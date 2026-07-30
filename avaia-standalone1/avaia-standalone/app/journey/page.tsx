@@ -38,10 +38,19 @@ export default async function JourneyPage({
   let convo = await getActiveConversation(supabase, user.id);
 
   // "Begin again" — start a brand-new journey with a fresh IAP conversation,
-  // even when past journeys are complete. Create it, then redirect to a clean
-  // URL so a refresh doesn't spawn another empty conversation.
+  // no matter what stage (or which leftover active conversation) the Host was
+  // last in. If something's still marked active, archive it as complete first
+  // so it stops being picked up as "the" active conversation, then create a
+  // clean IAP conversation. Redirect to a clean URL so a refresh doesn't spawn
+  // another empty conversation.
   if (searchParams?.new === "1") {
-    if (!convo) await createConversation(supabase, user.id, "iap");
+    if (convo) {
+      await supabase
+        .from("conversations")
+        .update({ status: "complete", completed_at: new Date().toISOString() })
+        .eq("id", convo.id);
+    }
+    await createConversation(supabase, user.id, "iap");
     redirect("/journey");
   }
 
@@ -63,7 +72,15 @@ export default async function JourneyPage({
       <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
         AVAIA
       </Link>
-      <SignOutButton />
+      <div className="flex items-center gap-4">
+        <Link
+          href="/journey?new=1"
+          className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
+        >
+          Start a new conversation
+        </Link>
+        <SignOutButton />
+      </div>
     </div>
   );
 
