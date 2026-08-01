@@ -8,6 +8,7 @@ import {
   loadMessages,
   toAnthropicMessages,
 } from "@/lib/engine/conversation";
+import { isMember } from "@/lib/membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,6 +108,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already complete." }, { status: 409 });
   }
   const stage = convo.stage as Stage;
+
+  // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
+  // untouched. This backstops the /journey page's own gate against a direct call.
+  if (stage !== "iap" && !(await isMember(supabase, user.id))) {
+    return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
+  }
+
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
 
   // Generate the AVAIA Standard Referral as structured data.

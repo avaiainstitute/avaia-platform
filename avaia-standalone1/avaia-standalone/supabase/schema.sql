@@ -17,6 +17,7 @@ create table if not exists public.profiles (
   disclaimer_version  text,                  -- which disclaimer they accepted
   adult_confirmed     boolean not null default false,
   minor_with_guardian boolean not null default false,
+  membership_status   text not null default 'free' check (membership_status in ('free', 'member')),
   created_at          timestamptz not null default now()
 );
 
