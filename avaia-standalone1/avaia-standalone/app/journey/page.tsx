@@ -12,15 +12,17 @@ import {
   loadMessages,
 } from "@/lib/engine/conversation";
 import { OPERATING_PRINCIPLES } from "@/lib/institution";
-import type { Stage } from "@/lib/engine/prompts";
+import type { Program, Stage } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Your Journey — AVAIA" };
 export const dynamic = "force-dynamic";
 
+const VALID_PROGRAMS: Program[] = ["general", "defying-grief"];
+
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string; checkout?: string };
+  searchParams?: { new?: string; checkout?: string; program?: string };
 }) {
   const supabase = createClient();
   const {
@@ -52,7 +54,11 @@ export default async function JourneyPage({
         .update({ status: "complete", completed_at: new Date().toISOString() })
         .eq("id", convo.id);
     }
-    await createConversation(supabase, user.id, "iap");
+    const requestedProgram = searchParams?.program;
+    const program: Program = VALID_PROGRAMS.includes(requestedProgram as Program)
+      ? (requestedProgram as Program)
+      : "general";
+    await createConversation(supabase, user.id, "iap", undefined, program);
     redirect("/journey");
   }
 

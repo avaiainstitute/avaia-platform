@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Anthropic from "@anthropic-ai/sdk";
-import type { Stage } from "./prompts";
+import type { Program, Stage } from "./prompts";
 
 export const STAGE_ORDER: Stage[] = ["iap", "cat", "innercompass"];
 
@@ -31,6 +31,7 @@ export type DbConversation = {
   host_id: string;
   stage: Stage;
   status: "active" | "complete";
+  program: Program;
   created_at: string;
   completed_at: string | null;
 };
@@ -51,16 +52,20 @@ export async function getActiveConversation(
   return (data as DbConversation) ?? null;
 }
 
-/** Create a conversation for a stage and seed the Guide's opening line. */
+/** Create a conversation for a stage and seed the Guide's opening line.
+ *  `program` defaults to 'general' and, once set on a Host's first (IAP)
+ *  conversation, should be carried forward into every later stage so the
+ *  program tag isn't lost at the IAP -> CAT -> InnerCompass handoffs. */
 export async function createConversation(
   supabase: SupabaseClient,
   hostId: string,
   stage: Stage,
-  opening?: string
+  opening?: string,
+  program: Program = "general"
 ): Promise<DbConversation> {
   const { data, error } = await supabase
     .from("conversations")
-    .insert({ host_id: hostId, stage })
+    .insert({ host_id: hostId, stage, program })
     .select("*")
     .single();
   if (error) throw new Error(error.message);

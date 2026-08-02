@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, systemPromptFor, type Stage } from "@/lib/engine/prompts";
+import { AVAIA_MODEL, systemPromptFor, type Program, type Stage } from "@/lib/engine/prompts";
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { isMember } from "@/lib/membership";
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   // Load the conversation (RLS guarantees it's the Host's own) and confirm it's active.
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status")
+    .select("id, stage, status, program")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This conversation is complete." }, { status: 409 });
   }
   const stage = convo.stage as Stage;
+  const program = convo.program as Program;
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
 
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).
-  let system = systemPromptFor(stage);
+  let system = systemPromptFor(stage, program);
   const { data: referral } = await supabase
     .from("referrals")
     .select("content")

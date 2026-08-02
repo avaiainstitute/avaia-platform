@@ -52,6 +52,7 @@ create table if not exists public.conversations (
   host_id       uuid not null references auth.users (id) on delete cascade,
   stage         text not null check (stage in ('iap', 'cat', 'innercompass')),
   status        text not null default 'active' check (status in ('active', 'complete')),
+  program       text not null default 'general' check (program in ('general', 'defying-grief')),
   created_at    timestamptz not null default now(),
   completed_at  timestamptz
 );

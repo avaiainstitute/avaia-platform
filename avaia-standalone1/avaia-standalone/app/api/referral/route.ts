@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, systemPromptFor, REFERRAL_FORMAT, type Stage } from "@/lib/engine/prompts";
+import { AVAIA_MODEL, systemPromptFor, REFERRAL_FORMAT, type Program, type Stage } from "@/lib/engine/prompts";
 import {
   STAGE_ORDER,
   createConversation,
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
 
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status")
+    .select("id, stage, status, program")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -108,6 +108,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already complete." }, { status: 409 });
   }
   const stage = convo.stage as Stage;
+  const program = convo.program as Program;
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
@@ -134,7 +135,7 @@ export async function POST(request: Request) {
     const params: any = {
       model: AVAIA_MODEL,
       max_tokens: 4096,
-      system: `${systemPromptFor(stage)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`,
+      system: `${systemPromptFor(stage, program)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`,
       messages: history,
       output_config: { format: { type: "json_schema", schema: SCHEMA_FOR[stage] } },
     };
@@ -163,7 +164,9 @@ export async function POST(request: Request) {
     .eq("id", conversationId);
 
   if (nextStage) {
-    await createConversation(supabase, user.id, nextStage);
+    // Carry the program forward so, e.g., an IAP(defying-grief) conversation
+    // hands off into a CAT(defying-grief) conversation, not a plain one.
+    await createConversation(supabase, user.id, nextStage, undefined, program);
     return NextResponse.json({ done: false, nextStage });
   }
   return NextResponse.json({ done: true });
