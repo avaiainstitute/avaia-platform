@@ -5,6 +5,7 @@ const LINKS = [
   { href: "/journey", label: "Journey" },
   { href: "/workbook", label: "Workbook" },
   { href: "/chemistry", label: "Chemistry of Virtue" },
+  { href: "/library", label: "Library" },
 ];
 
 export default function Nav() {
