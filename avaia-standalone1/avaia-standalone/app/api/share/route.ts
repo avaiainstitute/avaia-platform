@@ -36,10 +36,10 @@ export async function POST(request: Request) {
   const conversationId: string | undefined = body?.conversationId;
   const email: string = (body?.email ?? "").toString().trim().toLowerCase();
 
-  if (scope !== "conversation" && scope !== "workbook") {
+  if (scope !== "conversation" && scope !== "workbook" && scope !== "referral") {
     return NextResponse.json({ error: "Invalid scope." }, { status: 400 });
   }
-  if (scope === "conversation" && !conversationId) {
+  if ((scope === "conversation" || scope === "referral") && !conversationId) {
     return NextResponse.json({ error: "Missing conversation to share." }, { status: 400 });
   }
   if (!email || !email.includes("@")) {
@@ -49,8 +49,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You can't share with yourself." }, { status: 400 });
   }
 
-  // Ownership check — a Host may only share conversations that are theirs.
-  if (scope === "conversation") {
+  // Ownership check — a Host may only share conversations (or their
+  // referrals) that are theirs.
+  if (scope === "conversation" || scope === "referral") {
     const { data: convo } = await supabase
       .from("conversations")
       .select("id, host_id")
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
       owner_id: user.id,
       shared_with_id: existingUserId,
       scope,
-      conversation_id: scope === "conversation" ? conversationId : null,
+      conversation_id: scope === "conversation" || scope === "referral" ? conversationId : null,
     });
     if (error) return NextResponse.json({ error: "Could not grant access." }, { status: 500 });
     return NextResponse.json({ status: "granted" });
@@ -91,7 +92,12 @@ export async function POST(request: Request) {
       subject: "You've been invited to AVAIA",
       html: inviteEmailHtml({
         ownerLabel: user.email ?? "An AVAIA Host",
-        scopeLabel: scope === "workbook" ? "their AVAIA Workbook" : "a conversation from their AVAIA Workbook",
+        scopeLabel:
+          scope === "workbook"
+            ? "their AVAIA Workbook"
+            : scope === "referral"
+              ? "a referral from their AVAIA Workbook"
+              : "a conversation from their AVAIA Workbook",
         signUpUrl: `${origin}/sign-in`,
       }),
     });

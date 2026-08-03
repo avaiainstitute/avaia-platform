@@ -87,7 +87,10 @@ create policy "conversations shared read"
       where sa.shared_with_id = auth.uid()
         and sa.revoked_at is null
         and sa.owner_id = conversations.host_id
-        and (sa.scope = 'workbook' or sa.conversation_id = conversations.id)
+        and (
+          sa.scope = 'workbook'
+          or (sa.scope = 'conversation' and sa.conversation_id = conversations.id)
+        )
     )
   );
 
@@ -119,7 +122,10 @@ create policy "messages shared read"
       where sa.shared_with_id = auth.uid()
         and sa.revoked_at is null
         and sa.owner_id = c.host_id
-        and (sa.scope = 'workbook' or sa.conversation_id = messages.conversation_id)
+        and (
+          sa.scope = 'workbook'
+          or (sa.scope = 'conversation' and sa.conversation_id = messages.conversation_id)
+        )
     )
   );
 
@@ -157,7 +163,7 @@ create policy "referrals shared read"
         and sa.owner_id = referrals.host_id
         and (
           sa.scope = 'workbook'
-          or (sa.scope = 'conversation' and sa.conversation_id = referrals.conversation_id)
+          or (sa.scope in ('conversation', 'referral') and sa.conversation_id = referrals.conversation_id)
         )
     )
   );
@@ -187,12 +193,12 @@ create table if not exists public.shared_access (
   id               uuid primary key default gen_random_uuid(),
   owner_id         uuid not null references auth.users (id) on delete cascade,
   shared_with_id   uuid not null references auth.users (id) on delete cascade,
-  scope            text not null check (scope in ('conversation', 'workbook')),
+  scope            text not null check (scope in ('conversation', 'workbook', 'referral')),
   conversation_id  uuid references public.conversations (id) on delete cascade,
   granted_at       timestamptz not null default now(),
   revoked_at       timestamptz,
   constraint shared_access_scope_shape check (
-    (scope = 'conversation' and conversation_id is not null)
+    (scope in ('conversation', 'referral') and conversation_id is not null)
     or (scope = 'workbook' and conversation_id is null)
   )
 );
@@ -214,12 +220,12 @@ create table if not exists public.shared_access_invites (
   id               uuid primary key default gen_random_uuid(),
   owner_id         uuid not null references auth.users (id) on delete cascade,
   invited_email    text not null,
-  scope            text not null check (scope in ('conversation', 'workbook')),
+  scope            text not null check (scope in ('conversation', 'workbook', 'referral')),
   conversation_id  uuid references public.conversations (id) on delete cascade,
   invited_at       timestamptz not null default now(),
   accepted_at      timestamptz,
   constraint shared_access_invites_scope_shape check (
-    (scope = 'conversation' and conversation_id is not null)
+    (scope in ('conversation', 'referral') and conversation_id is not null)
     or (scope = 'workbook' and conversation_id is null)
   )
 );

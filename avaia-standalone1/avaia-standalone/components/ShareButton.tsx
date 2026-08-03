@@ -8,17 +8,25 @@ export default function ShareButton({
   scope,
   conversationId,
   label,
+  allowReferralOnly,
 }: {
   scope: ShareScope;
   conversationId?: string;
   label: string;
+  /** Only meaningful when scope="conversation" — offers "just the referral,
+   *  not the transcript" as an alternative. Doesn't apply to whole-Workbook
+   *  shares. */
+  allowReferralOnly?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [referralOnly, setReferralOnly] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<"granted" | "invited" | null>(null);
+
+  const effectiveScope: ShareScope = allowReferralOnly && referralOnly ? "referral" : scope;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +37,7 @@ export default function ShareButton({
       const res = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scope, conversationId, email }),
+        body: JSON.stringify({ scope: effectiveScope, conversationId, email }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not share.");
@@ -50,6 +58,7 @@ export default function ShareButton({
         onClick={() => {
           setOpen(true);
           setResult(null);
+          setReferralOnly(false);
         }}
         className="rounded-md border border-rule px-3 py-1.5 font-sans text-xs text-muted transition-colors hover:border-seal hover:text-ink"
       >
@@ -77,6 +86,26 @@ export default function ShareButton({
         </div>
       ) : (
         <form onSubmit={submit} className="flex flex-wrap items-center gap-2">
+          {allowReferralOnly && (
+            <div className="flex w-full gap-4">
+              <label className="flex items-center gap-1.5 text-xs text-ink">
+                <input
+                  type="radio"
+                  checked={!referralOnly}
+                  onChange={() => setReferralOnly(false)}
+                />
+                Full conversation
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-ink">
+                <input
+                  type="radio"
+                  checked={referralOnly}
+                  onChange={() => setReferralOnly(true)}
+                />
+                Just the referral
+              </label>
+            </div>
+          )}
           <input
             type="email"
             required

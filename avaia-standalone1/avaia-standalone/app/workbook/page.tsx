@@ -469,7 +469,12 @@ export default async function WorkbookPage() {
                     <h3 className="font-serif text-xl text-ink">{STAGE_LABEL[convo.stage as Stage]}</h3>
                     <span className="label">{convo.status === "complete" ? "Complete" : "In progress"}</span>
                   </div>
-                  <ShareButton scope="conversation" conversationId={convo.id} label="Share" />
+                  <ShareButton
+                    scope="conversation"
+                    conversationId={convo.id}
+                    label="Share"
+                    allowReferralOnly
+                  />
                 </div>
                 <div className="mt-4 space-y-4">
                   {transcript.map((m) => (

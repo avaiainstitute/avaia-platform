@@ -23,12 +23,15 @@ create table if not exists public.shared_access (
   id               uuid primary key default gen_random_uuid(),
   owner_id         uuid not null references auth.users (id) on delete cascade,
   shared_with_id   uuid not null references auth.users (id) on delete cascade,
-  scope            text not null check (scope in ('conversation', 'workbook')),
+  -- 'referral' shares only the AVAIA Standard Referral for one conversation —
+  -- NOT its transcript. Kept distinct from 'conversation' (full transcript +
+  -- its referral) so the RLS policies below can tell them apart.
+  scope            text not null check (scope in ('conversation', 'workbook', 'referral')),
   conversation_id  uuid references public.conversations (id) on delete cascade,
   granted_at       timestamptz not null default now(),
   revoked_at       timestamptz,
   constraint shared_access_scope_shape check (
-    (scope = 'conversation' and conversation_id is not null)
+    (scope in ('conversation', 'referral') and conversation_id is not null)
     or (scope = 'workbook' and conversation_id is null)
   )
 );
@@ -58,12 +61,12 @@ create table if not exists public.shared_access_invites (
   id               uuid primary key default gen_random_uuid(),
   owner_id         uuid not null references auth.users (id) on delete cascade,
   invited_email    text not null,
-  scope            text not null check (scope in ('conversation', 'workbook')),
+  scope            text not null check (scope in ('conversation', 'workbook', 'referral')),
   conversation_id  uuid references public.conversations (id) on delete cascade,
   invited_at       timestamptz not null default now(),
   accepted_at      timestamptz,
   constraint shared_access_invites_scope_shape check (
-    (scope = 'conversation' and conversation_id is not null)
+    (scope in ('conversation', 'referral') and conversation_id is not null)
     or (scope = 'workbook' and conversation_id is null)
   )
 );
@@ -86,6 +89,10 @@ create policy "shared_access_invites owner manage"
 -- ADD read-only access for anyone holding a live (unrevoked) shared_access
 -- grant that covers the row.
 -- ---------------------------------------------------------------------------
+-- 'referral' scope deliberately does NOT appear in the conversations/messages
+-- policies below — it grants the referral only, never the transcript. Only
+-- 'workbook' (everything) and 'conversation' (this transcript + its referral)
+-- unlock the transcript itself.
 create policy "conversations shared read"
   on public.conversations for select
   using (
@@ -94,7 +101,10 @@ create policy "conversations shared read"
       where sa.shared_with_id = auth.uid()
         and sa.revoked_at is null
         and sa.owner_id = conversations.host_id
-        and (sa.scope = 'workbook' or sa.conversation_id = conversations.id)
+        and (
+          sa.scope = 'workbook'
+          or (sa.scope = 'conversation' and sa.conversation_id = conversations.id)
+        )
     )
   );
 
@@ -107,10 +117,16 @@ create policy "messages shared read"
       where sa.shared_with_id = auth.uid()
         and sa.revoked_at is null
         and sa.owner_id = c.host_id
-        and (sa.scope = 'workbook' or sa.conversation_id = messages.conversation_id)
+        and (
+          sa.scope = 'workbook'
+          or (sa.scope = 'conversation' and sa.conversation_id = messages.conversation_id)
+        )
     )
   );
 
+-- Referrals ARE visible under both 'conversation' and 'referral' scope
+-- (as well as 'workbook') — a referral-only share's entire purpose is to
+-- grant exactly this, without the transcript access conversation-scope adds.
 create policy "referrals shared read"
   on public.referrals for select
   using (
@@ -121,7 +137,7 @@ create policy "referrals shared read"
         and sa.owner_id = referrals.host_id
         and (
           sa.scope = 'workbook'
-          or (sa.scope = 'conversation' and sa.conversation_id = referrals.conversation_id)
+          or (sa.scope in ('conversation', 'referral') and sa.conversation_id = referrals.conversation_id)
         )
     )
   );

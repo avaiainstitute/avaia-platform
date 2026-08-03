@@ -1,7 +1,7 @@
 // Workbook sharing — shared types. Not server-only: the share/revoke buttons
 // (client components) need the ShareScope type too.
 
-export type ShareScope = "conversation" | "workbook";
+export type ShareScope = "conversation" | "workbook" | "referral";
 
 export type SharedAccessGrant = {
   id: string;

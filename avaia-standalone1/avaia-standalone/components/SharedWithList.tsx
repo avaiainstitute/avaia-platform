@@ -33,7 +33,12 @@ export default function SharedWithList({ grants }: { grants: SharedAccessGrantWi
           <div>
             <p className="text-sm text-ink">{g.shared_with_email ?? "Pending"}</p>
             <p className="text-xs text-muted">
-              {g.scope === "workbook" ? "Entire Workbook" : "One conversation"} · granted{" "}
+              {g.scope === "workbook"
+                ? "Entire Workbook"
+                : g.scope === "referral"
+                  ? "Referral only"
+                  : "One conversation"}{" "}
+              · granted{" "}
               {new Date(g.granted_at).toLocaleDateString()}
             </p>
           </div>

@@ -26,12 +26,19 @@ export default async function SharedWithMePage() {
   const grants = grantsData ?? [];
 
   // Group by owner: a 'workbook' grant supersedes any 'conversation' grants
-  // from the same owner (they'd be a subset anyway).
+  // from the same owner (they'd be a subset anyway). 'referral' grants are
+  // deliberately NOT added to conversationIds — that set drives which
+  // conversations get their transcript fetched below, and a referral-only
+  // grant must never expose the transcript. The referrals query further down
+  // is unfiltered by conversation and relies entirely on RLS ("referrals
+  // shared read", which DOES include 'referral' scope) to surface exactly
+  // the right referrals — so referral-only shares still show up correctly,
+  // just without a transcript alongside them.
   const byOwner = new Map<string, { workbook: boolean; conversationIds: Set<string> }>();
   for (const g of grants) {
     const entry = byOwner.get(g.owner_id) ?? { workbook: false, conversationIds: new Set<string>() };
     if (g.scope === "workbook") entry.workbook = true;
-    else if (g.conversation_id) entry.conversationIds.add(g.conversation_id);
+    else if (g.scope === "conversation" && g.conversation_id) entry.conversationIds.add(g.conversation_id);
     byOwner.set(g.owner_id, entry);
   }
 
@@ -109,7 +116,7 @@ export default async function SharedWithMePage() {
           <p className="label text-seal">Shared by</p>
           <h2 className="mt-1 font-serif text-2xl text-ink">{s.ownerEmail ?? "An AVAIA Host"}</h2>
 
-          {s.conversations.length === 0 && (
+          {s.conversations.length === 0 && s.referrals.length === 0 && (
             <p className="mt-3 text-sm text-muted">Nothing to show yet.</p>
           )}
 
