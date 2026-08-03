@@ -4,6 +4,7 @@ const LINKS = [
   { href: "/about", label: "About" },
   { href: "/journey", label: "Journey" },
   { href: "/workbook", label: "Workbook" },
+  { href: "/shared-with-me", label: "Shared with Me" },
   { href: "/chemistry", label: "Chemistry of Virtue" },
 ];
 

@@ -151,11 +151,15 @@ export async function POST(request: Request) {
   }
 
   // Store the referral, complete this stage, and open the next (if any).
+  // conversation_id lets a 'conversation'-scope Workbook share (see
+  // shared_access) identify exactly this referral, not just any referral
+  // that happens to share the same from_stage name.
   await supabase.from("referrals").insert({
     host_id: user.id,
     from_stage: stage,
     to_stage: nextStage ?? "continuity",
     content,
+    conversation_id: conversationId,
   });
   await supabase
     .from("conversations")

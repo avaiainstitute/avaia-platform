@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import SignOutButton from "@/components/SignOutButton";
 import WorkbookExport from "@/components/WorkbookExport";
+import ShareButton from "@/components/ShareButton";
+import SharedWithList from "@/components/SharedWithList";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
+import type { SharedAccessGrantWithEmail } from "@/lib/sharing";
 
 export const metadata = { title: "Your Workbook — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -153,6 +157,34 @@ export default async function WorkbookPage() {
     .order("created_at", { ascending: true });
   const referrals = referralsData ?? [];
 
+  // Who currently has access to what — the shared_with_id -> email lookup
+  // needs the admin client since auth.users isn't otherwise queryable; the
+  // grants themselves are already scoped to this Host by RLS ("shared_access
+  // owner manage"), so this only ever resolves emails for the Host's own
+  // grants, never anyone else's.
+  const { data: grantsData } = await supabase
+    .from("shared_access")
+    .select("*")
+    .eq("owner_id", user.id)
+    .is("revoked_at", null)
+    .order("granted_at", { ascending: false });
+  const grants = grantsData ?? [];
+  let sharedWithGrants: SharedAccessGrantWithEmail[] = [];
+  if (grants.length > 0) {
+    const admin = createAdminClient();
+    const emailById = new Map<string, string>();
+    for (let page = 1; page <= 20 && emailById.size < grants.length; page++) {
+      const { data } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (!data || data.users.length === 0) break;
+      for (const u of data.users) if (u.email) emailById.set(u.id, u.email);
+      if (data.users.length < 1000) break;
+    }
+    sharedWithGrants = grants.map((g) => ({
+      ...g,
+      shared_with_email: emailById.get(g.shared_with_id) ?? null,
+    }));
+  }
+
   const transcripts = await Promise.all(
     conversations.map((c) => loadMessages(supabase, c.id))
   );
@@ -260,14 +292,24 @@ export default async function WorkbookPage() {
         It&rsquo;s yours, and only yours.
       </p>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Link
           href={hasActive ? "/journey" : "/journey?new=1"}
           className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
           {hasActive ? "Continue your journey" : "Begin a new journey"}
         </Link>
+        {journeys.length > 0 && <ShareButton scope="workbook" label="Share entire Workbook" />}
       </div>
+
+      {journeys.length > 0 && (
+        <section className="mt-10">
+          <p className="label text-muted">Shared with</p>
+          <div className="mt-3">
+            <SharedWithList grants={sharedWithGrants} />
+          </div>
+        </section>
+      )}
 
       {hasPatterns && (
         <section className="mt-12 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
@@ -422,9 +464,12 @@ export default async function WorkbookPage() {
 
             {j.convos.map(({ convo, transcript }) => (
               <section key={convo.id} className="mt-8">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h3 className="font-serif text-xl text-ink">{STAGE_LABEL[convo.stage as Stage]}</h3>
-                  <span className="label">{convo.status === "complete" ? "Complete" : "In progress"}</span>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <h3 className="font-serif text-xl text-ink">{STAGE_LABEL[convo.stage as Stage]}</h3>
+                    <span className="label">{convo.status === "complete" ? "Complete" : "In progress"}</span>
+                  </div>
+                  <ShareButton scope="conversation" conversationId={convo.id} label="Share" />
                 </div>
                 <div className="mt-4 space-y-4">
                   {transcript.map((m) => (
