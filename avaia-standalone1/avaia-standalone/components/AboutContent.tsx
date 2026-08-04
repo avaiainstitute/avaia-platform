@@ -192,6 +192,7 @@ export default function AboutContent() {
         </p>
         <Link
           href="/journey"
+          prefetch={false}
           className="mt-7 inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
           Start the journey

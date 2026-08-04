@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -23,9 +22,20 @@ import { createClient } from "@/lib/supabase/client";
  * cookie, but the cookie being consumed out from under us by our own
  * duplicate exchange attempt. So we only ever *observe* for the session the
  * automatic exchange produces, never redeem the code ourselves.
+ *
+ * finish() uses a hard window.location navigation, not next/navigation's
+ * router. Nav.tsx links to /journey from every page, including pre-auth ones
+ * like /sign-in — Next prefetches those on viewport/hover by default, caching
+ * the anonymous JourneyIntro render for /journey in the client-side Router
+ * Cache well before sign-in happens. router.replace()+router.refresh() back
+ * to back in the same tick is a known-unreliable combination for busting that
+ * specific cache entry (export const dynamic = "force-dynamic" only affects
+ * server-side rendering — it does nothing to the client cache). A full
+ * browser navigation bypasses that cache entirely: the server sees a fresh
+ * request with whatever cookie now exists, no client-side caching layer
+ * involved at all.
  */
 export default function AuthCallbackPage() {
-  const router = useRouter();
   const [status, setStatus] = useState<"working" | "error">("working");
   const [detail, setDetail] = useState("");
 
@@ -38,8 +48,7 @@ export default function AuthCallbackPage() {
     const finish = () => {
       if (done) return;
       done = true;
-      router.replace("/journey");
-      router.refresh();
+      window.location.replace("/journey");
     };
     const fail = (msg: string) => {
       if (done) return;
@@ -80,7 +89,7 @@ export default function AuthCallbackPage() {
         fail(e instanceof Error ? e.message : "Something went wrong signing you in.");
       }
     })();
-  }, [router]);
+  }, []);
 
   return (
     <div className="mx-auto max-w-prose px-5 py-24 text-center">

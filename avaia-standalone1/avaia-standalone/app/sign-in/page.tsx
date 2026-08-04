@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -11,9 +10,16 @@ import { createClient } from "@/lib/supabase/client";
  * so the Host verifies in the SAME tab/PWA — reliable on a phone, no dependence
  * on which browser opens an email link. Once verified, the session persists, so
  * return visits are seamless.
+ *
+ * verify() below hard-navigates via window.location rather than next/
+ * navigation's router — see the matching note in app/auth/callback/page.tsx.
+ * Nav.tsx links to /journey from this very page before sign-in, so Next may
+ * have already prefetched and cached the anonymous JourneyIntro render for
+ * /journey client-side; router.replace()+router.refresh() is unreliable for
+ * busting that specific cache entry, and a full navigation sidesteps it
+ * entirely.
  */
 export default function SignInPage() {
-  const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -60,8 +66,7 @@ export default function SignInPage() {
         type: "email",
       });
       if (error) throw error;
-      router.replace("/journey");
-      router.refresh();
+      window.location.replace("/journey");
     } catch {
       setError("That code didn't match, or it expired. Check the latest email, or send a new code.");
       setBusy(false);

@@ -1,11 +1,19 @@
 import Link from "next/link";
 
-const LINKS = [
-  { href: "/about", label: "About" },
-  { href: "/journey", label: "Journey" },
-  { href: "/workbook", label: "Workbook" },
-  { href: "/shared-with-me", label: "Shared with Me" },
-  { href: "/chemistry", label: "Chemistry of Virtue" },
+// /journey, /workbook, and /shared-with-me all render completely differently
+// signed in vs signed out. Next prefetches links by default on viewport/hover
+// — since this Nav renders on every page, including pre-auth ones like
+// /sign-in, that would cache the SIGNED-OUT render of these routes in the
+// client-side Router Cache before the Host ever signs in, and later
+// navigation to them (even once actually signed in) can serve that stale
+// anonymous snapshot instead of refetching. prefetch={false} keeps every
+// visit to these three routes a real request.
+const LINKS: { href: string; label: string; prefetch: boolean }[] = [
+  { href: "/about", label: "About", prefetch: true },
+  { href: "/journey", label: "Journey", prefetch: false },
+  { href: "/workbook", label: "Workbook", prefetch: false },
+  { href: "/shared-with-me", label: "Shared with Me", prefetch: false },
+  { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
 ];
 
 export default function Nav() {
@@ -23,6 +31,7 @@ export default function Nav() {
             <li key={l.href}>
               <Link
                 href={l.href}
+                prefetch={l.prefetch}
                 className="label hover:text-seal transition-colors"
               >
                 {l.label}
