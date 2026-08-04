@@ -3,6 +3,16 @@ import { createClient } from "@/lib/supabase/server";
 import ConsentForm from "@/components/ConsentForm";
 
 export const metadata = { title: "Welcome — AVAIA" };
+// Every other server-rendered page that reads profiles.consent_at
+// (journey, workbook, shared-with-me) has this — this one didn't. cookies()
+// usage forces per-request rendering regardless, but that's a separate
+// mechanism from Next's Data Cache, which still applies to the individual
+// fetch() calls the Supabase client makes unless a route is force-dynamic.
+// Without it, this page's read of consent_at could serve a stale cached
+// result while /journey's (already force-dynamic) read stayed fresh — the
+// two pages' redirect() calls are exact opposites of the same fact, so any
+// disagreement between them bounces forever: ERR_TOO_MANY_REDIRECTS.
+export const dynamic = "force-dynamic";
 
 export default async function WelcomePage() {
   const supabase = createClient();
