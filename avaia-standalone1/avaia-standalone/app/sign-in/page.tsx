@@ -28,7 +28,16 @@ export default function SignInPage() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { shouldCreateUser: true },
+        options: {
+          shouldCreateUser: true,
+          // Without this, Supabase falls back to the dashboard's Site URL
+          // for the emailed link's redirect target — which has drifted
+          // before (see the earlier Supabase-project mix-up) and, when it
+          // doesn't point at /auth/callback, silently strands the session
+          // tokens in a URL hash no page ever reads. Making the destination
+          // explicit here removes that dependency entirely.
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) throw error;
       setStep("code");
