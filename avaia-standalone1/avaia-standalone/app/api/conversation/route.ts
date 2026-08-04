@@ -4,6 +4,7 @@ import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
 import { AVAIA_MODEL, systemPromptFor, type Stage } from "@/lib/engine/prompts";
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
+import { isMember } from "@/lib/membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This conversation is complete." }, { status: 409 });
   }
   const stage = convo.stage as Stage;
+
+  // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
+  // untouched. This backstops the /journey page's own gate against a direct call.
+  if (stage !== "iap" && !(await isMember(supabase, user.id))) {
+    return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
+  }
 
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).

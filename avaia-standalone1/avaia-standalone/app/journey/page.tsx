@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import JourneyChat from "@/components/JourneyChat";
+import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
 import {
   STAGE_ORDER,
   STAGE_LABEL,
@@ -19,7 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string };
+  searchParams?: { new?: string; checkout?: string };
 }) {
   const supabase = createClient();
   const {
@@ -29,10 +30,11 @@ export default async function JourneyPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("consent_at")
+    .select("consent_at, membership_status")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
+  const isMember = profile.membership_status === "member";
 
   // Resolve the conversation to show: the active one, or open IAP on first entry.
   let convo = await getActiveConversation(supabase, user.id);
@@ -112,6 +114,15 @@ export default async function JourneyPage({
   }
 
   const stage = convo.stage as Stage;
+
+  // The free IAP experience is complete and untouched — but Conversations
+  // Across Time (and everything after it) is a membership feature. A free
+  // Host who has just been carried into CAT sees the membership gate instead
+  // of the chat; a member continues exactly as before.
+  if (stage !== "iap" && !isMember) {
+    return <MembershipGate header={header} checkout={searchParams?.checkout} />;
+  }
+
   const rawMessages = await loadMessages(supabase, convo.id);
   const messages = rawMessages.map((m) => ({ role: m.role, content: m.content }));
   const currentIdx = STAGE_ORDER.indexOf(stage);
@@ -168,6 +179,44 @@ export default async function JourneyPage({
         isLast={stage === "innercompass"}
         initialMessages={messages}
       />
+    </div>
+  );
+}
+
+/** Shown to a free Host whose IAP is complete and who has been carried into
+ *  CAT — Conversations Across Time (and InnerCompass after it) are an AVAIA
+ *  Membership feature. Their referral and IAP conversation are already saved;
+ *  checkout just unlocks continuing into the conversation waiting for them. */
+function MembershipGate({
+  header,
+  checkout,
+}: {
+  header: React.ReactNode;
+  checkout?: string;
+}) {
+  return (
+    <div className="mx-auto max-w-prose px-5 py-20">
+      {header}
+      <h1 className="mt-8 font-serif text-4xl text-ink">Continue your journey</h1>
+      <p className="mt-4 text-lg text-muted">
+        Your Individual Awareness Profile is complete — that first step is free, and it&rsquo;s
+        yours to keep. Conversations Across Time and InnerCompass, where understanding turns into
+        discernment, are part of AVAIA Membership.
+      </p>
+      <p className="mt-4 text-lg text-muted">
+        Your referral is saved and waiting. Join to continue exactly where you left off.
+      </p>
+      {checkout === "cancelled" && (
+        <p className="mt-4 text-sm text-muted">Checkout was cancelled — no charge was made.</p>
+      )}
+      {checkout === "success" && (
+        <p className="mt-4 text-sm text-muted">
+          Payment received — if your membership isn&rsquo;t reflected yet, refresh in a moment.
+        </p>
+      )}
+      <div className="mt-8">
+        <MembershipCheckoutButton />
+      </div>
     </div>
   );
 }

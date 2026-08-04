@@ -8,6 +8,7 @@ import {
   loadMessages,
   toAnthropicMessages,
 } from "@/lib/engine/conversation";
+import { isMember } from "@/lib/membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,6 +111,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already complete." }, { status: 409 });
   }
   const stage = convo.stage as Stage;
+
+  // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
+  // untouched. This backstops the /journey page's own gate against a direct call.
+  if (stage !== "iap" && !(await isMember(supabase, user.id))) {
+    return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
+  }
+
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
 
   // Generate the AVAIA Standard Referral as structured data.
@@ -166,11 +174,15 @@ export async function POST(request: Request) {
   }
 
   // Store the referral, complete this stage, and open the next (if any).
+  // conversation_id lets a 'conversation'-scope Workbook share (see
+  // shared_access) identify exactly this referral, not just any referral
+  // that happens to share the same from_stage name.
   await supabase.from("referrals").insert({
     host_id: user.id,
     from_stage: stage,
     to_stage: nextStage ?? "continuity",
     content,
+    conversation_id: conversationId,
   });
   await supabase
     .from("conversations")
