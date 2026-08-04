@@ -79,8 +79,12 @@ export default function MicButton({
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
-        if (r.isFinal) finalRef.current += r[0].transcript;
-        else interim += r[0].transcript;
+        if (r.isFinal) {
+          const needsSpace = finalRef.current.length > 0 && !/\s$/.test(finalRef.current);
+          finalRef.current += (needsSpace ? " " : "") + r[0].transcript;
+        } else {
+          interim += r[0].transcript;
+        }
       }
       onChange(baseRef.current + finalRef.current + interim);
     };
