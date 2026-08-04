@@ -9,11 +9,20 @@ import { createClient } from "@/lib/supabase/client";
  * Magic-link landing. Establishes the session from the sign-in link, then
  * forwards into the journey.
  *
- * We read the link explicitly rather than relying only on the client's
- * auto-detection: implicit links carry the session in the URL hash
- * (#access_token=…&refresh_token=…) — we set the session from those directly;
- * PKCE links carry a ?code= we exchange. Any Supabase error (expired or
- * already-used link) is surfaced verbatim instead of a blind timeout.
+ * We do NOT call setSession()/exchangeCodeForSession() ourselves here.
+ * createBrowserClient() (lib/supabase/client.ts) forces detectSessionInUrl:
+ * true and cannot be configured otherwise — merely constructing the client
+ * (here, or in SupabaseSessionSync in the root layout, which mounts on every
+ * page including this one) already triggers Supabase's own automatic
+ * exchange of whatever's in the URL (hash tokens or a PKCE ?code=) the
+ * moment it runs. A second, manual exchange call here would race that
+ * automatic one for the SAME single-use code/verifier — and reliably lose,
+ * since Supabase deletes the PKCE verifier the instant either attempt
+ * redeems (or fails to redeem) the code. That race was the actual cause of
+ * "PKCE code verifier not found in storage": not a missing or misplaced
+ * cookie, but the cookie being consumed out from under us by our own
+ * duplicate exchange attempt. So we only ever *observe* for the session the
+ * automatic exchange produces, never redeem the code ourselves.
  */
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -21,8 +30,6 @@ export default function AuthCallbackPage() {
   const [detail, setDetail] = useState("");
 
   useEffect(() => {
-    // Capture the URL BEFORE creating the client — auto-detection may strip the
-    // hash as soon as the client initializes.
     const rawHash = window.location.hash.replace(/^#/, "");
     const rawSearch = window.location.search.replace(/^\?/, "");
     const supabase = createClient();
@@ -46,7 +53,8 @@ export default function AuthCallbackPage() {
         const hp = new URLSearchParams(rawHash);
         const sp = new URLSearchParams(rawSearch);
 
-        // An explicit error from Supabase (expired / already used / denied).
+        // An explicit error from Supabase (expired / already used / denied) —
+        // just reading query/hash params, no exchange involved.
         const err =
           hp.get("error_description") ||
           hp.get("error") ||
@@ -54,35 +62,20 @@ export default function AuthCallbackPage() {
           sp.get("error");
         if (err) return fail(err.replace(/\+/g, " "));
 
-        // Implicit flow — tokens in the hash. Set the session directly.
-        const access_token = hp.get("access_token");
-        const refresh_token = hp.get("refresh_token");
-        if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (error) return fail(error.message);
-          return finish();
-        }
-
-        // PKCE flow — a code in the query string.
-        const code = sp.get("code");
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) return fail(error.message);
-          return finish();
-        }
-
-        // The client may have already parsed and cleared the hash — check for a
-        // session, then wait briefly for the auth event as a last resort.
+        // No explicit error, and there's something to redeem (hash tokens or
+        // a code) — the client's automatic detectSessionInUrl handling is
+        // already processing it as of the createClient() call above. Wait
+        // for it to land rather than attempting our own parallel exchange.
         const { data } = await supabase.auth.getSession();
         if (data.session) return finish();
 
-        const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-          if (session) finish();
+        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_IN" && session) finish();
         });
         setTimeout(() => {
           sub.subscription.unsubscribe();
           fail("We couldn't find valid sign-in details in that link.");
-        }, 6000);
+        }, 8000);
       } catch (e) {
         fail(e instanceof Error ? e.message : "Something went wrong signing you in.");
       }
