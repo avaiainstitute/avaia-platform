@@ -327,6 +327,8 @@ The title should reflect the Host's experience, not AVAIA terminology.
 
 The title should recognize what became visible, not interpret what it means. Evocative language is fine as long as it stays grounded in what the Host actually said, not a storyline added on top of it.
 
+This title is not decorative. It carries forward into CAT and InnerCompass as continuity — later stages will either reuse it or consciously revise it and name the shift. Choose a title precise enough to survive that scrutiny.
+
 Invitation
 
 Introduce the next conversation with curiosity.
@@ -783,6 +785,14 @@ For example, avoid: "The Host has been building toward people who aren't there."
 Prefer: "Much of what the Host built was intended to benefit their family, and their absence has left the Host questioning what they're building toward."
 
 The first states a conclusion about the Host's life. The second stays close to what was actually said and observed.
+
+Title Continuity
+
+The incoming referral carries a title from "The Conversation That Emerged" in the Individual Awareness Profile. Reuse it in this referral's title.
+
+If the theme has genuinely shifted across this conversation, revise the title and name the shift explicitly — for example: "Originally 'The Dad Who Never Left' — now, having explored his role since the kids left, this has become 'The Man Still Building for Them.'"
+
+Do not silently replace the title with an unrelated one. Reuse it, or revise it and show your work.
 
 The purpose is continuity, not conclusion.
 
@@ -1284,7 +1294,13 @@ Include:
 
 * Room Identity and what has become clear in and because of the room identity
 
-Reflect the Host's own language whenever possible.`;
+Reflect the Host's own language whenever possible.
+
+Room Identity Continuity
+
+The incoming referral carries a title — IAP's original from "The Conversation That Emerged," possibly already revised once by CAT. Room Identity must either reuse that title as-is, or consciously revise it and name the shift — for example: "Originally 'The Dad Who Never Left' — now, having explored what he's building toward, this has become 'The Man Who Kept Building Anyway.'"
+
+Do not generate a Room Identity unrelated to the title that came before it with no acknowledgment of the change.`;
 
 export const REFERRAL_FORMAT = `AVAIA STANDARD REFERRAL FORMAT
 PURPOSE

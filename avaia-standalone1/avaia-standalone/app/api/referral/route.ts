@@ -28,6 +28,7 @@ const schema = (properties: Record<string, unknown>) => ({
 
 const IAP_REFERRAL_SCHEMA = schema({
   hostOverview: str,
+  title: str,
   currentConcern: str,
   primaryThreads: strArr,
   significantRelationships: strArr,
@@ -47,6 +48,7 @@ const IAP_REFERRAL_SCHEMA = schema({
 
 const CAT_REFERRAL_SCHEMA = schema({
   hostOverview: str,
+  title: str,
   majorUnderstandings: strArr,
   primaryLoss: str,
   significantSecondaryLosses: strArr,
@@ -78,6 +80,7 @@ const IC_REFERRAL_SCHEMA = schema({
   decisionsMade: strArr,
   commitmentsChosen: strArr,
   whatToPreserve: str,
+  roomIdentity: str,
 });
 
 const SCHEMA_FOR: Record<Stage, ReturnType<typeof schema>> = {
@@ -118,6 +121,26 @@ export async function POST(request: Request) {
       "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me — output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted as close to verbatim as possible, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). Leave a Host-Voice array empty rather than inventing or paraphrasing.",
   });
 
+  // Carry the incoming referral (if any) into context, so fields meant to persist
+  // across stages — like the conversation's title — can be reused or consciously
+  // revised instead of generated fresh with no awareness of what came before.
+  let system = `${systemPromptFor(stage)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
+  const { data: incoming } = await supabase
+    .from("referrals")
+    .select("content")
+    .eq("host_id", user.id)
+    .eq("to_stage", stage)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (incoming?.content) {
+    system +=
+      "\n\n" +
+      "=".repeat(60) +
+      "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — reuse or consciously revise carried-forward fields such as the title; never replace them with no acknowledgment):\n\n" +
+      JSON.stringify(incoming.content, null, 2);
+  }
+
   let content: unknown;
   try {
     const client = anthropic();
@@ -126,7 +149,7 @@ export async function POST(request: Request) {
     const params: any = {
       model: AVAIA_MODEL,
       max_tokens: 4096,
-      system: `${systemPromptFor(stage)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`,
+      system,
       messages: history,
       output_config: { format: { type: "json_schema", schema: SCHEMA_FOR[stage] } },
     };

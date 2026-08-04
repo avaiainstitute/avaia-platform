@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 const REFERRAL_LABELS: Record<string, string> = {
   // IAP
   hostOverview: "Host Overview",
+  title: "Title",
   currentConcern: "Current Concern",
   primaryThreads: "Primary Threads",
   significantRelationships: "Significant Relationships",
@@ -47,6 +48,7 @@ const REFERRAL_LABELS: Record<string, string> = {
   nextStep: "Next Step",
   followUpQuestions: "Follow-up Questions",
   whatToPreserve: "What to Preserve",
+  roomIdentity: "Room Identity",
   // shared
   nextConversationPurpose: "Next Conversation Purpose",
 };
