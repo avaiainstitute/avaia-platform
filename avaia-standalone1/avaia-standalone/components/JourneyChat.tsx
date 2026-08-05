@@ -14,11 +14,16 @@ export default function JourneyChat({
   stageLabel,
   isLast,
   initialMessages,
+  program = "general",
 }: {
   conversationId: string;
   stageLabel: string;
   isLast: boolean;
   initialMessages: Msg[];
+  /** Which program this conversation belongs to — decides where finishing
+   *  the whole journey lands the Host (general Workbook vs. the Defying
+   *  Grief dashboard). Defaults to "general" for every existing caller. */
+  program?: "general" | "defying-grief";
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
@@ -129,7 +134,7 @@ export default function JourneyChat({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not move forward.");
-      if (data.done) router.push("/workbook");
+      if (data.done) router.push(program === "defying-grief" ? "/defying-grief" : "/workbook");
       else router.refresh(); // the next stage's conversation loads
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");

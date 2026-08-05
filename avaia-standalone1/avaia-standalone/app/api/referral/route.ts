@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, systemPromptFor, REFERRAL_FORMAT, type Stage } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  systemPromptFor,
+  REFERRAL_FORMAT,
+  type Program,
+  type Stage,
+} from "@/lib/engine/prompts";
 import {
   STAGE_ORDER,
   createConversation,
@@ -103,7 +109,7 @@ export async function POST(request: Request) {
 
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status")
+    .select("id, stage, status, program")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -111,6 +117,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already complete." }, { status: 409 });
   }
   const stage = convo.stage as Stage;
+  const program = convo.program as Program;
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
@@ -132,7 +139,7 @@ export async function POST(request: Request) {
   // Carry the incoming referral (if any) into context, so fields meant to persist
   // across stages — like the conversation's title — can be reused or consciously
   // revised instead of generated fresh with no awareness of what came before.
-  let system = `${systemPromptFor(stage)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
+  let system = `${systemPromptFor(stage, program)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
   const { data: incoming } = await supabase
     .from("referrals")
     .select("content")
@@ -190,7 +197,9 @@ export async function POST(request: Request) {
     .eq("id", conversationId);
 
   if (nextStage) {
-    await createConversation(supabase, user.id, nextStage);
+    // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
+    // doesn't silently fall back to 'general' on the next stage.
+    await createConversation(supabase, user.id, nextStage, undefined, program);
     return NextResponse.json({ done: false, nextStage });
   }
   return NextResponse.json({ done: true });

@@ -12,7 +12,7 @@ import {
   loadMessages,
 } from "@/lib/engine/conversation";
 import { OPERATING_PRINCIPLES } from "@/lib/institution";
-import type { Stage } from "@/lib/engine/prompts";
+import type { Program, Stage } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Your Journey — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string; checkout?: string };
+  searchParams?: { new?: string; checkout?: string; program?: string };
 }) {
   const supabase = createClient();
   const {
@@ -67,13 +67,15 @@ export default async function JourneyPage({
   // clean IAP conversation. Redirect to a clean URL so a refresh doesn't spawn
   // another empty conversation.
   if (searchParams?.new === "1") {
+    const requestedProgram: Program =
+      searchParams?.program === "defying-grief" ? "defying-grief" : "general";
     if (convo) {
       await supabase
         .from("conversations")
         .update({ status: "complete", completed_at: new Date().toISOString() })
         .eq("id", convo.id);
     }
-    await createConversation(supabase, user.id, "iap");
+    await createConversation(supabase, user.id, "iap", undefined, requestedProgram);
     redirect("/journey");
   }
 
@@ -199,6 +201,7 @@ export default async function JourneyPage({
         stageLabel={STAGE_LABEL[stage]}
         isLast={stage === "innercompass"}
         initialMessages={messages}
+        program={convo.program}
       />
     </div>
   );
