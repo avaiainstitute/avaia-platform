@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ConsentForm from "@/components/ConsentForm";
@@ -40,12 +39,16 @@ export default async function WelcomePage() {
           <p className="mt-4 text-lg text-muted">
             You&rsquo;ve already confirmed the disclaimer below — no need to do it again.
           </p>
-          <Link
+          {/* A plain <a>, not next/link's <Link> — every other post-auth-state
+              transition in this app had to move off Next's client router onto
+              a real navigation to stop serving stale cached pages; this one
+              is no different and was missed in the first pass. */}
+          <a
             href="/journey"
             className="mt-8 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
             Continue to your journey
-          </Link>
+          </a>
         </>
       ) : (
         <>
