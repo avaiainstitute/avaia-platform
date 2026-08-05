@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string; checkout?: string; debug?: string };
+  searchParams?: { new?: string; checkout?: string };
 }) {
   const supabase = createClient();
   const {
@@ -33,20 +33,6 @@ export default async function JourneyPage({
     .select("consent_at, membership_status")
     .eq("id", user.id)
     .maybeSingle();
-
-  // TEMPORARY DEBUG — visit /journey?debug=1 to see this instead of being
-  // redirected away before it ever renders. Remove once the /journey <->
-  // /welcome consent_at mismatch is confirmed and fixed.
-  if (searchParams?.debug === "1") {
-    return (
-      <pre className="mx-auto max-w-prose whitespace-pre-wrap rounded-md border border-[#e0857d] bg-[#e0857d]/10 p-3 text-xs text-ink">
-        DEBUG /journey{"\n"}
-        user.id: {user.id}{"\n"}
-        profile: {JSON.stringify(profile)}{"\n"}
-        error: {profileError ? profileError.message : "none"}
-      </pre>
-    );
-  }
 
   // A real query error (missing column, RLS misconfiguration, etc.) must
   // never be treated as "not consented" — that's exactly how the
