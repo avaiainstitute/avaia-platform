@@ -12,7 +12,7 @@ export default async function WelcomePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("consent_at")
     .eq("id", user.id)
@@ -32,6 +32,15 @@ export default async function WelcomePage() {
 
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
+      {/* TEMPORARY DEBUG — remove once the /journey <-> /welcome consent_at
+          mismatch is confirmed and fixed. Only ever visible to the signed-in
+          Host viewing their own page (same data RLS already scopes to them). */}
+      <pre className="mb-6 whitespace-pre-wrap rounded-md border border-[#e0857d] bg-[#e0857d]/10 p-3 text-xs text-ink">
+        DEBUG /welcome{"\n"}
+        user.id: {user.id}{"\n"}
+        profile: {JSON.stringify(profile)}{"\n"}
+        error: {profileError ? profileError.message : "none"}
+      </pre>
       <p className="label mb-3">Welcome</p>
       {alreadyConsented ? (
         <>
