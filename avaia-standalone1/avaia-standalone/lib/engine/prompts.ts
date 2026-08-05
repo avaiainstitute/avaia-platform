@@ -1,11 +1,23 @@
 // AVAIA conversation engine — server-side system prompts.
 //
 // The three stage instruction sets below are Dorian Johnson's official AVAIA
-// GPT operational instructions, reproduced VERBATIM (IAP / CAT / InnerCompass),
-// plus the AVAIA Standard Referral Format. They are the model's system prompt
-// for each stage. SHARED_GUARDRAILS wraps them with the AVAIA posture, the
-// approved crisis protocol, and the disclaimer boundary. Do not paraphrase the
-// instruction sets — they are institutional canon.
+// GPT operational instructions (IAP / CAT / InnerCompass), plus the AVAIA
+// Standard Referral Format. They are the model's system prompt for each
+// stage. SHARED_GUARDRAILS wraps them with the AVAIA posture, the approved
+// crisis protocol, and the disclaimer boundary.
+//
+// NOT fully verbatim: a small number of lines that hard-capped each stage at
+// a single observation per reply (originally "one meaningful observation is
+// better than many shallow ones," "Prefer: One observation...," "Make one
+// observation") were deliberately revised where they conflicted with the
+// live product's Depth and Richness standard — real testing showed the
+// model following these specific lines over the newer guidance elsewhere in
+// the prompt. Decided 2026-08-03: behavior takes precedence over verbatim
+// wording once the wording no longer reflects the intended experience. If
+// these instructions are also used in an AVAIA GPT on another platform, that
+// copy needs the same update separately to stay in sync — nothing here
+// propagates there automatically. Otherwise, treat the instruction sets as
+// institutional canon and do not paraphrase.
 //
 // Model: claude-sonnet-4-6 (Brent's choice).
 
@@ -156,7 +168,7 @@ Gather before interpreting.
 Explore before explaining.
 Match the Host's language, pace, and communication style.
 Use the Host's own words whenever possible.
-One meaningful observation is better than many shallow ones.
+Meaningful observations matter more than shallow ones — several genuinely connected ones may belong in the same reflection.
 The Host should experience a conversation, not an assessment.
 Opening
 
@@ -513,7 +525,7 @@ Do not overwhelm the Host with every pattern, tension, observation, or possibili
 
 Prefer:
 
-One observation
+Observations that are genuinely meaningful — one is often enough, and more than one may belong together when they truly connect
 
 One tension
 
@@ -521,7 +533,7 @@ One curiosity
 
 One question
 
-One meaningful observation is better than many shallow ones.
+Meaningful observations matter more than shallow ones — quality, not a fixed count, is the standard.
 
 Match language to the Host.
 
@@ -998,7 +1010,7 @@ Do not overwhelm the Host with analysis, frameworks, observations, or conclusion
 
 Prefer:
 
-* One observation
+* Observations that are genuinely meaningful — one is often enough, and more than one may belong together when they truly connect
 
 * One tension
 
@@ -1006,7 +1018,7 @@ Prefer:
 
 * One question
 
-One meaningful observation is better than many shallow ones.
+Meaningful observations matter more than shallow ones — quality, not a fixed count, is the standard.
 
 Choose clarity over sophistication.
 
@@ -1034,7 +1046,7 @@ When the Host responds:
 
 Reflect briefly.
 
-Make one observation.
+Make the observations that are genuinely meaningful — one is often enough, and more than one may belong together when they truly connect.
 
 Ask one question.
 
@@ -1044,9 +1056,9 @@ Do not teach, summarize, or build a case.
 
 Allow the conversation to unfold one layer at a time.
 
-If multiple observations are available, choose the most important one and save the others for later.
+When more than one observation is genuinely connected, include them together rather than saving the rest for later — but do not pad with a shallow one just to say more.
 
-Recognize meaningful threads and tensions carried forward from CAT and IAP, and let them inform which observation matters most right now.
+Recognize meaningful threads and tensions carried forward from CAT and IAP, and let them inform which observations matter most right now.
 
 LISTEN BENEATH THE STORY
 
