@@ -48,6 +48,26 @@ export default async function JourneyPage({
     );
   }
 
+  // A real query error (missing column, RLS misconfiguration, etc.) must
+  // never be treated as "not consented" — that's exactly how the
+  // membership_status column being missing on the live database turned into
+  // an apparent /journey<->/welcome redirect loop: the error was silently
+  // discarded, profile came back null, and the code assumed no consent
+  // rather than surfacing the real problem.
+  if (profileError) {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <p className="label mb-3">Something&rsquo;s wrong</p>
+        <h1 className="font-serif text-4xl text-ink">We couldn&rsquo;t load your profile</h1>
+        <p className="mt-4 text-lg text-muted">
+          This is a server-side problem, not something to retry your way past. Please let AVAIA
+          know what happened.
+        </p>
+        <p className="mt-3 text-xs text-muted/70">Details: {profileError.message}</p>
+      </div>
+    );
+  }
+
   if (!profile?.consent_at) redirect("/welcome");
   const isMember = profile.membership_status === "member";
 

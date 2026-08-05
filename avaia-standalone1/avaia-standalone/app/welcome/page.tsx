@@ -18,6 +18,25 @@ export default async function WelcomePage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  // A real query error must never be silently treated as "not consented" —
+  // that's exactly how the membership_status column being missing on the
+  // live database turned into an apparent /journey<->/welcome redirect loop
+  // on THIS page's sibling. This page's own query doesn't touch that column,
+  // but the same discipline applies to whatever breaks it next.
+  if (profileError) {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <p className="label mb-3">Something&rsquo;s wrong</p>
+        <h1 className="font-serif text-4xl text-ink">We couldn&rsquo;t load your profile</h1>
+        <p className="mt-4 text-lg text-muted">
+          This is a server-side problem, not something to retry your way past. Please let AVAIA
+          know what happened.
+        </p>
+        <p className="mt-3 text-xs text-muted/70">Details: {profileError.message}</p>
+      </div>
+    );
+  }
+
   // Deliberately NOT `redirect("/journey")` here. /journey redirects here
   // when consent is missing; this page used to redirect back to /journey
   // when consent was present — two server-side redirects that are exact
