@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { DISCLAIMER } from "@/lib/safety";
 
-/** The disclaimer + eligibility gate. Records consent, then enters the journey. */
+/**
+ * The disclaimer + eligibility gate. Records consent, then enters the journey.
+ *
+ * Hard-navigates via window.location rather than next/navigation's router —
+ * see the matching note in app/auth/callback/page.tsx and app/sign-in/page.tsx.
+ * Same reasoning applies here: a soft client-side navigation right after an
+ * auth-state-changing write is exactly the pattern that's caused stale-page
+ * problems elsewhere in this app.
+ */
 export default function ConsentForm() {
-  const router = useRouter();
   const [age, setAge] = useState<"" | "adult" | "minor">("");
   const [understood, setUnderstood] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -26,8 +32,7 @@ export default function ConsentForm() {
         body: JSON.stringify({ age }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
-      router.replace("/journey");
-      router.refresh();
+      window.location.replace("/journey");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setSubmitting(false);
