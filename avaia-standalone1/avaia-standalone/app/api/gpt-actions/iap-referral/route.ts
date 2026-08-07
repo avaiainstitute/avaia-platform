@@ -29,6 +29,32 @@ export async function POST(request: Request) {
 
   const authHeader = request.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.GPT_ACTION_API_KEY ?? ""}`;
+
+  // STEP 1a — auth diagnostic. Never logs the actual secret or token value,
+  // only presence/shape/length, so this is safe to leave in Vercel's logs.
+  const hasAuthHeader = authHeader.length > 0;
+  const startsWithBearer = authHeader.startsWith("Bearer ");
+  const sentTokenLength = startsWithBearer ? authHeader.slice("Bearer ".length).length : 0;
+  const envKeyConfigured = !!process.env.GPT_ACTION_API_KEY;
+  const envKeyLength = process.env.GPT_ACTION_API_KEY?.length ?? 0;
+
+  let failBranch: string | null = null;
+  if (!envKeyConfigured) failBranch = "GPT_ACTION_API_KEY not set in this deployment";
+  else if (!hasAuthHeader) failBranch = "no Authorization header present on the request";
+  else if (!startsWithBearer) failBranch = 'Authorization header present but does not start with "Bearer "';
+  else if (sentTokenLength !== envKeyLength) failBranch = "token length mismatch (wrong key, or extra whitespace/newline)";
+  else if (authHeader !== expected) failBranch = "same length, but characters don't match (wrong key value)";
+
+  debugLog("1a_auth_diagnostic", {
+    hasAuthHeader,
+    startsWithBearer,
+    sentTokenLength,
+    envKeyConfigured,
+    envKeyLength,
+    match: authHeader === expected,
+    failBranch,
+  });
+
   if (!process.env.GPT_ACTION_API_KEY || authHeader !== expected) {
     debugLog("1_request_received", { result: "FAILED — bad or missing bearer auth" });
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
