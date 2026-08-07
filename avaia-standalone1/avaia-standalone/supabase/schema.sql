@@ -185,6 +185,28 @@ create policy "crisis insert self"
   on public.crisis_events for insert with check (auth.uid() = host_id);
 
 -- ---------------------------------------------------------------------------
+-- gpt_handoff_sessions — see supabase/migrations/0003_gpt_iap_handoff.sql for
+-- full commentary; kept in sync here for fresh installs. Service-role only,
+-- by design: no anon/authenticated policies.
+-- ---------------------------------------------------------------------------
+create table if not exists public.gpt_handoff_sessions (
+  id               uuid primary key default gen_random_uuid(),
+  host_id          uuid not null references auth.users (id) on delete cascade,
+  stage            text not null check (stage in ('iap')),
+  token            text not null unique,
+  conversation_id  uuid not null references public.conversations (id) on delete cascade,
+  status           text not null default 'pending' check (status in ('pending', 'used', 'expired')),
+  created_at       timestamptz not null default now(),
+  expires_at       timestamptz not null,
+  used_at          timestamptz
+);
+
+create index if not exists gpt_handoff_sessions_token_idx on public.gpt_handoff_sessions (token);
+create index if not exists gpt_handoff_sessions_host_idx on public.gpt_handoff_sessions (host_id);
+
+alter table public.gpt_handoff_sessions enable row level security;
+
+-- ---------------------------------------------------------------------------
 -- Workbook sharing — see supabase/migrations/0002_workbook_sharing.sql for
 -- full commentary; kept in sync here for fresh installs.
 -- ---------------------------------------------------------------------------
