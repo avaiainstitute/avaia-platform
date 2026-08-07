@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createConversation } from "@/lib/engine/conversation";
@@ -30,7 +31,27 @@ export default async function GptIapPreviewPage() {
   const supabase = createClient();
   const {
     data: { user },
+    error: getUserError,
   } = await supabase.auth.getUser();
+
+  // TEMPORARY DEBUG — server-side only, visible in Vercel's function logs,
+  // not shown to the Host. Remove once the sign-in issue is diagnosed.
+  const allCookieNames = cookies()
+    .getAll()
+    .map((c) => c.name);
+  console.log("[gpt-iap-preview debug]", {
+    cookieCount: allCookieNames.length,
+    cookieNames: allCookieNames,
+    supabaseAuthCookieNames: allCookieNames.filter((n) => n.startsWith("sb-")),
+    hasUser: !!user,
+    getUserError: getUserError
+      ? { name: getUserError.name, message: getUserError.message, status: getUserError.status }
+      : null,
+    envConfigured: {
+      NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    },
+  });
 
   if (!user) {
     return (
