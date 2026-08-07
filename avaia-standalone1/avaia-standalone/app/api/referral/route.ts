@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/engine/anthropic";
+import { openai } from "@/lib/engine/openai";
+import { OPENAI_IAP_MODEL, OPENAI_IAP_REFERRAL_SYSTEM_PROMPT } from "@/lib/engine/openai-iap-prompt";
 import { AVAIA_MODEL, systemPromptFor, REFERRAL_FORMAT, type Stage } from "@/lib/engine/prompts";
 import {
   STAGE_ORDER,
@@ -120,53 +122,88 @@ export async function POST(request: Request) {
 
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
 
+  // PREVIEW: IAP's referral runs on OpenAI Structured Outputs, reusing the
+  // exact same IAP_REFERRAL_SCHEMA — confirmed compatible in Phase 0. CAT and
+  // InnerCompass below are completely unchanged.
+  const usingOpenAiForIap = stage === "iap";
+
+  const READY_FOR_REFERRAL_MESSAGE =
+    "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me — output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted as close to verbatim as possible, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). Leave a Host-Voice array empty rather than inventing or paraphrasing.";
+
+  const dbMessages = await loadMessages(supabase, conversationId);
+
   // Generate the AVAIA Standard Referral as structured data.
-  const history = toAnthropicMessages(await loadMessages(supabase, conversationId));
-  if (history[0]?.role === "assistant") history.shift();
-  history.push({
-    role: "user",
-    content:
-      "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me — output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted as close to verbatim as possible, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). Leave a Host-Voice array empty rather than inventing or paraphrasing.",
-  });
-
-  // Carry the incoming referral (if any) into context, so fields meant to persist
-  // across stages — like the conversation's title — can be reused or consciously
-  // revised instead of generated fresh with no awareness of what came before.
-  let system = `${systemPromptFor(stage)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
-  const { data: incoming } = await supabase
-    .from("referrals")
-    .select("content")
-    .eq("host_id", user.id)
-    .eq("to_stage", stage)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (incoming?.content) {
-    system +=
-      "\n\n" +
-      "=".repeat(60) +
-      "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — reuse or consciously revise carried-forward fields such as the title; never replace them with no acknowledgment):\n\n" +
-      JSON.stringify(incoming.content, null, 2);
-  }
-
   let content: unknown;
   try {
-    const client = anthropic();
-    // output_config.format constrains the response to the referral schema.
-    // Typed as any because output_config isn't in this SDK version's create() types.
-    const params: any = {
-      model: AVAIA_MODEL,
-      max_tokens: 4096,
-      system,
-      messages: history,
-      output_config: { format: { type: "json_schema", schema: SCHEMA_FOR[stage] } },
-    };
-    const resp: any = await client.messages.create(params);
-    const text = (resp.content as Array<{ type: string; text?: string }>).find(
-      (b) => b.type === "text"
-    )?.text;
-    content = text ? JSON.parse(text) : {};
-  } catch {
+    if (usingOpenAiForIap) {
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error("OPENAI_API_KEY is not set in this deployment.");
+      }
+      const oaHistory = dbMessages.map((m) => ({
+        role: m.role === "host" ? ("user" as const) : ("assistant" as const),
+        content: m.content,
+      }));
+      if (oaHistory[0]?.role === "assistant") oaHistory.shift();
+      oaHistory.push({ role: "user" as const, content: READY_FOR_REFERRAL_MESSAGE });
+
+      const client = openai();
+      const completion = await client.chat.completions.create({
+        model: OPENAI_IAP_MODEL,
+        messages: [
+          { role: "system" as const, content: OPENAI_IAP_REFERRAL_SYSTEM_PROMPT },
+          ...oaHistory,
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: { name: "avaia_iap_referral", strict: true, schema: SCHEMA_FOR[stage] },
+        },
+      });
+      const text = completion.choices[0]?.message?.content ?? "";
+      content = text ? JSON.parse(text) : {};
+    } else {
+      const history = toAnthropicMessages(dbMessages);
+      if (history[0]?.role === "assistant") history.shift();
+      history.push({ role: "user", content: READY_FOR_REFERRAL_MESSAGE });
+
+      // Carry the incoming referral (if any) into context, so fields meant to
+      // persist across stages — like the conversation's title — can be
+      // reused or consciously revised instead of generated fresh with no
+      // awareness of what came before.
+      let system = `${systemPromptFor(stage)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
+      const { data: incoming } = await supabase
+        .from("referrals")
+        .select("content")
+        .eq("host_id", user.id)
+        .eq("to_stage", stage)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (incoming?.content) {
+        system +=
+          "\n\n" +
+          "=".repeat(60) +
+          "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — reuse or consciously revise carried-forward fields such as the title; never replace them with no acknowledgment):\n\n" +
+          JSON.stringify(incoming.content, null, 2);
+      }
+
+      const client = anthropic();
+      // output_config.format constrains the response to the referral schema.
+      // Typed as any because output_config isn't in this SDK version's create() types.
+      const params: any = {
+        model: AVAIA_MODEL,
+        max_tokens: 4096,
+        system,
+        messages: history,
+        output_config: { format: { type: "json_schema", schema: SCHEMA_FOR[stage] } },
+      };
+      const resp: any = await client.messages.create(params);
+      const text = (resp.content as Array<{ type: string; text?: string }>).find(
+        (b) => b.type === "text"
+      )?.text;
+      content = text ? JSON.parse(text) : {};
+    }
+  } catch (e) {
+    console.error("AVAIA referral error:", e);
     return NextResponse.json(
       { error: "Could not generate the referral. Please try again." },
       { status: 502 }
