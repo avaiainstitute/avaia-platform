@@ -66,7 +66,9 @@ export default function SignInPage() {
         type: "email",
       });
       if (error) throw error;
-      window.location.replace("/journey");
+      // PROOF OF CONCEPT (gpt-iap-handoff branch only): send the Host
+      // straight to the GPT handoff page, not /journey. main is unaffected.
+      window.location.replace("/gpt-iap-preview");
     } catch {
       setError("That code didn't match, or it expired. Check the latest email, or send a new code.");
       setBusy(false);

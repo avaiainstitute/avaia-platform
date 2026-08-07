@@ -190,8 +190,10 @@ export default function AboutContent() {
           step — one conversation, carried across time, with everything saved so
           you can return.
         </p>
+        {/* PROOF OF CONCEPT (gpt-iap-handoff branch only): points at the GPT
+            handoff page directly. main is unaffected. */}
         <Link
-          href="/journey"
+          href="/gpt-iap-preview"
           prefetch={false}
           className="mt-7 inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >

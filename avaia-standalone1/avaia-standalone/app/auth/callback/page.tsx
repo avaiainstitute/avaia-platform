@@ -48,7 +48,9 @@ export default function AuthCallbackPage() {
     const finish = () => {
       if (done) return;
       done = true;
-      window.location.replace("/journey");
+      // PROOF OF CONCEPT (gpt-iap-handoff branch only): send the Host
+      // straight to the GPT handoff page, not /journey. main is unaffected.
+      window.location.replace("/gpt-iap-preview");
     };
     const fail = (msg: string) => {
       if (done) return;

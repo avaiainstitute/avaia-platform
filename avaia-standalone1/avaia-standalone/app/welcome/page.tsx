@@ -62,8 +62,10 @@ export default async function WelcomePage() {
               transition in this app had to move off Next's client router onto
               a real navigation to stop serving stale cached pages; this one
               is no different and was missed in the first pass. */}
+          {/* PROOF OF CONCEPT (gpt-iap-handoff branch only): points at the
+              GPT handoff page directly. main is unaffected. */}
           <a
-            href="/journey"
+            href="/gpt-iap-preview"
             className="mt-8 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
             Continue to your journey

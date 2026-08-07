@@ -8,9 +8,13 @@ import Link from "next/link";
 // navigation to them (even once actually signed in) can serve that stale
 // anonymous snapshot instead of refetching. prefetch={false} keeps every
 // visit to these three routes a real request.
+// PROOF OF CONCEPT (gpt-iap-handoff branch only): "Journey" points straight
+// at the GPT handoff page instead of /journey, so there's no nav path back
+// into the website's own conversation engine on this branch. main is
+// unaffected — /journey itself still redirects here too either way.
 const LINKS: { href: string; label: string; prefetch: boolean }[] = [
   { href: "/about", label: "About", prefetch: true },
-  { href: "/journey", label: "Journey", prefetch: false },
+  { href: "/gpt-iap-preview", label: "Journey", prefetch: false },
   { href: "/workbook", label: "Workbook", prefetch: false },
   { href: "/shared-with-me", label: "Shared with Me", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
