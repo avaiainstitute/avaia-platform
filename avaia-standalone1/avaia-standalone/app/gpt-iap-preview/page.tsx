@@ -57,7 +57,25 @@ async function beginIapHandoff() {
   });
 
   const openingMessage = `AVAIA_SESSION_TOKEN:${token}`;
-  redirect(`${IAP_GPT_URL}?q=${encodeURIComponent(openingMessage)}`);
+  const launchUrl = `${IAP_GPT_URL}?q=${encodeURIComponent(openingMessage)}`;
+
+  // TEMPORARY DEBUG — server-side only, visible in Vercel's function logs,
+  // not shown to the Host. Confirms exactly what AVAIA sent for this launch,
+  // for direct comparison against what actually shows up in ChatGPT. Token
+  // itself is logged here (unlike other debug logging in this branch) only
+  // because this specific token is single-use, short-lived, and already
+  // being sent in a URL query string — logging it adds no new exposure.
+  // Remove once the token-handoff mechanism is confirmed or replaced.
+  console.log("[gpt-iap-preview launch debug]", {
+    ts: new Date().toISOString(),
+    conversationId: convo.id,
+    hostId: user.id,
+    token,
+    openingMessage,
+    launchUrl,
+  });
+
+  redirect(launchUrl);
 }
 
 export default async function GptIapPreviewPage() {
