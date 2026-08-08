@@ -93,7 +93,11 @@ export default async function OAuthAuthorizePage({
     return <ErrorScreen message="Unsupported response_type." />;
   }
   if (!params.client_id || params.client_id !== process.env.GPT_OAUTH_CLIENT_ID) {
-    return <ErrorScreen message="Unrecognized client." />;
+    return (
+      <ErrorScreen
+        message={`Unrecognized client. ChatGPT sent client_id: "${params.client_id ?? "(none)"}" — AVAIA has GPT_OAUTH_CLIENT_ID configured as: "${process.env.GPT_OAUTH_CLIENT_ID ?? "(not set)"}". These need to match exactly.`}
+      />
+    );
   }
   if (!params.redirect_uri) {
     return <ErrorScreen message="Missing redirect_uri." />;
