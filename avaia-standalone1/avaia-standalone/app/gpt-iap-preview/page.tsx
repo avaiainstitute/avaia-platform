@@ -32,6 +32,23 @@ const TOKEN_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours — one sitting's worth of h
 
 export const dynamic = "force-dynamic";
 
+// Two confirmed real-conversation tests (with two different trigger
+// instructions) proved the model never actually attempted the Action call
+// with the original 32-character token — the request never once reached
+// AVAIA, even though the Builder Preview test proved the Action itself
+// works fine when explicitly invoked. That points at the model failing to
+// reliably hold and reproduce a long random string across a full
+// conversation, not at timing or instruction wording. A short numeric code
+// is dramatically more reliable for a model to carry verbatim across many
+// turns. This needs no change on the GPT side at all — its instruction
+// only cares that the Host's first message starts with
+// "AVAIA_SESSION_TOKEN:" followed by a value; the value's length and shape
+// were never part of that contract.
+function generateShortCode(): string {
+  const n = randomBytes(4).readUInt32BE(0) % 1000000;
+  return n.toString().padStart(6, "0");
+}
+
 async function beginIapHandoff() {
   "use server";
 
@@ -50,15 +67,28 @@ async function beginIapHandoff() {
 
   const convo = await createConversation(supabase, user.id, "iap");
 
-  const token = randomBytes(24).toString("base64url");
   const admin = createAdminClient();
-  await admin.from("gpt_handoff_sessions").insert({
-    host_id: user.id,
-    stage: "iap",
-    token,
-    conversation_id: convo.id,
-    expires_at: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
-  });
+  let token = "";
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = generateShortCode();
+    const { error: sessionError } = await admin.from("gpt_handoff_sessions").insert({
+      host_id: user.id,
+      stage: "iap",
+      token: candidate,
+      conversation_id: convo.id,
+      expires_at: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
+    });
+    if (!sessionError) {
+      token = candidate;
+      break;
+    }
+    // Only retry on a unique-constraint collision (rare, 1-in-a-million
+    // space); any other error should surface, not loop silently.
+    if (!sessionError.message.includes("duplicate") && !sessionError.message.includes("unique")) {
+      throw new Error(sessionError.message);
+    }
+  }
+  if (!token) throw new Error("Could not generate a unique code after 5 attempts.");
 
   redirect(`/gpt-iap-preview?token=${encodeURIComponent(token)}`);
 }
