@@ -40,14 +40,25 @@ export async function POST(request: Request) {
   }
   const accessToken = authHeader.slice("Bearer ".length);
 
-  const body = await request.json().catch(() => ({}));
+  const rawBodyText = await request.text();
+  const body = (() => {
+    try {
+      return JSON.parse(rawBodyText);
+    } catch {
+      return {};
+    }
+  })();
   const referral: unknown = body?.referral;
   debugLog("1_request_received", {
     result: "has bearer token",
+    bodyKeys: body && typeof body === "object" ? Object.keys(body) : null,
+    referralType: typeof referral,
     referralKeys:
       referral && typeof referral === "object" && !Array.isArray(referral)
         ? Object.keys(referral)
         : null,
+    // Truncated raw body — temporary, to see exactly what the model sent.
+    rawBodyPreview: rawBodyText.slice(0, 2000),
   });
 
   if (!referral || typeof referral !== "object" || Array.isArray(referral)) {
