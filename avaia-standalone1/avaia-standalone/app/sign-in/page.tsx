@@ -32,14 +32,6 @@ export default function SignInPage() {
     setError("");
     try {
       const supabase = createClient();
-      // PROOF OF CONCEPT (gpt-iap-handoff branch only): carry a ?redirect=
-      // target (e.g. back into /oauth/authorize for the GPT's consent flow)
-      // through the magic link, so auth/callback knows where to send the
-      // Host afterward instead of always landing on the GPT handoff page.
-      const redirectParam = new URLSearchParams(window.location.search).get("redirect");
-      const callbackUrl = new URL("/auth/callback", window.location.origin);
-      if (redirectParam) callbackUrl.searchParams.set("redirect", redirectParam);
-
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
@@ -50,7 +42,14 @@ export default function SignInPage() {
           // doesn't point at /auth/callback, silently strands the session
           // tokens in a URL hash no page ever reads. Making the destination
           // explicit here removes that dependency entirely.
-          emailRedirectTo: callbackUrl.toString(),
+          //
+          // Deliberately simple — no ?redirect= parameter appended. A more
+          // complex, nested-URL version of this (for bouncing back into
+          // /oauth/authorize after sign-in) caused Supabase to fall back to
+          // its Site URL instead of matching this against its allowlist,
+          // landing on production instead of this preview. Simplicity here
+          // is load-bearing, not a style choice.
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
@@ -74,11 +73,9 @@ export default function SignInPage() {
         type: "email",
       });
       if (error) throw error;
-      // PROOF OF CONCEPT (gpt-iap-handoff branch only): honor ?redirect= if
-      // present, otherwise the GPT handoff page, not /journey. main is
-      // unaffected.
-      const redirectParam = new URLSearchParams(window.location.search).get("redirect");
-      window.location.replace(redirectParam || "/gpt-iap-preview");
+      // PROOF OF CONCEPT (gpt-iap-handoff branch only): send the Host
+      // straight to the GPT handoff page, not /journey. main is unaffected.
+      window.location.replace("/gpt-iap-preview");
     } catch {
       setError("That code didn't match, or it expired. Check the latest email, or send a new code.");
       setBusy(false);

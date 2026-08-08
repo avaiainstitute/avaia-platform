@@ -25,14 +25,6 @@ type OAuthParams = {
   state?: string;
 };
 
-function buildQuery(params: OAuthParams): string {
-  const sp = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value) sp.set(key, value);
-  }
-  return sp.toString();
-}
-
 async function approve(formData: FormData) {
   "use server";
 
@@ -120,10 +112,27 @@ export default async function OAuthAuthorizePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const here = `/oauth/authorize?${buildQuery(params)}`;
-
+  // Deliberately does NOT chain a ?redirect= back through sign-in — that
+  // more complex URL caused Supabase's magic-link redirect to fall back to
+  // its Site URL (production) instead of matching this preview's allowlist
+  // entry. A flat, simple message costs one manual step but can't trigger
+  // that failure mode.
   if (!user) {
-    redirect(`/sign-in?redirect=${encodeURIComponent(here)}`);
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <p className="label mb-3">Sign in required</p>
+        <h1 className="font-serif text-4xl text-ink">Sign in to AVAIA first</h1>
+        <p className="mt-4 text-lg text-muted">
+          Sign in, then go back to ChatGPT and try connecting your account again.
+        </p>
+        <a
+          href="/sign-in"
+          className="mt-8 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Sign in
+        </a>
+      </div>
+    );
   }
 
   const { data: profile, error: profileError } = await supabase
