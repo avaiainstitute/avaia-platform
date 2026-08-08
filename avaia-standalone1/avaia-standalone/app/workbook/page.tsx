@@ -295,12 +295,18 @@ export default async function WorkbookPage() {
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <Link
-          href={hasActive ? "/journey" : "/journey?new=1"}
+        {/* PROOF OF CONCEPT (gpt-iap-handoff branch only): points at the GPT
+            handoff page directly, and as a plain <a> rather than next/link's
+            <Link> — this branch's other post-auth-state transitions all had
+            to make the same move to stop Next's client Router Cache from
+            serving a stale, pre-redirect snapshot of /journey. main is
+            unaffected. */}
+        <a
+          href="/gpt-iap-preview"
           className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
           {hasActive ? "Continue your journey" : "Begin a new journey"}
-        </Link>
+        </a>
         {journeys.length > 0 && <ShareButton scope="workbook" label="Share entire Workbook" />}
       </div>
 

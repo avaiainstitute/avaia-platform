@@ -32,7 +32,9 @@ export default function ConsentForm() {
         body: JSON.stringify({ age }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
-      window.location.replace("/journey");
+      // PROOF OF CONCEPT (gpt-iap-handoff branch only): straight to the GPT
+      // handoff page, not /journey. main is unaffected.
+      window.location.replace("/gpt-iap-preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setSubmitting(false);
