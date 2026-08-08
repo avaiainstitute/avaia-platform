@@ -109,7 +109,9 @@ export default async function OAuthAuthorizePage({
   const allowedRedirect = process.env.GPT_OAUTH_REDIRECT_URI;
   if (!allowedRedirect || params.redirect_uri !== allowedRedirect) {
     return (
-      <ErrorScreen message="redirect_uri is not recognized. GPT_OAUTH_REDIRECT_URI needs to be set to exactly the callback URL ChatGPT's GPT Builder is using." />
+      <ErrorScreen
+        message={`redirect_uri is not recognized. The exact value ChatGPT just sent was: ${params.redirect_uri} — set GPT_OAUTH_REDIRECT_URI to exactly that value in Vercel.`}
+      />
     );
   }
 
