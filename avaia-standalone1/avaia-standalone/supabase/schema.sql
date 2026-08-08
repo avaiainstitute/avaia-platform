@@ -207,6 +207,41 @@ create index if not exists gpt_handoff_sessions_host_idx on public.gpt_handoff_s
 alter table public.gpt_handoff_sessions enable row level security;
 
 -- ---------------------------------------------------------------------------
+-- GPT OAuth provider — see supabase/migrations/0004_gpt_oauth.sql for full
+-- commentary; kept in sync here for fresh installs. Service-role only, by
+-- design: no anon/authenticated policies on either table.
+-- ---------------------------------------------------------------------------
+create table if not exists public.oauth_authorization_codes (
+  id               uuid primary key default gen_random_uuid(),
+  code             text not null unique,
+  host_id          uuid not null references auth.users (id) on delete cascade,
+  client_id        text not null,
+  redirect_uri     text not null,
+  created_at       timestamptz not null default now(),
+  expires_at       timestamptz not null,
+  used_at          timestamptz
+);
+
+create index if not exists oauth_authorization_codes_code_idx on public.oauth_authorization_codes (code);
+
+alter table public.oauth_authorization_codes enable row level security;
+
+create table if not exists public.oauth_access_tokens (
+  id               uuid primary key default gen_random_uuid(),
+  access_token     text not null unique,
+  host_id          uuid not null references auth.users (id) on delete cascade,
+  client_id        text not null,
+  created_at       timestamptz not null default now(),
+  expires_at       timestamptz,
+  revoked_at       timestamptz
+);
+
+create index if not exists oauth_access_tokens_token_idx on public.oauth_access_tokens (access_token);
+create index if not exists oauth_access_tokens_host_idx on public.oauth_access_tokens (host_id);
+
+alter table public.oauth_access_tokens enable row level security;
+
+-- ---------------------------------------------------------------------------
 -- Workbook sharing — see supabase/migrations/0002_workbook_sharing.sql for
 -- full commentary; kept in sync here for fresh installs.
 -- ---------------------------------------------------------------------------

@@ -48,9 +48,13 @@ export default function AuthCallbackPage() {
     const finish = () => {
       if (done) return;
       done = true;
-      // PROOF OF CONCEPT (gpt-iap-handoff branch only): send the Host
-      // straight to the GPT handoff page, not /journey. main is unaffected.
-      window.location.replace("/gpt-iap-preview");
+      // PROOF OF CONCEPT (gpt-iap-handoff branch only): honor a ?redirect=
+      // target if one was carried through from sign-in (e.g. back into
+      // /oauth/authorize for the GPT's consent flow) — falls back to the
+      // GPT handoff page, not /journey, same as before. main is unaffected.
+      const sp = new URLSearchParams(window.location.search.replace(/^\?/, ""));
+      const redirectTo = sp.get("redirect");
+      window.location.replace(redirectTo || "/gpt-iap-preview");
     };
     const fail = (msg: string) => {
       if (done) return;
