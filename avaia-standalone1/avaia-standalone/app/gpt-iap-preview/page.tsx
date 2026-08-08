@@ -3,23 +3,27 @@ import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createConversation } from "@/lib/engine/conversation";
+import CopyCodeBox from "./CopyCodeBox";
 
 // PROOF OF CONCEPT — isolated from the real /journey IAP flow entirely. Does
 // not modify it, does not share a code path with it.
 //
-// Visiting this page (signed in, consented) shows one button. Clicking it
-// (the beginIapHandoff server action below):
-//   1. creates a conversations row exactly the way /journey does today
-//      (lib/engine/conversation.ts's createConversation, unchanged);
-//   2. mints a single-use, short-lived token and stores it in
-//      gpt_handoff_sessions via the service-role client (this table has no
-//      client-readable RLS policies at all — bearer secret, not a normal row);
-//   3. redirects the browser to the real IAP custom GPT, with the token
-//      embedded as the opening prefilled message so the GPT can carry it
-//      silently and hand it back with the referral.
+// ChatGPT's ?q= prefill was tested and disproven — it never delivered the
+// opening message into this GPT's conversation (confirmed: AVAIA's launch
+// log showed a correctly-built token and URL, but the resulting ChatGPT
+// conversation had no trace of it). Replaced with the simplest working
+// alternative: show the code, let the Host copy it, they paste it as their
+// own first message. The GPT's existing instruction ("if the Host's first
+// message begins with AVAIA_SESSION_TOKEN:...") already handles this
+// exactly as written — it never cared how the message arrived. Nothing
+// about the GPT, its Action, its schema, or the ingestion endpoint changes.
 //
-// The GPT conversation itself is completely untouched by any of this. This
-// page never routes into the existing AVAIA website conversation engine.
+// Flow: click "Begin IAP in ChatGPT" -> AVAIA creates the conversation +
+// token (unchanged) -> this same page re-renders showing the code to copy
+// and a plain (un-parameterized) link to open the GPT -> Host pastes the
+// code as their first message -> GPT stores it silently -> normal IAP
+// conversation, untouched -> referral Action submits back to AVAIA,
+// unchanged.
 
 const IAP_GPT_URL =
   "https://chatgpt.com/g/g-6a2cc069e6688191b02bff51c3067c6a-individual-awareness-profile-iap-gpt";
@@ -56,29 +60,14 @@ async function beginIapHandoff() {
     expires_at: new Date(Date.now() + TOKEN_TTL_MS).toISOString(),
   });
 
-  const openingMessage = `AVAIA_SESSION_TOKEN:${token}`;
-  const launchUrl = `${IAP_GPT_URL}?q=${encodeURIComponent(openingMessage)}`;
-
-  // TEMPORARY DEBUG — server-side only, visible in Vercel's function logs,
-  // not shown to the Host. Confirms exactly what AVAIA sent for this launch,
-  // for direct comparison against what actually shows up in ChatGPT. Token
-  // itself is logged here (unlike other debug logging in this branch) only
-  // because this specific token is single-use, short-lived, and already
-  // being sent in a URL query string — logging it adds no new exposure.
-  // Remove once the token-handoff mechanism is confirmed or replaced.
-  console.log("[gpt-iap-preview launch debug]", {
-    ts: new Date().toISOString(),
-    conversationId: convo.id,
-    hostId: user.id,
-    token,
-    openingMessage,
-    launchUrl,
-  });
-
-  redirect(launchUrl);
+  redirect(`/gpt-iap-preview?token=${encodeURIComponent(token)}`);
 }
 
-export default async function GptIapPreviewPage() {
+export default async function GptIapPreviewPage({
+  searchParams,
+}: {
+  searchParams?: { token?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -113,6 +102,34 @@ export default async function GptIapPreviewPage() {
   }
 
   if (!profile?.consent_at) redirect("/welcome");
+
+  if (searchParams?.token) {
+    const code = `AVAIA_SESSION_TOKEN:${searchParams.token}`;
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <p className="label mb-3">One more step</p>
+        <h1 className="font-serif text-4xl text-ink">Copy this, then open the GPT</h1>
+        <ol className="mt-6 space-y-2 text-lg text-muted">
+          <li>1. Copy the code below.</li>
+          <li>2. Open the GPT.</li>
+          <li>3. Paste it as your very first message, then continue normally.</li>
+        </ol>
+
+        <CopyCodeBox value={code} />
+
+        <div className="mt-8">
+          <a
+            href={IAP_GPT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            Open IAP GPT
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
