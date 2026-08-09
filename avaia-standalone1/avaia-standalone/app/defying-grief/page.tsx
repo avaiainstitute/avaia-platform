@@ -9,6 +9,79 @@ import {
 export const metadata = { title: `${DEFYING_GRIEF_PROGRAM_NAME} — AVAIA` };
 export const dynamic = "force-dynamic";
 
+// A dimmed tile of AVAIA's real Chemistry of Virtue family colors (see
+// lib/virtues.ts), used only as atmosphere behind the Threshold screen. The
+// one lit "Au" tile below is drawn separately, in the ember accent, to make
+// literal what the real CAT instructions already say: Audacity is not one of
+// these families, but it gets a seat at the table anyway.
+const VIRTUE_FIELD_STYLE = {
+  backgroundImage:
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 40 40'%3E%3Crect x='2' y='2' width='16' height='16' rx='1.5' fill='%233f6fd4'/%3E%3Crect x='22' y='2' width='16' height='16' rx='1.5' fill='%238f1d1d'/%3E%3Crect x='2' y='22' width='16' height='16' rx='1.5' fill='%231c7a4a'/%3E%3Crect x='22' y='22' width='16' height='16' rx='1.5' fill='%233a97b8'/%3E%3C/svg%3E\")",
+  backgroundSize: "56px 56px",
+  backgroundRepeat: "repeat" as const,
+  maskImage: "radial-gradient(ellipse at 50% 20%, black 0%, transparent 70%)",
+  WebkitMaskImage: "radial-gradient(ellipse at 50% 20%, black 0%, transparent 70%)",
+};
+
+/** The lit "Au" tile — Defying Grief's one reserved accent, never used
+ *  elsewhere in AVAIA. See lib/defying-grief.ts's design note. */
+function AudacityTile() {
+  return (
+    <div className="relative mx-auto mb-3 h-24 w-24">
+      <div className="absolute inset-0 -z-10 opacity-40" style={VIRTUE_FIELD_STYLE} />
+      <div className="flex h-24 w-24 flex-col items-center justify-center rounded border border-[#c1502e] bg-gradient-to-br from-[#c1502e]/25 to-[#c1502e]/5 shadow-[0_0_18px_rgba(193,80,46,0.25)]">
+        <span className="font-serif text-2xl text-[#e8845a]">Au</span>
+        <span className="mt-0.5 font-sans text-[0.55rem] uppercase tracking-wide text-ink/70">
+          Audacity
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Shared Threshold copy — used for both the signed-out intro and the
+ *  signed-in "haven't started yet" state, which differ only in where the
+ *  call to action leads. */
+function ThresholdContent({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
+  return (
+    <>
+      <AudacityTile />
+      <p className="text-center font-sans text-[0.7rem] text-muted">
+        Not one of AVAIA&rsquo;s virtues. A seat at the table anyway.
+      </p>
+      <p className="label mt-8 mb-2">Dorian&rsquo;s second guided program</p>
+      <h1 className="font-serif text-4xl text-ink sm:text-5xl">{DEFYING_GRIEF_PROGRAM_NAME}</h1>
+      <p className="mt-6 text-lg leading-relaxed text-ink">
+        Grief did not ask permission to enter your life. This does not ask permission either.
+      </p>
+      <p className="mt-4 text-lg text-muted">
+        This is not a program that resolves grief, and it will not ask you to move on. It asks
+        something more audacious: that you keep participating in your own life anyway — awake to
+        what was lost, and still willing to want, to try, to laugh, to build something that
+        matters.
+      </p>
+      <p className="mt-4 text-lg text-muted">
+        That willingness has a name here. AVAIA calls it <span className="text-ink">Audacity</span>{" "}
+        — not a virtue exactly, but the force that makes a person insist on their own aliveness in
+        the face of loss.
+      </p>
+      <p className="mt-4 text-lg text-muted">You are not asked to feel ready. Only to begin.</p>
+      <div className="mt-8">
+        <Link
+          href={ctaHref}
+          className="inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]"
+        >
+          {ctaLabel}
+        </Link>
+      </div>
+      <p className="mt-4 text-xs text-muted">
+        Individual Awareness Profile → Conversations Across Time: The Audacity of Grief →
+        InnerCompass: The Audacity of Happiness
+      </p>
+    </>
+  );
+}
+
 export default async function DefyingGriefPage() {
   const supabase = createClient();
   const {
@@ -40,24 +113,14 @@ export default async function DefyingGriefPage() {
     return (
       <div className="mx-auto max-w-prose px-5 py-16">
         {header}
-        <p className="label mt-8 mb-2">Dorian&rsquo;s second guided program</p>
-        <h1 className="font-serif text-4xl text-ink">{DEFYING_GRIEF_PROGRAM_NAME}</h1>
-        <p className="mt-4 text-lg text-muted">
-          A guided path through grief, held with the same care as the AVAIA Journey —
-          Individual Awareness Profile, Conversations Across Time: The Audacity of Grief, and
-          InnerCompass: The Audacity of Happiness, walked as one continuous program.
-        </p>
-        <div className="mt-8">
-          <Link
-            href="/journey?new=1&program=defying-grief"
-            className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-          >
-            Begin Defying Grief
-          </Link>
+        <div className="mt-8 text-center sm:text-left">
+          <ThresholdContent ctaHref="/journey?new=1&program=defying-grief" ctaLabel="I'm Still Here" />
         </div>
       </div>
     );
   }
+
+  const allComplete = dashboard.stages.every((s) => s.status === "complete");
 
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -66,10 +129,17 @@ export default async function DefyingGriefPage() {
       <p className="label mt-8 mb-2">Dorian&rsquo;s guided program</p>
       <h1 className="font-serif text-4xl text-ink">{DEFYING_GRIEF_PROGRAM_NAME}</h1>
 
+      {allComplete && (
+        <p className="mt-4 text-lg text-muted">
+          This is what emerged. It&rsquo;s yours to keep, revisit, or share — nothing about it
+          needs to be resolved any further.
+        </p>
+      )}
+
       {dashboard.roomIdentity && (
-        <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4">
+        <div className="mt-6 rounded-lg border border-[#c1502e]/40 bg-[#c1502e]/[0.06] px-5 py-4">
           <p className="font-sans text-xs uppercase tracking-wide text-muted">
-            Room Identity — what emerged from your own conversation
+            Room Identity — what emerged from your own words
           </p>
           <p className="mt-1 font-serif text-lg text-ink">{dashboard.roomIdentity}</p>
         </div>
@@ -98,6 +168,12 @@ export default async function DefyingGriefPage() {
           </li>
         ))}
       </ol>
+
+      {allComplete && (
+        <p className="mt-8 border-t border-rule pt-6 font-serif text-lg text-ink">
+          You crossed all three rooms. That, itself, was an act of audacity.
+        </p>
+      )}
     </div>
   );
 }
@@ -105,22 +181,8 @@ export default async function DefyingGriefPage() {
 /** Shown to visitors who aren't signed in — the invitation to begin. */
 function DefyingGriefIntro() {
   return (
-    <div className="mx-auto max-w-prose px-5 py-20">
-      <p className="label mb-4">Dorian&rsquo;s second guided program</p>
-      <h1 className="font-serif text-4xl text-ink sm:text-5xl">{DEFYING_GRIEF_PROGRAM_NAME}</h1>
-      <p className="mt-6 text-lg leading-relaxed text-ink">
-        A guided path through grief, held with the same care as the AVAIA Journey — Individual
-        Awareness Profile, Conversations Across Time: The Audacity of Grief, and InnerCompass: The
-        Audacity of Happiness, walked as one continuous program.
-      </p>
-      <div className="mt-8">
-        <Link
-          href="/sign-in"
-          className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-        >
-          Begin
-        </Link>
-      </div>
+    <div className="mx-auto max-w-prose px-5 py-20 text-center sm:text-left">
+      <ThresholdContent ctaHref="/sign-in" ctaLabel="I'm Still Here" />
     </div>
   );
 }

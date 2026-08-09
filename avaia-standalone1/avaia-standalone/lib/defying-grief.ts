@@ -117,3 +117,35 @@ export async function loadDefyingGriefDashboard(
 
   return { started: true, stages, roomIdentity, activeStage };
 }
+
+/** For the CAT-entry crossing screen only: the title IAP's referral produced,
+ *  read the same way loadDefyingGriefDashboard reads Room Identity — no new
+ *  storage, just a narrower read of the same data for a moment before the
+ *  dashboard itself would normally show it. Returns null for any stage other
+ *  than "cat" (the InnerCompass crossing screen doesn't show a title). */
+export async function getIncomingRoomTitle(
+  supabase: SupabaseClient,
+  hostId: string,
+  forStage: Stage
+): Promise<string | null> {
+  if (forStage !== "cat") return null;
+
+  const { data: iapConvo } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("host_id", hostId)
+    .eq("program", "defying-grief")
+    .eq("stage", "iap")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!iapConvo) return null;
+
+  const { data: referral } = await supabase
+    .from("referrals")
+    .select("content")
+    .eq("conversation_id", iapConvo.id)
+    .maybeSingle();
+  const content = referral?.content as Record<string, unknown> | null;
+  return (content?.title as string) ?? null;
+}

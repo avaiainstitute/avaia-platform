@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import JourneyChat from "@/components/JourneyChat";
 import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
+import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import {
   STAGE_ORDER,
   STAGE_LABEL,
@@ -12,6 +13,7 @@ import {
   loadMessages,
 } from "@/lib/engine/conversation";
 import { OPERATING_PRINCIPLES } from "@/lib/institution";
+import { getIncomingRoomTitle } from "@/lib/defying-grief";
 import type { Program, Stage } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Your Journey — AVAIA" };
@@ -20,7 +22,7 @@ export const dynamic = "force-dynamic";
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string; checkout?: string; program?: string };
+  searchParams?: { new?: string; checkout?: string; program?: string; enter?: string };
 }) {
   const supabase = createClient();
   const {
@@ -147,6 +149,27 @@ export default async function JourneyPage({
   }
 
   const rawMessages = await loadMessages(supabase, convo.id);
+
+  // Defying Grief's crossing screens (entering CAT, entering InnerCompass) —
+  // shown exactly once, before the Host's first message in the new stage.
+  // rawMessages.length === 1 means only the seeded opening line exists yet;
+  // the moment they send a message this condition is permanently false on
+  // its own, so ?enter=1 only has to carry them past it the first time.
+  if (
+    convo.program === "defying-grief" &&
+    stage !== "iap" &&
+    rawMessages.length === 1 &&
+    searchParams?.enter !== "1"
+  ) {
+    const roomTitle = await getIncomingRoomTitle(supabase, user.id, stage);
+    return (
+      <div className="mx-auto max-w-prose px-5 py-16">
+        {header}
+        <DefyingGriefCrossing stage={stage} roomTitle={roomTitle} />
+      </div>
+    );
+  }
+
   const messages = rawMessages.map((m) => ({ role: m.role, content: m.content }));
   const currentIdx = STAGE_ORDER.indexOf(stage);
 
