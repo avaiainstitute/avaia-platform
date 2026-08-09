@@ -1,12 +1,14 @@
 import Link from "next/link";
 import type { Stage } from "@/lib/engine/prompts";
+import { CAT_GPT_URL, INNERCOMPASS_GPT_URL } from "@/lib/defying-grief";
 
 /**
- * The threshold screen shown once, before the Host's first message in CAT or
- * InnerCompass, when program === "defying-grief" — see app/journey/page.tsx.
- * Purely presentational: no new data, no new conversation state. The
- * "Continue" link just re-requests /journey with ?enter=1, which the page
- * uses to skip this screen and render the normal JourneyChat underneath.
+ * The crossing screen shown once a referral has come home from the previous
+ * stage's workshop and the next stage's placeholder conversation is waiting
+ * (see the generalized receiving endpoint at
+ * app/api/gpt-actions/iap-referral/route.ts). Purely presentational — the
+ * buttons below just open the next stage's real GPT directly; the website
+ * never hosts the conversation itself for any stage of Defying Grief.
  */
 export default function DefyingGriefCrossing({
   stage,
@@ -47,12 +49,15 @@ export default function DefyingGriefCrossing({
         </p>
         <div className="mt-8">
           <Link
-            href="/journey?enter=1"
+            href={CAT_GPT_URL}
             className="inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]"
           >
             Enter the Room
           </Link>
         </div>
+        <p className="mt-3 text-xs text-muted">
+          This opens Conversations Across Time in ChatGPT — a new tab, not this site.
+        </p>
       </div>
     );
   }
@@ -90,12 +95,15 @@ export default function DefyingGriefCrossing({
       </ul>
       <div className="mt-8">
         <Link
-          href="/journey?enter=1"
+          href={INNERCOMPASS_GPT_URL}
           className="inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]"
         >
           Keep Going
         </Link>
       </div>
+      <p className="mt-3 text-xs text-muted">
+        This opens InnerCompass in ChatGPT — a new tab, not this site.
+      </p>
     </div>
   );
 }

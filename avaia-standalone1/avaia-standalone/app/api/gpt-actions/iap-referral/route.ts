@@ -1,25 +1,30 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createConversation, type DbConversation } from "@/lib/engine/conversation";
+import { createConversation, STAGE_ORDER, type DbConversation } from "@/lib/engine/conversation";
+import type { Stage } from "@/lib/engine/prompts";
 
-// The entry point the real IAP custom GPT's Action calls. No Supabase
-// session exists on this request at all (OpenAI's servers call this
-// directly, not a Host's browser), so everything here goes through the
+// The entry point every real custom GPT's Action calls — IAP, Conversations
+// Across Time, and InnerCompass all point here. (The path still says
+// "iap-referral" only because that's what the IAP GPT was already
+// configured with before this became stage-agnostic; renaming it would mean
+// re-editing a GPT that already works for no functional benefit.)
+//
+// No Supabase session exists on this request at all (OpenAI's servers call
+// this directly, not a Host's browser), so everything here goes through the
 // service-role client, same pattern as the Stripe webhook.
 //
 // Identity comes entirely from a real OAuth bearer access token (issued by
 // app/api/oauth/token/route.ts after the Host approved /oauth/authorize) —
 // nothing the model has to remember or reproduce.
 //
-// Because the OAuth token identifies WHO, not WHICH conversation, this
-// looks up the Host's current active IAP conversation directly — the same
-// "one active conversation per Host" assumption the rest of AVAIA already
-// relies on. That conversation's `program` (e.g. "defying-grief", set when
-// the workshop trip began — see beginDefyingGriefWorkshop in
-// app/defying-grief/page.tsx) is read back here and carried forward into
-// the next stage, so a referral coming home from the workshop lands in a
-// conversation the receiving side (crossing screens, dashboard) actually
-// recognizes as belonging to that program.
+// Because the OAuth token identifies WHO, not WHICH conversation or stage,
+// this looks up the Host's current active conversation directly (whatever
+// stage it's at) and derives from_stage/to_stage/the next stage from that —
+// the same "one active conversation per Host" assumption the rest of AVAIA
+// already relies on. That conversation's `program` is read back and carried
+// forward into whichever stage comes next, so a referral coming home from
+// any workshop trip lands somewhere the receiving side (crossing screens,
+// dashboard) actually recognizes as belonging to that program.
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +34,7 @@ export const dynamic = "force-dynamic";
 // zero if something regresses. Remove once this has run reliably for a
 // while in real use.
 function debugLog(step: string, fields: Record<string, unknown>) {
-  console.log("[gpt-iap-referral debug]", { step, ts: new Date().toISOString(), ...fields });
+  console.log("[gpt-referral debug]", { step, ts: new Date().toISOString(), ...fields });
 }
 
 export async function POST(request: Request) {
@@ -92,11 +97,13 @@ export async function POST(request: Request) {
 
   const hostId = tokenRow.host_id as string;
 
+  // No .eq("stage", ...) here on purpose -- this endpoint now serves
+  // whichever stage's GPT calls it, so it just finds whatever this Host's
+  // one active conversation currently is.
   const { data: convo, error: convoError } = await admin
     .from("conversations")
     .select("*")
     .eq("host_id", hostId)
-    .eq("stage", "iap")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(1)
@@ -106,22 +113,29 @@ export async function POST(request: Request) {
   debugLog("3_active_conversation_lookup", {
     hostId,
     conversationId: activeConvo?.id ?? null,
+    stage: activeConvo?.stage ?? null,
     program: activeConvo?.program ?? null,
     lookupError: convoError?.message ?? null,
-    result: convoError || !activeConvo ? "FAILED — no active IAP conversation for this Host" : "OK",
+    result: convoError || !activeConvo ? "FAILED — no active conversation for this Host" : "OK",
   });
 
   if (convoError || !activeConvo) {
     return NextResponse.json(
-      { error: "no_active_conversation", error_description: "No active IAP conversation found for this Host." },
+      { error: "no_active_conversation", error_description: "No active conversation found for this Host." },
       { status: 409 }
     );
   }
 
+  const fromStage = activeConvo.stage as Stage;
+  const currentIdx = STAGE_ORDER.indexOf(fromStage);
+  const nextStage: Stage | null = STAGE_ORDER[currentIdx + 1] ?? null;
+
   const { error: insertError } = await admin.from("referrals").insert({
     host_id: hostId,
-    from_stage: "iap",
-    to_stage: "cat",
+    from_stage: fromStage,
+    // Mirrors app/api/referral/route.ts's own convention for the website
+    // flow: "continuity" when there's no next stage (InnerCompass finishing).
+    to_stage: nextStage ?? "continuity",
     content: referral,
     conversation_id: activeConvo.id,
   });
@@ -129,6 +143,8 @@ export async function POST(request: Request) {
   debugLog("4_after_referral_insert", {
     hostId,
     conversationId: activeConvo.id,
+    fromStage,
+    nextStage,
     result: insertError ? "FAILED" : "OK",
     insertError: insertError
       ? { message: insertError.message, details: insertError.details, hint: insertError.hint }
@@ -151,11 +167,14 @@ export async function POST(request: Request) {
     completeError: completeError ? completeError.message : null,
   });
 
-  // Carry the program tag forward — without this, a referral coming home
+  // Carry the program tag forward -- without this, a referral coming home
   // from a Defying Grief workshop trip would silently land in a 'general'
-  // CAT conversation, invisible to the Defying Grief dashboard and crossing
-  // screens.
-  await createConversation(admin, hostId, "cat", undefined, activeConvo.program);
+  // conversation, invisible to the Defying Grief dashboard and crossing
+  // screens. Only create the next stage if there is one; InnerCompass
+  // finishing has nothing after it.
+  if (nextStage) {
+    await createConversation(admin, hostId, nextStage, undefined, activeConvo.program);
+  }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, done: nextStage === null });
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import { createConversation } from "@/lib/engine/conversation";
+import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import {
   loadDefyingGriefDashboard,
   DEFYING_GRIEF_PROGRAM_NAME,
@@ -169,6 +170,24 @@ export default async function DefyingGriefPage() {
   }
 
   const allComplete = dashboard.stages.every((s) => s.status === "complete");
+
+  // A referral just came home from the workshop and the next stage's
+  // placeholder conversation is waiting — this is the crossing moment. Since
+  // the actual conversation never happens on the website (it's entirely in
+  // ChatGPT), there's no "have they started typing yet" signal to detect
+  // here the way the general Journey can; showing this every time the
+  // dashboard is visited while a stage is mid-workshop is correct, not just
+  // a fallback -- it's also how a Host gets back to an in-progress GPT trip.
+  if (dashboard.activeStage === "cat" || dashboard.activeStage === "innercompass") {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-16">
+        {header}
+        <p className="label mt-8 mb-2">Dorian&rsquo;s guided program</p>
+        <h1 className="font-serif text-4xl text-ink">{DEFYING_GRIEF_PROGRAM_NAME}</h1>
+        <DefyingGriefCrossing stage={dashboard.activeStage} roomTitle={dashboard.roomIdentity} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-prose px-5 py-16">

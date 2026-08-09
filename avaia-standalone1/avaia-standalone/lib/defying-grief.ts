@@ -5,12 +5,27 @@ import { STAGE_ORDER } from "./engine/conversation";
 
 export const DEFYING_GRIEF_PROGRAM_NAME = "Defying Grief: A Sacred Rebellion";
 
-// The real IAP custom GPT — the workshop. IAP is identical whether a
-// conversation belongs to the general Journey or Defying Grief (Defying
-// Grief's only content addition, DEFYING_GRIEF_CAT_AUDACITY, applies at CAT
-// only), so the same GPT is reused rather than needing a second one.
+// The real custom GPTs — the workshops. Every stage of Defying Grief happens
+// in its own GPT; the website never hosts the conversation itself, only
+// receives what comes home from it (see the generalized referral-receiving
+// endpoint at app/api/gpt-actions/iap-referral/route.ts, and
+// beginDefyingGriefWorkshop in app/defying-grief/page.tsx). IAP is identical
+// whether a conversation belongs to the general Journey or Defying Grief
+// (Defying Grief's only content addition, DEFYING_GRIEF_CAT_AUDACITY,
+// applies at CAT only), so the same IAP GPT is reused for both rather than
+// needing a second one.
 export const IAP_GPT_URL =
   "https://chatgpt.com/g/g-6a2cc069e6688191b02bff51c3067c6a-individual-awareness-profile-iap-gpt";
+export const CAT_GPT_URL =
+  "https://chatgpt.com/g/g-6a28cb3a85608191b00bf15c6b7359b2-conversations-across-time";
+export const INNERCOMPASS_GPT_URL =
+  "https://chatgpt.com/g/g-69e94fd211d88191a3d1c6e1b3c654de-my-inner-compass";
+
+export const STAGE_GPT_URL: Record<Stage, string> = {
+  iap: IAP_GPT_URL,
+  cat: CAT_GPT_URL,
+  innercompass: INNERCOMPASS_GPT_URL,
+};
 
 // Display-only labels — the AI prompt itself still uses the official stage
 // instructions (STAGE_LABEL in lib/engine/conversation.ts) untouched. Only
@@ -97,11 +112,10 @@ export async function loadDefyingGriefDashboard(
       return { stage, label, status: "complete", statusCopy: "Complete", href: "/workbook" };
     }
     if (activeStage === stage) {
-      // IAP happens in the workshop (the real GPT), not on the website — a
-      // Host returning to "Continue" IAP needs to go back to ChatGPT, not
-      // to a website chat that has nothing in it.
-      const href = stage === "iap" ? IAP_GPT_URL : "/journey";
-      return { stage, label, status: "in-progress", statusCopy: "In progress", href };
+      // Every stage happens in its own workshop (a real GPT), never on the
+      // website — a Host returning to "Continue" needs to go back to
+      // ChatGPT, not to a website chat that has nothing in it.
+      return { stage, label, status: "in-progress", statusCopy: "In progress", href: STAGE_GPT_URL[stage] };
     }
     return {
       stage,

@@ -101,11 +101,17 @@ export default async function OAuthAuthorizePage({
   if (!params.redirect_uri) {
     return <ErrorScreen message="Missing redirect_uri." />;
   }
-  const allowedRedirect = process.env.GPT_OAUTH_REDIRECT_URI;
-  if (!allowedRedirect || params.redirect_uri !== allowedRedirect) {
+  // Every real GPT's own callback address (IAP, CAT, InnerCompass, and any
+  // future one) follows this exact shape, but the "g-<hash>" segment is
+  // specific to that GPT and has been observed changing between sessions
+  // for the same GPT. Matching one fixed saved value meant re-configuring
+  // this by hand almost every time; matching the shape instead means it
+  // only has to be right once, for any GPT this ever grows to include.
+  const CHATGPT_CALLBACK_PATTERN = /^https:\/\/chat\.openai\.com\/aip\/g-[a-z0-9]+\/oauth\/callback$/i;
+  if (!CHATGPT_CALLBACK_PATTERN.test(params.redirect_uri)) {
     return (
       <ErrorScreen
-        message={`redirect_uri is not recognized. The exact value ChatGPT just sent was: ${params.redirect_uri} — set GPT_OAUTH_REDIRECT_URI to exactly that value in Vercel.`}
+        message={`redirect_uri doesn't look like a real ChatGPT callback address. The exact value ChatGPT just sent was: ${params.redirect_uri}`}
       />
     );
   }
