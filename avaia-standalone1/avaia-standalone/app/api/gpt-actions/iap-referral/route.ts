@@ -1,0 +1,161 @@
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createConversation, type DbConversation } from "@/lib/engine/conversation";
+
+// The entry point the real IAP custom GPT's Action calls. No Supabase
+// session exists on this request at all (OpenAI's servers call this
+// directly, not a Host's browser), so everything here goes through the
+// service-role client, same pattern as the Stripe webhook.
+//
+// Identity comes entirely from a real OAuth bearer access token (issued by
+// app/api/oauth/token/route.ts after the Host approved /oauth/authorize) —
+// nothing the model has to remember or reproduce.
+//
+// Because the OAuth token identifies WHO, not WHICH conversation, this
+// looks up the Host's current active IAP conversation directly — the same
+// "one active conversation per Host" assumption the rest of AVAIA already
+// relies on. That conversation's `program` (e.g. "defying-grief", set when
+// the workshop trip began — see beginDefyingGriefWorkshop in
+// app/defying-grief/page.tsx) is read back here and carried forward into
+// the next stage, so a referral coming home from the workshop lands in a
+// conversation the receiving side (crossing screens, dashboard) actually
+// recognizes as belonging to that program.
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Kept from the earlier debugging round — this was the first real test of a
+// brand-new mechanism, and losing visibility again would mean starting from
+// zero if something regresses. Remove once this has run reliably for a
+// while in real use.
+function debugLog(step: string, fields: Record<string, unknown>) {
+  console.log("[gpt-iap-referral debug]", { step, ts: new Date().toISOString(), ...fields });
+}
+
+export async function POST(request: Request) {
+  debugLog("1_request_received", {});
+
+  const authHeader = request.headers.get("authorization") ?? "";
+  if (!authHeader.startsWith("Bearer ")) {
+    debugLog("1_request_received", { result: "FAILED — no Bearer token present" });
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  const accessToken = authHeader.slice("Bearer ".length);
+
+  const rawBodyText = await request.text();
+  const body = (() => {
+    try {
+      return JSON.parse(rawBodyText);
+    } catch {
+      return {};
+    }
+  })();
+  const referral: unknown = body?.referral;
+  debugLog("1_request_received", {
+    result: "has bearer token",
+    bodyKeys: body && typeof body === "object" ? Object.keys(body) : null,
+    referralType: typeof referral,
+    referralKeys:
+      referral && typeof referral === "object" && !Array.isArray(referral)
+        ? Object.keys(referral)
+        : null,
+  });
+
+  if (!referral || typeof referral !== "object" || Array.isArray(referral)) {
+    return NextResponse.json({ error: "Missing or invalid referral." }, { status: 400 });
+  }
+
+  const admin = createAdminClient();
+
+  const { data: tokenRow, error: tokenLookupError } = await admin
+    .from("oauth_access_tokens")
+    .select("id, host_id, revoked_at, expires_at")
+    .eq("access_token", accessToken)
+    .maybeSingle();
+
+  debugLog("2_oauth_token_validated", {
+    hostId: tokenRow?.host_id ?? null,
+    revokedAt: tokenRow?.revoked_at ?? null,
+    lookupError: tokenLookupError?.message ?? null,
+    result: tokenLookupError || !tokenRow ? "FAILED — unknown access token" : "OK",
+  });
+
+  if (tokenLookupError || !tokenRow) {
+    return NextResponse.json({ error: "invalid_token" }, { status: 401 });
+  }
+  if (tokenRow.revoked_at) {
+    return NextResponse.json({ error: "invalid_token", error_description: "revoked" }, { status: 401 });
+  }
+  if (tokenRow.expires_at && new Date(tokenRow.expires_at).getTime() < Date.now()) {
+    return NextResponse.json({ error: "invalid_token", error_description: "expired" }, { status: 401 });
+  }
+
+  const hostId = tokenRow.host_id as string;
+
+  const { data: convo, error: convoError } = await admin
+    .from("conversations")
+    .select("*")
+    .eq("host_id", hostId)
+    .eq("stage", "iap")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const activeConvo = convo as DbConversation | null;
+
+  debugLog("3_active_conversation_lookup", {
+    hostId,
+    conversationId: activeConvo?.id ?? null,
+    program: activeConvo?.program ?? null,
+    lookupError: convoError?.message ?? null,
+    result: convoError || !activeConvo ? "FAILED — no active IAP conversation for this Host" : "OK",
+  });
+
+  if (convoError || !activeConvo) {
+    return NextResponse.json(
+      { error: "no_active_conversation", error_description: "No active IAP conversation found for this Host." },
+      { status: 409 }
+    );
+  }
+
+  const { error: insertError } = await admin.from("referrals").insert({
+    host_id: hostId,
+    from_stage: "iap",
+    to_stage: "cat",
+    content: referral,
+    conversation_id: activeConvo.id,
+  });
+
+  debugLog("4_after_referral_insert", {
+    hostId,
+    conversationId: activeConvo.id,
+    result: insertError ? "FAILED" : "OK",
+    insertError: insertError
+      ? { message: insertError.message, details: insertError.details, hint: insertError.hint }
+      : null,
+  });
+
+  if (insertError) {
+    return NextResponse.json({ error: "Could not store the referral." }, { status: 500 });
+  }
+
+  const { error: completeError } = await admin
+    .from("conversations")
+    .update({ status: "complete", completed_at: new Date().toISOString() })
+    .eq("id", activeConvo.id);
+
+  debugLog("5_after_conversation_complete", {
+    hostId,
+    conversationId: activeConvo.id,
+    result: completeError ? "FAILED" : "OK",
+    completeError: completeError ? completeError.message : null,
+  });
+
+  // Carry the program tag forward — without this, a referral coming home
+  // from a Defying Grief workshop trip would silently land in a 'general'
+  // CAT conversation, invisible to the Defying Grief dashboard and crossing
+  // screens.
+  await createConversation(admin, hostId, "cat", undefined, activeConvo.program);
+
+  return NextResponse.json({ ok: true });
+}

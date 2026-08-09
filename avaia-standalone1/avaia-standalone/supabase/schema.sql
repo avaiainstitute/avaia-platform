@@ -243,3 +243,40 @@ alter table public.shared_access_invites enable row level security;
 create policy "shared_access_invites owner manage"
   on public.shared_access_invites for all
   using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+
+-- ---------------------------------------------------------------------------
+-- GPT IAP workshop OAuth — see supabase/migrations/0004_gpt_iap_workshop.sql
+-- for full commentary; kept in sync here for fresh installs. Both tables are
+-- service-role only (RLS enabled, zero policies) -- the real IAP custom
+-- GPT's Action is the only client.
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.oauth_authorization_codes (
+  id               uuid primary key default gen_random_uuid(),
+  code             text not null unique,
+  host_id          uuid not null references auth.users (id) on delete cascade,
+  client_id        text not null,
+  redirect_uri     text not null,
+  created_at       timestamptz not null default now(),
+  expires_at       timestamptz not null,
+  used_at          timestamptz
+);
+
+create index if not exists oauth_authorization_codes_code_idx on public.oauth_authorization_codes (code);
+
+alter table public.oauth_authorization_codes enable row level security;
+
+create table if not exists public.oauth_access_tokens (
+  id               uuid primary key default gen_random_uuid(),
+  access_token     text not null unique,
+  host_id          uuid not null references auth.users (id) on delete cascade,
+  client_id        text not null,
+  created_at       timestamptz not null default now(),
+  expires_at       timestamptz,
+  revoked_at       timestamptz
+);
+
+create index if not exists oauth_access_tokens_token_idx on public.oauth_access_tokens (access_token);
+create index if not exists oauth_access_tokens_host_idx on public.oauth_access_tokens (host_id);
+
+alter table public.oauth_access_tokens enable row level security;

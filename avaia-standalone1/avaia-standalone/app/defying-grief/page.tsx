@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
+import { createConversation } from "@/lib/engine/conversation";
 import {
   loadDefyingGriefDashboard,
   DEFYING_GRIEF_PROGRAM_NAME,
+  IAP_GPT_URL,
 } from "@/lib/defying-grief";
 
 export const metadata = { title: `${DEFYING_GRIEF_PROGRAM_NAME} — AVAIA` };
@@ -39,10 +42,18 @@ function AudacityTile() {
   );
 }
 
+const CTA_CLASSES =
+  "inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]";
+
 /** Shared Threshold copy — used for both the signed-out intro and the
- *  signed-in "haven't started yet" state, which differ only in where the
- *  call to action leads. */
-function ThresholdContent({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
+ *  signed-in "haven't started yet" state. The call to action differs: a
+ *  signed-out Host has to sign in first (a plain link); a signed-in Host's
+ *  click directly opens the workshop (a form action), no intermediate page. */
+function ThresholdContent({
+  cta,
+}: {
+  cta: { kind: "link"; href: string } | { kind: "action"; action: (formData: FormData) => Promise<void> };
+}) {
   return (
     <>
       <AudacityTile />
@@ -67,19 +78,56 @@ function ThresholdContent({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: st
       </p>
       <p className="mt-4 text-lg text-muted">You are not asked to feel ready. Only to begin.</p>
       <div className="mt-8">
-        <Link
-          href={ctaHref}
-          className="inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]"
-        >
-          {ctaLabel}
-        </Link>
+        {cta.kind === "link" ? (
+          <Link href={cta.href} className={CTA_CLASSES}>
+            I&rsquo;m Still Here
+          </Link>
+        ) : (
+          <form action={cta.action}>
+            <button type="submit" className={CTA_CLASSES}>
+              I&rsquo;m Still Here
+            </button>
+          </form>
+        )}
       </div>
+      {cta.kind === "action" && (
+        <p className="mt-3 text-xs text-muted">
+          This opens the Individual Awareness Profile in ChatGPT — a new tab, not this site.
+        </p>
+      )}
       <p className="mt-4 text-xs text-muted">
         Individual Awareness Profile → Conversations Across Time: The Audacity of Grief →
         InnerCompass: The Audacity of Happiness
       </p>
     </>
   );
+}
+
+/** Begins Defying Grief's workshop trip: creates the waiting placeholder IAP
+ *  conversation, tagged so whatever referral eventually comes home from the
+ *  GPT lands somewhere Defying Grief recognizes (see the program-preserving
+ *  fix in app/api/gpt-actions/iap-referral/route.ts), then sends the Host
+ *  straight to the real GPT. AVAIA doesn't render anything from here until
+ *  the referral comes home. */
+async function beginDefyingGriefWorkshop() {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/defying-grief");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("consent_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!profile?.consent_at) redirect("/welcome");
+
+  await createConversation(supabase, user.id, "iap", undefined, "defying-grief");
+
+  redirect(IAP_GPT_URL);
 }
 
 export default async function DefyingGriefPage() {
@@ -114,7 +162,7 @@ export default async function DefyingGriefPage() {
       <div className="mx-auto max-w-prose px-5 py-16">
         {header}
         <div className="mt-8 text-center sm:text-left">
-          <ThresholdContent ctaHref="/journey?new=1&program=defying-grief" ctaLabel="I'm Still Here" />
+          <ThresholdContent cta={{ kind: "action", action: beginDefyingGriefWorkshop }} />
         </div>
       </div>
     );
@@ -182,7 +230,7 @@ export default async function DefyingGriefPage() {
 function DefyingGriefIntro() {
   return (
     <div className="mx-auto max-w-prose px-5 py-20 text-center sm:text-left">
-      <ThresholdContent ctaHref="/sign-in" ctaLabel="I'm Still Here" />
+      <ThresholdContent cta={{ kind: "link", href: "/sign-in" }} />
     </div>
   );
 }

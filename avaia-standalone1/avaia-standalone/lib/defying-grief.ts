@@ -5,6 +5,13 @@ import { STAGE_ORDER } from "./engine/conversation";
 
 export const DEFYING_GRIEF_PROGRAM_NAME = "Defying Grief: A Sacred Rebellion";
 
+// The real IAP custom GPT — the workshop. IAP is identical whether a
+// conversation belongs to the general Journey or Defying Grief (Defying
+// Grief's only content addition, DEFYING_GRIEF_CAT_AUDACITY, applies at CAT
+// only), so the same GPT is reused rather than needing a second one.
+export const IAP_GPT_URL =
+  "https://chatgpt.com/g/g-6a2cc069e6688191b02bff51c3067c6a-individual-awareness-profile-iap-gpt";
+
 // Display-only labels — the AI prompt itself still uses the official stage
 // instructions (STAGE_LABEL in lib/engine/conversation.ts) untouched. Only
 // what the participant sees on the Defying Grief dashboard changes.
@@ -90,7 +97,11 @@ export async function loadDefyingGriefDashboard(
       return { stage, label, status: "complete", statusCopy: "Complete", href: "/workbook" };
     }
     if (activeStage === stage) {
-      return { stage, label, status: "in-progress", statusCopy: "In progress", href: "/journey" };
+      // IAP happens in the workshop (the real GPT), not on the website — a
+      // Host returning to "Continue" IAP needs to go back to ChatGPT, not
+      // to a website chat that has nothing in it.
+      const href = stage === "iap" ? IAP_GPT_URL : "/journey";
+      return { stage, label, status: "in-progress", statusCopy: "In progress", href };
     }
     return {
       stage,
