@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import { createConversation } from "@/lib/engine/conversation";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
+import { MembershipGate } from "@/app/journey/page";
 import {
   loadDefyingGriefDashboard,
   DEFYING_GRIEF_PROGRAM_NAME,
@@ -131,7 +132,11 @@ async function beginDefyingGriefWorkshop() {
   redirect(IAP_GPT_URL);
 }
 
-export default async function DefyingGriefPage() {
+export default async function DefyingGriefPage({
+  searchParams,
+}: {
+  searchParams?: { checkout?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -140,6 +145,12 @@ export default async function DefyingGriefPage() {
   if (!user) return <DefyingGriefIntro />;
 
   const dashboard = await loadDefyingGriefDashboard(supabase, user.id);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_status")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isMember = profile?.membership_status === "member";
 
   const header = (
     <div className="flex items-baseline justify-between">
@@ -179,6 +190,20 @@ export default async function DefyingGriefPage() {
   // dashboard is visited while a stage is mid-workshop is correct, not just
   // a fallback -- it's also how a Host gets back to an in-progress GPT trip.
   if (dashboard.activeStage === "cat" || dashboard.activeStage === "innercompass") {
+    // IAP is free; Conversations Across Time and InnerCompass are an AVAIA
+    // Membership feature, same rule the general Journey already enforces at
+    // this exact boundary. The crossing screen (and the workshop it opens
+    // onto) is exactly the thing being gated -- a free Host sees the same
+    // membership offer instead, never the room itself.
+    if (!isMember) {
+      return (
+        <MembershipGate
+          header={header}
+          checkout={searchParams?.checkout}
+          returnTo="/defying-grief"
+        />
+      );
+    }
     return (
       <div className="mx-auto max-w-prose px-5 py-16">
         {header}

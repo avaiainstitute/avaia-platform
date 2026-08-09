@@ -234,12 +234,18 @@ export default async function JourneyPage({
  *  CAT — Conversations Across Time (and InnerCompass after it) are an AVAIA
  *  Membership feature. Their referral and IAP conversation are already saved;
  *  checkout just unlocks continuing into the conversation waiting for them. */
-function MembershipGate({
+export function MembershipGate({
   header,
   checkout,
+  returnTo,
 }: {
   header: React.ReactNode;
   checkout?: string;
+  /** Where Stripe should send the Host back to after checkout — defaults to
+   *  /journey if omitted. Defying Grief passes "/defying-grief" so a Host
+   *  who pays from there lands back where they actually were, not on the
+   *  general Journey page. */
+  returnTo?: string;
 }) {
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
@@ -262,7 +268,7 @@ function MembershipGate({
         </p>
       )}
       <div className="mt-8">
-        <MembershipCheckoutButton />
+        <MembershipCheckoutButton returnTo={returnTo} />
       </div>
     </div>
   );

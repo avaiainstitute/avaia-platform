@@ -18,6 +18,13 @@ export async function POST(request: Request) {
 
   const origin = new URL(request.url).origin;
 
+  // Where to land after Stripe redirects back — validated against a fixed
+  // allowlist rather than trusted as-is, since this becomes part of a URL
+  // handed to Stripe. Falls back to /journey for anything unrecognized.
+  const ALLOWED_RETURN_PATHS = ["/journey", "/defying-grief"];
+  const body = await request.json().catch(() => ({}));
+  const returnTo = ALLOWED_RETURN_PATHS.includes(body?.returnTo) ? body.returnTo : "/journey";
+
   try {
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
@@ -26,8 +33,8 @@ export async function POST(request: Request) {
       customer_email: user.email ?? undefined,
       metadata: { supabase_user_id: user.id },
       subscription_data: { metadata: { supabase_user_id: user.id } },
-      success_url: `${origin}/journey?checkout=success`,
-      cancel_url: `${origin}/journey?checkout=cancelled`,
+      success_url: `${origin}${returnTo}?checkout=success`,
+      cancel_url: `${origin}${returnTo}?checkout=cancelled`,
     });
     if (!session.url) throw new Error("Stripe did not return a checkout URL.");
     return NextResponse.json({ url: session.url });
