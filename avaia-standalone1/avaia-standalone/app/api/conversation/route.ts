@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
+import { openai } from "@/lib/engine/openai";
+import { OPENAI_IAP_MODEL, OPENAI_IAP_SYSTEM_PROMPT } from "@/lib/engine/openai-iap-prompt";
 import { AVAIA_MODEL, systemPromptFor, type Stage } from "@/lib/engine/prompts";
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
@@ -41,23 +43,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
   }
 
+  // PREVIEW: IAP runs on OpenAI with a minimal, non-orchestrated prompt
+  // (lib/engine/openai-iap-prompt.ts). CAT and InnerCompass below are
+  // completely unchanged — same Anthropic path, same systemPromptFor, same
+  // referral-continuity injection as before this branch existed.
+  const usingOpenAiForIap = stage === "iap";
+
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).
-  let system = systemPromptFor(stage);
-  const { data: referral } = await supabase
-    .from("referrals")
-    .select("content")
-    .eq("host_id", user.id)
-    .eq("to_stage", stage)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (referral?.content) {
-    system +=
-      "\n\n" +
-      "=".repeat(60) +
-      "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — do not ask the Host to repeat it; build from it):\n\n" +
-      JSON.stringify(referral.content, null, 2);
+  // Nothing ever hands a referral into IAP, so this is skipped on that path.
+  let system = usingOpenAiForIap ? OPENAI_IAP_SYSTEM_PROMPT : systemPromptFor(stage);
+  if (!usingOpenAiForIap) {
+    const { data: referral } = await supabase
+      .from("referrals")
+      .select("content")
+      .eq("host_id", user.id)
+      .eq("to_stage", stage)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (referral?.content) {
+      system +=
+        "\n\n" +
+        "=".repeat(60) +
+        "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — do not ask the Host to repeat it; build from it):\n\n" +
+        JSON.stringify(referral.content, null, 2);
+    }
   }
 
   // Crisis safety net — log for oversight; the AI's guardrail handles the response.
@@ -89,29 +100,51 @@ export async function POST(request: Request) {
       "again, re-introduce yourself, or repeat your opening question.";
     convoMessages = dbMessages.slice(1);
   }
-  const history = toAnthropicMessages(convoMessages);
-
-  const client = anthropic();
   const encoder = new TextEncoder();
   let full = "";
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        if (!process.env.ANTHROPIC_API_KEY) {
-          throw new Error("ANTHROPIC_API_KEY is not set in this deployment.");
+        if (usingOpenAiForIap) {
+          if (!process.env.OPENAI_API_KEY) {
+            throw new Error("OPENAI_API_KEY is not set in this deployment.");
+          }
+          const client = openai();
+          const oaMessages = convoMessages.map((m) => ({
+            role: m.role === "host" ? ("user" as const) : ("assistant" as const),
+            content: m.content,
+          }));
+          const completion = await client.chat.completions.create({
+            model: OPENAI_IAP_MODEL,
+            messages: [{ role: "system" as const, content: system }, ...oaMessages],
+            stream: true,
+          });
+          for await (const chunk of completion) {
+            const delta = chunk.choices[0]?.delta?.content ?? "";
+            if (delta) {
+              full += delta;
+              controller.enqueue(encoder.encode(delta));
+            }
+          }
+        } else {
+          if (!process.env.ANTHROPIC_API_KEY) {
+            throw new Error("ANTHROPIC_API_KEY is not set in this deployment.");
+          }
+          const client = anthropic();
+          const history = toAnthropicMessages(convoMessages);
+          const ms = client.messages.stream({
+            model: AVAIA_MODEL,
+            max_tokens: 2048,
+            system,
+            messages: history,
+          });
+          ms.on("text", (delta) => {
+            full += delta;
+            controller.enqueue(encoder.encode(delta));
+          });
+          await ms.finalMessage();
         }
-        const ms = client.messages.stream({
-          model: AVAIA_MODEL,
-          max_tokens: 2048,
-          system,
-          messages: history,
-        });
-        ms.on("text", (delta) => {
-          full += delta;
-          controller.enqueue(encoder.encode(delta));
-        });
-        await ms.finalMessage();
 
         // Persist the reply WITHOUT the focus marker — it's a UI signal, not
         // part of the transcript the Host or Workbook should ever see.
