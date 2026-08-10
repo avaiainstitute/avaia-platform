@@ -154,10 +154,10 @@ export default function UnsungHeroesChat({
   if (saved) {
     return (
       <div className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-6">
-        <p className="label text-seal">Seen and recorded</p>
+        <p className="label text-seal">Recognized</p>
         <h2 className="mt-2 font-serif text-2xl text-ink">{saved.title}</h2>
         <p className="mt-2 text-ink">
-          <strong>{saved.whoBecameVisible}</strong> is a little more visible now.
+          <strong>{saved.whoBecameVisible}</strong> just got recognized for it.
           {saved.primaryVirtue ? ` What you noticed: ${saved.primaryVirtue}.` : ""}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">

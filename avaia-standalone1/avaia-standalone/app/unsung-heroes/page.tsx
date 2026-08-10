@@ -65,10 +65,10 @@ export default async function UnsungHeroesPage({
       <div className="mx-auto max-w-prose px-5 py-20">
         {header}
         <p className="label mb-3 mt-8">Unsung Heroes</p>
-        <h1 className="font-serif text-4xl text-ink">Someone deserves to be seen</h1>
+        <h1 className="font-serif text-4xl text-ink">You noticed something real</h1>
         <p className="mt-4 text-lg text-muted">
-          Quiet acts of virtue happen constantly and mostly go unnoticed. This is a short,
-          guided conversation to help you name one and honor it.
+          Quiet acts of virtue happen constantly and mostly go unacknowledged. This is a short,
+          guided conversation to help you name what you saw, and say so.
         </p>
 
         <div className="mt-8 grid gap-3">
@@ -114,10 +114,10 @@ function UnsungHeroesIntro() {
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
       <p className="label mb-3">Unsung Heroes</p>
-      <h1 className="font-serif text-4xl text-ink">Someone deserves to be seen</h1>
+      <h1 className="font-serif text-4xl text-ink">You noticed something real</h1>
       <p className="mt-4 text-lg text-muted">
-        A short, guided conversation to help you notice and honor a quiet act of virtue — one you
-        witnessed, one you received, or one you&rsquo;re hoping to grow into.
+        A short, guided conversation to help you name a quiet act of virtue — one you witnessed,
+        one you received, or one you&rsquo;re hoping to grow into.
       </p>
       <div className="mt-8">
         <Link

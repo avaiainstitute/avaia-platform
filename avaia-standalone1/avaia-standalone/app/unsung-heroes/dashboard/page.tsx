@@ -53,10 +53,10 @@ export default async function UnsungHeroesDashboardPage() {
       </div>
 
       <p className="label mb-3 mt-8">Unsung Heroes</p>
-      <h1 className="font-serif text-4xl text-ink">Moments of Visibility</h1>
+      <h1 className="font-serif text-4xl text-ink">Virtue, Recognized</h1>
       <p className="mt-4 text-lg text-muted">
-        Not a tally of virtues — a record of who was seen, and what it meant. Recognition is the
-        vehicle here; visibility is the point.
+        A record of the virtue you&rsquo;ve noticed in the people around you — named, and
+        acknowledged out loud. Not a tally to keep score by; a workbook of what you saw.
       </p>
 
       <div className="mt-6">
@@ -70,14 +70,14 @@ export default async function UnsungHeroesDashboardPage() {
 
       {recognitions.length === 0 && (
         <p className="mt-12 text-muted">
-          Nothing recorded yet — that&rsquo;s where every one of these starts. Most goodness goes
-          unnoticed only because no one paused long enough to name it.
+          Nothing recorded yet — that&rsquo;s where every one of these starts. Most virtue goes
+          unacknowledged only because no one paused long enough to name it.
         </p>
       )}
 
       {recognitions.length > 0 && (
         <section className="mt-12">
-          <p className="label text-muted">What&rsquo;s been seen</p>
+          <p className="label text-muted">Virtue you&rsquo;ve noticed</p>
           <div className="mt-3 space-y-3">
             {recognitions.map((r) => (
               <div
@@ -96,7 +96,7 @@ export default async function UnsungHeroesDashboardPage() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  <span className="text-ink">{r.who_became_visible}</span> — seen and recorded
+                  <span className="text-ink">{r.who_became_visible}</span> — recognized for it
                 </p>
                 <p className="mt-2 line-clamp-2 text-sm text-muted">{r.story}</p>
               </div>
