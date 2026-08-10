@@ -127,6 +127,20 @@ async function beginDefyingGriefWorkshop() {
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
 
+  // The referral-receiving endpoint assumes one active conversation per
+  // Host, the same assumption getActiveConversation relies on everywhere
+  // else -- but nothing here previously enforced that. A stray active
+  // conversation left over from unrelated earlier testing (any program,
+  // any stage) could get picked up instead of this new one, silently
+  // attaching a real referral to the wrong conversation. /journey?new=1
+  // already archives the previous active conversation before creating a
+  // fresh one; this does the same thing here.
+  await supabase
+    .from("conversations")
+    .update({ status: "complete", completed_at: new Date().toISOString() })
+    .eq("host_id", user.id)
+    .eq("status", "active");
+
   await createConversation(supabase, user.id, "iap", undefined, "defying-grief");
 
   redirect(IAP_GPT_URL);
