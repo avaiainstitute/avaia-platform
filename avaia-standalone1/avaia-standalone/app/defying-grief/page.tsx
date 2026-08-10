@@ -274,7 +274,7 @@ export default async function DefyingGriefPage({
 function DefyingGriefIntro() {
   return (
     <div className="mx-auto max-w-prose px-5 py-20 text-center sm:text-left">
-      <ThresholdContent cta={{ kind: "link", href: "/sign-in" }} />
+      <ThresholdContent cta={{ kind: "link", href: "/sign-in?from=/defying-grief" }} />
     </div>
   );
 }

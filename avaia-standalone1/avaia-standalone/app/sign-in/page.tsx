@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { setPostSignInRedirect, consumePostSignInRedirect } from "@/lib/post-signin-redirect";
 
 /**
  * Passwordless sign-in by 6-digit code. This is NOT two-factor — there is no
@@ -25,6 +26,15 @@ export default function SignInPage() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // Captures ?from=/defying-grief (or similar) the moment this page loads,
+  // so it survives all the way through to verify() or /auth/callback's
+  // finish() below -- see lib/post-signin-redirect.ts for why this uses
+  // sessionStorage rather than threading it through the Supabase-facing URL.
+  useEffect(() => {
+    const from = new URLSearchParams(window.location.search).get("from");
+    if (from) setPostSignInRedirect(from);
+  }, []);
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -66,7 +76,7 @@ export default function SignInPage() {
         type: "email",
       });
       if (error) throw error;
-      window.location.replace("/journey");
+      window.location.replace(consumePostSignInRedirect());
     } catch {
       setError("That code didn't match, or it expired. Check the latest email, or send a new code.");
       setBusy(false);
