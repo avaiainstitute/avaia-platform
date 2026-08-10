@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-// /journey, /defying-grief, /workbook, and /shared-with-me all render
-// completely differently signed in vs signed out. Next prefetches links by
-// default on viewport/hover — since this Nav renders on every page,
+// /journey, /defying-grief, /workbook, /shared-with-me, and /unsung-heroes
+// all render completely differently signed in vs signed out. Next prefetches
+// links by default on viewport/hover — since this Nav renders on every page,
 // including pre-auth ones like /sign-in, that would cache the SIGNED-OUT
 // render of these routes in the client-side Router Cache before the Host
 // ever signs in, and later navigation to them (even once actually signed in)
@@ -15,6 +15,7 @@ const LINKS: { href: string; label: string; prefetch: boolean }[] = [
   { href: "/workbook", label: "Workbook", prefetch: false },
   { href: "/shared-with-me", label: "Shared with Me", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
+  { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
 ];
 
 export default function Nav() {
