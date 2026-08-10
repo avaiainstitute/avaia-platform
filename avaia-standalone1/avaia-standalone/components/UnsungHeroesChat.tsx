@@ -38,9 +38,10 @@ export default function UnsungHeroesChat({
   const [eventName, setEventName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<{
-    observedName: string;
+    title: string;
+    whoBecameVisible: string;
     virtueFamily: string;
-    virtueName: string | null;
+    primaryVirtue: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -127,11 +128,12 @@ export default function UnsungHeroesChat({
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not save the recognition.");
+      if (!res.ok) throw new Error(data.error || "Could not save the workbook entry.");
       setSaved({
-        observedName: data.recognition.observed_name,
+        title: data.recognition.title,
+        whoBecameVisible: data.recognition.who_became_visible,
         virtueFamily: data.recognition.virtue_family,
-        virtueName: data.recognition.virtue_name,
+        primaryVirtue: data.recognition.primary_virtue,
       });
       setShowCardForm(false);
     } catch (err) {
@@ -152,26 +154,24 @@ export default function UnsungHeroesChat({
   if (saved) {
     return (
       <div className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-6">
-        <p className="label text-seal">Recognition saved</p>
-        <h2 className="mt-2 font-serif text-2xl text-ink">
-          {saved.virtueName ? `${saved.virtueName} · ` : ""}
-          {saved.virtueFamily}
-        </h2>
+        <p className="label text-seal">Seen and recorded</p>
+        <h2 className="mt-2 font-serif text-2xl text-ink">{saved.title}</h2>
         <p className="mt-2 text-ink">
-          You recognized <strong>{saved.observedName}</strong>. It&rsquo;s saved to the record.
+          <strong>{saved.whoBecameVisible}</strong> is a little more visible now.
+          {saved.primaryVirtue ? ` What you noticed: ${saved.primaryVirtue}.` : ""}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a
             href="/unsung-heroes"
             className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
-            Recognize someone else
+            Notice someone else
           </a>
           <a
             href="/unsung-heroes/dashboard"
             className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
           >
-            View dashboard
+            View the workbook
           </a>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function UnsungHeroesChat({
               disabled={saving}
               className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {saving ? "Saving…" : "Save recognition"}
+              {saving ? "Saving…" : "Save to the workbook"}
             </button>
             <button
               type="button"
@@ -355,11 +355,11 @@ export default function UnsungHeroesChat({
               disabled={sending}
               className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-muted transition-colors hover:border-seal hover:text-ink disabled:opacity-50"
             >
-              Create recognition card
+              Save to the workbook
             </button>
           </div>
           <p className="mt-3 text-xs text-muted">
-            {pathLabel}. This conversation is saved so the recognition can be created whenever
+            {pathLabel}. This conversation is saved so the entry can be recorded whenever
             you&rsquo;re ready.
           </p>
         </form>

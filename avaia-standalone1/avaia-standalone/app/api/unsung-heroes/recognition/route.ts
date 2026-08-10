@@ -12,17 +12,38 @@ export const dynamic = "force-dynamic";
 const CONTEXT_TYPES = ["school", "community", "family"] as const;
 type ContextType = (typeof CONTEXT_TYPES)[number];
 
+// Workbook entry, not a recognition card — see the migration's own comment
+// for why. The questions this shape answers (see the Instructions in
+// prompts.ts) are the actual point; the virtue names are how one of those
+// questions gets answered, not the center of the record.
 const RECOGNITION_SCHEMA = {
   type: "object",
   properties: {
-    observedName: { type: "string" },
-    virtueFamily: { type: "string", enum: VIRTUE_FAMILIES.map((f) => f.key) },
-    virtueName: { type: "string" },
+    title: { type: "string" },
+    whoBecameVisible: { type: "string" },
     story: { type: "string" },
-    whyItMattered: { type: "string" },
+    virtueFamily: { type: "string", enum: VIRTUE_FAMILIES.map((f) => f.key) },
+    primaryVirtue: { type: "string" },
+    supportingVirtues: { type: "array", items: { type: "string" } },
     reflection: { type: "string" },
+    personalInsight: { type: "string" },
+    communityImpact: { type: "string" },
+    nextPractice: { type: "string" },
+    questionsToRevisit: { type: "array", items: { type: "string" } },
   },
-  required: ["observedName", "virtueFamily", "virtueName", "story", "whyItMattered", "reflection"],
+  required: [
+    "title",
+    "whoBecameVisible",
+    "story",
+    "virtueFamily",
+    "primaryVirtue",
+    "supportingVirtues",
+    "reflection",
+    "personalInsight",
+    "communityImpact",
+    "nextPractice",
+    "questionsToRevisit",
+  ],
   additionalProperties: false,
 } as const;
 
@@ -60,21 +81,28 @@ export async function POST(request: Request) {
   history.push({
     role: "user",
     content:
-      "I'm ready to create the recognition card. Using everything in this conversation, produce the " +
-      "card now as structured data. Do not address me — output only the fields. story, whyItMattered, " +
-      "and reflection must stay close to the Host's own words and only include what they actually said " +
-      "— never invent detail. reflection specifically must capture WHY the Host noticed this, not just " +
-      "what happened; if the conversation never surfaced that, use the clearest true answer implied by " +
-      "what they said rather than inventing one.",
+      "I'm ready. Using everything in this conversation, produce the workbook entry now as " +
+      "structured data. Do not address me — output only the fields. whoBecameVisible, story, " +
+      "reflection, personalInsight, and communityImpact must stay close to the Host's own words " +
+      "and only include what they actually said — never invent detail. reflection specifically " +
+      "must capture why this mattered, not just what happened; personalInsight must capture what " +
+      "the Host recognized about themselves, not a restatement of the story. If the conversation " +
+      "never surfaced a genuine answer for nextPractice or questionsToRevisit, use an empty string " +
+      "or empty array rather than inventing one.",
   });
 
   let content: {
-    observedName: string;
-    virtueFamily: string;
-    virtueName: string;
+    title: string;
+    whoBecameVisible: string;
     story: string;
-    whyItMattered: string;
+    virtueFamily: string;
+    primaryVirtue: string;
+    supportingVirtues: string[];
     reflection: string;
+    personalInsight: string;
+    communityImpact: string;
+    nextPractice: string;
+    questionsToRevisit: string[];
   };
   try {
     const client = anthropic();
@@ -93,31 +121,43 @@ export async function POST(request: Request) {
     content = JSON.parse(text);
   } catch {
     return NextResponse.json(
-      { error: "Could not create the recognition card. Please try again." },
+      { error: "Could not create the workbook entry. Please try again." },
       { status: 502 }
     );
   }
 
-  // virtue_name is validated against the Chemistry of Virtue rather than trusted
-  // as-is — if the model's word doesn't match a real element in that family, we
-  // keep the family (still meaningful) and drop the element rather than store an
-  // invented one.
+  // Virtue names are validated against the real Chemistry of Virtue rather
+  // than trusted as-is — anything that doesn't match a real element in the
+  // stated family is dropped rather than stored invented. virtue_elements
+  // is the validated subset of primaryVirtue + supportingVirtues, kept
+  // separate from those two (which stay as the model's own words) so the
+  // dashboard has a clean, canonical list to work from.
   const family = content.virtueFamily as VirtueFamilyKey;
-  const validElement = VIRTUES.find(
-    (v) => v.family === family && v.name.toLowerCase() === content.virtueName.toLowerCase()
+  const candidateNames = [content.primaryVirtue, ...content.supportingVirtues].filter(Boolean);
+  const virtueElements = candidateNames.filter((name) =>
+    VIRTUES.some((v) => v.family === family && v.name.toLowerCase() === name.toLowerCase())
+  );
+  const validPrimary = VIRTUES.find(
+    (v) => v.family === family && v.name.toLowerCase() === content.primaryVirtue.toLowerCase()
   );
 
   const { data: row, error } = await supabase
     .from("recognitions")
     .insert({
       observer_id: user.id,
-      observed_name: content.observedName,
       observed_user_id: observedUserId ?? null,
-      virtue_family: family,
-      virtue_name: validElement?.name ?? null,
+      title: content.title,
+      who_became_visible: content.whoBecameVisible,
       story: content.story,
-      why_it_mattered: content.whyItMattered,
+      virtue_family: family,
+      primary_virtue: validPrimary?.name ?? null,
+      supporting_virtues: content.supportingVirtues,
+      virtue_elements: virtueElements,
       reflection: content.reflection,
+      personal_insight: content.personalInsight,
+      community_impact: content.communityImpact,
+      next_practice: content.nextPractice || null,
+      questions_to_revisit: content.questionsToRevisit,
       conversation_path: path,
       context_type: contextType,
       context_school: context.school ?? null,
@@ -130,7 +170,7 @@ export async function POST(request: Request) {
     .select("*")
     .single();
   if (error) {
-    return NextResponse.json({ error: "Could not save the recognition." }, { status: 500 });
+    return NextResponse.json({ error: "Could not save the workbook entry." }, { status: 500 });
   }
 
   await supabase

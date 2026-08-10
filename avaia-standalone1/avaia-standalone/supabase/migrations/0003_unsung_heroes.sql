@@ -50,26 +50,43 @@ create policy "community contacts are self-only"
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
--- recognitions — the Unsung Heroes recognition card. observer_id is always
--- the signed-in Host recording it; observed_name is who they're recognizing,
--- optionally linked to a real AVAIA account via observed_user_id. virtue_name
--- is validated at the application layer against lib/virtues.ts (123 elements
--- is too many to enumerate in a check constraint); virtue_family is the one
--- piece constrained here since there are only ten.
--- ---------------------------------------------------------------------------
+-- recognitions — the Unsung Heroes workbook entry. observer_id is always
+-- the signed-in Host recording it; who_became_visible is who they're
+-- recognizing, optionally linked to a real AVAIA account via
+-- observed_user_id.
+--
+-- Reworked from the original card shape into a workbook entry, per the
+-- program's actual origin (the Lost Child Program) and its real purpose:
+-- not a virtue-recognition platform, a visibility one. "I see you. What you
+-- did mattered. You matter." is the success condition this table exists to
+-- record evidence of, not a score to accumulate.
+--
+-- who_became_visible replaces observed_name deliberately — the point is not
+-- who performed an action, it's who was seen. primary_virtue/
+-- supporting_virtues are the model's own words for what it named in
+-- conversation; virtue_elements is the validated subset that actually
+-- matches a real Chemistry of Virtue element (lib/virtues.ts — 123 elements
+-- is too many to enumerate in a check constraint, so this validation happens
+-- at the application layer, same as the original virtue_name did).
 create table if not exists public.recognitions (
   id                    uuid primary key default gen_random_uuid(),
   observer_id           uuid not null references auth.users (id) on delete cascade,
-  observed_name         text not null,
   observed_user_id      uuid references auth.users (id) on delete set null,
+  title                 text not null,
+  who_became_visible    text not null,
+  story                 text not null,
   virtue_family         text not null check (virtue_family in (
                             'wisdom', 'justice', 'fortitude', 'self-control', 'love',
                             'positive-attitude', 'hard-work', 'integrity', 'gratitude', 'humility'
                           )),
-  virtue_name           text,
-  story                 text not null,
-  why_it_mattered       text not null,
-  reflection            text not null,  -- why the observer noticed it — core, not optional
+  primary_virtue        text,
+  supporting_virtues    text[] not null default '{}',
+  virtue_elements       text[] not null default '{}',
+  reflection            text not null,  -- why this mattered / why it was noticed — core, not optional
+  personal_insight      text not null,  -- what the observer recognized about themselves
+  community_impact      text not null,  -- how this moment affected people beyond the two involved
+  next_practice         text,           -- what kind of person/community this points toward
+  questions_to_revisit  text[] not null default '{}',
   conversation_path     text not null check (conversation_path in (
                             'i_saw_someone', 'someone_recognized_me',
                             'something_difficult', 'i_want_to_grow'
@@ -126,7 +143,7 @@ create policy "recognitions visible to observer, observed, and community contact
           and cc.contact_role = 'guardian'
           and (
             cc.guardian_of_user_id = recognitions.observed_user_id
-            or cc.guardian_of_name = recognitions.observed_name
+            or cc.guardian_of_name = recognitions.who_became_visible
           )
       )
     )
