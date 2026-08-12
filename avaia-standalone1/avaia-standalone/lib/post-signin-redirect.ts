@@ -9,10 +9,14 @@
 // the browser's own sessionStorage, entirely on AVAIA's side, so it can't
 // trigger that failure mode.
 //
-// Both real sign-in paths use it: verify() in app/sign-in/page.tsx (the
+// Both real sign-in paths peek at it: verify() in app/sign-in/page.tsx (the
 // code the Host types), and finish() in app/auth/callback/page.tsx (if they
-// click a link in the email instead) -- whichever one actually completes
-// the sign-in reads the same stored value.
+// click a link in the email instead). Neither one clears it, because a
+// first-time Host still has to pass through /welcome's consent form before
+// really landing anywhere -- ConsentForm is the one that actually consumes
+// it, since it's the genuine last stop. A returning, already-consented Host
+// never hits /welcome, so nothing ever consumes the value for them; it just
+// sits harmlessly in sessionStorage until overwritten or the tab closes.
 
 const KEY = "avaia_post_signin_redirect";
 
@@ -31,8 +35,23 @@ export function setPostSignInRedirect(path: string) {
   }
 }
 
-/** Reads and clears the stored destination -- read-once, so a later sign-in
- *  from the same browser doesn't reuse a stale value. Defaults to /journey. */
+/** Reads the stored destination without clearing it -- a first-time Host
+ *  may still have to pass through /welcome's consent form between signing
+ *  in and actually landing on this destination, so the value has to survive
+ *  that extra hop. Used by verify() and finish(), which may or may not be
+ *  the last stop. Defaults to /journey. */
+export function peekPostSignInRedirect(): string {
+  if (typeof window === "undefined") return "/journey";
+  try {
+    const value = window.sessionStorage.getItem(KEY);
+    return value && ALLOWED.includes(value) ? value : "/journey";
+  } catch {
+    return "/journey";
+  }
+}
+
+/** Reads and clears the stored destination -- read-once. Used by ConsentForm,
+ *  the genuine last stop for a first-time Host. */
 export function consumePostSignInRedirect(): string {
   if (typeof window === "undefined") return "/journey";
   try {

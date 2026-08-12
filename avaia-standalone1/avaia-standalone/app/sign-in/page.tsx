@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { setPostSignInRedirect, consumePostSignInRedirect } from "@/lib/post-signin-redirect";
+import { setPostSignInRedirect, peekPostSignInRedirect } from "@/lib/post-signin-redirect";
 
 /**
  * Passwordless sign-in by 6-digit code. This is NOT two-factor — there is no
@@ -76,7 +76,7 @@ export default function SignInPage() {
         type: "email",
       });
       if (error) throw error;
-      window.location.replace(consumePostSignInRedirect());
+      window.location.replace(peekPostSignInRedirect());
     } catch {
       setError("That code didn't match, or it expired. Check the latest email, or send a new code.");
       setBusy(false);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DISCLAIMER } from "@/lib/safety";
+import { consumePostSignInRedirect } from "@/lib/post-signin-redirect";
 
 /**
  * The disclaimer + eligibility gate. Records consent, then enters the journey.
@@ -32,7 +33,7 @@ export default function ConsentForm() {
         body: JSON.stringify({ age }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
-      window.location.replace("/journey");
+      window.location.replace(consumePostSignInRedirect());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setSubmitting(false);

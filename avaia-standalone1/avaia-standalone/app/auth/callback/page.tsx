@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { consumePostSignInRedirect } from "@/lib/post-signin-redirect";
+import { peekPostSignInRedirect } from "@/lib/post-signin-redirect";
 
 /**
  * Magic-link landing. Establishes the session from the sign-in link, then
@@ -49,7 +49,7 @@ export default function AuthCallbackPage() {
     const finish = () => {
       if (done) return;
       done = true;
-      window.location.replace(consumePostSignInRedirect());
+      window.location.replace(peekPostSignInRedirect());
     };
     const fail = (msg: string) => {
       if (done) return;
