@@ -276,9 +276,20 @@ export default async function DefyingGriefPage({
       </ol>
 
       {allComplete && (
-        <p className="mt-8 border-t border-rule pt-6 font-serif text-lg text-ink">
-          You crossed all three rooms. That, itself, was an act of audacity.
-        </p>
+        <div className="mt-8 border-t border-rule pt-6">
+          <p className="font-serif text-lg text-ink">
+            You crossed all three rooms. That, itself, was an act of audacity.
+          </p>
+          <form action={beginDefyingGriefWorkshop} className="mt-6">
+            <button type="submit" className={CTA_CLASSES}>
+              Begin Another Journey
+            </button>
+          </form>
+          <p className="mt-3 text-xs text-muted">
+            What you already have stays exactly as it is in your Workbook. This starts a new,
+            separate one alongside it — nothing here gets overwritten.
+          </p>
+        </div>
       )}
     </div>
   );

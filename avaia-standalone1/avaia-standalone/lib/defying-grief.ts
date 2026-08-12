@@ -108,14 +108,19 @@ export async function loadDefyingGriefDashboard(
 
   const stages: DashboardStage[] = STAGE_ORDER.map((stage) => {
     const label = DEFYING_GRIEF_STAGE_LABEL[stage];
-    if (completedStages.has(stage)) {
-      return { stage, label, status: "complete", statusCopy: "Complete", href: "/workbook" };
-    }
+    // Checked before completedStages on purpose -- "Begin Another Journey"
+    // creates a fresh active conversation for a stage that may already have
+    // a completed referral from an earlier run. What's happening right now
+    // has to win the display, or a Host starting over would see "Complete"
+    // forever and have no way back into the new attempt from this page.
     if (activeStage === stage) {
       // Every stage happens in its own workshop (a real GPT), never on the
       // website — a Host returning to "Continue" needs to go back to
       // ChatGPT, not to a website chat that has nothing in it.
       return { stage, label, status: "in-progress", statusCopy: "In progress", href: STAGE_GPT_URL[stage] };
+    }
+    if (completedStages.has(stage)) {
+      return { stage, label, status: "complete", statusCopy: "Complete", href: "/workbook" };
     }
     return {
       stage,
