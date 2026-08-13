@@ -158,12 +158,23 @@ export default async function DefyingGriefPage({
 
   if (!user) return <DefyingGriefIntro />;
 
-  const dashboard = await loadDefyingGriefDashboard(supabase, user.id);
   const { data: profile } = await supabase
     .from("profiles")
-    .select("membership_status")
+    .select("membership_status, consent_at")
     .eq("id", user.id)
     .maybeSingle();
+  // Checked here, before the Threshold screen ever renders -- not just
+  // inside beginDefyingGriefWorkshop's own check further down. Consent
+  // living only in the action meant a Host's first "I'm Still Here" click
+  // got spent discovering they hadn't consented yet and bouncing to
+  // /welcome, landing them back on this same page needing to click the
+  // exact same button a second time to actually do anything. Checking it
+  // here instead means a not-yet-consented Host never sees that button
+  // until they're actually ready to use it -- matching how /journey has
+  // always handled this same check.
+  if (!profile?.consent_at) redirect("/welcome");
+
+  const dashboard = await loadDefyingGriefDashboard(supabase, user.id);
   const isMember = profile?.membership_status === "member";
 
   const header = (
