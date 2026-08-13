@@ -105,12 +105,33 @@ function ThresholdContent({
   );
 }
 
-/** Begins Defying Grief's workshop trip: creates the waiting placeholder IAP
- *  conversation, tagged so whatever referral eventually comes home from the
- *  GPT lands somewhere Defying Grief recognizes (see the program-preserving
- *  fix in app/api/gpt-actions/iap-referral/route.ts), then sends the Host
- *  straight to the real GPT. AVAIA doesn't render anything from here until
- *  the referral comes home. */
+/** Creates the waiting placeholder IAP conversation, tagged so whatever
+ *  referral eventually comes home from the GPT lands somewhere Defying Grief
+ *  recognizes (see the program-preserving fix in
+ *  app/api/gpt-actions/iap-referral/route.ts). Shared by the "I'm Still
+ *  Here" button action and the autostart path below, so both go through the
+ *  exact same archive-then-create logic. */
+async function startDefyingGriefWorkshop(supabase: ReturnType<typeof createClient>, userId: string) {
+  // The referral-receiving endpoint assumes one active conversation per
+  // Host, the same assumption getActiveConversation relies on everywhere
+  // else -- but nothing here previously enforced that. A stray active
+  // conversation left over from unrelated earlier testing (any program,
+  // any stage) could get picked up instead of this new one, silently
+  // attaching a real referral to the wrong conversation. /journey?new=1
+  // already archives the previous active conversation before creating a
+  // fresh one; this does the same thing here.
+  await supabase
+    .from("conversations")
+    .update({ status: "complete", completed_at: new Date().toISOString() })
+    .eq("host_id", userId)
+    .eq("status", "active");
+
+  await createConversation(supabase, userId, "iap", undefined, "defying-grief");
+}
+
+/** The "I'm Still Here" button's action, used once a Host is signed in,
+ *  consented, and ready to click through into the GPT themselves. AVAIA
+ *  doesn't render anything from here until the referral comes home. */
 async function beginDefyingGriefWorkshop() {
   "use server";
 
@@ -127,29 +148,14 @@ async function beginDefyingGriefWorkshop() {
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
 
-  // The referral-receiving endpoint assumes one active conversation per
-  // Host, the same assumption getActiveConversation relies on everywhere
-  // else -- but nothing here previously enforced that. A stray active
-  // conversation left over from unrelated earlier testing (any program,
-  // any stage) could get picked up instead of this new one, silently
-  // attaching a real referral to the wrong conversation. /journey?new=1
-  // already archives the previous active conversation before creating a
-  // fresh one; this does the same thing here.
-  await supabase
-    .from("conversations")
-    .update({ status: "complete", completed_at: new Date().toISOString() })
-    .eq("host_id", user.id)
-    .eq("status", "active");
-
-  await createConversation(supabase, user.id, "iap", undefined, "defying-grief");
-
+  await startDefyingGriefWorkshop(supabase, user.id);
   redirect(IAP_GPT_URL);
 }
 
 export default async function DefyingGriefPage({
   searchParams,
 }: {
-  searchParams?: { checkout?: string };
+  searchParams?: { checkout?: string; autostart?: string };
 }) {
   const supabase = createClient();
   const {
@@ -175,6 +181,18 @@ export default async function DefyingGriefPage({
   if (!profile?.consent_at) redirect("/welcome");
 
   const dashboard = await loadDefyingGriefDashboard(supabase, user.id);
+
+  // ConsentForm sends a first-time Host here with ?autostart=1 once consent
+  // is recorded -- they already expressed readiness twice by this point
+  // (the original "I'm Still Here" click before signing in, then "I agree
+  // -- begin" on the disclaimer), so this skips making them click a third,
+  // functionally identical button and goes straight into the workshop the
+  // moment this page would otherwise have shown it to them.
+  if (searchParams?.autostart === "1" && !dashboard.started) {
+    await startDefyingGriefWorkshop(supabase, user.id);
+    redirect(IAP_GPT_URL);
+  }
+
   const isMember = profile?.membership_status === "member";
 
   const header = (

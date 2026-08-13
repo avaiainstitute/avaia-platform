@@ -33,7 +33,13 @@ export default function ConsentForm() {
         body: JSON.stringify({ age }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
-      window.location.replace(consumePostSignInRedirect());
+      const dest = consumePostSignInRedirect();
+      // Defying Grief specifically skips the extra click of landing on that
+      // page and having to press "I'm Still Here" a second time -- see the
+      // autostart handling in app/defying-grief/page.tsx. /journey has no
+      // equivalent extra click to skip (its first question already renders
+      // inline, no button needed), so it's left exactly as it was.
+      window.location.replace(dest === "/defying-grief" ? "/defying-grief?autostart=1" : dest);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setSubmitting(false);
