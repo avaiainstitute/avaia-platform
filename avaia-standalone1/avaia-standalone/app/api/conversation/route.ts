@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, systemPromptFor, type Program, type Stage } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  systemPromptFor,
+  CAT_REFERRAL_PRESENTATION,
+  type Program,
+  type Stage,
+} from "@/lib/engine/prompts";
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { isMember } from "@/lib/membership";
@@ -45,6 +51,15 @@ export async function POST(request: Request) {
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).
   let system = systemPromptFor(stage, program);
+
+  // CAT-only, live-conversation-only: overrides CAT_INSTRUCTIONS' own
+  // JSON-object referral format for what the model actually says to the
+  // Host. Deliberately not part of systemPromptFor, so /api/referral's
+  // structured-JSON generation call never sees it -- see
+  // CAT_REFERRAL_PRESENTATION's own comment in lib/engine/prompts.ts.
+  if (stage === "cat") {
+    system += `\n\n${"=".repeat(60)}\n\n${CAT_REFERRAL_PRESENTATION}`;
+  }
   const { data: referral } = await supabase
     .from("referrals")
     .select("content")

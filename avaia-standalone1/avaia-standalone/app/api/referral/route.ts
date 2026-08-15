@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/engine/anthropic";
+import { VIRTUE_FAMILIES } from "@/lib/virtues";
 import {
   AVAIA_MODEL,
   systemPromptFor,
@@ -245,6 +246,18 @@ export async function POST(request: Request) {
       { error: "Could not generate the referral. Please try again." },
       { status: 502 }
     );
+  }
+
+  // Backstop for CAT_REFERRAL_VIRTUE_DISCIPLINE: the ten official virtue
+  // families are the only valid entries for relevantVirtues. A silent drop,
+  // not an interpretive fix -- the model is responsible for making the
+  // connection correctly; this only prevents an invented or misclassified
+  // name from ever reaching the stored referral.
+  if (stage === "cat" && Array.isArray((content as { relevantVirtues?: unknown })?.relevantVirtues)) {
+    const familyNames = new Set(VIRTUE_FAMILIES.map((f) => f.name.toLowerCase()));
+    (content as { relevantVirtues: unknown[] }).relevantVirtues = (
+      content as { relevantVirtues: unknown[] }
+    ).relevantVirtues.filter((v) => typeof v === "string" && familyNames.has(v.toLowerCase()));
   }
 
   // Store the referral, complete this stage, and open the next (if any).
