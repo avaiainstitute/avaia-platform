@@ -191,3 +191,74 @@ export function familyOf(key: VirtueFamilyKey): VirtueFamily {
 export function virtuesByFamily(key: VirtueFamilyKey): Virtue[] {
   return VIRTUES.filter((v) => v.family === key);
 }
+
+// ---------------------------------------------------------------------------
+// Name-to-virtue acronym — one curated element per letter, so the same name
+// always spells the same thing. This is a deterministic lookup, not an AI
+// pick per request, for exactly that reason: consistency and speed matter
+// more here than variety.
+//
+// Every letter has a real Chemistry of Virtue element except Q, which has
+// none. Rather than invent one or force a weak phonetic stretch, Q maps to
+// "Quality" — a real, meaningful word, explicitly NOT one of the 123
+// official elements, the same treatment Audacity gets in Defying Grief: a
+// seat at the table anyway, clearly marked as not officially part of the
+// Chemistry of Virtue. X has a genuine element close enough to use as-is:
+// "Excellence" already opens with the same sound X makes.
+// ---------------------------------------------------------------------------
+
+export const QUALITY_WORD = "Quality";
+
+const LETTER_TO_VIRTUE_NAME: Record<string, string> = {
+  A: "Authenticity",
+  B: "Bravery",
+  C: "Courage",
+  D: "Dignity",
+  E: "Excellence",
+  F: "Fortitude",
+  G: "Generosity",
+  H: "Honesty",
+  I: "Individuality",
+  J: "Joy",
+  K: "Kindness",
+  L: "Love",
+  M: "Mindfulness",
+  N: "Nobility",
+  O: "Originality",
+  P: "Perseverance",
+  // Q intentionally has no entry here -- see QUALITY_WORD above.
+  R: "Respect",
+  S: "Sincerity",
+  T: "Truth",
+  U: "Understanding",
+  V: "Vision",
+  W: "Wonder",
+  X: "Excellence",
+  Y: "Yearning",
+  Z: "Zeal",
+};
+
+export type LetterVirtue =
+  | { letter: string; kind: "virtue"; virtue: Virtue }
+  | { letter: string; kind: "quality" }
+  | { letter: string; kind: "none" };
+
+/** Resolves a single letter to its curated virtue element, the special
+ *  Quality case (Q), or "none" for anything that isn't A-Z. */
+export function virtueForLetter(letter: string): LetterVirtue {
+  const upper = letter.toUpperCase();
+  if (!/^[A-Z]$/.test(upper)) return { letter: upper, kind: "none" };
+  if (upper === "Q") return { letter: upper, kind: "quality" };
+  const name = LETTER_TO_VIRTUE_NAME[upper];
+  const virtue = name ? VIRTUES.find((v) => v.name === name) : undefined;
+  if (!virtue) return { letter: upper, kind: "none" };
+  return { letter: upper, kind: "virtue", virtue };
+}
+
+/** Resolves every letter in a name/word, in order, skipping non-letters. */
+export function virtuesForName(input: string): LetterVirtue[] {
+  return input
+    .split("")
+    .filter((ch) => /[a-zA-Z]/.test(ch))
+    .map((ch) => virtueForLetter(ch));
+}

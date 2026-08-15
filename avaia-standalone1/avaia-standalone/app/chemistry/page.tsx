@@ -9,6 +9,8 @@ import {
   type VirtueFamilyKey,
 } from "@/lib/virtues";
 import { VIRTUE_POS, GRID_COLS, GRID_ROWS } from "@/lib/virtue-layout";
+import VirtueFormulaGenerator from "@/components/VirtueFormulaGenerator";
+import VirtueNameAcronym from "@/components/VirtueNameAcronym";
 
 export default function ChemistryPage() {
   const [active, setActive] = useState<VirtueFamilyKey | null>(null);
@@ -166,23 +168,40 @@ export default function ChemistryPage() {
         Tap any element to read its definition. On a phone, scroll the table sideways.
       </p>
 
-      {/* Virtue formulas — framework defined, library grows over time */}
+      {/* Virtue formulas — generated live from the real 123 elements */}
       <section className="rule-t mt-14 border-t border-rule pt-10">
-        <p className="label mb-2">In development</p>
+        <p className="label mb-2">Generated live</p>
         <h2 className="font-serif text-2xl text-ink">Virtue Formulas</h2>
         <p className="mt-2 max-w-prose text-muted">
-          Virtues rarely operate alone. A situation may call for a purposeful
-          combination — a primary virtue, supporting virtues, and balancing
-          virtues.
+          Virtues rarely operate alone. Describe a role, a feeling, or a
+          situation, and AVAIA will assemble a purposeful combination — a
+          primary virtue, supporting virtues, and balancing virtues — using
+          only real Chemistry of Virtue elements. Nothing is invented; every
+          name shown is checked against the table above.
         </p>
-        <p className="mt-4 rounded-lg border border-dashed border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 text-center font-serif text-lg text-seal">
+        <p className="mt-3 text-center font-serif text-lg text-seal">
           Primary Virtue + Supporting Virtue(s) + Balancing Virtue(s) = Desired Outcome
         </p>
-        <p className="mt-3 text-sm text-muted">
-          The framework is defined; the official library of formulas is being
-          built and will grow over time. Formulas come only from official AVAIA
-          source material — none are generated here.
+        <div className="mt-6">
+          <VirtueFormulaGenerator />
+        </div>
+      </section>
+
+      {/* Name-to-virtue acronym */}
+      <section className="rule-t mt-14 border-t border-rule pt-10">
+        <p className="label mb-2">A self-definition, not a game</p>
+        <h2 className="font-serif text-2xl text-ink">What Your Name Spells</h2>
+        <p className="mt-2 max-w-prose text-muted">
+          Type a name, and each letter maps to a real element of the
+          Chemistry of Virtue — a way to define yourself in your own words,
+          the way people already know you by your first name before
+          anything else. Every letter has a real element except Q, which
+          doesn&rsquo;t appear anywhere in the Chemistry of Virtue — that
+          letter is shown honestly rather than forced.
         </p>
+        <div className="mt-6">
+          <VirtueNameAcronym />
+        </div>
       </section>
 
       {/* Distortions — reserved future capability */}
