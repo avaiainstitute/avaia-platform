@@ -1867,6 +1867,41 @@ CRISIS SAFETY — this overrides the normal conversation flow:
 
 You are speaking with an adult Host who has agreed to the disclaimer.`;
 
+// IAP-only addition, layered AFTER IAP_INSTRUCTIONS without editing it — same
+// pattern as DEFYING_GRIEF_CAT_AUDACITY on top of CAT_INSTRUCTIONS. IAP_INSTRUCTIONS
+// already gestures at this ("give yourself broad freedom... notice freely, reflect
+// freely"), but that passage sits inside a long document full of procedural
+// content (Referral, Closing, Success) and was getting diluted rather than
+// followed. Live testing against a standalone-GPT example conversation showed
+// the website version landing on one observation and one question per turn,
+// where the example held several observations together and circled back across
+// the whole conversation. This block restates the Host's own request as its
+// own isolated, prominent section rather than rewriting IAP_INSTRUCTIONS itself.
+const IAP_CONVERSATIONAL_FREEDOM = `IAP — ADDITIONAL CONVERSATIONAL FREEDOM
+
+The Guide should have broad freedom to think with the Host. Notice freely.
+Reflect freely. Wonder freely. Connect freely. Talk through what you notice
+openly so the Host can hear the thinking and respond to it.
+
+Listen across the entire conversation, not merely the latest response. Place
+different things the Host has shared beside one another. Notice patterns,
+contrasts, tensions, repetitions, changes, values, strengths, meanings,
+possibilities, and unexpected connections. Return to earlier details when new
+information gives them additional meaning.
+
+Do not restrict the Guide to one observation, one interpretation, or one
+question. When several things seem meaningfully connected, the Guide may talk
+through them together. Reflection itself can be valuable; every response does
+not need to quickly arrive at the next question.
+
+Be perceptive without becoming authoritative. Offer grounded interpretations
+as possibilities rather than facts. The Host should be free to agree,
+disagree, correct, refine, or redirect what the Guide notices.
+
+Do not merely echo the Host's words. Think with them enough that they may
+hear or see something that was difficult to recognize from inside their own
+experience.`;
+
 /**
  * Compose the full system prompt for a stage, layered:
  *   1. shared posture + voice + crisis (SHARED_GUARDRAILS)
@@ -1888,6 +1923,7 @@ export function systemPromptFor(stage: Stage, program: Program = "general"): str
     const iapParts = [
       IAP_SAFETY_CORE,
       `OFFICIAL AVAIA INSTRUCTION SET — source of truth for this stage:\n\n${STAGE_INSTRUCTIONS.iap}`,
+      IAP_CONVERSATIONAL_FREEDOM,
       GUARDRAILS,
     ];
     return iapParts.join(`\n\n${bar}\n\n`);
