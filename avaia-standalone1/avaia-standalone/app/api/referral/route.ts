@@ -5,6 +5,7 @@ import {
   AVAIA_MODEL,
   systemPromptFor,
   REFERRAL_FORMAT,
+  CAT_OPENING_GENERATION,
   type Program,
   type Stage,
 } from "@/lib/engine/prompts";
@@ -95,6 +96,33 @@ const SCHEMA_FOR: Record<Stage, ReturnType<typeof schema>> = {
   cat: CAT_REFERRAL_SCHEMA,
   innercompass: IC_REFERRAL_SCHEMA,
 };
+
+// Generates CAT's referral-aware opening once, at the IAP -> CAT handoff
+// only. Falls back to the static STAGE_OPENING.cat line (createConversation's
+// existing behavior when opening is undefined) on any failure, so a
+// transient generation error never blocks the handoff.
+async function generateCatOpening(referralContent: unknown): Promise<string | undefined> {
+  try {
+    const client = anthropic();
+    const resp: any = await client.messages.create({
+      model: AVAIA_MODEL,
+      max_tokens: 600,
+      system: CAT_OPENING_GENERATION,
+      messages: [
+        {
+          role: "user",
+          content: `Here is the incoming AVAIA Standard Referral:\n\n${JSON.stringify(referralContent, null, 2)}`,
+        },
+      ],
+    });
+    const text = (resp.content as Array<{ type: string; text?: string }>).find(
+      (b) => b.type === "text"
+    )?.text;
+    return text?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -199,7 +227,8 @@ export async function POST(request: Request) {
   if (nextStage) {
     // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
     // doesn't silently fall back to 'general' on the next stage.
-    await createConversation(supabase, user.id, nextStage, undefined, program);
+    const opening = nextStage === "cat" ? await generateCatOpening(content) : undefined;
+    await createConversation(supabase, user.id, nextStage, opening, program);
     return NextResponse.json({ done: false, nextStage });
   }
   return NextResponse.json({ done: true });
