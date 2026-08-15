@@ -6,6 +6,7 @@ import {
   systemPromptFor,
   REFERRAL_FORMAT,
   CAT_OPENING_GENERATION,
+  INNERCOMPASS_OPENING_GENERATION,
   type Program,
   type Stage,
 } from "@/lib/engine/prompts";
@@ -108,6 +109,33 @@ async function generateCatOpening(referralContent: unknown): Promise<string | un
       model: AVAIA_MODEL,
       max_tokens: 600,
       system: CAT_OPENING_GENERATION,
+      messages: [
+        {
+          role: "user",
+          content: `Here is the incoming AVAIA Standard Referral:\n\n${JSON.stringify(referralContent, null, 2)}`,
+        },
+      ],
+    });
+    const text = (resp.content as Array<{ type: string; text?: string }>).find(
+      (b) => b.type === "text"
+    )?.text;
+    return text?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Generates InnerCompass's referral-aware opening once, at the CAT ->
+// InnerCompass handoff only. Independent of generateCatOpening -- same
+// mechanism, deliberately separate instruction set and call. Same
+// fallback-on-failure behavior.
+async function generateInnerCompassOpening(referralContent: unknown): Promise<string | undefined> {
+  try {
+    const client = anthropic();
+    const resp: any = await client.messages.create({
+      model: AVAIA_MODEL,
+      max_tokens: 600,
+      system: INNERCOMPASS_OPENING_GENERATION,
       messages: [
         {
           role: "user",
@@ -227,7 +255,12 @@ export async function POST(request: Request) {
   if (nextStage) {
     // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
     // doesn't silently fall back to 'general' on the next stage.
-    const opening = nextStage === "cat" ? await generateCatOpening(content) : undefined;
+    const opening =
+      nextStage === "cat"
+        ? await generateCatOpening(content)
+        : nextStage === "innercompass"
+          ? await generateInnerCompassOpening(content)
+          : undefined;
     await createConversation(supabase, user.id, nextStage, opening, program);
     return NextResponse.json({ done: false, nextStage });
   }
