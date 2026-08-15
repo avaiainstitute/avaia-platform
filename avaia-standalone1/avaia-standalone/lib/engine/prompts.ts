@@ -2203,6 +2203,21 @@ paragraph or two.
 Write only the message itself. Do not add commentary, labels, or anything
 before or after it.`;
 
+// ===========================================================================
+// JOURNEY DEVELOPMENT STATUS (as of the latest controlled testing round)
+//
+// IAP          — VALIDATED / LOCKED. Creates Awareness. Do not tune, rewrite,
+//                or expand unless future Host testing demonstrates a
+//                specific reproducible gap.
+// CAT          — VALIDATED / LOCKED. Creates Understanding. Same standard:
+//                only touch it for a demonstrated reproducible gap.
+// InnerCompass — ACTIVE TESTING. Creates Agency. Current development focus.
+//
+// "Locked" is a testing standard, not a permanent prohibition: a real,
+// reproducible gap found through Host testing is grounds to reopen a stage,
+// exactly as happened for both IAP and CAT during this same testing arc.
+// ===========================================================================
+
 /**
  * Compose the full system prompt for a stage. Each stage now gets its own
  * trimmed, dedicated stack built around its own verbatim source
