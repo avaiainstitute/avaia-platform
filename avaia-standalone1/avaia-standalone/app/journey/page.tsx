@@ -69,6 +69,20 @@ export default async function JourneyPage({
   // clean IAP conversation. Redirect to a clean URL so a refresh doesn't spawn
   // another empty conversation.
   if (searchParams?.new === "1") {
+    // One complimentary IAP per Host: once a non-member has already completed
+    // an IAP, this must not let them begin another one -- that would silently
+    // archive whatever CAT/InnerCompass conversation is already waiting for
+    // them behind the membership gate. A member is never restricted here.
+    if (!isMember) {
+      const { count } = await supabase
+        .from("conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("host_id", user.id)
+        .eq("stage", "iap")
+        .eq("status", "complete");
+      if ((count ?? 0) > 0) redirect("/journey");
+    }
+
     const requestedProgram: Program =
       searchParams?.program === "defying-grief" ? "defying-grief" : "general";
     if (convo) {
@@ -94,22 +108,10 @@ export default async function JourneyPage({
     }
   }
 
-  const header = (
-    <div className="flex items-baseline justify-between">
-      <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
-        AVAIA
-      </Link>
-      <div className="flex items-center gap-4">
-        <Link
-          href="/journey?new=1"
-          className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
-        >
-          Start a new conversation
-        </Link>
-        <SignOutButton />
-      </div>
-    </div>
-  );
+  // showRestart is false only for the membership gate below -- a non-member
+  // sitting there has nothing "Start a new conversation" could meaningfully
+  // do for them now (see the ?new=1 guard above), so the link isn't offered.
+  const header = renderHeader(true);
 
   if (journeyComplete || !convo) {
     return (
@@ -145,7 +147,7 @@ export default async function JourneyPage({
   // Host who has just been carried into CAT sees the membership gate instead
   // of the chat; a member continues exactly as before.
   if (stage !== "iap" && !isMember) {
-    return <MembershipGate header={header} checkout={searchParams?.checkout} />;
+    return <MembershipGate header={renderHeader(false)} checkout={searchParams?.checkout} />;
   }
 
   const rawMessages = await loadMessages(supabase, convo.id);
@@ -226,6 +228,30 @@ export default async function JourneyPage({
         initialMessages={messages}
         program={convo.program}
       />
+    </div>
+  );
+}
+
+/** The page header, with "Start a new conversation" shown except on the
+ *  membership gate -- see the ?new=1 guard above for why that link has
+ *  nothing meaningful to do for a non-member sitting there. */
+function renderHeader(showRestart: boolean) {
+  return (
+    <div className="flex items-baseline justify-between">
+      <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
+        AVAIA
+      </Link>
+      <div className="flex items-center gap-4">
+        {showRestart && (
+          <Link
+            href="/journey?new=1"
+            className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
+          >
+            Start a new conversation
+          </Link>
+        )}
+        <SignOutButton />
+      </div>
     </div>
   );
 }
