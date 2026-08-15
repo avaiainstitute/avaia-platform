@@ -53,6 +53,7 @@ const IAP_REFERRAL_SCHEMA = schema({
   reflectionsThatEmerged: strArr,
   questionsWorthCarrying: strArr,
   nextConversationPurpose: str,
+  boundariesToProtect: strArr,
 });
 
 const CAT_REFERRAL_SCHEMA = schema({
@@ -73,6 +74,7 @@ const CAT_REFERRAL_SCHEMA = schema({
   reflectionsThatEmerged: strArr,
   questionsWorthCarrying: strArr,
   nextConversationPurpose: str,
+  boundariesToProtect: strArr,
 });
 
 const IC_REFERRAL_SCHEMA = schema({
@@ -90,6 +92,7 @@ const IC_REFERRAL_SCHEMA = schema({
   commitmentsChosen: strArr,
   whatToPreserve: str,
   roomIdentity: str,
+  boundariesToProtect: strArr,
 });
 
 const SCHEMA_FOR: Record<Stage, ReturnType<typeof schema>> = {
@@ -210,6 +213,14 @@ export async function POST(request: Request) {
       "=".repeat(60) +
       "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — reuse or consciously revise carried-forward fields such as the title; never replace them with no acknowledgment):\n\n" +
       JSON.stringify(incoming.content, null, 2);
+    const boundaries = (incoming.content as { boundariesToProtect?: unknown })?.boundariesToProtect;
+    if (Array.isArray(boundaries) && boundaries.length > 0) {
+      system +=
+        "\n\n" +
+        "=".repeat(60) +
+        "\n\nHOST-ESTABLISHED BOUNDARIES CARRIED FORWARD (see this stage's own boundary-protection instructions above for how to handle a reference, an approach, or a reopening):\n" +
+        boundaries.map((b) => `- ${b}`).join("\n");
+    }
   }
 
   let content: unknown;

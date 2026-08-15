@@ -59,6 +59,14 @@ export async function POST(request: Request) {
       "=".repeat(60) +
       "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — do not ask the Host to repeat it; build from it):\n\n" +
       JSON.stringify(referral.content, null, 2);
+    const boundaries = (referral.content as { boundariesToProtect?: unknown })?.boundariesToProtect;
+    if (Array.isArray(boundaries) && boundaries.length > 0) {
+      system +=
+        "\n\n" +
+        "=".repeat(60) +
+        "\n\nHOST-ESTABLISHED BOUNDARIES CARRIED FORWARD (see this stage's own boundary-protection instructions above for how to handle a reference, an approach, or a reopening):\n" +
+        boundaries.map((b) => `- ${b}`).join("\n");
+    }
   }
 
   // Crisis safety net — log for oversight; the AI's guardrail handles the response.
