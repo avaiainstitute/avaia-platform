@@ -330,6 +330,37 @@ function JourneyIntro() {
         </div>
       </section>
 
+      {/* What happens in each part */}
+      <section className="py-12">
+        <p className="label mb-6">What happens in each part</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link
+            href="/journey/iap"
+            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
+          >
+            <p className="label text-muted">Awareness</p>
+            <p className="mt-1 font-serif text-lg text-ink">Individual Awareness Profile</p>
+            <p className="mt-1 text-sm text-muted">You get to say it.</p>
+          </Link>
+          <Link
+            href="/journey/cat"
+            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
+          >
+            <p className="label text-muted">Understanding</p>
+            <p className="mt-1 font-serif text-lg text-ink">Conversations Across Time</p>
+            <p className="mt-1 text-sm text-muted">You get to understand it.</p>
+          </Link>
+          <Link
+            href="/journey/innercompass"
+            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
+          >
+            <p className="label text-muted">Agency</p>
+            <p className="mt-1 font-serif text-lg text-ink">InnerCompass</p>
+            <p className="mt-1 text-sm text-muted">You get to decide what belongs to you from here.</p>
+          </Link>
+        </div>
+      </section>
+
       {/* Principles */}
       <section className="py-12">
         <p className="label mb-6">What every part of AVAIA holds to</p>

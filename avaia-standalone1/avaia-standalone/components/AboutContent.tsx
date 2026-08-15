@@ -18,6 +18,16 @@ import {
  * governance policy. Rendered by /about (canonical) and by the site root, so
  * there is only one copy of it.
  */
+// The three Journey explanation pages, in JOURNEY_ARC/JOURNEY_MOVEMENTS
+// order -- used to link the matching badge/card below without altering
+// either constant's own text.
+const JOURNEY_STEP_HREF: Record<string, string> = {
+  Awareness: "/journey/iap",
+  Understanding: "/journey/cat",
+  Agency: "/journey/innercompass",
+  Discernment: "/journey/innercompass",
+};
+
 export default function AboutContent() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -79,22 +89,50 @@ export default function AboutContent() {
         <p className="label mb-2">The Arc</p>
         <h2 className="font-serif text-3xl text-ink">The AVAIA Journey</h2>
         <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-2">
-          {JOURNEY_ARC.map((step, i) => (
-            <span key={step} className="flex items-center gap-2">
-              <span className="rounded-full border border-rule bg-white/[0.04] backdrop-blur-sm px-3 py-1 text-sm text-ink">
-                {step}
+          {JOURNEY_ARC.map((step, i) => {
+            const href = JOURNEY_STEP_HREF[step];
+            return (
+              <span key={step} className="flex items-center gap-2">
+                {href ? (
+                  <Link
+                    href={href}
+                    className="rounded-full border border-rule bg-white/[0.04] backdrop-blur-sm px-3 py-1 text-sm text-ink transition-colors hover:border-seal hover:text-seal"
+                  >
+                    {step}
+                  </Link>
+                ) : (
+                  <span className="rounded-full border border-rule bg-white/[0.04] backdrop-blur-sm px-3 py-1 text-sm text-ink">
+                    {step}
+                  </span>
+                )}
+                {i < JOURNEY_ARC.length - 1 && <span className="text-muted">→</span>}
               </span>
-              {i < JOURNEY_ARC.length - 1 && <span className="text-muted">→</span>}
-            </span>
-          ))}
+            );
+          })}
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {JOURNEY_MOVEMENTS.map((m) => (
-            <div key={m.name} className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4">
-              <p className="font-serif text-lg text-seal">{m.name}</p>
-              <p className="mt-1 text-sm text-muted">{m.text}</p>
-            </div>
-          ))}
+          {JOURNEY_MOVEMENTS.map((m) => {
+            const href = JOURNEY_STEP_HREF[m.name];
+            const card = (
+              <>
+                <p className="font-serif text-lg text-seal">{m.name}</p>
+                <p className="mt-1 text-sm text-muted">{m.text}</p>
+              </>
+            );
+            return href ? (
+              <Link
+                key={m.name}
+                href={href}
+                className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
+              >
+                {card}
+              </Link>
+            ) : (
+              <div key={m.name} className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4">
+                {card}
+              </div>
+            );
+          })}
         </div>
       </section>
 
