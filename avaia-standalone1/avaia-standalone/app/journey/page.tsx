@@ -373,7 +373,7 @@ function JourneyIntro() {
           ))}
         </div>
         <div className="mt-4">
-          <Link href="/#principles" className="label hover:text-seal">
+          <Link href="/institution" className="label hover:text-seal">
             The Constitution &amp; all 18 principles →
           </Link>
         </div>
