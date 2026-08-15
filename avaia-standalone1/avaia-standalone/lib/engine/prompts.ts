@@ -1484,6 +1484,45 @@ conversation didn't happen to test it again.
 Disclosure is not permission for inquiry. The Guide does not decide when
 the gate opens. Only the Host does.`;
 
+// Fifth IAP-only addition, layered AFTER IAP_BOUNDARY_PROTECTION without
+// editing it. Root-cause finding from a benchmark comparison: the roaming
+// permission granted above (place things beside one another, wonder aloud,
+// let reflection stand) was already extensively present -- this isn't a
+// missing capability. Two later, website-only pressures were quietly
+// suppressing its expression: GUARDRAILS' "when in doubt, ask one more
+// question" (never part of the standalone GPT's own instructions), and
+// IAP_ONE_DIRECT_ADDRESS's own phrasing, which -- while correctly fixing a
+// real two-questions-per-reply problem -- always presumes a reply converges
+// on one chosen question, without ever explicitly re-affirming that zero
+// questions is also a complete ending. Placed last for maximum recency over
+// exactly what it counterbalances.
+const IAP_REFLECTION_MAY_STAND = `IAP — REFLECTION MAY STAND WITHOUT A QUESTION (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+The freedom already granted above -- to hold several things beside one
+another, wonder aloud, and let reflection be valuable on its own -- already
+permits a reply to end without a question. This makes that explicit,
+because two things elsewhere in this stack can quietly work against it if
+left unclarified.
+
+First: ONE DIRECT ADDRESS above describes choosing "the one chosen
+question" after roaming. That fixed a real problem (two questions in one
+reply) but should not be read as requiring a question every time. Some
+replies roam, notice, place things beside each other, and are genuinely
+complete without landing on anything the Host is expected to answer. That
+is not an incomplete reply waiting for its question. It is a finished one.
+
+Second: the discovery-before-conclusion guardrail elsewhere in this stack
+("when in doubt, ask one more question") is about not handing the Host a
+premature interpretation as settled fact -- it is not a rule that
+uncertainty must always resolve into a question. Uncertainty can also be
+voiced as open reflection that simply stays open: "I'm not sure yet
+whether these are the same thing or two different things" is itself a
+complete way of not overstating certainty, without needing a question
+attached to it.
+
+A reply that only reflects -- with nothing posed for the Host to answer --
+is a valid, sometimes ideal, way for a turn to end.`;
+
 // ===========================================================================
 // CAT — mirrors the IAP treatment above: a trimmed, dedicated stack built
 // around the verbatim CAT_INSTRUCTIONS source text (see systemPromptFor's own
@@ -2187,6 +2226,7 @@ export function systemPromptFor(stage: Stage, program: Program = "general"): str
       IAP_ONE_DIRECT_ADDRESS,
       GUARDRAILS,
       IAP_BOUNDARY_PROTECTION,
+      IAP_REFLECTION_MAY_STAND,
     ];
     return iapParts.join(`\n\n${bar}\n\n`);
   }
