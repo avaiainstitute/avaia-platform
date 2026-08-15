@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   VIRTUES,
   VIRTUE_FAMILIES,
@@ -15,6 +16,8 @@ import VirtueNameAcronym from "@/components/VirtueNameAcronym";
 export default function ChemistryPage() {
   const [active, setActive] = useState<VirtueFamilyKey | null>(null);
   const [selected, setSelected] = useState<Virtue | null>(null);
+  const detailRef = useRef<HTMLDivElement | null>(null);
+  const [scrollToken, setScrollToken] = useState(0);
 
   // If the Host was just referred to a virtue in the journey, arrive with that
   // family lit and that virtue selected — continuity across the two tabs.
@@ -33,6 +36,22 @@ export default function ChemistryPage() {
     }
   }, []);
 
+  // Scrolls the existing detail panel into view -- only when selection was
+  // triggered from somewhere off-screen (a Formula pill), not from a direct
+  // table click, which is already next to the panel.
+  useEffect(() => {
+    if (scrollToken === 0) return;
+    detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [scrollToken]);
+
+  function selectByName(name: string) {
+    const v = VIRTUES.find((x) => x.name === name);
+    if (!v) return;
+    setSelected(v);
+    setActive(v.family);
+    setScrollToken((t) => t + 1);
+  }
+
   const activeFamily = active ? familyOf(active) : null;
 
   return (
@@ -48,6 +67,20 @@ export default function ChemistryPage() {
         participation. Every name and definition here is drawn from the AVAIA
         source materials.
       </p>
+
+      {/* Three doors framing */}
+      <div className="mt-8 rounded-lg border border-dashed border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">Three ways in</p>
+        <p className="text-ink">
+          Identity, Capacity, and Connection aren&rsquo;t three separate features here — they&rsquo;re
+          three doors into the same thing. What Your Name Spells is who you already are. A Virtue
+          Formula names capacities available to you. And{" "}
+          <Link href="/unsung-heroes" className="underline decoration-rule underline-offset-2 hover:text-seal">
+            Unsung Heroes
+          </Link>{" "}
+          is where you learn to recognize those same capacities alive in someone else.
+        </p>
+      </div>
 
       {/* Legend / family filter */}
       <div className="mt-10 flex flex-wrap gap-2">
@@ -90,7 +123,10 @@ export default function ChemistryPage() {
 
       {/* Selected virtue detail */}
       {selected && (
-        <div className="mt-6 flex items-start gap-4 rounded-lg border border-seal bg-white/[0.08] backdrop-blur-sm px-5 py-4">
+        <div
+          ref={detailRef}
+          className="mt-6 flex items-start gap-4 rounded-lg border border-seal bg-white/[0.08] backdrop-blur-sm px-5 py-4 scroll-mt-24"
+        >
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md font-sans text-sm font-bold text-white"
             style={{ backgroundColor: familyOf(selected.family).color }}
@@ -170,7 +206,7 @@ export default function ChemistryPage() {
 
       {/* Virtue formulas — generated live from the real 123 elements */}
       <section className="rule-t mt-14 border-t border-rule pt-10">
-        <p className="label mb-2">Generated live</p>
+        <p className="label mb-2">Generated live · Capacity</p>
         <h2 className="font-serif text-2xl text-ink">Virtue Formulas</h2>
         <p className="mt-2 max-w-prose text-muted">
           Virtues rarely operate alone. Describe a role, a feeling, or a
@@ -183,13 +219,13 @@ export default function ChemistryPage() {
           Primary Virtue + Supporting Virtue(s) + Balancing Virtue(s) = Desired Outcome
         </p>
         <div className="mt-6">
-          <VirtueFormulaGenerator />
+          <VirtueFormulaGenerator onSelectVirtue={selectByName} />
         </div>
       </section>
 
       {/* Name-to-virtue acronym */}
       <section className="rule-t mt-14 border-t border-rule pt-10">
-        <p className="label mb-2">A self-definition, not a game</p>
+        <p className="label mb-2">A self-definition, not a game · Identity</p>
         <h2 className="font-serif text-2xl text-ink">What Your Name Spells</h2>
         <p className="mt-2 max-w-prose text-muted">
           Type a name, and each letter maps to a real element of the

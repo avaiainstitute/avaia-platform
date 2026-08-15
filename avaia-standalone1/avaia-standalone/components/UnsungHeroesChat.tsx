@@ -160,6 +160,20 @@ export default function UnsungHeroesChat({
         primaryVirtue: data.recognition.primary_virtue,
       });
       setShowCardForm(false);
+      // Same avaia:focus sessionStorage key JourneyChat already uses so the
+      // Chemistry tab opens with this virtue pre-highlighted -- no new
+      // handoff mechanism.
+      try {
+        sessionStorage.setItem(
+          "avaia:focus",
+          JSON.stringify({
+            familyKey: data.recognition.virtue_family,
+            virtueName: data.recognition.primary_virtue,
+          })
+        );
+      } catch {
+        /* storage unavailable -- the link back to Chemistry still works */
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -196,6 +210,12 @@ export default function UnsungHeroesChat({
             className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
           >
             View the workbook
+          </a>
+          <a
+            href="/chemistry"
+            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            See what this might be waking up in you
           </a>
         </div>
       </div>

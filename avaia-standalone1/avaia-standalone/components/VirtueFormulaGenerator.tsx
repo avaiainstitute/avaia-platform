@@ -15,12 +15,22 @@ function familyColorFor(name: string): string {
   return v ? familyOf(v.family).color : "#9aa4b2";
 }
 
-function VirtuePill({ name }: { name: string }) {
+function VirtuePill({ name, onClick }: { name: string; onClick?: () => void }) {
+  const style = { backgroundColor: familyColorFor(name) };
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-block rounded-full px-3 py-1 text-sm text-white transition-opacity hover:opacity-80"
+        style={style}
+      >
+        {name}
+      </button>
+    );
+  }
   return (
-    <span
-      className="inline-block rounded-full px-3 py-1 text-sm text-white"
-      style={{ backgroundColor: familyColorFor(name) }}
-    >
+    <span className="inline-block rounded-full px-3 py-1 text-sm text-white" style={style}>
       {name}
     </span>
   );
@@ -30,8 +40,16 @@ function VirtuePill({ name }: { name: string }) {
  *  Primary + Supporting + Balancing formula from the real 123 elements --
  *  generated live, not looked up from a curated library. See the route's
  *  own comments for why every name it returns is validated against the
- *  real Chemistry of Virtue before being shown. */
-export default function VirtueFormulaGenerator() {
+ *  real Chemistry of Virtue before being shown.
+ *
+ *  onSelectVirtue, if given, makes each pill clickable -- it reuses the
+ *  Chemistry page's own existing detail-panel state (see selectByName in
+ *  app/chemistry/page.tsx) rather than building a second definition view. */
+export default function VirtueFormulaGenerator({
+  onSelectVirtue,
+}: {
+  onSelectVirtue?: (name: string) => void;
+}) {
   const [description, setDescription] = useState("");
   const [formula, setFormula] = useState<Formula | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,14 +102,17 @@ export default function VirtueFormulaGenerator() {
         <div className="mt-6 space-y-4 rounded-lg border border-dashed border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-5">
           <div>
             <p className="label mb-2 text-muted">Primary</p>
-            <VirtuePill name={formula.primaryVirtue} />
+            <VirtuePill
+              name={formula.primaryVirtue}
+              onClick={onSelectVirtue ? () => onSelectVirtue(formula.primaryVirtue) : undefined}
+            />
           </div>
           {formula.supportingVirtues.length > 0 && (
             <div>
               <p className="label mb-2 text-muted">Supporting</p>
               <div className="flex flex-wrap gap-2">
                 {formula.supportingVirtues.map((n) => (
-                  <VirtuePill key={n} name={n} />
+                  <VirtuePill key={n} name={n} onClick={onSelectVirtue ? () => onSelectVirtue(n) : undefined} />
                 ))}
               </div>
             </div>
@@ -101,7 +122,7 @@ export default function VirtueFormulaGenerator() {
               <p className="label mb-2 text-muted">Balancing</p>
               <div className="flex flex-wrap gap-2">
                 {formula.balancingVirtues.map((n) => (
-                  <VirtuePill key={n} name={n} />
+                  <VirtuePill key={n} name={n} onClick={onSelectVirtue ? () => onSelectVirtue(n) : undefined} />
                 ))}
               </div>
             </div>
