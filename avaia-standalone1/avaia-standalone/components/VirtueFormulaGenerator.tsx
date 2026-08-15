@@ -110,8 +110,42 @@ export default function VirtueFormulaGenerator() {
             <p className="label mb-1 text-muted">What this supports</p>
             <p className="font-serif text-lg text-ink">{formula.desiredOutcome}</p>
           </div>
+          <div className="border-t border-rule pt-4">
+            <p className="text-ink">
+              These virtues are all around you. See if you can notice them becoming visible in
+              someone.
+            </p>
+            <button
+              type="button"
+              onClick={() => noticeThisFormula(formula)}
+              className="mt-3 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Notice an Unsung Hero
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
+}
+
+// Carries this formula's virtue names into Unsung Heroes' default recognition
+// path -- same sessionStorage-handoff pattern already used for avaia:focus
+// (Journey -> Chemistry of Virtue), just a separate key since the shape is
+// different (a small set of virtues + an outcome, not one family/virtue).
+// Read once and cleared on the Unsung Heroes side; nothing is sent to the AI.
+function noticeThisFormula(formula: Formula) {
+  const virtues = Array.from(
+    new Set([formula.primaryVirtue, ...formula.supportingVirtues, ...formula.balancingVirtues])
+  );
+  try {
+    sessionStorage.setItem(
+      "avaia:formula-focus",
+      JSON.stringify({ virtues, outcome: formula.desiredOutcome })
+    );
+  } catch {
+    // Storage can be unavailable (private browsing) -- proceeding without the
+    // reminder banner is a fine, harmless outcome.
+  }
+  window.location.href = "/unsung-heroes?path=i_saw_someone";
 }

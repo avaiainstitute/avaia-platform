@@ -23,7 +23,7 @@ const KEY = "avaia_post_signin_redirect";
 // Fixed allowlist -- this value ends up driving a same-origin navigation,
 // so it's validated rather than trusted, the same posture used for
 // Stripe's returnTo in app/api/stripe/checkout/route.ts.
-const ALLOWED = ["/journey", "/defying-grief"];
+const ALLOWED = ["/journey", "/defying-grief", "/unsung-heroes?path=i_saw_someone"];
 
 export function setPostSignInRedirect(path: string) {
   if (typeof window === "undefined" || !ALLOWED.includes(path)) return;

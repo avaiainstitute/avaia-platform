@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import UnsungHeroesChat from "@/components/UnsungHeroesChat";
+import UnsungHeroesIntro from "@/components/UnsungHeroesIntro";
 import {
   getActiveUnsungHeroesConversation,
   createUnsungHeroesConversation,
@@ -105,28 +106,6 @@ export default async function UnsungHeroesPage({
         pathLabel={UNSUNG_HEROES_PATH_LABEL[convo.path]}
         initialMessages={messages}
       />
-    </div>
-  );
-}
-
-/** Shown to visitors who aren't signed in. */
-function UnsungHeroesIntro() {
-  return (
-    <div className="mx-auto max-w-prose px-5 py-20">
-      <p className="label mb-3">Unsung Heroes</p>
-      <h1 className="font-serif text-4xl text-ink">You noticed something real</h1>
-      <p className="mt-4 text-lg text-muted">
-        A short, guided conversation to help you name a quiet act of virtue — one you witnessed,
-        one you received, or one you&rsquo;re hoping to grow into.
-      </p>
-      <div className="mt-8">
-        <Link
-          href="/sign-in"
-          className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-        >
-          Sign in to begin
-        </Link>
-      </div>
     </div>
   );
 }

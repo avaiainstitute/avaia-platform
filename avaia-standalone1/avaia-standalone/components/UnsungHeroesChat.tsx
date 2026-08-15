@@ -27,6 +27,9 @@ export default function UnsungHeroesChat({
   const prevHostCount = useRef(0);
   const [focus, setFocus] = useState<ResolvedFocus | null>(null);
   const lastFocusKeyRef = useRef("");
+  const [formulaFocus, setFormulaFocus] = useState<{ virtues: string[]; outcome: string } | null>(
+    null
+  );
 
   const [showCardForm, setShowCardForm] = useState(false);
   const [contextType, setContextType] = useState<ContextType>("school");
@@ -64,6 +67,27 @@ export default function UnsungHeroesChat({
     return () => {
       window.dispatchEvent(new CustomEvent("avaia:focus", { detail: null }));
     };
+  }, []);
+
+  // Read-once reminder of a Virtue Formula the Host generated on the
+  // Chemistry of Virtue page and chose to come notice here -- same
+  // sessionStorage-handoff pattern as avaia:focus, a separate key since the
+  // shape differs. Purely a visual cue for the Host; nothing here is sent to
+  // the AI. Cleared immediately so it doesn't linger into a later, unrelated
+  // conversation.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("avaia:formula-focus");
+      if (raw) {
+        sessionStorage.removeItem("avaia:formula-focus");
+        const parsed = JSON.parse(raw) as { virtues?: string[]; outcome?: string };
+        if (parsed?.virtues?.length) {
+          setFormulaFocus({ virtues: parsed.virtues, outcome: parsed.outcome ?? "" });
+        }
+      }
+    } catch {
+      /* no stored formula, or storage unavailable -- proceed without the reminder */
+    }
   }, []);
 
   async function send(e: React.FormEvent) {
@@ -180,6 +204,22 @@ export default function UnsungHeroesChat({
 
   return (
     <div className="mt-8">
+      {formulaFocus && (
+        <div className="mb-6 rounded-lg border border-dashed border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+          <p className="label mb-2 text-muted">What you came here looking for</p>
+          <div className="flex flex-wrap gap-2">
+            {formulaFocus.virtues.map((v) => (
+              <span
+                key={v}
+                className="inline-block rounded-full border border-rule px-3 py-0.5 text-sm text-ink"
+              >
+                {v}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {crisis && (
         <div className="mb-6 rounded-lg border border-[#8f3b34] bg-[#2a1512]/60 px-5 py-4 backdrop-blur-sm">
           <p className="font-serif text-lg text-[#e0a59d]">You don&rsquo;t have to hold this alone</p>
