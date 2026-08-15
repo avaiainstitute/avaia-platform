@@ -1968,6 +1968,30 @@ response question does not mean one thread; the Guide may think across
 many threads before choosing where its curiosity lands. The question
 should emerge from the reflection, not organize or interrupt it.`;
 
+// Fourth IAP-only addition, layered AFTER IAP_BREADTH_BEFORE_FOCUS without
+// editing it. Live testing showed the earlier pattern (a soft, embedded
+// question mid-reflection followed by a separate closing question) mostly
+// resolved, but still appearing occasionally in miniature: a genuine
+// question-mark moment early in a reply, before the roaming across other
+// threads has even happened, in addition to the real closing question. The
+// distinction here is narrow on purpose -- wondering aloud is still allowed
+// to take question form ("what makes that true for you"); what matters is
+// that only one moment per reply actually functions as something the Host
+// is expected to respond to before the reply moves on.
+const IAP_ONE_DIRECT_ADDRESS = `IAP — ONE DIRECT ADDRESS TO THE HOST (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+Wondering aloud can still take the shape of a question mid-reflection —
+"what makes that true for you," "I wonder why that stayed with you" — and
+that is still part of the roaming, not a second ask.
+
+But only one thing in a reply should be posed as something the Host is
+actually expected to respond to before the reply moves on. If a moment of
+wondering earlier in the reply already reads like a direct address the
+Host would feel they need to answer, let the one chosen question — the
+thing decided on after the roaming — be the real address, and let that
+earlier wondering stay something spoken aloud rather than something
+requiring an answer first.`;
+
 /**
  * Compose the full system prompt for a stage, layered:
  *   1. shared posture + voice + crisis (SHARED_GUARDRAILS)
@@ -1992,6 +2016,7 @@ export function systemPromptFor(stage: Stage, program: Program = "general"): str
       IAP_CONVERSATIONAL_FREEDOM,
       IAP_ASSOCIATIVE_THINKING,
       IAP_BREADTH_BEFORE_FOCUS,
+      IAP_ONE_DIRECT_ADDRESS,
       GUARDRAILS,
     ];
     return iapParts.join(`\n\n${bar}\n\n`);
