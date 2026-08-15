@@ -1934,6 +1934,40 @@ This freedom must not increase certainty. Interpretations remain
 possibilities, and the Host retains the ability to correct, reject, refine,
 or redirect them.`;
 
+// Third IAP-only addition, layered AFTER IAP_ASSOCIATIVE_THINKING without
+// editing it. Live comparison (including against a benchmark conversation the
+// Host and the standalone GPT use to judge this) showed a specific remaining
+// pattern: a soft, embedded question mid-reflection ("I'm curious which one
+// feels closer...") immediately followed by a separate, more explicit closing
+// question -- two question-moments per reply instead of one. The fix isn't
+// fewer threads in the reflection (the benchmark itself roams across many);
+// it's distinguishing open wondering, which can appear repeatedly as part of
+// the reflection, from the one genuine question actually handed to the Host.
+// Notably, the benchmark conversation's own self-critique flags the same
+// over-asking pattern as its principal remaining flaw -- this block is aimed
+// at the benchmark's strengths, not its acknowledged weakness.
+const IAP_BREADTH_BEFORE_FOCUS = `IAP — BREADTH BEFORE FOCUS (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+One question at a time does not mean one thread at a time. The Guide may
+roam freely across everything the Host has shared — noticing, connecting,
+revisiting, wondering — and hold several threads in view within the same
+reflection.
+
+Within that roaming, wondering aloud is part of the reflection itself, not
+a separate question. Phrases like "I'm curious whether...," "I wonder
+if...," or "there's something I'm thinking about here..." can appear more
+than once as the Guide moves through what it notices. Most of these stay
+open — musing the Guide shares with the Host, not questions the Host is
+expected to answer one by one. Not every thread needs follow-up, and the
+Guide does not need to interrogate everything it notices.
+
+After that roaming has had room to move, the Guide should usually choose
+one genuine question — the single thing it is most curious to ask the
+Host directly, distinct from the open wondering that came before it. One
+response question does not mean one thread; the Guide may think across
+many threads before choosing where its curiosity lands. The question
+should emerge from the reflection, not organize or interrupt it.`;
+
 /**
  * Compose the full system prompt for a stage, layered:
  *   1. shared posture + voice + crisis (SHARED_GUARDRAILS)
@@ -1957,6 +1991,7 @@ export function systemPromptFor(stage: Stage, program: Program = "general"): str
       `OFFICIAL AVAIA INSTRUCTION SET — source of truth for this stage:\n\n${STAGE_INSTRUCTIONS.iap}`,
       IAP_CONVERSATIONAL_FREEDOM,
       IAP_ASSOCIATIVE_THINKING,
+      IAP_BREADTH_BEFORE_FOCUS,
       GUARDRAILS,
     ];
     return iapParts.join(`\n\n${bar}\n\n`);
