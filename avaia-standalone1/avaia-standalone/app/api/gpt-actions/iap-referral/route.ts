@@ -181,7 +181,7 @@ export async function POST(request: Request) {
     // opening isn't generated on this path yet -- unchanged, out of scope
     // for this fix.
     const opening = nextStage === "cat" ? await generateCatOpening(referral) : undefined;
-    await createConversation(admin, hostId, nextStage, opening, activeConvo.program);
+    await createConversation(admin, hostId, nextStage, opening, activeConvo.program, activeConvo.journey_id);
   }
 
   return NextResponse.json({ ok: true, done: nextStage === null });

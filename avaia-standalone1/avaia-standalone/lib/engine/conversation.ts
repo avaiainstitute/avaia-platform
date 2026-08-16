@@ -32,6 +32,11 @@ export type DbConversation = {
   stage: Stage;
   status: "active" | "complete";
   program: Program;
+  // Explicit Journey this conversation belongs to (see public.journeys).
+  // Null means the Journey couldn't be confidently determined -- for
+  // historical rows only; every conversation created from this point
+  // forward is assigned one. Never guessed.
+  journey_id: string | null;
   created_at: string;
   completed_at: string | null;
 };
@@ -52,20 +57,43 @@ export async function getActiveConversation(
   return (data as DbConversation) ?? null;
 }
 
+/** Starts a brand-new Journey -- call this once, at the very first IAP
+ *  conversation of a Journey, and carry the returned id into every later
+ *  stage's createConversation call via journeyId. A handoff between stages
+ *  (IAP -> CAT -> InnerCompass) reuses the same journey_id; it does not
+ *  call this again. */
+export async function createJourney(
+  supabase: SupabaseClient,
+  hostId: string,
+  program: Program = "general"
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("journeys")
+    .insert({ host_id: hostId, program })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return (data as { id: string }).id;
+}
+
 /** Create a conversation for a stage and seed the Guide's opening line.
  *  `program` defaults to 'general' and, once set on a Host's first (IAP)
  *  conversation, should be carried forward into every later stage so the
- *  program tag isn't lost at the IAP -> CAT -> InnerCompass handoffs. */
+ *  program tag isn't lost at the IAP -> CAT -> InnerCompass handoffs.
+ *  `journeyId` should be a freshly created journey (via createJourney) when
+ *  starting a Journey from IAP, or the prior conversation's own journey_id
+ *  when handing off to the next stage -- never a new journey at a handoff. */
 export async function createConversation(
   supabase: SupabaseClient,
   hostId: string,
   stage: Stage,
   opening?: string,
-  program: Program = "general"
+  program: Program = "general",
+  journeyId?: string | null
 ): Promise<DbConversation> {
   const { data, error } = await supabase
     .from("conversations")
-    .insert({ host_id: hostId, stage, program })
+    .insert({ host_id: hostId, stage, program, journey_id: journeyId ?? null })
     .select("*")
     .single();
   if (error) throw new Error(error.message);

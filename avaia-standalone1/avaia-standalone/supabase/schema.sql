@@ -60,6 +60,31 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ---------------------------------------------------------------------------
+-- journeys — explicit grouping of one Host's IAP -> CAT -> InnerCompass
+-- conversations into a single Journey. Previously an inference from
+-- timestamp proximity; that broke once (a Defying Grief referral picked up
+-- by an unrelated general-program InnerCompass conversation purely because
+-- it was more recent). journey_id below makes the relationship a stored
+-- fact. Nullable/unenforced on conversations by design: a conversation
+-- whose Journey can't be confidently determined stays unresolved rather
+-- than guessed.
+-- ---------------------------------------------------------------------------
+create table if not exists public.journeys (
+  id            uuid primary key default gen_random_uuid(),
+  host_id       uuid not null references auth.users (id) on delete cascade,
+  program       text not null default 'general' check (program in ('general', 'defying-grief')),
+  started_at    timestamptz not null default now(),
+  completed_at  timestamptz
+);
+
+create index if not exists journeys_host_idx on public.journeys (host_id, started_at);
+
+alter table public.journeys enable row level security;
+create policy "journeys are self-only"
+  on public.journeys for all
+  using (auth.uid() = host_id) with check (auth.uid() = host_id);
+
+-- ---------------------------------------------------------------------------
 -- conversations — one row per stage the Host walks (iap / cat / innercompass)
 -- ---------------------------------------------------------------------------
 create table if not exists public.conversations (
@@ -72,11 +97,14 @@ create table if not exists public.conversations (
   -- Identity/referral content/completion state all still live entirely in
   -- this table and referrals, keyed by conversation_id as they always have.
   program       text not null default 'general' check (program in ('general', 'defying-grief')),
+  -- Explicit Journey this conversation belongs to — see journeys above.
+  journey_id    uuid references public.journeys (id) on delete set null,
   created_at    timestamptz not null default now(),
   completed_at  timestamptz
 );
 
 create index if not exists conversations_host_idx on public.conversations (host_id, created_at);
+create index if not exists conversations_journey_idx on public.conversations (journey_id);
 
 alter table public.conversations enable row level security;
 create policy "conversations are self-only"

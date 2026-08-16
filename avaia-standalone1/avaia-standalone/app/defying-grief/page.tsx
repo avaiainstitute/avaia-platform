@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
-import { createConversation } from "@/lib/engine/conversation";
+import { createConversation, createJourney } from "@/lib/engine/conversation";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import { MembershipGate } from "@/app/journey/page";
 import { loadDefyingGriefDashboard, DEFYING_GRIEF_PROGRAM_NAME } from "@/lib/defying-grief";
@@ -122,7 +122,10 @@ async function startDefyingGriefWorkshop(supabase: ReturnType<typeof createClien
     .eq("host_id", userId)
     .eq("status", "active");
 
-  await createConversation(supabase, userId, "iap", undefined, "defying-grief");
+  // Every workshop start (including "Begin Another Journey") is a new
+  // Journey -- never reuses a prior one, matching /journey?new=1.
+  const journeyId = await createJourney(supabase, userId, "defying-grief");
+  await createConversation(supabase, userId, "iap", undefined, "defying-grief", journeyId);
 }
 
 /** The "I'm Still Here" button's action, used once a Host is signed in,

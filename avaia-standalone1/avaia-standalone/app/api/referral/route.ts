@@ -148,7 +148,7 @@ export async function POST(request: Request) {
 
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status, program")
+    .select("id, stage, status, program, journey_id")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -157,6 +157,7 @@ export async function POST(request: Request) {
   }
   const stage = convo.stage as Stage;
   const program = convo.program as Program;
+  const journeyId = convo.journey_id as string | null;
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
@@ -264,7 +265,7 @@ export async function POST(request: Request) {
         : nextStage === "innercompass"
           ? await generateInnerCompassOpening(content)
           : undefined;
-    await createConversation(supabase, user.id, nextStage, opening, program);
+    await createConversation(supabase, user.id, nextStage, opening, program, journeyId);
     return NextResponse.json({ done: false, nextStage });
   }
   return NextResponse.json({ done: true });

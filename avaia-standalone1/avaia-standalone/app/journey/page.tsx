@@ -10,6 +10,7 @@ import {
   STAGE_LABEL,
   getActiveConversation,
   createConversation,
+  createJourney,
   loadMessages,
 } from "@/lib/engine/conversation";
 import { OPERATING_PRINCIPLES } from "@/lib/institution";
@@ -91,7 +92,10 @@ export default async function JourneyPage({
         .update({ status: "complete", completed_at: new Date().toISOString() })
         .eq("id", convo.id);
     }
-    await createConversation(supabase, user.id, "iap", undefined, requestedProgram);
+    // A fresh IAP entered here always begins a new Journey -- never reuses
+    // an existing journey_id, even if one was active a moment ago.
+    const newJourneyId = await createJourney(supabase, user.id, requestedProgram);
+    await createConversation(supabase, user.id, "iap", undefined, requestedProgram, newJourneyId);
     redirect("/journey");
   }
 
@@ -102,7 +106,8 @@ export default async function JourneyPage({
       .select("id", { count: "exact", head: true })
       .eq("host_id", user.id);
     if ((count ?? 0) === 0) {
-      convo = await createConversation(supabase, user.id, "iap");
+      const firstJourneyId = await createJourney(supabase, user.id, "general");
+      convo = await createConversation(supabase, user.id, "iap", undefined, "general", firstJourneyId);
     } else {
       journeyComplete = true;
     }
