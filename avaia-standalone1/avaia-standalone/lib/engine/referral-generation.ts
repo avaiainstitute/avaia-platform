@@ -20,6 +20,7 @@ import {
 import { generateCatOpening } from "@/lib/engine/openings";
 import {
   formatCatReferralForInnerCompass,
+  formatReferralForHostPresentation,
   INNERCOMPASS_REFERRAL_WRAPPER,
 } from "@/lib/engine/referral-presentation";
 
@@ -242,8 +243,29 @@ async function generateInnerCompassOpening(referralContent: unknown): Promise<st
 }
 
 export type GenerateReferralResult =
-  | { ok: true; done: boolean; nextStage?: Stage }
+  | { ok: true; done: boolean; nextStage?: Stage; content: Record<string, unknown>; referralText: string }
   | { ok: false; error: string; status: number };
+
+/** Renders the given content and persists it as a guide-role message on
+ *  the completed conversation -- the one place this happens, so the button
+ *  and a typed completion request always produce an identical Host-facing
+ *  result. */
+async function presentAndPersist(
+  supabase: SupabaseClient,
+  hostId: string,
+  conversationId: string,
+  stage: Stage,
+  content: Record<string, unknown>
+): Promise<string> {
+  const referralText = formatReferralForHostPresentation(stage, content);
+  await supabase.from("messages").insert({
+    conversation_id: conversationId,
+    host_id: hostId,
+    role: "guide",
+    content: referralText,
+  });
+  return referralText;
+}
 
 /** Generates the AVAIA Standard Referral for an active conversation, stores
  *  it, completes the conversation, and opens the next stage (if any) --
@@ -338,33 +360,67 @@ export async function generateReferral(
     );
   }
 
+  const finalContent = content as Record<string, unknown>;
+
   // Store the referral, complete this stage, and open the next (if any).
   // conversation_id lets a 'conversation'-scope Workbook share (see
   // shared_access) identify exactly this referral, not just any referral
   // that happens to share the same from_stage name.
-  await supabase.from("referrals").insert({
+  const { error: insertError } = await supabase.from("referrals").insert({
     host_id: hostId,
     from_stage: stage,
     to_stage: nextStage ?? "continuity",
-    content,
+    content: finalContent,
     conversation_id: conversationId,
   });
+  if (insertError) {
+    // 23505 = unique_violation on referrals.conversation_id (see
+    // supabase/migrations/0008_referrals_unique_conversation.sql). Two
+    // near-simultaneous completion signals for the same conversation (a
+    // typed request and a button click, or a double-submit) can both pass
+    // the caller's "still active" check before either has written back --
+    // the second call's insert loses the race. Treat that as success, not
+    // failure: the Host's completion intent was already honored by the
+    // other call. Do not create a second referral or a second next-stage
+    // conversation.
+    if ((insertError as { code?: string }).code === "23505") {
+      const { data: existing } = await supabase
+        .from("referrals")
+        .select("content")
+        .eq("conversation_id", conversationId)
+        .maybeSingle();
+      const existingContent = (existing?.content as Record<string, unknown>) ?? finalContent;
+      // Do not persist another presentation message -- the call that won
+      // the race already did, and a second one would duplicate the guide
+      // turn in the transcript for no reason.
+      return {
+        ok: true,
+        done: !nextStage,
+        nextStage: nextStage ?? undefined,
+        content: existingContent,
+        referralText: formatReferralForHostPresentation(stage, existingContent),
+      };
+    }
+    return { ok: false, error: "Could not save the referral. Please try again.", status: 502 };
+  }
   await supabase
     .from("conversations")
     .update({ status: "complete", completed_at: new Date().toISOString() })
     .eq("id", conversationId);
+
+  const referralText = await presentAndPersist(supabase, hostId, conversationId, stage, finalContent);
 
   if (nextStage) {
     // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
     // doesn't silently fall back to 'general' on the next stage.
     const opening =
       nextStage === "cat"
-        ? await generateCatOpening(content)
+        ? await generateCatOpening(finalContent)
         : nextStage === "innercompass"
-          ? await generateInnerCompassOpening(content)
+          ? await generateInnerCompassOpening(finalContent)
           : undefined;
     await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
-    return { ok: true, done: false, nextStage };
+    return { ok: true, done: false, nextStage, content: finalContent, referralText };
   }
-  return { ok: true, done: true };
+  return { ok: true, done: true, content: finalContent, referralText };
 }

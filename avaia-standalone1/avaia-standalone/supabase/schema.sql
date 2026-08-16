@@ -175,12 +175,15 @@ create table if not exists public.referrals (
   -- Which conversation this referral closed out of. Nullable because it
   -- pre-dates this column; without it, a 'conversation'-scope Workbook share
   -- can't identify which single referral belongs to that conversation.
-  conversation_id  uuid references public.conversations (id) on delete set null,
+  -- Unique (see migration 0008): at most one referral per conversation --
+  -- the backstop that makes generateReferral() safe against two
+  -- near-simultaneous completion signals (e.g. a typed request and a
+  -- button click) producing two referrals for the same handoff.
+  conversation_id  uuid references public.conversations (id) on delete set null unique,
   created_at       timestamptz not null default now()
 );
 
 create index if not exists referrals_host_idx on public.referrals (host_id, created_at);
-create index if not exists referrals_conversation_idx on public.referrals (conversation_id);
 
 alter table public.referrals enable row level security;
 create policy "referrals are self-only"

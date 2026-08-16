@@ -46,7 +46,14 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
+  // generateReferral() already rendered and persisted result.referralText
+  // as a guide turn -- the same deterministic render a typed completion
+  // request in /api/conversation produces, so the button and a typed
+  // request are two ways of expressing the same action, not two referral
+  // systems.
   return NextResponse.json(
-    result.done ? { done: true } : { done: false, nextStage: result.nextStage }
+    result.done
+      ? { done: true, referralText: result.referralText }
+      : { done: false, nextStage: result.nextStage, referralText: result.referralText }
   );
 }

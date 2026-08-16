@@ -4,8 +4,7 @@ import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
 import {
   AVAIA_MODEL,
   systemPromptFor,
-  CAT_REFERRAL_PRESENTATION,
-  INNERCOMPASS_REFERRAL_PRESENTATION,
+  REFERRAL_HANDLED_BY_SITE,
   type Program,
   type Stage,
 } from "@/lib/engine/prompts";
@@ -72,16 +71,18 @@ export async function POST(request: Request) {
     content: message,
   });
 
-  // InnerCompass-only: the Host may type readiness to finish directly into
-  // the chat instead of clicking "I'm ready to finish" — see
-  // lib/engine/finish-intent.ts for why this is scoped to InnerCompass only
-  // and kept conservative. When it fires, this calls the same referral
+  // Convergence: the Host may type completion in ordinary language instead
+  // of clicking "I'm ready to move forward" -- see lib/engine/finish-intent.ts
+  // for the exact, conservative pattern set. Applies uniformly to IAP, CAT,
+  // and InnerCompass. When it fires, this calls the same referral
   // generation logic the button does (generateReferral, shared with
   // /api/referral) directly, rather than sending the message to the model
-  // for a normal reply — honoring the request immediately instead of the
-  // model inserting one more exploratory turn first. A false negative here
-  // just falls through to a normal reply; the button is always still there.
-  if (stage === "innercompass" && isFinishIntent(message)) {
+  // for a normal reply -- honoring the request immediately instead of one
+  // more exploratory turn first, and producing the one authoritative,
+  // sanitized, calibration-disciplined record rather than a second,
+  // independently-improvised one. A false negative here just falls
+  // through to a normal reply; the button is always still there.
+  if (isFinishIntent(message)) {
     const result = await generateReferral(supabase, user.id, {
       id: conversationId,
       stage,
@@ -94,32 +95,25 @@ export async function POST(request: Request) {
         { status: result.status, headers: { "x-avaia-crisis": crisis ? "1" : "0" } }
       );
     }
+    // generateReferral() already rendered and persisted result.referralText
+    // as a guide turn -- the same deterministic render the button path
+    // produces, the Workbook shows, and the next stage receives.
     return NextResponse.json(
-      result.done ? { finished: true, done: true } : { finished: true, done: false, nextStage: result.nextStage },
+      result.done
+        ? { finished: true, done: true, referralText: result.referralText }
+        : {
+            finished: true,
+            done: false,
+            nextStage: result.nextStage,
+            referralText: result.referralText,
+          },
       { headers: { "x-avaia-finished": "1", "x-avaia-crisis": crisis ? "1" : "0" } }
     );
   }
 
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).
-  let system = systemPromptFor(stage, program);
-
-  // CAT-only, live-conversation-only: overrides CAT_INSTRUCTIONS' own
-  // JSON-object referral format for what the model actually says to the
-  // Host. Deliberately not part of systemPromptFor, so /api/referral's
-  // structured-JSON generation call never sees it -- see
-  // CAT_REFERRAL_PRESENTATION's own comment in lib/engine/prompts.ts.
-  if (stage === "cat") {
-    system += `\n\n${"=".repeat(60)}\n\n${CAT_REFERRAL_PRESENTATION}`;
-  }
-  // InnerCompass-only, live-conversation-only: same treatment as CAT above --
-  // overrides INNERCOMPASS_INSTRUCTIONS' own JSON-object referral format for
-  // what the model actually says to the Host. See
-  // INNERCOMPASS_REFERRAL_PRESENTATION's own comment in lib/engine/prompts.ts
-  // for the root cause this fixes.
-  if (stage === "innercompass") {
-    system += `\n\n${"=".repeat(60)}\n\n${INNERCOMPASS_REFERRAL_PRESENTATION}`;
-  }
+  let system = `${systemPromptFor(stage, program)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
   const { data: referral } = await supabase
     .from("referrals")
     .select("content")
