@@ -95,9 +95,24 @@ export default function JourneyChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversationId, message: text }),
       });
-      if (!res.ok || !res.body) throw new Error("The Guide could not respond. Please try again.");
+      if (!res.ok) throw new Error("The Guide could not respond. Please try again.");
       if (res.headers.get("x-avaia-crisis") === "1") setCrisis(true);
 
+      // The Host typed readiness to finish directly into the chat instead of
+      // clicking the button below — the server already generated the
+      // referral and advanced the stage (see isFinishIntent in
+      // lib/engine/finish-intent.ts). Drop the empty guide placeholder and
+      // navigate exactly as moveForward() does, rather than reading a body
+      // that isn't a stream.
+      if (res.headers.get("x-avaia-finished") === "1") {
+        const data = await res.json().catch(() => ({}));
+        setMessages((m) => m.slice(0, -1));
+        if (data.done) router.push(program === "defying-grief" ? "/defying-grief" : "/workbook");
+        else router.refresh();
+        return;
+      }
+
+      if (!res.body) throw new Error("The Guide could not respond. Please try again.");
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       let acc = "";

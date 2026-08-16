@@ -16,6 +16,8 @@ import {
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { isMember } from "@/lib/membership";
+import { isFinishIntent } from "@/lib/engine/finish-intent";
+import { generateReferral } from "@/lib/engine/referral-generation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
   // Load the conversation (RLS guarantees it's the Host's own) and confirm it's active.
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status, program")
+    .select("id, stage, status, program, journey_id")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -46,11 +48,56 @@ export async function POST(request: Request) {
   }
   const stage = convo.stage as Stage;
   const program = convo.program as Program;
+  const journeyId = convo.journey_id as string | null;
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
   if (stage !== "iap" && !(await isMember(supabase, user.id))) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
+  }
+
+  // Crisis safety net — log for oversight; the AI's guardrail handles the response.
+  const crisis = detectCrisis(message);
+  if (crisis) {
+    await supabase
+      .from("crisis_events")
+      .insert({ host_id: user.id, conversation_id: conversationId });
+  }
+
+  // Persist the Host's turn before anything else branches on it.
+  await supabase.from("messages").insert({
+    conversation_id: conversationId,
+    host_id: user.id,
+    role: "host",
+    content: message,
+  });
+
+  // InnerCompass-only: the Host may type readiness to finish directly into
+  // the chat instead of clicking "I'm ready to finish" — see
+  // lib/engine/finish-intent.ts for why this is scoped to InnerCompass only
+  // and kept conservative. When it fires, this calls the same referral
+  // generation logic the button does (generateReferral, shared with
+  // /api/referral) directly, rather than sending the message to the model
+  // for a normal reply — honoring the request immediately instead of the
+  // model inserting one more exploratory turn first. A false negative here
+  // just falls through to a normal reply; the button is always still there.
+  if (stage === "innercompass" && isFinishIntent(message)) {
+    const result = await generateReferral(supabase, user.id, {
+      id: conversationId,
+      stage,
+      program,
+      journeyId,
+    });
+    if (!result.ok) {
+      return NextResponse.json(
+        { error: result.error },
+        { status: result.status, headers: { "x-avaia-crisis": crisis ? "1" : "0" } }
+      );
+    }
+    return NextResponse.json(
+      result.done ? { finished: true, done: true } : { finished: true, done: false, nextStage: result.nextStage },
+      { headers: { "x-avaia-finished": "1", "x-avaia-crisis": crisis ? "1" : "0" } }
+    );
   }
 
   // Continuity: if a referral was handed into this stage, give it to the Guide
@@ -109,22 +156,8 @@ export async function POST(request: Request) {
     }
   }
 
-  // Crisis safety net — log for oversight; the AI's guardrail handles the response.
-  const crisis = detectCrisis(message);
-  if (crisis) {
-    await supabase
-      .from("crisis_events")
-      .insert({ host_id: user.id, conversation_id: conversationId });
-  }
-
-  // Persist the Host's turn, then assemble the full history for the model.
-  await supabase.from("messages").insert({
-    conversation_id: conversationId,
-    host_id: user.id,
-    role: "host",
-    content: message,
-  });
-
+  // Assemble the full history for the model — the Host's turn was already
+  // persisted above, before the finish-intent check.
   const dbMessages = await loadMessages(supabase, conversationId);
   // The scripted opener is a guide turn, but Anthropic requires the first turn
   // to be the user. Move it into the system prompt as context (so the Guide
