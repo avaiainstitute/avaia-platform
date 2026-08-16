@@ -9,6 +9,16 @@ import SharedWithList from "@/components/SharedWithList";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
 import type { SharedAccessGrantWithEmail } from "@/lib/sharing";
+import { formatVirtueClassifications } from "@/lib/engine/referral-provenance";
+
+// relevantVirtues (CAT) and virtuesInvolved (InnerCompass) are the only
+// referral fields whose stored shape differs between historical records
+// (flat family-name strings) and current ones ({family, element} objects).
+// Every place below that renders a referral field generically checks this
+// set first and routes through formatVirtueClassifications instead of
+// String(v), so both shapes display identically without rewriting stored
+// data.
+const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
 
 export const metadata = { title: "Your Workbook — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -117,7 +127,12 @@ function buildWorkbookText(
       for (const [key, label] of Object.entries(REFERRAL_LABELS)) {
         const val = content[key];
         if (val == null || (Array.isArray(val) && val.length === 0)) continue;
-        if (Array.isArray(val)) {
+        if (VIRTUE_FIELD_KEYS.has(key)) {
+          const items = formatVirtueClassifications(val);
+          if (items.length === 0) continue;
+          out.push(`${label}:`);
+          for (const v of items) out.push(`  - ${v}`);
+        } else if (Array.isArray(val)) {
           out.push(`${label}:`);
           for (const v of val) out.push(`  - ${String(v)}`);
         } else {
@@ -264,7 +279,20 @@ export default async function WorkbookPage() {
     }
     return out;
   };
-  const patternVirtues = recurring(collectAll(["relevantVirtues", "virtuesInvolved"]));
+  // Virtue fields need their own collector: collectAll assumes flat string
+  // arrays, but relevantVirtues/virtuesInvolved may hold either legacy
+  // strings or current {family, element} objects, and recurring()'s
+  // it.trim() would throw on an object. formatVirtueClassifications
+  // normalizes both shapes to display strings first.
+  const collectVirtues = () =>
+    allReferrals.flatMap((r) => {
+      const c = r.content as Record<string, unknown> | undefined;
+      return [
+        ...formatVirtueClassifications(c?.relevantVirtues),
+        ...formatVirtueClassifications(c?.virtuesInvolved),
+      ];
+    });
+  const patternVirtues = recurring(collectVirtues());
   const patternLosses = recurring(
     collectAll(["secondaryLossesIdentified", "significantSecondaryLosses"])
   );
@@ -515,6 +543,24 @@ export default async function WorkbookPage() {
                       <dl className="space-y-3">
                         {Object.entries(REFERRAL_LABELS).map(([key, label]) => {
                           const val = (r.content as Record<string, unknown>)?.[key];
+                          const items = VIRTUE_FIELD_KEYS.has(key)
+                            ? formatVirtueClassifications(val)
+                            : null;
+                          if (items) {
+                            if (items.length === 0) return null;
+                            return (
+                              <div key={key}>
+                                <dt className="label text-muted">{label}</dt>
+                                <dd className="mt-1 text-sm text-ink">
+                                  <ul className="list-disc space-y-0.5 pl-5">
+                                    {items.map((v, jx) => (
+                                      <li key={jx}>{v}</li>
+                                    ))}
+                                  </ul>
+                                </dd>
+                              </div>
+                            );
+                          }
                           if (val == null || (Array.isArray(val) && val.length === 0)) return null;
                           return (
                             <div key={key}>

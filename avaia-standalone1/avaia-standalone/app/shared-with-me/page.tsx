@@ -5,6 +5,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import SignOutButton from "@/components/SignOutButton";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
+import { formatVirtueClassifications } from "@/lib/engine/referral-provenance";
+
+// Same historical-vs-current shape gap as the Workbook's own referral
+// renderer -- relevantVirtues (CAT) and virtuesInvolved (InnerCompass) need
+// normalization, everything else can render generically.
+const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
 
 export const metadata = { title: "Shared with Me — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -161,10 +167,27 @@ export default async function SharedWithMePage() {
                     </p>
                     <dl className="space-y-2">
                       {Object.entries((r.content ?? {}) as Record<string, unknown>).map(([key, val]) => {
+                        const label = key.replace(/([A-Z])/g, " $1").trim();
+                        if (VIRTUE_FIELD_KEYS.has(key)) {
+                          const items = formatVirtueClassifications(val);
+                          if (items.length === 0) return null;
+                          return (
+                            <div key={key}>
+                              <dt className="label text-muted">{label}</dt>
+                              <dd className="mt-0.5 text-sm text-ink">
+                                <ul className="list-disc space-y-0.5 pl-5">
+                                  {items.map((v, jx) => (
+                                    <li key={jx}>{v}</li>
+                                  ))}
+                                </ul>
+                              </dd>
+                            </div>
+                          );
+                        }
                         if (val == null || (Array.isArray(val) && val.length === 0) || val === "") return null;
                         return (
                           <div key={key}>
-                            <dt className="label text-muted">{key.replace(/([A-Z])/g, " $1").trim()}</dt>
+                            <dt className="label text-muted">{label}</dt>
                             <dd className="mt-0.5 text-sm text-ink">
                               {Array.isArray(val) ? (
                                 <ul className="list-disc space-y-0.5 pl-5">

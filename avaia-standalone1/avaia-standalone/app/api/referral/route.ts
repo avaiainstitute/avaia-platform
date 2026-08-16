@@ -42,6 +42,15 @@ const strArr = { type: "array", items: { type: "string" } } as const;
 // lib/virtues.ts hierarchy server-side after generation (see the sanitizer
 // below), the same backstop-not-just-instruction treatment already proven
 // for CAT's old family-only filter.
+//
+// required includes "element" deliberately, even though it may be null --
+// the canonical shape is { family, element: null }, not { family } with
+// element merely absent. This keeps every newly generated classification
+// structurally identical whether or not an element applies, matching
+// VirtueClassification in lib/engine/referral-provenance.ts. (Historical
+// referrals predate this shape entirely -- flat family-name strings --
+// and are handled by normalizeVirtueClassifications on read, not by
+// rewriting stored data.)
 const virtueArr = {
   type: "array",
   items: {

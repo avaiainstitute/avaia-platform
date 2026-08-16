@@ -1,5 +1,5 @@
 import "server-only";
-import { isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
+import { VIRTUE_FAMILIES, isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
 
 // One authoritative mapping of referral field -> epistemic/provenance role,
 // per stage. Built once so completion rendering, Workbook rendering, and
@@ -90,26 +90,60 @@ export const INNERCOMPASS_FIELD_PROVENANCE: Record<string, FieldMeta> = {
   outcomeType: { role: "stage_synthesis", label: "Outcome" },
 };
 
-/** Renders a virtue classification array ({family, element}[]) as display
- *  strings -- "Positive Attitude — Serenity" when a real element is present,
- *  just "Integrity" when it's family-only, per the approved shape. Silently
- *  drops anything that doesn't validate against the canonical Chemistry of
- *  Virtue hierarchy -- a rendering-time backstop alongside the
- *  generation-time one in api/referral/route.ts. */
-export function formatVirtueClassifications(value: unknown): string[] {
+/** The canonical, internal shape every virtue-classification consumer reads
+ *  -- element is always present as a key, either a real element name or
+ *  null, never merely omitted. Everything that stores or renders a virtue
+ *  classification (Workbook, sharing, CAT -> InnerCompass presentation,
+ *  future continuity extraction) should go through normalizeVirtueClassifications
+ *  rather than reading referral.content directly, so a legacy record and a
+ *  current one are indistinguishable once normalized. */
+export type VirtueClassification = { family: string; element: string | null };
+
+/** Accepts either shape a stored relevantVirtues/virtuesInvolved value can
+ *  currently be in and produces the canonical structured representation:
+ *  - Legacy (historical CAT referrals, pre this round): a flat array of
+ *    family-name strings, e.g. ["Integrity", "Positive Attitude"].
+ *  - Current: an array of {family, element} objects, element nullable.
+ *  This does not rewrite stored data -- referrals already in the database
+ *  keep whichever shape they were written in; only reading normalizes.
+ *  Anything that doesn't validate against the canonical Chemistry of Virtue
+ *  hierarchy is silently dropped either way, matching the existing
+ *  generation-time backstop in api/referral/route.ts. */
+export function normalizeVirtueClassifications(value: unknown): VirtueClassification[] {
   if (!Array.isArray(value)) return [];
-  const out: string[] = [];
+  const out: VirtueClassification[] = [];
   for (const item of value) {
-    if (!item || typeof item !== "object") continue;
-    const family = (item as { family?: unknown }).family;
-    const element = (item as { element?: unknown }).element;
-    if (typeof family !== "string" || !isValidVirtueFamily(family)) continue;
-    if (element === null || element === undefined) {
-      out.push(family);
-    } else if (typeof element === "string" && isValidVirtueElement(family, element)) {
-      out.push(`${family} — ${element}`);
+    if (typeof item === "string") {
+      // Legacy shape: a flat family-name string. Case-insensitive match,
+      // same tolerance the pre-this-round sanitizer applied, normalized to
+      // the family's canonical display casing.
+      const match = VIRTUE_FAMILIES.find(
+        (f) => f.name.toLowerCase() === item.trim().toLowerCase()
+      );
+      if (match) out.push({ family: match.name, element: null });
+      continue;
     }
-    // else: element present but invalid -- dropped, not guessed at.
+    if (item && typeof item === "object") {
+      const family = (item as { family?: unknown }).family;
+      const element = (item as { element?: unknown }).element;
+      if (typeof family !== "string" || !isValidVirtueFamily(family)) continue;
+      if (element === null || element === undefined) {
+        out.push({ family, element: null });
+      } else if (typeof element === "string" && isValidVirtueElement(family, element)) {
+        out.push({ family, element });
+      }
+      // else: element present but invalid -- dropped, not guessed at.
+    }
   }
   return out;
+}
+
+/** Renders a virtue classification array (either legacy flat-string or
+ *  current {family, element} shape) as display strings -- "Positive
+ *  Attitude — Serenity" when a real element is present, just "Integrity"
+ *  when it's family-only. */
+export function formatVirtueClassifications(value: unknown): string[] {
+  return normalizeVirtueClassifications(value).map((v) =>
+    v.element ? `${v.family} — ${v.element}` : v.family
+  );
 }
