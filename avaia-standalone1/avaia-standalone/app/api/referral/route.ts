@@ -6,7 +6,6 @@ import {
   AVAIA_MODEL,
   systemPromptFor,
   REFERRAL_FORMAT,
-  CAT_OPENING_GENERATION,
   INNERCOMPASS_OPENING_GENERATION,
   type Program,
   type Stage,
@@ -18,6 +17,7 @@ import {
   toAnthropicMessages,
 } from "@/lib/engine/conversation";
 import { isMember } from "@/lib/membership";
+import { generateCatOpening } from "@/lib/engine/openings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,33 +101,6 @@ const SCHEMA_FOR: Record<Stage, ReturnType<typeof schema>> = {
   cat: CAT_REFERRAL_SCHEMA,
   innercompass: IC_REFERRAL_SCHEMA,
 };
-
-// Generates CAT's referral-aware opening once, at the IAP -> CAT handoff
-// only. Falls back to the static STAGE_OPENING.cat line (createConversation's
-// existing behavior when opening is undefined) on any failure, so a
-// transient generation error never blocks the handoff.
-async function generateCatOpening(referralContent: unknown): Promise<string | undefined> {
-  try {
-    const client = anthropic();
-    const resp: any = await client.messages.create({
-      model: AVAIA_MODEL,
-      max_tokens: 600,
-      system: CAT_OPENING_GENERATION,
-      messages: [
-        {
-          role: "user",
-          content: `Here is the incoming AVAIA Standard Referral:\n\n${JSON.stringify(referralContent, null, 2)}`,
-        },
-      ],
-    });
-    const text = (resp.content as Array<{ type: string; text?: string }>).find(
-      (b) => b.type === "text"
-    )?.text;
-    return text?.trim() || undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 // Generates InnerCompass's referral-aware opening once, at the CAT ->
 // InnerCompass handoff only. Independent of generateCatOpening -- same

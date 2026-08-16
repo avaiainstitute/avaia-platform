@@ -5,11 +5,7 @@ import SignOutButton from "@/components/SignOutButton";
 import { createConversation } from "@/lib/engine/conversation";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import { MembershipGate } from "@/app/journey/page";
-import {
-  loadDefyingGriefDashboard,
-  DEFYING_GRIEF_PROGRAM_NAME,
-  IAP_GPT_URL,
-} from "@/lib/defying-grief";
+import { loadDefyingGriefDashboard, DEFYING_GRIEF_PROGRAM_NAME } from "@/lib/defying-grief";
 
 export const metadata = { title: `${DEFYING_GRIEF_PROGRAM_NAME} — AVAIA` };
 export const dynamic = "force-dynamic";
@@ -94,7 +90,7 @@ function ThresholdContent({
       </div>
       {cta.kind === "action" && (
         <p className="mt-3 text-xs text-muted">
-          This opens the Individual Awareness Profile in ChatGPT — a new tab, not this site.
+          This begins here, on the AVAIA website.
         </p>
       )}
       <p className="mt-4 text-xs text-muted">
@@ -130,8 +126,10 @@ async function startDefyingGriefWorkshop(supabase: ReturnType<typeof createClien
 }
 
 /** The "I'm Still Here" button's action, used once a Host is signed in,
- *  consented, and ready to click through into the GPT themselves. AVAIA
- *  doesn't render anything from here until the referral comes home. */
+ *  consented, and ready to begin. IAP happens on the AVAIA website, same as
+ *  the general Journey -- /journey picks up the freshly created active
+ *  conversation (tagged program: "defying-grief" by startDefyingGriefWorkshop
+ *  above) and renders it directly. */
 async function beginDefyingGriefWorkshop() {
   "use server";
 
@@ -149,7 +147,7 @@ async function beginDefyingGriefWorkshop() {
   if (!profile?.consent_at) redirect("/welcome");
 
   await startDefyingGriefWorkshop(supabase, user.id);
-  redirect(IAP_GPT_URL);
+  redirect("/journey");
 }
 
 export default async function DefyingGriefPage({
@@ -190,7 +188,7 @@ export default async function DefyingGriefPage({
   // moment this page would otherwise have shown it to them.
   if (searchParams?.autostart === "1" && !dashboard.started) {
     await startDefyingGriefWorkshop(supabase, user.id);
-    redirect(IAP_GPT_URL);
+    redirect("/journey");
   }
 
   const isMember = profile?.membership_status === "member";

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createConversation, STAGE_ORDER, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
+import { generateCatOpening } from "@/lib/engine/openings";
 
 // The entry point every real custom GPT's Action calls — IAP, Conversations
 // Across Time, and InnerCompass all point here. (The path still says
@@ -173,7 +174,14 @@ export async function POST(request: Request) {
   // screens. Only create the next stage if there is one; InnerCompass
   // finishing has nothing after it.
   if (nextStage) {
-    await createConversation(admin, hostId, nextStage, undefined, activeConvo.program);
+    // Give a CAT conversation created from this handoff the same
+    // referral-aware opening the normal website IAP -> CAT flow produces
+    // (see generateCatOpening in lib/engine/openings.ts, shared by both) --
+    // without this it fell back to the generic static opener. InnerCompass's
+    // opening isn't generated on this path yet -- unchanged, out of scope
+    // for this fix.
+    const opening = nextStage === "cat" ? await generateCatOpening(referral) : undefined;
+    await createConversation(admin, hostId, nextStage, opening, activeConvo.program);
   }
 
   return NextResponse.json({ ok: true, done: nextStage === null });

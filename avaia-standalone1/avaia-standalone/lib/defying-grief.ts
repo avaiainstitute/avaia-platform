@@ -114,10 +114,14 @@ export async function loadDefyingGriefDashboard(
     // has to win the display, or a Host starting over would see "Complete"
     // forever and have no way back into the new attempt from this page.
     if (activeStage === stage) {
-      // Every stage happens in its own workshop (a real GPT), never on the
-      // website — a Host returning to "Continue" needs to go back to
-      // ChatGPT, not to a website chat that has nothing in it.
-      return { stage, label, status: "in-progress", statusCopy: "In progress", href: STAGE_GPT_URL[stage] };
+      // IAP now happens on the website (see beginDefyingGriefWorkshop in
+      // app/defying-grief/page.tsx) -- a Host returning to "Continue" an
+      // in-progress IAP goes back into /journey, not to the standalone GPT.
+      // CAT and InnerCompass still happen in their own workshop GPT; this
+      // branch isn't reached for them today (the crossing screen above
+      // always intercepts an in-progress CAT/InnerCompass stage first).
+      const href = stage === "iap" ? "/journey" : STAGE_GPT_URL[stage];
+      return { stage, label, status: "in-progress", statusCopy: "In progress", href };
     }
     if (completedStages.has(stage)) {
       return { stage, label, status: "complete", statusCopy: "Complete", href: "/workbook" };
