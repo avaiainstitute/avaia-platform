@@ -1,14 +1,17 @@
 import Link from "next/link";
 import type { Stage } from "@/lib/engine/prompts";
-import { CAT_GPT_URL, INNERCOMPASS_GPT_URL } from "@/lib/defying-grief";
 
 /**
- * The crossing screen shown once a referral has come home from the previous
- * stage's workshop and the next stage's placeholder conversation is waiting
- * (see the generalized receiving endpoint at
- * app/api/gpt-actions/iap-referral/route.ts). Purely presentational — the
- * buttons below just open the next stage's real GPT directly; the website
- * never hosts the conversation itself for any stage of Defying Grief.
+ * The crossing screen shown once a referral has come home (from the IAP
+ * workshop, or from completing CAT on the website) and the next stage's
+ * conversation is waiting with exactly its seeded opening message. The
+ * public website Journey is IAP -> CAT -> InnerCompass, all three inside
+ * AVAIA -- both buttons below continue on the website (via /journey?enter=1,
+ * which app/journey/page.tsx uses specifically to skip back past this same
+ * crossing screen and into the real chat). The standalone GPTs
+ * (CAT_GPT_URL / INNERCOMPASS_GPT_URL in lib/defying-grief.ts) remain for
+ * Dorian's own facilitated one-on-one/workshop use and are intentionally
+ * not linked from here.
  */
 export default function DefyingGriefCrossing({
   stage,
@@ -49,14 +52,14 @@ export default function DefyingGriefCrossing({
         </p>
         <div className="mt-8">
           <Link
-            href={CAT_GPT_URL}
+            href="/journey?enter=1"
             className="inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]"
           >
             Enter the Room
           </Link>
         </div>
         <p className="mt-3 text-xs text-muted">
-          This opens Conversations Across Time in ChatGPT — a new tab, not this site.
+          This continues here, on the AVAIA website.
         </p>
       </div>
     );
@@ -95,14 +98,14 @@ export default function DefyingGriefCrossing({
       </ul>
       <div className="mt-8">
         <Link
-          href={INNERCOMPASS_GPT_URL}
+          href="/journey?enter=1"
           className="inline-block rounded-md bg-[#c1502e] px-5 py-2.5 font-sans text-sm font-semibold text-[#0c0503] transition-shadow hover:shadow-[0_0_24px_rgba(193,80,46,0.4)]"
         >
           Keep Going
         </Link>
       </div>
       <p className="mt-3 text-xs text-muted">
-        This opens InnerCompass in ChatGPT — a new tab, not this site.
+        This continues here, on the AVAIA website.
       </p>
     </div>
   );
