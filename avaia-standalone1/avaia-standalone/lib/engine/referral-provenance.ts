@@ -1,5 +1,6 @@
 import "server-only";
 import { VIRTUE_FAMILIES, isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
+import type { Stage } from "@/lib/engine/prompts";
 
 // One authoritative mapping of referral field -> epistemic/provenance role,
 // per stage. Built once so completion rendering, Workbook rendering, and
@@ -146,4 +147,72 @@ export function formatVirtueClassifications(value: unknown): string[] {
   return normalizeVirtueClassifications(value).map((v) =>
     v.element ? `${v.family} — ${v.element}` : v.family
   );
+}
+
+const FIELD_PROVENANCE_FOR: Record<Stage, Record<string, FieldMeta>> = {
+  iap: IAP_FIELD_PROVENANCE,
+  cat: CAT_FIELD_PROVENANCE,
+  innercompass: INNERCOMPASS_FIELD_PROVENANCE,
+};
+
+const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
+
+const OUTCOME_TYPE_LABEL: Record<string, string> = {
+  decision_made: "A decision was made",
+  direction_chosen: "A direction was chosen",
+  possibilities_identified: "Possibilities were identified",
+  next_step_only: "A next step was identified",
+  still_discerning: "Still discerning — no decision reached yet",
+};
+
+export type ReferralDisplayItem = {
+  key: string;
+  label: string;
+  role: ProvenanceRole;
+  value: string | string[];
+};
+
+/** The one deterministic, render-not-generate formatter for a stored
+ *  referral's content -- turns the structured record into an ordered list
+ *  of display-ready {label, role, value} items, driven entirely by the
+ *  field -> provenance map above rather than each renderer re-deciding
+ *  labels and shapes independently. Reused by Workbook and the
+ *  Shared-with-me view today; the intended foundation for a future live
+ *  completion display and host_continuity_entries extraction, so none of
+ *  those diverge in how a field is labeled or a virtue is displayed.
+ *
+ *  `stage` is the referral's `from_stage` -- the schema that produced
+ *  `content` -- not the stage it was referred to. Fields absent, empty, or
+ *  blank are omitted rather than shown empty. */
+export function formatReferralFields(
+  stage: Stage,
+  content: Record<string, unknown> | null | undefined
+): ReferralDisplayItem[] {
+  if (!content) return [];
+  const map = FIELD_PROVENANCE_FOR[stage];
+  if (!map) return [];
+  const out: ReferralDisplayItem[] = [];
+  for (const [key, meta] of Object.entries(map)) {
+    const raw = content[key];
+    if (VIRTUE_FIELD_KEYS.has(key)) {
+      const items = formatVirtueClassifications(raw);
+      if (items.length > 0) out.push({ key, label: meta.label, role: meta.role, value: items });
+      continue;
+    }
+    if (key === "outcomeType") {
+      if (typeof raw === "string" && raw in OUTCOME_TYPE_LABEL) {
+        out.push({ key, label: meta.label, role: meta.role, value: OUTCOME_TYPE_LABEL[raw] });
+      }
+      continue;
+    }
+    if (Array.isArray(raw)) {
+      const items = raw.filter((v): v is string => typeof v === "string" && v.trim().length > 0);
+      if (items.length > 0) out.push({ key, label: meta.label, role: meta.role, value: items });
+      continue;
+    }
+    if (typeof raw === "string" && raw.trim().length > 0) {
+      out.push({ key, label: meta.label, role: meta.role, value: raw.trim() });
+    }
+  }
+  return out;
 }

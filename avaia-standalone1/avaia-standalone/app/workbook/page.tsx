@@ -9,63 +9,10 @@ import SharedWithList from "@/components/SharedWithList";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
 import type { SharedAccessGrantWithEmail } from "@/lib/sharing";
-import { formatVirtueClassifications } from "@/lib/engine/referral-provenance";
-
-// relevantVirtues (CAT) and virtuesInvolved (InnerCompass) are the only
-// referral fields whose stored shape differs between historical records
-// (flat family-name strings) and current ones ({family, element} objects).
-// Every place below that renders a referral field generically checks this
-// set first and routes through formatVirtueClassifications instead of
-// String(v), so both shapes display identically without rewriting stored
-// data.
-const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
+import { formatVirtueClassifications, formatReferralFields } from "@/lib/engine/referral-provenance";
 
 export const metadata = { title: "Your Workbook — AVAIA" };
 export const dynamic = "force-dynamic";
-
-// Superset of every stage's referral fields, in reading order. The renderer
-// skips any field a given referral doesn't include, so each stage shows only its
-// own fields.
-const REFERRAL_LABELS: Record<string, string> = {
-  // IAP
-  hostOverview: "Host Overview",
-  title: "Title",
-  currentConcern: "Current Concern",
-  primaryThreads: "Primary Threads",
-  significantRelationships: "Significant Relationships",
-  internalTensions: "Internal Tensions",
-  strengthsAndSupports: "Strengths & Supports",
-  listeningCues: "Listening Cues",
-  areasForExploration: "Areas for Exploration",
-  hostPriorities: "Host Priorities",
-  desiredDirection: "Desired Direction",
-  secondaryLossesIdentified: "Secondary Losses Identified",
-  governingNarratives: "Governing Narratives",
-  // CAT
-  majorUnderstandings: "Major Understandings",
-  primaryLoss: "Primary Loss",
-  significantSecondaryLosses: "Significant Secondary Losses",
-  keyRecognitions: "Key Recognitions",
-  identityThreads: "Identity Threads",
-  activeTensions: "Active Tensions",
-  relevantVirtues: "Relevant Virtues",
-  restorationTargets: "Restoration Targets",
-  councilPerspectives: "Council Perspectives",
-  unresolvedQuestions: "Unresolved Questions",
-  integrationPoints: "Integration Points",
-  // InnerCompass / Continuity
-  centralDecisionOrDirection: "Decision or Direction",
-  rationale: "Rationale",
-  virtuesInvolved: "Virtues Involved",
-  obstacles: "Obstacles",
-  capacityConsiderations: "Capacity Considerations",
-  nextStep: "Next Step",
-  followUpQuestions: "Follow-up Questions",
-  whatToPreserve: "What to Preserve",
-  roomIdentity: "Room Identity",
-  // shared
-  nextConversationPurpose: "Next Conversation Purpose",
-};
 
 type Transcript = Awaited<ReturnType<typeof loadMessages>>;
 
@@ -123,20 +70,15 @@ function buildWorkbookText(
       const from = STAGE_LABEL[r.from_stage as Stage] ?? String(r.from_stage);
       const to = STAGE_LABEL[r.to_stage as Stage] ?? "Continuity";
       out.push(`${from} -> ${to}`, "-".repeat(60));
-      const content = (r.content ?? {}) as Record<string, unknown>;
-      for (const [key, label] of Object.entries(REFERRAL_LABELS)) {
-        const val = content[key];
-        if (val == null || (Array.isArray(val) && val.length === 0)) continue;
-        if (VIRTUE_FIELD_KEYS.has(key)) {
-          const items = formatVirtueClassifications(val);
-          if (items.length === 0) continue;
-          out.push(`${label}:`);
-          for (const v of items) out.push(`  - ${v}`);
-        } else if (Array.isArray(val)) {
-          out.push(`${label}:`);
-          for (const v of val) out.push(`  - ${String(v)}`);
+      for (const item of formatReferralFields(
+        r.from_stage as Stage,
+        (r.content ?? null) as Record<string, unknown> | null
+      )) {
+        if (Array.isArray(item.value)) {
+          out.push(`${item.label}:`);
+          for (const v of item.value) out.push(`  - ${v}`);
         } else {
-          out.push(`${label}: ${String(val)}`);
+          out.push(`${item.label}: ${item.value}`);
         }
       }
       out.push("");
@@ -541,44 +483,25 @@ export default async function WorkbookPage() {
                         {STAGE_LABEL[r.to_stage as Stage] ?? "Continuity"}
                       </p>
                       <dl className="space-y-3">
-                        {Object.entries(REFERRAL_LABELS).map(([key, label]) => {
-                          const val = (r.content as Record<string, unknown>)?.[key];
-                          const items = VIRTUE_FIELD_KEYS.has(key)
-                            ? formatVirtueClassifications(val)
-                            : null;
-                          if (items) {
-                            if (items.length === 0) return null;
-                            return (
-                              <div key={key}>
-                                <dt className="label text-muted">{label}</dt>
-                                <dd className="mt-1 text-sm text-ink">
-                                  <ul className="list-disc space-y-0.5 pl-5">
-                                    {items.map((v, jx) => (
-                                      <li key={jx}>{v}</li>
-                                    ))}
-                                  </ul>
-                                </dd>
-                              </div>
-                            );
-                          }
-                          if (val == null || (Array.isArray(val) && val.length === 0)) return null;
-                          return (
-                            <div key={key}>
-                              <dt className="label text-muted">{label}</dt>
-                              <dd className="mt-1 text-sm text-ink">
-                                {Array.isArray(val) ? (
-                                  <ul className="list-disc space-y-0.5 pl-5">
-                                    {val.map((v, jx) => (
-                                      <li key={jx}>{String(v)}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  String(val)
-                                )}
-                              </dd>
-                            </div>
-                          );
-                        })}
+                        {formatReferralFields(
+                          r.from_stage as Stage,
+                          r.content as Record<string, unknown> | null
+                        ).map((item) => (
+                          <div key={item.key}>
+                            <dt className="label text-muted">{item.label}</dt>
+                            <dd className="mt-1 text-sm text-ink">
+                              {Array.isArray(item.value) ? (
+                                <ul className="list-disc space-y-0.5 pl-5">
+                                  {item.value.map((v, jx) => (
+                                    <li key={jx}>{v}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                item.value
+                              )}
+                            </dd>
+                          </div>
+                        ))}
                       </dl>
                     </div>
                   ))}

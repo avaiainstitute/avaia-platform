@@ -2400,6 +2400,85 @@ a Chemistry of Virtue classification, no matter how virtue-adjacent it
 sounds. It can still be preserved as Host language, a theme, a belief, or a
 capacity the Host named. It cannot be listed as a Guiding Virtue.`;
 
+// Live-testing finding (completion-architecture round): INNERCOMPASS_
+// INSTRUCTIONS still describes the referral as a JSON object to output --
+// accurate for the standalone GPT (a hidden tool payload) but wrong here,
+// where the model's text IS what the Host sees. CAT already had this fix
+// (CAT_REFERRAL_PRESENTATION); InnerCompass never did, which is the direct
+// cause of raw JSON reaching the Host when the conversation was indicated
+// complete in the live chat rather than through the website's own "I'm
+// ready to finish" control. Deliberately NOT composed into systemPromptFor
+// (same treatment as CAT_REFERRAL_PRESENTATION) -- appended only in
+// api/conversation/route.ts for the live conversation, so
+// /api/referral/route.ts's structured-JSON generation call never sees it.
+//
+// Also carries the two other completion findings that belong at the point
+// of writing, not just storing: an honest outcome (do not round a "still
+// discerning" ending up into a decision that was not reached -- see
+// outcomeType in IC_REFERRAL_SCHEMA, which this mirrors) and the Host-
+// authored/Guide-synthesis distinction INNERCOMPASS_HOST_AUTHORED_MEANING
+// already established for the rest of the conversation, carried through to
+// how the referral itself is written.
+export const INNERCOMPASS_REFERRAL_PRESENTATION = `INNERCOMPASS — REFERRAL PRESENTATION (REPLACES THE JSON FORMAT DESCRIBED ABOVE FOR WHAT YOU SAY TO THE HOST)
+
+The instructions above describe the referral as a JSON object. That
+description exists for a different technical context and does not apply
+here: on this website, whatever you write in the conversation is shown to
+the Host directly, exactly as written. The Host must never see a JSON
+object, a code block, or raw structured data.
+
+When the Host indicates the conversation is complete, write the referral
+as the Host would actually read it -- clear titled sections in plain,
+readable prose, the same posture already established by the Individual
+Awareness Profile's and Conversations Across Time's own referrals. Do not
+output JSON, braces, quotation-mark-wrapped keys, or anything that reads
+like data rather than writing.
+
+Write what actually happened, not a fuller version of it. If the Host
+reached a decision or a clear direction, say so plainly and describe it. If
+what emerged instead was a set of possibilities, a next step without a
+settled direction, or a place where discernment is still genuinely
+underway, say that just as plainly -- do not round it up into a decision
+that was not reached. An honest "still discerning" referral is not an
+incomplete one, and is not a failure of this conversation.
+
+Keep the same distinction this conversation has held throughout: what the
+Host actually said, in their own words, is different from InnerCompass's
+own reasoning about it. When you carry forward the Host's own language,
+keep it recognizably theirs. When you offer InnerCompass's own read on an
+obstacle, a capacity, or what a decision rests on, write it as
+InnerCompass's own observation, not as settled fact the Host already
+agreed to.
+
+Cover what the referral is meant to preserve, using this shape as a guide
+(sections may be reworded or omitted to fit what actually emerged -- this
+is a structure, not a rigid template; a section with nothing genuine to
+put in it is better left out than filled with something invented):
+
+- Decision or Direction (only if one was actually reached -- otherwise
+  describe what remains open instead)
+- Reasoning
+- Guiding Virtues
+- Obstacles
+- Capacity Considerations
+- Next Step (only if one was actually identified)
+- Decisions Made / Commitments Chosen (only if the Host actually voiced
+  them)
+- What to Preserve
+- Still Open (questions or discernment the Host is carrying forward)
+- Stewardship / Boundaries to Protect (only if a boundary was actually
+  established -- see the boundary-protection instructions elsewhere in
+  this stack; omit this section entirely if none exists)
+
+Open the referral with:
+
+"I have completed InnerCompass. Please use the following referral
+information as the starting point for continuity."
+
+This governs what you say to the Host. It does not change what the
+website itself stores for continuity between stages -- that happens
+separately and is not something you need to produce or think about.`;
+
 // One-shot generation, not part of the ongoing InnerCompass stack -- never
 // composed into systemPromptFor. Produces the single message a Host sees the
 // moment they arrive in InnerCompass, generated once at the CAT ->

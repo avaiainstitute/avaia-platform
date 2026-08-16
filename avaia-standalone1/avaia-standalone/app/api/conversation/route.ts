@@ -5,6 +5,7 @@ import {
   AVAIA_MODEL,
   systemPromptFor,
   CAT_REFERRAL_PRESENTATION,
+  INNERCOMPASS_REFERRAL_PRESENTATION,
   type Program,
   type Stage,
 } from "@/lib/engine/prompts";
@@ -63,6 +64,14 @@ export async function POST(request: Request) {
   // CAT_REFERRAL_PRESENTATION's own comment in lib/engine/prompts.ts.
   if (stage === "cat") {
     system += `\n\n${"=".repeat(60)}\n\n${CAT_REFERRAL_PRESENTATION}`;
+  }
+  // InnerCompass-only, live-conversation-only: same treatment as CAT above --
+  // overrides INNERCOMPASS_INSTRUCTIONS' own JSON-object referral format for
+  // what the model actually says to the Host. See
+  // INNERCOMPASS_REFERRAL_PRESENTATION's own comment in lib/engine/prompts.ts
+  // for the root cause this fixes.
+  if (stage === "innercompass") {
+    system += `\n\n${"=".repeat(60)}\n\n${INNERCOMPASS_REFERRAL_PRESENTATION}`;
   }
   const { data: referral } = await supabase
     .from("referrals")

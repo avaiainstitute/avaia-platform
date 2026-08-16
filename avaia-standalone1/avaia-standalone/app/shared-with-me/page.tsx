@@ -5,12 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import SignOutButton from "@/components/SignOutButton";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
-import { formatVirtueClassifications } from "@/lib/engine/referral-provenance";
-
-// Same historical-vs-current shape gap as the Workbook's own referral
-// renderer -- relevantVirtues (CAT) and virtuesInvolved (InnerCompass) need
-// normalization, everything else can render generically.
-const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
+import { formatReferralFields } from "@/lib/engine/referral-provenance";
 
 export const metadata = { title: "Shared with Me — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -166,42 +161,25 @@ export default async function SharedWithMePage() {
                       {STAGE_LABEL[r.to_stage as Stage] ?? "Continuity"}
                     </p>
                     <dl className="space-y-2">
-                      {Object.entries((r.content ?? {}) as Record<string, unknown>).map(([key, val]) => {
-                        const label = key.replace(/([A-Z])/g, " $1").trim();
-                        if (VIRTUE_FIELD_KEYS.has(key)) {
-                          const items = formatVirtueClassifications(val);
-                          if (items.length === 0) return null;
-                          return (
-                            <div key={key}>
-                              <dt className="label text-muted">{label}</dt>
-                              <dd className="mt-0.5 text-sm text-ink">
-                                <ul className="list-disc space-y-0.5 pl-5">
-                                  {items.map((v, jx) => (
-                                    <li key={jx}>{v}</li>
-                                  ))}
-                                </ul>
-                              </dd>
-                            </div>
-                          );
-                        }
-                        if (val == null || (Array.isArray(val) && val.length === 0) || val === "") return null;
-                        return (
-                          <div key={key}>
-                            <dt className="label text-muted">{label}</dt>
-                            <dd className="mt-0.5 text-sm text-ink">
-                              {Array.isArray(val) ? (
-                                <ul className="list-disc space-y-0.5 pl-5">
-                                  {val.map((v, jx) => (
-                                    <li key={jx}>{String(v)}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                String(val)
-                              )}
-                            </dd>
-                          </div>
-                        );
-                      })}
+                      {formatReferralFields(
+                        r.from_stage as Stage,
+                        r.content as Record<string, unknown> | null
+                      ).map((item) => (
+                        <div key={item.key}>
+                          <dt className="label text-muted">{item.label}</dt>
+                          <dd className="mt-0.5 text-sm text-ink">
+                            {Array.isArray(item.value) ? (
+                              <ul className="list-disc space-y-0.5 pl-5">
+                                {item.value.map((v, jx) => (
+                                  <li key={jx}>{v}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              item.value
+                            )}
+                          </dd>
+                        </div>
+                      ))}
                     </dl>
                   </div>
                 ))}
