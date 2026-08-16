@@ -6,6 +6,7 @@ import {
   AVAIA_MODEL,
   systemPromptFor,
   REFERRAL_FORMAT,
+  REFERRAL_CALIBRATION_DISCIPLINE,
   INNERCOMPASS_OPENING_GENERATION,
   type Program,
   type Stage,
@@ -294,6 +295,13 @@ export async function generateReferral(
         boundaries.map((b) => `- ${b}`).join("\n");
     }
   }
+
+  // Last, most salient system content for every stage's referral writing --
+  // see REFERRAL_CALIBRATION_DISCIPLINE's own comment in lib/engine/prompts.ts
+  // for the root cause this addresses. Placed after the incoming-referral
+  // block (not right after REFERRAL_FORMAT) so it stays last even when CAT
+  // or InnerCompass has incoming referral context appended above.
+  system += `\n\n${"=".repeat(60)}\n\n${REFERRAL_CALIBRATION_DISCIPLINE}`;
 
   let content: unknown;
   try {
