@@ -23,6 +23,7 @@
 
 import "server-only";
 import { SECONDARY_LOSSES } from "@/lib/institution";
+import { formatVirtueHierarchy } from "@/lib/virtues";
 
 export const AVAIA_MODEL = "claude-sonnet-4-6";
 
@@ -1827,27 +1828,52 @@ may go deep with them.`;
 // (systemPromptFor is shared by both) since virtue-naming correctness
 // matters in what CAT says, not only in the stored referral. Does NOT touch
 // VIRTUE_TABLE_INTEGRATION or the live <<focus: Family | Virtue>> marker --
-// that's separate, already-validated behavior.
+// that's separate, already-validated behavior, deliberately left untouched
+// this round since it also governs live CAT conversation and isn't
+// implicated in the referral/completion findings this responds to.
+//
+// UPGRADED (root-cause round): the original version correctly blocked
+// invented pseudo-families but also collapsed every real element away
+// entirely ("name that one [family] -- not the more specific word"),
+// losing real detail (e.g. Serenity under Positive Attitude) unnecessarily.
+// Root cause was that no prompt anywhere ever had access to the actual
+// canonical hierarchy in lib/virtues.ts -- everything improvised from a
+// separately hand-authored approximation. Now sources the real data
+// directly instead of asking the model to collapse or improvise, and
+// preserves the real element when one genuinely applies instead of
+// erasing it. Same shape and treatment as INNERCOMPASS_VIRTUE_DISCIPLINE.
 const CAT_REFERRAL_VIRTUE_DISCIPLINE = `CAT — REFERRAL VIRTUE DISCIPLINE (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
 
-The Chemistry of Virtue has exactly ten official virtues:
+The Chemistry of Virtue has exactly ten official virtues, each with its own
+set of established elements. This is the complete, authoritative hierarchy --
+use it as the only source, not general knowledge or a guess at what sounds
+right:
 
-Wisdom, Justice, Fortitude, Self-Control, Love, Positive Attitude, Hard
-Work, Integrity, Gratitude, Humility.
+${formatVirtueHierarchy()}
 
-These ten are fixed. Never invent, substitute, rename, or expand this
-set, and never present anything else as if it were one of AVAIA's
-official virtues.
+Never invent, substitute, rename, or expand a virtue family. Never invent an
+element that isn't listed above, and never attach a real element to the
+wrong family.
 
-Words like loyalty, perseverance, self-trust, gentleness, courage,
-resilience, or compassion may appear naturally in the conversation and in
-the referral -- as qualities, experiences, strengths, tensions, or
-language the Host actually used. That is fine and often meaningful. What
-they must never become is a listed "virtue" in their own right. When a
-Chemistry of Virtue connection genuinely belongs in the referral's
-Relevant Virtues, map it to whichever of the ten official virtues it
-actually lives within, and name that one -- not the more specific word
-that prompted the connection.
+A word the Host uses -- loyalty, perseverance, self-trust, gentleness,
+courage, resilience, compassion, or anything else -- may appear naturally in
+the conversation and in the referral as a quality, experience, strength, or
+piece of the Host's own language. That is fine and often meaningful. It
+becomes a Chemistry of Virtue classification only when it genuinely matches
+something on the list above.
+
+When it does, classify it precisely: name the family, and name the specific
+element too when the Host's word is genuinely that element and not just
+adjacent to it -- family Positive Attitude, element Serenity, not just
+Positive Attitude alone, when Serenity is really what's alive. If only the
+family fits and no single element captures it more precisely, the family
+alone is correct and complete -- do not force an element that isn't quite
+right just because the schema allows one.
+
+A word that isn't on the list above -- "trust" is a common example -- is not
+a Chemistry of Virtue classification, no matter how virtue-adjacent it
+sounds. It can still be preserved as Host language, a theme, a belief, or a
+capacity. It cannot be listed as a virtue or an element.
 
 The Chemistry of Virtue supports understanding. It is not a destination
 CAT is steering the conversation, or the referral, toward.`;
@@ -2341,6 +2367,39 @@ it is not a more authoritative source than the Host sitting in front of you
 now. If what's alive in this conversation doesn't match what the referral
 suggested, what's alive now is the more current truth.`;
 
+// New (completion-architecture round): InnerCompass never had any virtue
+// discipline layer at all -- the same root cause as CAT's original gap (no
+// authoritative source ever injected into any prompt), but unaddressed
+// until now. Directly caused "Serenity" being promoted to a standalone
+// Guiding Virtue and "Trust" (not a real Chemistry of Virtue element or
+// family) being classified as one in a live completion record. Parallel
+// structure to CAT_REFERRAL_VIRTUE_DISCIPLINE deliberately -- this is a
+// factual/mechanical discipline, not a stylistic one, so the same precision
+// applies the same way in both stages.
+const INNERCOMPASS_VIRTUE_DISCIPLINE = `INNERCOMPASS — VIRTUE DISCIPLINE (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+The Chemistry of Virtue has exactly ten official virtues, each with its own
+set of established elements. This is the complete, authoritative hierarchy --
+use it as the only source, not general knowledge or a guess at what sounds
+right:
+
+${formatVirtueHierarchy()}
+
+Never invent, substitute, rename, or expand a virtue family. Never invent an
+element that isn't listed above, and never attach a real element to the
+wrong family.
+
+When naming Guiding Virtues, classify precisely: name the family, and name
+the specific element too when the Host's own language genuinely matches that
+element and not just something adjacent to it. If only the family fits, the
+family alone is correct and complete -- do not force an element into a
+Guiding Virtue just because the schema allows one.
+
+A word that isn't on the list above -- "trust" is a common example -- is not
+a Chemistry of Virtue classification, no matter how virtue-adjacent it
+sounds. It can still be preserved as Host language, a theme, a belief, or a
+capacity the Host named. It cannot be listed as a Guiding Virtue.`;
+
 // One-shot generation, not part of the ongoing InnerCompass stack -- never
 // composed into systemPromptFor. Produces the single message a Host sees the
 // moment they arrive in InnerCompass, generated once at the CAT ->
@@ -2505,6 +2564,7 @@ export function systemPromptFor(stage: Stage, program: Program = "general"): str
     INNERCOMPASS_DISCERNMENT_FUNCTION,
     INNERCOMPASS_QUESTION_PREMISE_INTEGRITY,
     INNERCOMPASS_HOST_AUTHORED_MEANING,
+    INNERCOMPASS_VIRTUE_DISCIPLINE,
   ];
   return icParts.join(`\n\n${bar}\n\n`);
 }

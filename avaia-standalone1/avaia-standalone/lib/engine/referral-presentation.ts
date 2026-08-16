@@ -1,4 +1,5 @@
 import "server-only";
+import { formatVirtueClassifications } from "@/lib/engine/referral-provenance";
 
 // Renders a CAT-generated referral into the plain-language, epistemically-
 // ordered form InnerCompass receives, instead of the raw JSON dump every
@@ -80,7 +81,7 @@ export function formatCatReferralForInnerCompass(content: CatReferralContent): s
       ...arr(content.majorUnderstandings),
       ...arr(content.keyRecognitions),
     ]),
-    field("Virtues CAT connected to this", arr(content.relevantVirtues)),
+    field("Virtues CAT connected to this", formatVirtueClassifications(content.relevantVirtues)),
     field("Places CAT saw things connecting", arr(content.integrationPoints)),
     field("Council perspectives CAT noted", arr(content.councilPerspectives)),
   ].filter((s): s is string => s !== null);

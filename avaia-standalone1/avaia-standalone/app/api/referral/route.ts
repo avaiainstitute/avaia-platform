@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/engine/anthropic";
-import { VIRTUE_FAMILIES } from "@/lib/virtues";
+import { isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
 import {
   AVAIA_MODEL,
   systemPromptFor,
@@ -29,9 +29,31 @@ export const dynamic = "force-dynamic";
 // Stage-specific referral schemas, following the AVAIA orchestration doc. Each
 // stage carries the fields that stage's referral is meant to preserve. All fields
 // are required so the structured output is reliable; the model uses empty arrays
-// or brief strings where a field doesn't apply.
+// or brief strings where a field doesn't apply. IAP_REFERRAL_SCHEMA and
+// CAT_REFERRAL_SCHEMA both use this helper unchanged -- IC_REFERRAL_SCHEMA
+// does not (see its own definition below), so InnerCompass-specific
+// optionality never touches IAP/CAT's required-field behavior.
 const str = { type: "string" } as const;
 const strArr = { type: "array", items: { type: "string" } } as const;
+
+// A Chemistry of Virtue classification: the family always present, the
+// specific element only when genuinely warranted -- never required merely
+// because the shape supports one. Validated against the canonical
+// lib/virtues.ts hierarchy server-side after generation (see the sanitizer
+// below), the same backstop-not-just-instruction treatment already proven
+// for CAT's old family-only filter.
+const virtueArr = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      family: { type: "string" },
+      element: { type: ["string", "null"] },
+    },
+    required: ["family", "element"],
+    additionalProperties: false,
+  },
+} as const;
 
 const schema = (properties: Record<string, unknown>) => ({
   type: "object",
@@ -70,7 +92,7 @@ const CAT_REFERRAL_SCHEMA = schema({
   keyRecognitions: strArr,
   identityThreads: strArr,
   activeTensions: strArr,
-  relevantVirtues: strArr,
+  relevantVirtues: virtueArr,
   restorationTargets: strArr,
   councilPerspectives: strArr,
   unresolvedQuestions: strArr,
@@ -82,25 +104,73 @@ const CAT_REFERRAL_SCHEMA = schema({
   boundariesToProtect: strArr,
 });
 
-const IC_REFERRAL_SCHEMA = schema({
-  centralDecisionOrDirection: str,
-  rationale: str,
-  virtuesInvolved: strArr,
-  obstacles: strArr,
-  capacityConsiderations: str,
-  nextStep: str,
-  followUpQuestions: strArr,
-  anchorStatements: strArr,
-  reflectionsThatEmerged: strArr,
-  questionsWorthCarrying: strArr,
-  decisionsMade: strArr,
-  commitmentsChosen: strArr,
-  whatToPreserve: str,
-  roomIdentity: str,
-  boundariesToProtect: strArr,
-});
+// InnerCompass gets its own bespoke schema construction rather than the
+// shared schema() helper, deliberately -- "still discerning" must be
+// representable honestly, without the model being mechanically forced to
+// manufacture a decision, next step, or commitment that was never actually
+// reached. outcomeType is the explicit, queryable signal of what actually
+// happened (for future host_continuity_entries extraction and retrieval,
+// not just this rendering); the four decision-specific fields are optional
+// so they can be genuinely empty rather than invented, matching whichever
+// outcomeType the conversation actually produced. schema() itself, and
+// IAP_REFERRAL_SCHEMA/CAT_REFERRAL_SCHEMA, are unchanged -- this only
+// affects InnerCompass.
+const IC_REFERRAL_SCHEMA = {
+  type: "object",
+  properties: {
+    roomIdentity: str,
+    outcomeType: {
+      type: "string",
+      enum: [
+        "decision_made",
+        "direction_chosen",
+        "possibilities_identified",
+        "next_step_only",
+        "still_discerning",
+      ],
+    },
+    centralDecisionOrDirection: str,
+    rationale: str,
+    virtuesInvolved: virtueArr,
+    obstacles: strArr,
+    capacityConsiderations: str,
+    nextStep: str,
+    followUpQuestions: strArr,
+    anchorStatements: strArr,
+    reflectionsThatEmerged: strArr,
+    questionsWorthCarrying: strArr,
+    decisionsMade: strArr,
+    commitmentsChosen: strArr,
+    whatToPreserve: str,
+    boundariesToProtect: strArr,
+  },
+  // Stable required core for every completion, regardless of outcome.
+  // Deliberately excludes centralDecisionOrDirection, nextStep,
+  // decisionsMade, commitmentsChosen -- those are optional so
+  // "still_discerning" (and the other non-decision outcomes) never forces
+  // fabricated content into a field named for a decision that didn't happen.
+  required: [
+    "roomIdentity",
+    "outcomeType",
+    "rationale",
+    "virtuesInvolved",
+    "obstacles",
+    "capacityConsiderations",
+    "followUpQuestions",
+    "anchorStatements",
+    "reflectionsThatEmerged",
+    "questionsWorthCarrying",
+    "whatToPreserve",
+    "boundariesToProtect",
+  ],
+  additionalProperties: false,
+} as const;
 
-const SCHEMA_FOR: Record<Stage, ReturnType<typeof schema>> = {
+// IC_REFERRAL_SCHEMA is a bespoke object literal (readonly required tuple),
+// not schema()'s return shape, so this is typed loosely enough to hold
+// both -- these are JSON schema payloads handed to the Anthropic SDK as
+// data, not something relying on schema()'s exact TS shape.
+const SCHEMA_FOR: Record<Stage, Record<string, unknown>> = {
   iap: IAP_REFERRAL_SCHEMA,
   cat: CAT_REFERRAL_SCHEMA,
   innercompass: IC_REFERRAL_SCHEMA,
@@ -228,16 +298,39 @@ export async function POST(request: Request) {
     );
   }
 
-  // Backstop for CAT_REFERRAL_VIRTUE_DISCIPLINE: the ten official virtue
-  // families are the only valid entries for relevantVirtues. A silent drop,
-  // not an interpretive fix -- the model is responsible for making the
-  // connection correctly; this only prevents an invented or misclassified
-  // name from ever reaching the stored referral.
+  // Backstop for CAT_REFERRAL_VIRTUE_DISCIPLINE / INNERCOMPASS_VIRTUE_
+  // DISCIPLINE: every {family, element} entry must validate against the
+  // canonical lib/virtues.ts hierarchy -- family is one of the ten official
+  // names, and element (when present) genuinely belongs to that family, not
+  // just to the Chemistry of Virtue in general. A silent drop, not an
+  // interpretive fix -- the model is responsible for making the connection
+  // correctly; this only prevents an invented family, a misplaced element,
+  // or a non-Chemistry word (e.g. "Trust") from ever reaching the stored
+  // referral. Applies to both CAT's relevantVirtues and InnerCompass's
+  // virtuesInvolved -- same shape, same validation, one place.
+  const sanitizeVirtueClassifications = (value: unknown): unknown[] => {
+    if (!Array.isArray(value)) return [];
+    return value.filter((item) => {
+      if (!item || typeof item !== "object") return false;
+      const family = (item as { family?: unknown }).family;
+      const element = (item as { element?: unknown }).element;
+      if (typeof family !== "string" || !isValidVirtueFamily(family)) return false;
+      if (element === null || element === undefined) return true;
+      return typeof element === "string" && isValidVirtueElement(family, element);
+    });
+  };
   if (stage === "cat" && Array.isArray((content as { relevantVirtues?: unknown })?.relevantVirtues)) {
-    const familyNames = new Set(VIRTUE_FAMILIES.map((f) => f.name.toLowerCase()));
-    (content as { relevantVirtues: unknown[] }).relevantVirtues = (
-      content as { relevantVirtues: unknown[] }
-    ).relevantVirtues.filter((v) => typeof v === "string" && familyNames.has(v.toLowerCase()));
+    (content as { relevantVirtues: unknown[] }).relevantVirtues = sanitizeVirtueClassifications(
+      (content as { relevantVirtues: unknown[] }).relevantVirtues
+    );
+  }
+  if (
+    stage === "innercompass" &&
+    Array.isArray((content as { virtuesInvolved?: unknown })?.virtuesInvolved)
+  ) {
+    (content as { virtuesInvolved: unknown[] }).virtuesInvolved = sanitizeVirtueClassifications(
+      (content as { virtuesInvolved: unknown[] }).virtuesInvolved
+    );
   }
 
   // Store the referral, complete this stage, and open the next (if any).

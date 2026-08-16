@@ -193,6 +193,44 @@ export function virtuesByFamily(key: VirtueFamilyKey): Virtue[] {
 }
 
 // ---------------------------------------------------------------------------
+// Authoritative hierarchy for conversational/referral use. Root cause of the
+// "Serenity promoted to a standalone virtue" / "Trust classified as a virtue"
+// finding: no prompt anywhere ever referenced this canonical data -- CAT and
+// InnerCompass improvised from a separately hand-authored, approximate
+// family/example-word list embedded in VIRTUE_TABLE_INTEGRATION instead. This
+// is now the single source every virtue-classification prompt and every
+// server-side validation should use, so nothing drifts from the real 123-
+// element table again.
+// ---------------------------------------------------------------------------
+
+/** Plain-text "Family: Element, Element, ..." rendering of the complete
+ *  Chemistry of Virtue, generated directly from VIRTUE_FAMILIES/VIRTUES --
+ *  never hand-copied, so it can't drift from the canonical table. */
+export function formatVirtueHierarchy(): string {
+  return VIRTUE_FAMILIES.map((family) => {
+    const elements = virtuesByFamily(family.key).map((v) => v.name);
+    return `${family.name}: ${elements.join(", ")}`;
+  }).join("\n");
+}
+
+/** True only if familyName exactly matches one of the ten official Chemistry
+ *  of Virtue family display names (e.g. "Positive Attitude"). */
+export function isValidVirtueFamily(familyName: string): boolean {
+  return VIRTUE_FAMILIES.some((f) => f.name === familyName);
+}
+
+/** True only if elementName is a real Chemistry of Virtue element that
+ *  belongs to familyName specifically -- not just a real element of some
+ *  other family. Case-insensitive on the element name only. */
+export function isValidVirtueElement(familyName: string, elementName: string): boolean {
+  const family = VIRTUE_FAMILIES.find((f) => f.name === familyName);
+  if (!family) return false;
+  return virtuesByFamily(family.key).some(
+    (v) => v.name.toLowerCase() === elementName.trim().toLowerCase()
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Name-to-virtue acronym — one curated element per letter, so the same name
 // always spells the same thing. This is a deterministic lookup, not an AI
 // pick per request, for exactly that reason: consistency and speed matter
