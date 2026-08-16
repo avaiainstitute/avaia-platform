@@ -8,6 +8,10 @@ import {
   type Program,
   type Stage,
 } from "@/lib/engine/prompts";
+import {
+  formatCatReferralForInnerCompass,
+  INNERCOMPASS_REFERRAL_WRAPPER,
+} from "@/lib/engine/referral-presentation";
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { isMember } from "@/lib/membership";
@@ -69,11 +73,23 @@ export async function POST(request: Request) {
     .limit(1)
     .maybeSingle();
   if (referral?.content) {
-    system +=
-      "\n\n" +
-      "=".repeat(60) +
-      "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — do not ask the Host to repeat it; build from it):\n\n" +
-      JSON.stringify(referral.content, null, 2);
+    // InnerCompass gets the plain-language, epistemically-ordered render
+    // (formatCatReferralForInnerCompass) instead of raw JSON -- see that
+    // function's comment for the root cause this fixes. CAT's own
+    // IAP-referral injection is untouched.
+    if (stage === "innercompass") {
+      system +=
+        "\n\n" +
+        "=".repeat(60) +
+        `\n\n${INNERCOMPASS_REFERRAL_WRAPPER}\n\n` +
+        formatCatReferralForInnerCompass(referral.content as Record<string, unknown>);
+    } else {
+      system +=
+        "\n\n" +
+        "=".repeat(60) +
+        "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — do not ask the Host to repeat it; build from it):\n\n" +
+        JSON.stringify(referral.content, null, 2);
+    }
     const boundaries = (referral.content as { boundariesToProtect?: unknown })?.boundariesToProtect;
     if (Array.isArray(boundaries) && boundaries.length > 0) {
       system +=

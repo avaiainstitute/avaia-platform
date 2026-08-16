@@ -18,6 +18,10 @@ import {
 } from "@/lib/engine/conversation";
 import { isMember } from "@/lib/membership";
 import { generateCatOpening } from "@/lib/engine/openings";
+import {
+  formatCatReferralForInnerCompass,
+  INNERCOMPASS_REFERRAL_WRAPPER,
+} from "@/lib/engine/referral-presentation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -105,7 +109,9 @@ const SCHEMA_FOR: Record<Stage, ReturnType<typeof schema>> = {
 // Generates InnerCompass's referral-aware opening once, at the CAT ->
 // InnerCompass handoff only. Independent of generateCatOpening -- same
 // mechanism, deliberately separate instruction set and call. Same
-// fallback-on-failure behavior.
+// fallback-on-failure behavior. Uses formatCatReferralForInnerCompass so
+// the opening line is never generated from raw referral JSON -- see that
+// function's own comment for why.
 async function generateInnerCompassOpening(referralContent: unknown): Promise<string | undefined> {
   try {
     const client = anthropic();
@@ -116,7 +122,7 @@ async function generateInnerCompassOpening(referralContent: unknown): Promise<st
       messages: [
         {
           role: "user",
-          content: `Here is the incoming AVAIA Standard Referral:\n\n${JSON.stringify(referralContent, null, 2)}`,
+          content: `${INNERCOMPASS_REFERRAL_WRAPPER}\n\n${formatCatReferralForInnerCompass(referralContent as Record<string, unknown>)}`,
         },
       ],
     });
