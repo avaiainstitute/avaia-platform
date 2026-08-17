@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import SignOutButton from "@/components/SignOutButton";
+import RichText from "@/components/RichText";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
@@ -138,7 +139,10 @@ export default async function SharedWithMePage() {
                             : "max-w-[90%] font-serif leading-relaxed text-ink"
                         }
                       >
-                        {m.content}
+                        {/* Same fix as Workbook's transcript rendering: a
+                            guide turn may be the persisted, multi-section
+                            referral text, not just a normal reply. */}
+                        {m.role === "host" ? m.content : <RichText text={m.content} />}
                       </div>
                     </div>
                   ))}

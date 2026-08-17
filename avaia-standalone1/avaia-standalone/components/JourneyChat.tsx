@@ -32,6 +32,13 @@ export default function JourneyChat({
   const [crisis, setCrisis] = useState(false);
   const [advancing, setAdvancing] = useState(false);
   const [error, setError] = useState("");
+  // Set once the referral has been generated and shown, from either the
+  // button or a typed completion request -- both converge on the same
+  // generateReferral() result and the same next step here. Navigation
+  // waits for the Host's own "Continue" click rather than happening
+  // automatically, so the referral (already displayed as the final
+  // message below) is something they actually get to read first.
+  const [finished, setFinished] = useState<{ done: boolean } | null>(null);
   const lastHostRef = useRef<HTMLDivElement | null>(null);
   const prevHostCount = useRef(0);
   const [focus, setFocus] = useState<ResolvedFocus | null>(null);
@@ -100,15 +107,19 @@ export default function JourneyChat({
 
       // The Host typed readiness to finish directly into the chat instead of
       // clicking the button below — the server already generated the
-      // referral and advanced the stage (see isFinishIntent in
-      // lib/engine/finish-intent.ts). Drop the empty guide placeholder and
-      // navigate exactly as moveForward() does, rather than reading a body
-      // that isn't a stream.
+      // referral (see isFinishIntent in lib/engine/finish-intent.ts). Show
+      // it in place of the empty guide placeholder and wait for the Host's
+      // own "Continue" click rather than reading a body that isn't a
+      // stream and navigating immediately — the Host gets to actually read
+      // the referral before moving on, the same as the button below.
       if (res.headers.get("x-avaia-finished") === "1") {
         const data = await res.json().catch(() => ({}));
-        setMessages((m) => m.slice(0, -1));
-        if (data.done) router.push(program === "defying-grief" ? "/defying-grief" : "/workbook");
-        else router.refresh();
+        setMessages((m) => {
+          const copy = m.slice();
+          copy[copy.length - 1] = { role: "guide", content: data.referralText || "" };
+          return copy;
+        });
+        setFinished({ done: !!data.done });
         return;
       }
 
@@ -149,12 +160,26 @@ export default function JourneyChat({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not move forward.");
-      if (data.done) router.push(program === "defying-grief" ? "/defying-grief" : "/workbook");
-      else router.refresh(); // the next stage's conversation loads
+      // Show the referral as the final message and wait for the Host's own
+      // "Continue" click, the same as a typed completion request in
+      // send() above -- both paths call the same generateReferral() and
+      // should behave identically, not one navigating instantly while the
+      // other pauses to show what was generated.
+      if (data.referralText) {
+        setMessages((m) => [...m, { role: "guide", content: data.referralText }]);
+      }
+      setFinished({ done: !!data.done });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
       setAdvancing(false);
     }
+  }
+
+  function continueForward() {
+    if (!finished) return;
+    if (finished.done) router.push(program === "defying-grief" ? "/defying-grief" : "/workbook");
+    else router.refresh(); // the next stage's conversation loads
   }
 
   // Index of the most recent Host message — the scroll anchor for a new turn.
@@ -229,56 +254,76 @@ export default function JourneyChat({
         </div>
       )}
 
-      <form onSubmit={send} className="mt-8">
-        <div className="relative">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send(e);
-              }
-            }}
-            rows={3}
-            placeholder="Write or speak — as much or as little as you like…"
-            disabled={sending || advancing}
-            className="w-full resize-none rounded-lg border border-rule bg-white/[0.04] py-3 pl-4 pr-16 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
-          />
-          <MicButton
-            value={input}
-            onChange={setInput}
-            disabled={sending || advancing}
-            stopSignal={micStop}
-          />
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={sending || advancing || !input.trim()}
-            className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {sending ? "…" : "Send"}
-          </button>
+      {finished ? (
+        <div className="mt-8">
           <button
             type="button"
-            onClick={moveForward}
-            disabled={sending || advancing}
-            className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-muted transition-colors hover:border-seal hover:text-ink disabled:opacity-50"
+            onClick={continueForward}
+            className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
-            {advancing
-              ? "Preparing your referral…"
-              : isLast
-                ? "I'm ready to finish"
-                : "I'm ready to move forward"}
+            {finished.done
+              ? program === "defying-grief"
+                ? "Continue to your Defying Grief dashboard"
+                : "Continue to your Workbook"
+              : "Continue"}
           </button>
+          <p className="mt-3 text-xs text-muted">
+            Your referral is above and saved to your Workbook. Take whatever time you need to read
+            it before continuing.
+          </p>
         </div>
-        <p className="mt-3 text-xs text-muted">
-          {stageLabel}. This conversation — and the referral prepared when you move forward — is
-          saved to your Workbook. AVAIA is not therapy or crisis care — if you&rsquo;re in crisis,
-          call or text 988 (U.S.).
-        </p>
-      </form>
+      ) : (
+        <form onSubmit={send} className="mt-8">
+          <div className="relative">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send(e);
+                }
+              }}
+              rows={3}
+              placeholder="Write or speak — as much or as little as you like…"
+              disabled={sending || advancing}
+              className="w-full resize-none rounded-lg border border-rule bg-white/[0.04] py-3 pl-4 pr-16 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
+            />
+            <MicButton
+              value={input}
+              onChange={setInput}
+              disabled={sending || advancing}
+              stopSignal={micStop}
+            />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={sending || advancing || !input.trim()}
+              className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {sending ? "…" : "Send"}
+            </button>
+            <button
+              type="button"
+              onClick={moveForward}
+              disabled={sending || advancing}
+              className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-muted transition-colors hover:border-seal hover:text-ink disabled:opacity-50"
+            >
+              {advancing
+                ? "Preparing your referral…"
+                : isLast
+                  ? "I'm ready to finish"
+                  : "I'm ready to move forward"}
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-muted">
+            {stageLabel}. This conversation — and the referral prepared when you move forward — is
+            saved to your Workbook. AVAIA is not therapy or crisis care — if you&rsquo;re in crisis,
+            call or text 988 (U.S.).
+          </p>
+        </form>
+      )}
     </div>
   );
 }

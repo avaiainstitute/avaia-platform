@@ -6,6 +6,7 @@ import SignOutButton from "@/components/SignOutButton";
 import WorkbookExport from "@/components/WorkbookExport";
 import ShareButton from "@/components/ShareButton";
 import SharedWithList from "@/components/SharedWithList";
+import RichText from "@/components/RichText";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
 import type { SharedAccessGrantWithEmail } from "@/lib/sharing";
@@ -472,7 +473,19 @@ export default async function WorkbookPage() {
                             : "max-w-[90%] font-serif leading-relaxed text-ink"
                         }
                       >
-                        {m.content}
+                        {m.role === "host" ? (
+                          m.content
+                        ) : (
+                          // Guide turns can be a normal reply or the
+                          // structured, multi-section referral text
+                          // persisted at completion (see
+                          // formatReferralForHostPresentation) -- RichText
+                          // renders both correctly, the same component
+                          // JourneyChat already uses live. Raw {m.content}
+                          // here collapsed the referral's line breaks and
+                          // "- " bullets into an unreadable run-on block.
+                          <RichText text={m.content} />
+                        )}
                       </div>
                     </div>
                   ))}
