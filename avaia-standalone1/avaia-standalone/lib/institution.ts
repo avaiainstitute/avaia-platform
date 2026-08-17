@@ -362,6 +362,27 @@ export const SECONDARY_LOSSES: SecondaryLoss[] = [
   { loss: "Attachment / Support", healingFamily: "love", healingLabel: "Love" },
 ];
 
+// Authoritative-source helpers, same treatment as formatVirtueHierarchy /
+// isValidVirtueFamily in lib/virtues.ts -- IAP and CAT referral generation
+// previously invented free-prose secondary-loss labels ("loss of home,"
+// "loss of professional meaning") instead of using these ten official
+// categories, the same root cause the Chemistry of Virtue fix addressed
+// for virtue classification. See SECONDARY_LOSS_DISCIPLINE in
+// lib/engine/prompts.ts and its use in lib/engine/referral-generation.ts.
+
+/** Plain-text "Loss (restoration: Family)" rendering of the complete
+ *  Secondary Loss taxonomy, generated directly from SECONDARY_LOSSES --
+ *  never hand-copied, so it can't drift from the canonical list. */
+export function formatSecondaryLossHierarchy(): string {
+  return SECONDARY_LOSSES.map((s) => `${s.loss} (restoration: ${s.healingLabel})`).join("\n");
+}
+
+/** True only if category exactly matches one of the ten official Secondary
+ *  Loss names (e.g. "Dreams / Opportunities"), case-insensitive. */
+export function isValidSecondaryLoss(category: string): boolean {
+  return SECONDARY_LOSSES.some((s) => s.loss.toLowerCase() === category.trim().toLowerCase());
+}
+
 // ---------------------------------------------------------------------------
 // Reports & consent (Dorian Q25, Q26)
 // ---------------------------------------------------------------------------

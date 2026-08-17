@@ -9,7 +9,11 @@ import SharedWithList from "@/components/SharedWithList";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
 import type { SharedAccessGrantWithEmail } from "@/lib/sharing";
-import { formatVirtueClassifications, formatReferralFields } from "@/lib/engine/referral-provenance";
+import {
+  formatVirtueClassifications,
+  formatSecondaryLossClassifications,
+  formatReferralFields,
+} from "@/lib/engine/referral-provenance";
 
 export const metadata = { title: "Your Workbook — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -235,9 +239,19 @@ export default async function WorkbookPage() {
       ];
     });
   const patternVirtues = recurring(collectVirtues());
-  const patternLosses = recurring(
-    collectAll(["secondaryLossesIdentified", "significantSecondaryLosses"])
-  );
+  // Same reasoning as collectVirtues above: secondaryLossesIdentified /
+  // significantSecondaryLosses may hold legacy free-prose strings or
+  // current {category, description} objects, and collectAll's flat-string
+  // assumption would throw on the object shape.
+  const collectSecondaryLosses = () =>
+    allReferrals.flatMap((r) => {
+      const c = r.content as Record<string, unknown> | undefined;
+      return [
+        ...formatSecondaryLossClassifications(c?.secondaryLossesIdentified),
+        ...formatSecondaryLossClassifications(c?.significantSecondaryLosses),
+      ];
+    });
+  const patternLosses = recurring(collectSecondaryLosses());
   const carriedQuestions = uniq(collectAll(["questionsWorthCarrying", "unresolvedQuestions"]));
   const anchorPatterns = uniq(collectAll(["anchorStatements"]));
   const hasPatterns =

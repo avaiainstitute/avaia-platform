@@ -1,5 +1,6 @@
 import "server-only";
 import { VIRTUE_FAMILIES, isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
+import { isValidSecondaryLoss } from "@/lib/institution";
 import type { Stage } from "@/lib/engine/prompts";
 
 // One authoritative mapping of referral field -> epistemic/provenance role,
@@ -149,6 +150,42 @@ export function formatVirtueClassifications(value: unknown): string[] {
   );
 }
 
+/** Renders a secondary-loss array as display strings. Two shapes coexist:
+ *  - Legacy (every referral before this round): a flat array of free-prose
+ *    descriptions ("loss of home") never validated against the canonical
+ *    ten Secondary Losses. There is no way to retroactively categorize
+ *    these, so they're shown exactly as stored -- not dropped, not
+ *    reclassified.
+ *  - Current: an array of {category, description} objects, category
+ *    validated against the canonical list, description an optional
+ *    Host-specific elaboration alongside it. Renders as
+ *    "Dreams / Opportunities — wanting to travel again" when a
+ *    description is present, just the category when it isn't. An invalid
+ *    category is dropped, not guessed at -- the same backstop treatment
+ *    already proven for virtue classifications. */
+export function formatSecondaryLossClassifications(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item === "string") {
+      const s = item.trim();
+      if (s) out.push(s);
+      continue;
+    }
+    if (item && typeof item === "object") {
+      const category = (item as { category?: unknown }).category;
+      const description = (item as { description?: unknown }).description;
+      if (typeof category !== "string" || !isValidSecondaryLoss(category)) continue;
+      if (typeof description === "string" && description.trim()) {
+        out.push(`${category} — ${description.trim()}`);
+      } else {
+        out.push(category);
+      }
+    }
+  }
+  return out;
+}
+
 const FIELD_PROVENANCE_FOR: Record<Stage, Record<string, FieldMeta>> = {
   iap: IAP_FIELD_PROVENANCE,
   cat: CAT_FIELD_PROVENANCE,
@@ -156,6 +193,7 @@ const FIELD_PROVENANCE_FOR: Record<Stage, Record<string, FieldMeta>> = {
 };
 
 const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
+const SECONDARY_LOSS_FIELD_KEYS = new Set(["secondaryLossesIdentified", "significantSecondaryLosses"]);
 
 const OUTCOME_TYPE_LABEL: Record<string, string> = {
   decision_made: "A decision was made",
@@ -181,6 +219,19 @@ export type ReferralDisplayItem = {
  *  completion display and host_continuity_entries extraction, so none of
  *  those diverge in how a field is labeled or a virtue is displayed.
  *
+ *  Two or more fields sharing the same label (anchorStatements +
+ *  reflectionsThatEmerged under "In the Host's own words"; CAT's
+ *  majorUnderstandings + keyRecognitions; unresolvedQuestions /
+ *  followUpQuestions + questionsWorthCarrying under "Still open," ...)
+ *  merge into one display item, exact-string deduplicated in first-seen
+ *  order -- the same approach already proven in
+ *  formatCatReferralForInnerCompass, generalized here so it's driven by
+ *  the field metadata itself rather than a hardcoded field-name list, and
+ *  applies uniformly wherever it occurs across IAP, CAT, and InnerCompass
+ *  instead of needing a separate fix per stage. Without this, two fields
+ *  with the same label rendered as two adjacent sections with an
+ *  identical, duplicated heading.
+ *
  *  `stage` is the referral's `from_stage` -- the schema that produced
  *  `content` -- not the stage it was referred to. Fields absent, empty, or
  *  blank are omitted rather than shown empty. */
@@ -192,14 +243,39 @@ export function formatReferralFields(
   const map = FIELD_PROVENANCE_FOR[stage];
   if (!map) return [];
   const out: ReferralDisplayItem[] = [];
+  const arrayItemIndexByLabel = new Map<string, number>();
+
+  const pushArray = (key: string, meta: FieldMeta, items: string[]) => {
+    if (items.length === 0) return;
+    const existingIndex = arrayItemIndexByLabel.get(meta.label);
+    if (existingIndex !== undefined) {
+      const existing = out[existingIndex].value as string[];
+      const seen = new Set(existing);
+      for (const v of items) {
+        if (!seen.has(v)) {
+          existing.push(v);
+          seen.add(v);
+        }
+      }
+      return;
+    }
+    arrayItemIndexByLabel.set(meta.label, out.length);
+    out.push({ key, label: meta.label, role: meta.role, value: [...items] });
+  };
+
   for (const [key, meta] of Object.entries(map)) {
     const raw = content[key];
     if (VIRTUE_FIELD_KEYS.has(key)) {
-      const items = formatVirtueClassifications(raw);
-      if (items.length > 0) out.push({ key, label: meta.label, role: meta.role, value: items });
+      pushArray(key, meta, formatVirtueClassifications(raw));
+      continue;
+    }
+    if (SECONDARY_LOSS_FIELD_KEYS.has(key)) {
+      pushArray(key, meta, formatSecondaryLossClassifications(raw));
       continue;
     }
     if (key === "outcomeType") {
+      // Scalar, one-off label ("Outcome") -- never collides with another
+      // field, so no merge handling needed.
       if (typeof raw === "string" && raw in OUTCOME_TYPE_LABEL) {
         out.push({ key, label: meta.label, role: meta.role, value: OUTCOME_TYPE_LABEL[raw] });
       }
@@ -207,10 +283,12 @@ export function formatReferralFields(
     }
     if (Array.isArray(raw)) {
       const items = raw.filter((v): v is string => typeof v === "string" && v.trim().length > 0);
-      if (items.length > 0) out.push({ key, label: meta.label, role: meta.role, value: items });
+      pushArray(key, meta, items);
       continue;
     }
     if (typeof raw === "string" && raw.trim().length > 0) {
+      // No scalar (str) field currently shares a label with another field;
+      // no merge handling needed here either.
       out.push({ key, label: meta.label, role: meta.role, value: raw.trim() });
     }
   }

@@ -2,11 +2,13 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { anthropic } from "@/lib/engine/anthropic";
 import { isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
+import { isValidSecondaryLoss } from "@/lib/institution";
 import {
   AVAIA_MODEL,
   systemPromptFor,
   REFERRAL_FORMAT,
   REFERRAL_CALIBRATION_DISCIPLINE,
+  SECONDARY_LOSS_DISCIPLINE,
   INNERCOMPASS_OPENING_GENERATION,
   type Program,
   type Stage,
@@ -70,6 +72,28 @@ const virtueArr = {
   },
 } as const;
 
+// A Secondary Loss classification: the canonical category (validated
+// against the ten official AVAIA Secondary Losses server-side, see the
+// sanitizer below) always present, alongside an optional Host-specific
+// description -- same required-but-nullable treatment as virtueArr's
+// element, so the category and the Host's own language can coexist rather
+// than one replacing the other. Historical referrals predate this shape
+// entirely -- flat free-prose descriptions, never validated against the
+// taxonomy -- and are handled by formatSecondaryLossClassifications on
+// read (lib/engine/referral-provenance.ts), not by rewriting stored data.
+const secondaryLossArr = {
+  type: "array",
+  items: {
+    type: "object",
+    properties: {
+      category: { type: "string" },
+      description: { type: ["string", "null"] },
+    },
+    required: ["category", "description"],
+    additionalProperties: false,
+  },
+} as const;
+
 const schema = (properties: Record<string, unknown>) => ({
   type: "object",
   properties,
@@ -89,7 +113,7 @@ const IAP_REFERRAL_SCHEMA = schema({
   areasForExploration: strArr,
   hostPriorities: strArr,
   desiredDirection: str,
-  secondaryLossesIdentified: strArr,
+  secondaryLossesIdentified: secondaryLossArr,
   governingNarratives: strArr,
   anchorStatements: strArr,
   reflectionsThatEmerged: strArr,
@@ -103,7 +127,7 @@ const CAT_REFERRAL_SCHEMA = schema({
   title: str,
   majorUnderstandings: strArr,
   primaryLoss: str,
-  significantSecondaryLosses: strArr,
+  significantSecondaryLosses: secondaryLossArr,
   keyRecognitions: strArr,
   identityThreads: strArr,
   activeTensions: strArr,
@@ -213,6 +237,23 @@ function sanitizeVirtueClassifications(value: unknown): unknown[] {
   });
 }
 
+// Backstop for SECONDARY_LOSS_DISCIPLINE, the same treatment as
+// sanitizeVirtueClassifications above: every {category, description}
+// entry must have a category that validates against the canonical ten
+// AVAIA Secondary Losses. description is free Host-specific text and
+// always valid, including null. A silent drop, not an interpretive fix --
+// prevents an invented or renamed category from ever reaching the stored
+// referral. Applies to IAP's secondaryLossesIdentified and CAT's
+// significantSecondaryLosses -- same shape, same validation, one place.
+function sanitizeSecondaryLossClassifications(value: unknown): unknown[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => {
+    if (!item || typeof item !== "object") return false;
+    const category = (item as { category?: unknown }).category;
+    return typeof category === "string" && isValidSecondaryLoss(category);
+  });
+}
+
 // Generates InnerCompass's referral-aware opening once, at the CAT ->
 // InnerCompass handoff only. Independent of generateCatOpening -- same
 // mechanism, deliberately separate instruction set and call. Same
@@ -287,7 +328,7 @@ export async function generateReferral(
   history.push({
     role: "user",
     content:
-      "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me — output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted as close to verbatim as possible, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). Leave a Host-Voice array empty rather than inventing or paraphrasing.",
+      "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me — output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted exactly, word for word, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). A quote must be a contiguous, unedited span of the Host's own words. Do not combine two separate sentences into one, do not remove words from the middle of a sentence, and do not smooth, correct, or lightly edit their phrasing. If a full sentence doesn't fit cleanly, choose a genuinely contiguous shorter span instead of editing a longer one down. Leave a Host-Voice array empty rather than inventing, paraphrasing, or reconstructing a quote from separate parts of what they said.",
   });
 
   // Carry the incoming referral (if any) into context, so fields meant to persist
@@ -325,6 +366,12 @@ export async function generateReferral(
   // or InnerCompass has incoming referral context appended above.
   system += `\n\n${"=".repeat(60)}\n\n${REFERRAL_CALIBRATION_DISCIPLINE}`;
 
+  // IAP and CAT only -- InnerCompass's schema has no secondary-loss field.
+  // See SECONDARY_LOSS_DISCIPLINE's own comment in lib/engine/prompts.ts.
+  if (stage === "iap" || stage === "cat") {
+    system += `\n\n${"=".repeat(60)}\n\n${SECONDARY_LOSS_DISCIPLINE}`;
+  }
+
   let content: unknown;
   try {
     const client = anthropic();
@@ -358,6 +405,24 @@ export async function generateReferral(
     (content as { virtuesInvolved: unknown[] }).virtuesInvolved = sanitizeVirtueClassifications(
       (content as { virtuesInvolved: unknown[] }).virtuesInvolved
     );
+  }
+  if (
+    stage === "iap" &&
+    Array.isArray((content as { secondaryLossesIdentified?: unknown })?.secondaryLossesIdentified)
+  ) {
+    (content as { secondaryLossesIdentified: unknown[] }).secondaryLossesIdentified =
+      sanitizeSecondaryLossClassifications(
+        (content as { secondaryLossesIdentified: unknown[] }).secondaryLossesIdentified
+      );
+  }
+  if (
+    stage === "cat" &&
+    Array.isArray((content as { significantSecondaryLosses?: unknown })?.significantSecondaryLosses)
+  ) {
+    (content as { significantSecondaryLosses: unknown[] }).significantSecondaryLosses =
+      sanitizeSecondaryLossClassifications(
+        (content as { significantSecondaryLosses: unknown[] }).significantSecondaryLosses
+      );
   }
 
   const finalContent = content as Record<string, unknown>;

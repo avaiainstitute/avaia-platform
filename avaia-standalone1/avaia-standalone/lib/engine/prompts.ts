@@ -22,7 +22,7 @@
 // Model: claude-sonnet-4-6 (Brent's choice).
 
 import "server-only";
-import { SECONDARY_LOSSES } from "@/lib/institution";
+import { SECONDARY_LOSSES, formatSecondaryLossHierarchy } from "@/lib/institution";
 import { formatVirtueHierarchy } from "@/lib/virtues";
 
 export const AVAIA_MODEL = "claude-sonnet-4-6";
@@ -643,6 +643,17 @@ The Host is the authority on what they established. This stage is the
 authority on what it noticed. A referral must keep that difference
 visible rather than letting the second quietly become the first.
 
+This applies the same way to every part of the referral that organizes or
+characterizes the conversation -- Overview, Threads, Tensions, Strengths,
+Priorities, Direction, and Governing Narratives included, not only to
+fields that are already framed as open questions or possibilities.
+"Governing narrative" and "tension" are not exemptions from this
+discipline. A governing narrative this stage constructed is still this
+stage's construction until the Host takes it up, and a tension is not
+more true for being named with confidence. If a field's own name invites
+a confident, story-like sentence, that is exactly where this discipline
+matters most, not where it can be relaxed.
+
 Before writing a synthesis item, notice what actually grounds it:
 - A plain restatement or organization of things the Host said or clearly
   demonstrated is Host material, organized -- write it plainly.
@@ -674,6 +685,47 @@ participation and belongs here. This instruction governs only what
 happens to that contribution once it becomes part of the durable
 record -- whether it is preserved as what it actually is, or quietly
 promoted into something it isn't yet.`;
+
+// Whole-system finding (post-freeze IAP retest): IAP_INSTRUCTIONS' own
+// locked text already names "Active Secondary Losses" as a specific,
+// capitalized category to recognize -- the same proper-noun treatment
+// "Chemistry of Virtue" had before its own fix -- but the canonical ten-
+// item taxonomy (SECONDARY_LOSSES, lib/institution.ts) was never injected
+// into IAP or CAT's referral generation. It has exactly one consumer
+// today: the Unsung Heroes "something_difficult" path guidance, a
+// completely separate program. IAP and CAT were left to invent free-prose
+// loss labels instead ("loss of home," "loss of professional meaning") --
+// the identical root cause the virtue-hierarchy fix addressed, just for a
+// second AVAIA taxonomy that was never extended the same way.
+//
+// Deliberately NOT composed into systemPromptFor -- appended only in
+// generateReferral(), for stage === "iap" or "cat" only (InnerCompass's
+// schema has no secondary-loss field). Same placement logic as
+// REFERRAL_CALIBRATION_DISCIPLINE: this is about how the referral is
+// written, not live conversation, and IAP and CAT need identical
+// treatment since they share the one authoritative taxonomy.
+export const SECONDARY_LOSS_DISCIPLINE = `REFERRAL — SECONDARY LOSS CLASSIFICATION (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+AVAIA recognizes exactly ten official Secondary Losses. This is the
+complete, authoritative list -- use it as the only source, not general
+knowledge or a guess at what sounds right:
+
+${formatSecondaryLossHierarchy()}
+
+When a secondary loss belongs in this referral, classify it against this
+list: name the closest matching category, and add a brief description in
+this Host's own specific terms alongside it -- what that loss actually
+looks like for them, in their own language where possible. The category
+and the description serve different purposes and both matter: the
+category is what makes this Host's loss comparable and restorable using
+AVAIA's own framework; the description is what keeps it recognizably
+theirs, not reduced to a label.
+
+Never invent, rename, or expand this list of ten. If something the Host
+described as a loss doesn't genuinely fit any of the ten, it may still
+belong elsewhere in the referral -- as a thread, a tension, part of the
+overview -- but it is not a secondary loss classification unless it
+actually matches one of these categories.`;
 
 const STAGE_INSTRUCTIONS: Record<Stage, string> = {
   iap: IAP_INSTRUCTIONS,
@@ -1557,6 +1609,19 @@ rules if they appear to approach or reopen it." Carry forward any boundary
 that is still relevant -- do not let it quietly disappear because this
 conversation didn't happen to test it again.
 
+This same test applies even when the Host never explicitly closed a
+subject. If the Host named something sensitive in passing -- a loss, a
+relationship, a person -- and moved forward without elaborating, and
+without being asked to elaborate, write a stewardship boundary for it the
+same way you would for something explicitly closed, so the next Guide
+does not independently open it either. The test is simple and the same
+every time, for every subject: did the Host actually invite exploration
+of this, or did they only name it and move on? Apply that test evenly to
+everything sensitive named this way in the conversation -- not only to
+some of them while others with the identical shape go unprotected. A
+subject earns this protection because of how the Host actually treated it
+here, not because of what kind of subject it is.
+
 Disclosure is not permission for inquiry. The Guide does not decide when
 the gate opens. Only the Host does.`;
 
@@ -1791,6 +1856,19 @@ rules if they appear to approach or reopen it." Carry forward any boundary
 still relevant from the incoming referral, and add any new one established
 here, in this same minimal form -- do not let a boundary quietly disappear
 after one hop, and do not let it grow more detailed as it travels.
+
+This same test applies even when the Host never explicitly closed a
+subject. If the Host named something sensitive in passing -- a loss, a
+relationship, a person -- and moved forward without elaborating, and
+without being asked to elaborate, write a stewardship boundary for it the
+same way you would for something explicitly closed, so the next Guide
+does not independently open it either. The test is simple and the same
+every time, for every subject: did the Host actually invite exploration
+of this, or did they only name it and move on? Apply that test evenly to
+everything sensitive named this way in the conversation -- not only to
+some of them while others with the identical shape go unprotected. A
+subject earns this protection because of how the Host actually treated it
+here, not because of what kind of subject it is.
 
 Disclosure is not permission for inquiry. The Guide does not decide when
 the gate opens. Only the Host does.`;

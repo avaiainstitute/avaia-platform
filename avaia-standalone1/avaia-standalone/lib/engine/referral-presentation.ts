@@ -1,5 +1,9 @@
 import "server-only";
-import { formatVirtueClassifications, formatReferralFields } from "@/lib/engine/referral-provenance";
+import {
+  formatVirtueClassifications,
+  formatSecondaryLossClassifications,
+  formatReferralFields,
+} from "@/lib/engine/referral-provenance";
 import type { Stage } from "@/lib/engine/prompts";
 
 // Renders a CAT-generated referral into the plain-language, epistemically-
@@ -75,7 +79,10 @@ export function formatCatReferralForInnerCompass(content: CatReferralContent): s
   const synthesis = [
     field("Overview", str(content.hostOverview)),
     field("Loss CAT identified as central", str(content.primaryLoss)),
-    field("Other losses CAT noticed", arr(content.significantSecondaryLosses)),
+    field(
+      "Other losses CAT noticed",
+      formatSecondaryLossClassifications(content.significantSecondaryLosses)
+    ),
     field("Patterns CAT noticed", arr(content.identityThreads)),
     field("Tensions CAT noticed", arr(content.activeTensions)),
     field("Understandings and recognitions CAT carried forward", [
