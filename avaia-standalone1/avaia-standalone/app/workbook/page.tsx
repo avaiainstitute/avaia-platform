@@ -476,14 +476,11 @@ export default async function WorkbookPage() {
                         {m.role === "host" ? (
                           m.content
                         ) : (
-                          // Guide turns can be a normal reply or the
-                          // structured, multi-section referral text
-                          // persisted at completion (see
-                          // formatReferralForHostPresentation) -- RichText
-                          // renders both correctly, the same component
+                          // RichText renders any lightly-formatted Guide
+                          // reply correctly -- the same component
                           // JourneyChat already uses live. Raw {m.content}
-                          // here collapsed the referral's line breaks and
-                          // "- " bullets into an unreadable run-on block.
+                          // would collapse line breaks and "- " bullets
+                          // into an unreadable run-on block.
                           <RichText text={m.content} />
                         )}
                       </div>

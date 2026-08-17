@@ -2,9 +2,7 @@ import "server-only";
 import {
   formatVirtueClassifications,
   formatSecondaryLossClassifications,
-  formatReferralFields,
 } from "@/lib/engine/referral-provenance";
-import type { Stage } from "@/lib/engine/prompts";
 
 // Renders a CAT-generated referral into the plain-language, epistemically-
 // ordered form InnerCompass receives, instead of the raw JSON dump every
@@ -147,35 +145,3 @@ export const INNERCOMPASS_REFERRAL_WRAPPER =
   "already here. Use this as memory and prior understanding while allowing " +
   "the current conversation to refine, redirect, or supersede it.";
 
-const REFERRAL_OPENING: Record<Stage, string> = {
-  iap: "I have completed the Individual Awareness Profile. Please use the following referral information as the starting point for Conversations Across Time.",
-  cat: "I have completed Conversations Across Time. Please use the following referral information as the starting point for InnerCompass.",
-  innercompass: "I have completed InnerCompass. Please use the following referral information as the starting point for continuity.",
-};
-
-// Deterministic, render-not-generate presentation of a just-completed
-// stage's authoritative referral -- the single source for what the Host
-// reads in chat at the moment of completion, persisted to the transcript
-// exactly as written here. Replaces CAT_REFERRAL_PRESENTATION and
-// INNERCOMPASS_REFERRAL_PRESENTATION (removed in lib/engine/prompts.ts),
-// which asked the model to independently improvise this prose in a second,
-// ungoverned generation -- the root cause traced in the completion-
-// architecture investigation (invalid virtue pairings and an unadopted
-// Guide framing both reached the Host through that path, never through
-// the sanitized, calibration-disciplined structured referral). Built
-// entirely from formatReferralFields, the same formatter Workbook and
-// Shared-with-me already use, so this presentation, the Workbook, and the
-// next stage's own reception of the referral are all views of the one
-// stored record -- never a second LLM call.
-export function formatReferralForHostPresentation(
-  stage: Stage,
-  content: Record<string, unknown> | null | undefined
-): string {
-  const items = formatReferralFields(stage, content);
-  const sections = items.map((item) =>
-    Array.isArray(item.value)
-      ? [`${item.label}:`, ...item.value.map((v) => `- ${v}`)].join("\n")
-      : `${item.label}: ${item.value}`
-  );
-  return [REFERRAL_OPENING[stage], "", ...sections].join("\n\n");
-}

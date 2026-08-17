@@ -2,10 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import MicButton from "@/components/MicButton";
 import SpeakButton from "@/components/SpeakButton";
 import RichText from "@/components/RichText";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
+// Type-only -- referral-provenance.ts is "server-only", but a type-only
+// import is fully erased before bundling, so nothing server-only actually
+// ships to the client. Reused so the card's shape can't drift from what
+// getCompletionSummary() actually returns.
+import type { CompletionSummary } from "@/lib/engine/referral-provenance";
 
 type Msg = { role: "host" | "guide"; content: string };
 
@@ -38,13 +44,16 @@ export default function JourneyChat({
   const [crisis, setCrisis] = useState(false);
   const [advancing, setAdvancing] = useState(false);
   const [error, setError] = useState("");
-  // Set once the referral has been generated and shown, from either the
-  // button or a typed completion request -- both converge on the same
-  // generateReferral() result and the same next step here. Navigation
-  // waits for the Host's own "Continue" click rather than happening
-  // automatically, so the referral (already displayed as the final
-  // message below) is something they actually get to read first.
-  const [finished, setFinished] = useState<{ done: boolean } | null>(null);
+  // Set once the referral has been generated, from either the button or a
+  // typed completion request -- both converge on the same
+  // generateReferral() result and the same compact completion card below.
+  // Navigation waits for the Host's own "Continue" click. summary is a
+  // handful of fields selected from the already-stored referral
+  // (getCompletionSummary, server-side) -- not the full referral, which
+  // now lives only in Workbook's Guide's Record.
+  const [finished, setFinished] = useState<{ done: boolean; summary: CompletionSummary } | null>(
+    null
+  );
   const lastHostRef = useRef<HTMLDivElement | null>(null);
   const prevHostCount = useRef(0);
   const [focus, setFocus] = useState<ResolvedFocus | null>(null);
@@ -113,19 +122,15 @@ export default function JourneyChat({
 
       // The Host typed readiness to finish directly into the chat instead of
       // clicking the button below — the server already generated the
-      // referral (see isFinishIntent in lib/engine/finish-intent.ts). Show
-      // it in place of the empty guide placeholder and wait for the Host's
-      // own "Continue" click rather than reading a body that isn't a
-      // stream and navigating immediately — the Host gets to actually read
-      // the referral before moving on, the same as the button below.
+      // referral (see isFinishIntent in lib/engine/finish-intent.ts). Drop
+      // the empty guide placeholder (no full-text reply follows anymore --
+      // the compact completion card below replaces it) and wait for the
+      // Host's own "Continue" click rather than reading a body that isn't
+      // a stream and navigating immediately.
       if (res.headers.get("x-avaia-finished") === "1") {
         const data = await res.json().catch(() => ({}));
-        setMessages((m) => {
-          const copy = m.slice();
-          copy[copy.length - 1] = { role: "guide", content: data.referralText || "" };
-          return copy;
-        });
-        setFinished({ done: !!data.done });
+        setMessages((m) => m.slice(0, -1));
+        setFinished({ done: !!data.done, summary: data.summary || {} });
         return;
       }
 
@@ -166,15 +171,10 @@ export default function JourneyChat({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not move forward.");
-      // Show the referral as the final message and wait for the Host's own
-      // "Continue" click, the same as a typed completion request in
-      // send() above -- both paths call the same generateReferral() and
-      // should behave identically, not one navigating instantly while the
-      // other pauses to show what was generated.
-      if (data.referralText) {
-        setMessages((m) => [...m, { role: "guide", content: data.referralText }]);
-      }
-      setFinished({ done: !!data.done });
+      // Wait for the Host's own "Continue" click, the same as a typed
+      // completion request in send() above -- both paths call the same
+      // generateReferral() and produce the same compact completion card.
+      setFinished({ done: !!data.done, summary: data.summary || {} });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -188,16 +188,10 @@ export default function JourneyChat({
     else router.refresh(); // the next stage's conversation loads
   }
 
-  // Once finished, the referral is the last message -- rendered separately
-  // below as a distinct completion card, not as one more chat bubble in
-  // this list. chatMessages is everything else, unchanged.
-  const chatMessages = finished ? messages.slice(0, -1) : messages;
-  const referralMessage = finished ? messages[messages.length - 1] : null;
-
   // Index of the most recent Host message — the scroll anchor for a new turn.
   let lastHostIdx = -1;
-  for (let i = chatMessages.length - 1; i >= 0; i--) {
-    if (chatMessages[i].role === "host") {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === "host") {
       lastHostIdx = i;
       break;
     }
@@ -218,7 +212,7 @@ export default function JourneyChat({
       )}
 
       <div className="space-y-5">
-        {chatMessages.map((m, i) => (
+        {messages.map((m, i) => (
           <div
             key={i}
             ref={i === lastHostIdx ? lastHostRef : undefined}
@@ -235,11 +229,11 @@ export default function JourneyChat({
                 <div className="font-serif text-lg leading-relaxed text-ink">
                   {m.content ? (
                     <RichText text={m.content} />
-                  ) : sending && i === chatMessages.length - 1 ? (
+                  ) : sending && i === messages.length - 1 ? (
                     <span className="text-muted">…</span>
                   ) : null}
                 </div>
-                {i === chatMessages.length - 1 && !sending && m.content && (
+                {i === messages.length - 1 && !sending && m.content && (
                   <div className="mt-1.5">
                     <SpeakButton text={m.content} />
                   </div>
@@ -266,39 +260,58 @@ export default function JourneyChat({
         </div>
       )}
 
-      {finished && referralMessage ? (
+      {finished ? (
         <div className="mt-10">
-          {/* A visual break before the completion card, not a chat bubble --
-              this is presentation only: the same referralText already
-              generated by generateReferral(), already persisted as the
-              authoritative Workbook transcript message, just not shown
-              here as one more long Guide reply. */}
-          <div className="flex items-center gap-3" aria-hidden>
-            <div className="h-px flex-1 bg-rule" />
-            <span className="font-sans text-xs uppercase tracking-wide text-muted">
-              Conversation complete
-            </span>
-            <div className="h-px flex-1 bg-rule" />
-          </div>
+          {/* A visual break before the completion card, not a chat bubble.
+              The card below shows a handful of fields already selected
+              from the stored referral (getCompletionSummary) -- not the
+              full referral, which is not persisted as a chat message
+              anymore and lives only in Workbook's Guide's Record. */}
+          <div className="h-px bg-rule" aria-hidden />
 
           <div className="mt-5 rounded-lg border border-seal/40 bg-seal/[0.06] p-5 backdrop-blur-sm">
-            <p className="label text-seal">
-              {stageLabel} — Referral to {nextStageLabel ?? "the next stage"}
+            <p className="label text-seal">Conversation Complete</p>
+            <p className="mt-1 font-serif text-2xl text-ink">{stageLabel}</p>
+
+            {finished.summary.outcomeLabel && (
+              <p className="mt-3 text-sm text-ink">
+                <span className="text-muted">Outcome: </span>
+                {finished.summary.outcomeLabel}
+              </p>
+            )}
+            {finished.summary.roomIdentity && (
+              <p className="mt-2 font-serif text-lg italic leading-relaxed text-ink">
+                &ldquo;{finished.summary.roomIdentity}&rdquo;
+              </p>
+            )}
+            {finished.summary.direction && (
+              <p className="mt-2 text-sm leading-relaxed text-ink">{finished.summary.direction}</p>
+            )}
+
+            <p className="mt-4 text-sm text-muted">
+              Your Guide&rsquo;s Record has been updated with what became visible in this
+              conversation.
             </p>
-            <div className="mt-3 font-serif text-base leading-relaxed text-ink">
-              <RichText text={referralMessage.content} />
+
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {!finished.done && (
+                <Link
+                  href="/workbook"
+                  className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+                >
+                  View Guide&rsquo;s Record
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={continueForward}
+                className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+              >
+                {finished.done
+                  ? "View Guide's Record"
+                  : `Continue to ${nextStageLabel ?? "the next stage"}`}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={continueForward}
-              className="mt-6 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-            >
-              {finished.done
-                ? program === "defying-grief"
-                  ? "Continue to your Defying Grief dashboard"
-                  : "Continue to your Workbook"
-                : `Continue to ${nextStageLabel ?? "the next stage"}`}
-            </button>
           </div>
         </div>
       ) : (

@@ -46,14 +46,15 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
-  // generateReferral() already rendered and persisted result.referralText
-  // as a guide turn -- the same deterministic render a typed completion
-  // request in /api/conversation produces, so the button and a typed
-  // request are two ways of expressing the same action, not two referral
-  // systems.
+  // result.summary is a handful of fields selected from the already-
+  // stored referral, for the compact completion card only -- same shape a
+  // typed completion request in /api/conversation returns, so the button
+  // and a typed request are two ways of expressing the same action. The
+  // full referral is not persisted as a chat message and lives only in
+  // Workbook's Guide's Record.
   return NextResponse.json(
     result.done
-      ? { done: true, referralText: result.referralText }
-      : { done: false, nextStage: result.nextStage, referralText: result.referralText }
+      ? { done: true, summary: result.summary }
+      : { done: false, nextStage: result.nextStage, summary: result.summary }
   );
 }

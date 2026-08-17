@@ -294,3 +294,57 @@ export function formatReferralFields(
   }
   return out;
 }
+
+export type CompletionSummary = {
+  roomIdentity?: string;
+  outcomeLabel?: string;
+  direction?: string;
+};
+
+// A short established-direction field exists for some stages, not others --
+// IAP's desiredDirection, InnerCompass's centralDecisionOrDirection. CAT
+// has no equivalent (CAT produces understanding, not a decision), so it's
+// simply absent here rather than guessed at.
+const DIRECTION_FIELD_FOR: Partial<Record<Stage, string>> = {
+  iap: "desiredDirection",
+  innercompass: "centralDecisionOrDirection",
+};
+
+/** A handful of fields selected from the already-generated, already-stored
+ *  referral -- for the compact live-conversation completion card only, not
+ *  a second generation and not a new summary. Room Identity is found the
+ *  same way for every stage (whichever field is labeled "Room Identity" in
+ *  that stage's own provenance map, so IAP/CAT's `title` and InnerCompass's
+ *  `roomIdentity` both resolve the same way); outcome uses the exact same
+ *  OUTCOME_TYPE_LABEL formatReferralFields already uses. The full referral
+ *  remains readable only in Workbook's Guide's Record, via
+ *  formatReferralFields, completely unchanged by this. */
+export function getCompletionSummary(
+  stage: Stage,
+  content: Record<string, unknown> | null | undefined
+): CompletionSummary {
+  const summary: CompletionSummary = {};
+  if (!content) return summary;
+  const map = FIELD_PROVENANCE_FOR[stage];
+
+  const roomIdentityKey = map && Object.keys(map).find((k) => map[k].label === "Room Identity");
+  if (roomIdentityKey) {
+    const v = content[roomIdentityKey];
+    if (typeof v === "string" && v.trim()) summary.roomIdentity = v.trim();
+  }
+
+  if (stage === "innercompass") {
+    const outcome = content.outcomeType;
+    if (typeof outcome === "string" && outcome in OUTCOME_TYPE_LABEL) {
+      summary.outcomeLabel = OUTCOME_TYPE_LABEL[outcome];
+    }
+  }
+
+  const directionKey = DIRECTION_FIELD_FOR[stage];
+  if (directionKey) {
+    const v = content[directionKey];
+    if (typeof v === "string" && v.trim()) summary.direction = v.trim();
+  }
+
+  return summary;
+}

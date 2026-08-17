@@ -2044,9 +2044,11 @@ CAT is steering the conversation, or the referral, toward.`;
 // Root fix: a conservative server-side detector (isFinishIntent, widened
 // to all three stages) now intercepts a completion request *before* the
 // model is ever called, and routes it straight to generateReferral() --
-// the same mechanism the button already used. What the Host reads is now
-// formatReferralForHostPresentation(), a deterministic render of that one
-// stored record, never a second LLM call. IAP/CAT/InnerCompass's own
+// the same mechanism the button already used. What the Host sees in chat
+// is now a compact completion card (getCompletionSummary, a few fields
+// selected from that one stored record) rather than the full referral --
+// the full record is readable only in Workbook's Guide's Record. Never a
+// second LLM call either way. IAP/CAT/InnerCompass's own
 // locked instructions still describe a JSON object because that's correct
 // for the standalone GPT context; this constant is the one thing that
 // still needs to override that for live chat, and it's now a redirect,

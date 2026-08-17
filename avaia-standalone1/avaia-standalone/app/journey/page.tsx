@@ -182,9 +182,8 @@ export default async function JourneyPage({
   // What the completion card should say this stage's referral goes to --
   // the next stage's own label, or "Continuity" for InnerCompass, the last
   // stage in STAGE_ORDER, matching to_stage: 'continuity' already used for
-  // its referral row and the "starting point for continuity" wording
-  // already in its own referralText. STAGE_LABEL is server-only, so this
-  // is resolved here and passed down as a plain string prop.
+  // its referral row. STAGE_LABEL is server-only, so this is resolved
+  // here and passed down as a plain string prop.
   const nextStageLabel = STAGE_ORDER[currentIdx + 1]
     ? STAGE_LABEL[STAGE_ORDER[currentIdx + 1]]
     : "Continuity";

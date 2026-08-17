@@ -22,9 +22,9 @@ import {
 import { generateCatOpening } from "@/lib/engine/openings";
 import {
   formatCatReferralForInnerCompass,
-  formatReferralForHostPresentation,
   INNERCOMPASS_REFERRAL_WRAPPER,
 } from "@/lib/engine/referral-presentation";
+import { getCompletionSummary, type CompletionSummary } from "@/lib/engine/referral-provenance";
 
 // The AVAIA Standard Referral generation logic -- shared between
 // /api/referral (the Host's explicit "I'm ready to..." button) and
@@ -284,29 +284,8 @@ async function generateInnerCompassOpening(referralContent: unknown): Promise<st
 }
 
 export type GenerateReferralResult =
-  | { ok: true; done: boolean; nextStage?: Stage; content: Record<string, unknown>; referralText: string }
+  | { ok: true; done: boolean; nextStage?: Stage; summary: CompletionSummary }
   | { ok: false; error: string; status: number };
-
-/** Renders the given content and persists it as a guide-role message on
- *  the completed conversation -- the one place this happens, so the button
- *  and a typed completion request always produce an identical Host-facing
- *  result. */
-async function presentAndPersist(
-  supabase: SupabaseClient,
-  hostId: string,
-  conversationId: string,
-  stage: Stage,
-  content: Record<string, unknown>
-): Promise<string> {
-  const referralText = formatReferralForHostPresentation(stage, content);
-  await supabase.from("messages").insert({
-    conversation_id: conversationId,
-    host_id: hostId,
-    role: "guide",
-    content: referralText,
-  });
-  return referralText;
-}
 
 /** Generates the AVAIA Standard Referral for an active conversation, stores
  *  it, completes the conversation, and opens the next stage (if any) --
@@ -455,15 +434,11 @@ export async function generateReferral(
         .eq("conversation_id", conversationId)
         .maybeSingle();
       const existingContent = (existing?.content as Record<string, unknown>) ?? finalContent;
-      // Do not persist another presentation message -- the call that won
-      // the race already did, and a second one would duplicate the guide
-      // turn in the transcript for no reason.
       return {
         ok: true,
         done: !nextStage,
         nextStage: nextStage ?? undefined,
-        content: existingContent,
-        referralText: formatReferralForHostPresentation(stage, existingContent),
+        summary: getCompletionSummary(stage, existingContent),
       };
     }
     return { ok: false, error: "Could not save the referral. Please try again.", status: 502 };
@@ -473,7 +448,11 @@ export async function generateReferral(
     .update({ status: "complete", completed_at: new Date().toISOString() })
     .eq("id", conversationId);
 
-  const referralText = await presentAndPersist(supabase, hostId, conversationId, stage, finalContent);
+  // A few fields selected from the stored record for the compact live-
+  // conversation completion card -- not a second generation, not a
+  // Guide-role message. The full referral is readable only in Workbook's
+  // Guide's Record (formatReferralFields), unaffected by this.
+  const summary = getCompletionSummary(stage, finalContent);
 
   if (nextStage) {
     // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
@@ -485,7 +464,7 @@ export async function generateReferral(
           ? await generateInnerCompassOpening(finalContent)
           : undefined;
     await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
-    return { ok: true, done: false, nextStage, content: finalContent, referralText };
+    return { ok: true, done: false, nextStage, summary };
   }
-  return { ok: true, done: true, content: finalContent, referralText };
+  return { ok: true, done: true, summary };
 }

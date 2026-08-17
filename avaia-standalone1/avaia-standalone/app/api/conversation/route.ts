@@ -95,18 +95,14 @@ export async function POST(request: Request) {
         { status: result.status, headers: { "x-avaia-crisis": crisis ? "1" : "0" } }
       );
     }
-    // generateReferral() already rendered and persisted result.referralText
-    // as a guide turn -- the same deterministic render the button path
-    // produces, the Workbook shows, and the next stage receives.
+    // result.summary is a handful of fields selected from the already-
+    // stored referral, for the compact completion card only -- the full
+    // referral is not persisted as a chat message and lives only in
+    // Workbook's Guide's Record (see getCompletionSummary's own comment).
     return NextResponse.json(
       result.done
-        ? { finished: true, done: true, referralText: result.referralText }
-        : {
-            finished: true,
-            done: false,
-            nextStage: result.nextStage,
-            referralText: result.referralText,
-          },
+        ? { finished: true, done: true, summary: result.summary }
+        : { finished: true, done: false, nextStage: result.nextStage, summary: result.summary },
       { headers: { "x-avaia-finished": "1", "x-avaia-crisis": crisis ? "1" : "0" } }
     );
   }
