@@ -2637,18 +2637,31 @@ Write only the message itself. Do not add commentary, labels, or anything
 before or after it.`;
 
 // ===========================================================================
-// JOURNEY DEVELOPMENT STATUS (as of the latest controlled testing round)
+// JOURNEY DEVELOPMENT STATUS — FROZEN (as of the full adult Journey
+// forensic-testing arc culminating in the referral-convergence and
+// completion-card rounds)
 //
-// IAP          — VALIDATED / LOCKED. Creates Awareness. Do not tune, rewrite,
-//                or expand unless future Host testing demonstrates a
-//                specific reproducible gap.
-// CAT          — VALIDATED / LOCKED. Creates Understanding. Same standard:
-//                only touch it for a demonstrated reproducible gap.
-// InnerCompass — ACTIVE TESTING. Creates Agency. Current development focus.
+// IAP          — VALIDATED / LOCKED. Creates Awareness.
+// CAT          — VALIDATED / LOCKED. Creates Understanding.
+// InnerCompass — VALIDATED / LOCKED. Creates Agency. Validated end-to-end
+//                against a real IAP -> CAT -> InnerCompass Journey,
+//                including the referral-calibration, Secondary Losses,
+//                virtue, boundary-consistency, and Host-verbatim fixes
+//                found in that same forensic pass.
+//
+// The freeze covers the whole adult Journey, not just per-stage
+// conversational tuning: referral generation and its shared mechanism
+// (generateReferral, the calibration/virtue/Secondary-Loss disciplines,
+// the finish-intent detector), completion/handoff logic, and Guide's
+// Record (Workbook) rendering are all locked together with the
+// conversations themselves.
 //
 // "Locked" is a testing standard, not a permanent prohibition: a real,
-// reproducible gap found through Host testing is grounds to reopen a stage,
-// exactly as happened for both IAP and CAT during this same testing arc.
+// reproducible gap found through Host testing is grounds to reopen a
+// stage, exactly as happened repeatedly across this whole arc. Absent
+// that, the entire adult Journey is now the reference architecture for
+// other work (website cleanup, classes, youth adaptation) -- not a
+// starting point to be tuned alongside it.
 // ===========================================================================
 
 /**
