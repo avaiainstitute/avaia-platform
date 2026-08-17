@@ -179,6 +179,15 @@ export default async function JourneyPage({
 
   const messages = rawMessages.map((m) => ({ role: m.role, content: m.content }));
   const currentIdx = STAGE_ORDER.indexOf(stage);
+  // What the completion card should say this stage's referral goes to --
+  // the next stage's own label, or "Continuity" for InnerCompass, the last
+  // stage in STAGE_ORDER, matching to_stage: 'continuity' already used for
+  // its referral row and the "starting point for continuity" wording
+  // already in its own referralText. STAGE_LABEL is server-only, so this
+  // is resolved here and passed down as a plain string prop.
+  const nextStageLabel = STAGE_ORDER[currentIdx + 1]
+    ? STAGE_LABEL[STAGE_ORDER[currentIdx + 1]]
+    : "Continuity";
 
   // Welcome the Host back when they're resuming — they've already engaged (more
   // than the opener) and the last activity was a while ago, not an active session.
@@ -229,6 +238,7 @@ export default async function JourneyPage({
         key={convo.id}
         conversationId={convo.id}
         stageLabel={STAGE_LABEL[stage]}
+        nextStageLabel={nextStageLabel}
         isLast={stage === "innercompass"}
         initialMessages={messages}
         program={convo.program}
