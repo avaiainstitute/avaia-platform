@@ -11,11 +11,12 @@ export const metadata = { title: "The Institution — AVAIA" };
 
 /**
  * The deeper institutional/reference page -- the full Constitution, all 18
- * Operating Principles, Component Relationships, and Governance policy,
- * moved here verbatim from the (now simplified) About page. Follows the
- * same progressive-disclosure pattern as /chemistry, /secondary-loss,
- * /reports, and /conversations/[slug]: a complete reference, not a top-nav
- * item, reached by anyone who wants to go past the About page's orientation.
+ * Operating Principles, Component Relationships, and Governance policy. The
+ * GIVE Method and Host/Guide/Witness live on /about instead (About's job is
+ * to explain AVAIA as an institute/approach with real substance; this page
+ * is the full governing document underneath that). Follows the same
+ * progressive-disclosure pattern as /chemistry, /secondary-loss, /reports,
+ * and /conversations/[slug]: a complete reference, not a top-nav item.
  */
 export default function InstitutionPage() {
   return (

@@ -5,7 +5,11 @@ import SignOutButton from "@/components/SignOutButton";
 import { createConversation, createJourney } from "@/lib/engine/conversation";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import { MembershipGate } from "@/app/journey/page";
-import { loadDefyingGriefDashboard, DEFYING_GRIEF_PROGRAM_NAME } from "@/lib/defying-grief";
+import {
+  loadDefyingGriefDashboard,
+  DEFYING_GRIEF_PROGRAM_NAME,
+  DEFYING_GRIEF_STAGE_LABEL,
+} from "@/lib/defying-grief";
 
 export const metadata = { title: `${DEFYING_GRIEF_PROGRAM_NAME} — AVAIA` };
 export const dynamic = "force-dynamic";
@@ -74,6 +78,11 @@ function ThresholdContent({
         — not a virtue exactly, but the force that makes a person insist on their own aliveness in
         the face of loss.
       </p>
+      <p className="mt-4 text-lg text-muted">
+        This is for anyone still carrying a loss that hasn&rsquo;t resolved — whether it happened
+        recently or long ago — who isn&rsquo;t looking to move past it, but to keep living
+        alongside it.
+      </p>
       <p className="mt-4 text-lg text-muted">You are not asked to feel ready. Only to begin.</p>
       <div className="mt-8">
         {cta.kind === "link" ? (
@@ -93,10 +102,92 @@ function ThresholdContent({
           This begins here, on the AVAIA website.
         </p>
       )}
-      <p className="mt-4 text-xs text-muted">
-        Individual Awareness Profile → Conversations Across Time: The Audacity of Grief →
-        InnerCompass: The Audacity of Happiness
-      </p>
+
+      {/* What journey will I take — AVAIA is the house; Defying Grief is the
+          program/journey; IAP, CAT, and InnerCompass are the same three
+          AVAIA conversations that carry a Host through it. Content below is
+          drawn from the existing public stage-explanation pages
+          (/journey/iap, /journey/cat, /journey/innercompass), reframed
+          under Defying Grief's own stage names -- not new engine content. */}
+      <div className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-2 text-muted">AVAIA is the house. Defying Grief is the journey.</p>
+        <p className="text-sm text-muted">
+          The Individual Awareness Profile, Conversations Across Time, and InnerCompass are the
+          same three AVAIA conversations that carry every Host through every journey — here,
+          they carry you through this one.
+        </p>
+
+        <div className="mt-8 space-y-8">
+          <div>
+            <p className="font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.iap}</p>
+            <p className="mt-1 text-sm text-seal">You get to say it.</p>
+            <p className="mt-3 text-muted">
+              IAP comes first because nothing else can start until this is said. It gives you
+              room to say what you&rsquo;ve been carrying, in your own words, at your own pace
+              — what happened, what&rsquo;s in tension, what&rsquo;s still strong in you,
+              what&rsquo;s been lost. It works exactly the same here as anywhere else in AVAIA
+              — this is where Defying Grief begins, before Audacity has a name yet.
+            </p>
+            <Link
+              href="/journey/iap"
+              className="mt-2 inline-block text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
+            >
+              Read more about the Individual Awareness Profile →
+            </Link>
+          </div>
+
+          <div>
+            <p className="font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.cat}</p>
+            <p className="mt-1 text-sm text-seal">You get to understand it.</p>
+            <p className="mt-3 text-muted">
+              CAT doesn&rsquo;t ask you to keep listing what&rsquo;s wrong — it already has
+              what became visible in IAP. Its work is to sit with that and help you see it more
+              clearly: how it formed, what it&rsquo;s connected to, what it may still be
+              costing you. This is usually where a stubbornness that isn&rsquo;t sadness and
+              isn&rsquo;t strength exactly first makes itself known — the Audacity of Grief,
+              the force that keeps a person showing up inside loss even when nothing about it
+              has resolved.
+            </p>
+            <Link
+              href="/journey/cat"
+              className="mt-2 inline-block text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
+            >
+              Read more about Conversations Across Time →
+            </Link>
+          </div>
+
+          <div>
+            <p className="font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.innercompass}</p>
+            <p className="mt-1 text-sm text-seal">You get to decide what belongs to you from here.</p>
+            <p className="mt-3 text-muted">
+              The question changes here — no longer what happened, or what does it mean, but
+              what does this understanding allow me to do now? InnerCompass helps you see
+              what&rsquo;s actually influencing a pull toward a direction, and whether that
+              direction really belongs to you. Here, that becomes the Audacity of Happiness —
+              the nerve it takes to hope again, to dream something for yourself again, to laugh
+              without it meaning you&rsquo;ve forgotten.
+            </p>
+            <Link
+              href="/journey/innercompass"
+              className="mt-2 inline-block text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
+            >
+              Read more about InnerCompass →
+            </Link>
+          </div>
+        </div>
+
+        <p className="mt-8 text-sm text-muted">
+          Along the way, your{" "}
+          <Link href="/workbook" prefetch={false} className="text-ink underline decoration-rule underline-offset-2 hover:text-seal">
+            Workbook
+          </Link>{" "}
+          keeps a record of what emerges, and the{" "}
+          <Link href="/chemistry" className="text-ink underline decoration-rule underline-offset-2 hover:text-seal">
+            Chemistry of Virtue
+          </Link>{" "}
+          can help you understand what you&rsquo;re drawing on.
+        </p>
+      </div>
     </>
   );
 }

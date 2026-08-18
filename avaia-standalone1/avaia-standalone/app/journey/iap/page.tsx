@@ -25,6 +25,15 @@ export default function IapJourneyPage() {
         <p>That&rsquo;s the whole reason the Individual Awareness Profile exists.</p>
       </div>
 
+      <div className="mt-8">
+        <Link
+          href="/journey"
+          className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Start Your IAP — Free
+        </Link>
+      </div>
+
       <section className="mt-12">
         <h2 className="font-serif text-2xl text-ink">What IAP actually does</h2>
         <p className="mt-3 text-lg leading-relaxed text-muted">

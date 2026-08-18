@@ -2,13 +2,16 @@ import Link from "next/link";
 import { CONSTITUTION_PREAMBLE, GIVE_METHOD, OPERATING_PRINCIPLES } from "@/lib/institution";
 
 /**
- * The public About page — orients a visitor to what AVAIA is, why it exists,
- * what makes it different, how it works, and where to go next. Deliberately
- * NOT the institution's full governing material -- that lives at /institution
- * (Constitution, all 18 principles, component relationships, governance
- * policy), following the same progressive-disclosure pattern already used by
- * /chemistry, /secondary-loss, /reports, and /conversations/[slug]. Rendered
- * by /about (canonical) and by the site root, so there is only one copy.
+ * The public About page — the deeper explanation of AVAIA as an institute
+ * and an approach: the philosophy, the GIVE Method, Host/Guide/Witness, and
+ * what makes it different. Distinct from the homepage (components/
+ * HomeContent.tsx), which is deliberately minimal and owns the "where do I
+ * start" job -- About's job is "explain," not "convert," so it carries more
+ * substance but stays organized under clear sections rather than one long
+ * scroll. The full governing material (Constitution articles, all 18
+ * principles, governance policy) lives one tier deeper, at /institution,
+ * following the same progressive-disclosure pattern used by /chemistry,
+ * /secondary-loss, /reports, and /conversations/[slug].
  */
 
 // The five principles selected to represent "what makes AVAIA different" on
@@ -29,17 +32,8 @@ export default function AboutContent() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
       <p className="label mb-3">About AVAIA</p>
-      <h1 className="font-serif text-4xl text-ink">One conversation, carried across time.</h1>
+      <h1 className="font-serif text-4xl text-ink">An institution for guided conversations.</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">{CONSTITUTION_PREAMBLE}</p>
-      <div className="mt-8">
-        <Link
-          href="/journey"
-          prefetch={false}
-          className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-        >
-          Begin the journey
-        </Link>
-      </div>
 
       {/* GIVE Method */}
       <section id="give" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
@@ -57,41 +51,6 @@ export default function AboutContent() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* The AVAIA Journey */}
-      <section id="journey" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
-        <p className="label mb-2">The Arc</p>
-        <h2 className="font-serif text-3xl text-ink">The AVAIA Journey</h2>
-        <p className="mt-3 text-muted">
-          One journey, three parts. Each has its own page — read what it means, or begin now.
-        </p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Link
-            href="/journey/iap"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="label text-muted">Awareness</p>
-            <p className="mt-1 font-serif text-lg text-ink">Individual Awareness Profile</p>
-            <p className="mt-1 text-sm text-muted">You get to say it.</p>
-          </Link>
-          <Link
-            href="/journey/cat"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="label text-muted">Understanding</p>
-            <p className="mt-1 font-serif text-lg text-ink">Conversations Across Time</p>
-            <p className="mt-1 text-sm text-muted">You get to understand it.</p>
-          </Link>
-          <Link
-            href="/journey/innercompass"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="label text-muted">Agency</p>
-            <p className="mt-1 font-serif text-lg text-ink">InnerCompass</p>
-            <p className="mt-1 text-sm text-muted">You get to decide what belongs to you from here.</p>
-          </Link>
         </div>
       </section>
 
@@ -143,64 +102,32 @@ export default function AboutContent() {
         </ol>
       </section>
 
-      {/* Explore AVAIA */}
-      <section id="explore" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
-        <p className="label mb-2">Go Deeper</p>
-        <h2 className="font-serif text-3xl text-ink">Explore AVAIA</h2>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link
-            href="/journey"
-            prefetch={false}
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="font-serif text-lg text-ink">The Journey</p>
-            <p className="mt-1 text-sm text-muted">Begin — or continue — the conversation itself.</p>
-          </Link>
-          <Link
-            href="/chemistry"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="font-serif text-lg text-ink">Chemistry of Virtue</p>
-            <p className="mt-1 text-sm text-muted">
-              The 123 elements a conversation works with, and how they combine.
-            </p>
-          </Link>
-          <Link
-            href="/secondary-loss"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="font-serif text-lg text-ink">The Secondary Loss Engine</p>
-            <p className="mt-1 text-sm text-muted">
-              Why a loss can affect more than what was directly taken.
-            </p>
-          </Link>
-          <Link
-            href="/defying-grief"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="font-serif text-lg text-ink">Defying Grief</p>
-            <p className="mt-1 text-sm text-muted">AVAIA&rsquo;s flagship grief program.</p>
-          </Link>
-          <Link
-            href="/workbook"
-            prefetch={false}
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="font-serif text-lg text-ink">Your Workbook</p>
-            <p className="mt-1 text-sm text-muted">The living record of your own AVAIA journey.</p>
-          </Link>
-          <Link
-            href="/institution"
-            className="rounded-lg border border-rule bg-white/[0.02] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="font-serif text-ink">The Institution</p>
-            <p className="mt-1 text-sm text-muted">
-              The full Constitution, principles, and governance behind AVAIA — for anyone who
-              wants to go deeper.
-            </p>
-          </Link>
-        </div>
+      {/* Go deeper — quiet reference links, not primary actions. The depth
+          of AVAIA becomes available as a visitor wants it, not before. */}
+      <section className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
+        <p className="label mb-3 text-muted">Go deeper</p>
+        <ul className="space-y-2">
+          <li>
+            <Link href="/institution" className="text-ink hover:text-seal">
+              The Institution — the full Constitution, principles, and governance behind AVAIA →
+            </Link>
+          </li>
+          <li>
+            <Link href="/secondary-loss" className="text-ink hover:text-seal">
+              The Secondary Loss Engine — why a loss can affect more than what was directly taken →
+            </Link>
+          </li>
+        </ul>
       </section>
+
+      {/* About's job is to explain, not to convert -- the homepage owns the
+          primary CTA. This is a modest way back to starting, not a repeat
+          of it, so this page doesn't dead-end. */}
+      <p className="rule-t mt-16 border-t border-rule pt-8 text-sm">
+        <Link href="/journey" prefetch={false} className="text-ink hover:text-seal">
+          Ready to begin? Start your Individual Awareness Profile — it&rsquo;s free →
+        </Link>
+      </p>
     </div>
   );
 }

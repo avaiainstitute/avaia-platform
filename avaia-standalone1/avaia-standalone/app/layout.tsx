@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "./globals.css";
 import Nav from "@/components/Nav";
 import SiteAnalytics from "@/components/SiteAnalytics";
@@ -48,6 +49,11 @@ export default function RootLayout({
             <p className="mt-4 text-xs">
               © AVAIA Enterprises, LLC. The Chemistry of Virtue™ is a mark of
               AVAIA Enterprises, LLC.
+            </p>
+            <p className="mt-3 text-xs">
+              <Link href="/privacy" className="hover:text-seal">
+                Privacy Policy
+              </Link>
             </p>
           </div>
         </footer>

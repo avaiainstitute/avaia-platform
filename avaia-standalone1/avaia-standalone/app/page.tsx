@@ -1,12 +1,12 @@
-import AboutContent from "@/components/AboutContent";
+import HomeContent from "@/components/HomeContent";
 
 export const metadata = { title: "AVAIA — Clarity Starts With Integrity" };
 
 /**
- * The site root shows the institution's governing content (the same page as
- * /about, which the nav points at). Rendered from a shared component rather than
- * redirecting — a statically prerendered redirect emits a 307 with no Location.
+ * The site root is its own minimal front door -- what is this, why might I
+ * care, where do I start -- distinct from /about, which now carries the
+ * deeper institutional explanation. See components/HomeContent.tsx.
  */
 export default function Home() {
-  return <AboutContent />;
+  return <HomeContent />;
 }

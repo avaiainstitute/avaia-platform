@@ -14,6 +14,9 @@ export async function POST(request: Request) {
   if (age !== "adult" && age !== "minor") {
     return NextResponse.json({ error: "Please confirm your eligibility." }, { status: 400 });
   }
+  // Fully separate from the required disclaimer above -- optional, off by
+  // default, and only ever written here when explicitly opted in.
+  const marketingConsent = body?.marketingConsent === true;
 
   // .select() so we can tell "updated" from "matched nothing" — an UPDATE
   // that matches zero rows (e.g. the profile row doesn't exist yet, a race
@@ -40,5 +43,25 @@ export async function POST(request: Request) {
       { status: 404 }
     );
   }
+
+  // Deliberately a separate, best-effort write -- never lets an optional
+  // marketing opt-in block the required consent above, which has already
+  // succeeded by this point. Also means a deployment that hasn't yet run
+  // supabase/migrations/0009_marketing_consent.sql fails quietly here
+  // instead of stranding a first-time Host outside the free IAP.
+  if (marketingConsent) {
+    const { error: marketingError } = await supabase
+      .from("profiles")
+      .update({
+        marketing_consent: true,
+        marketing_consent_at: new Date().toISOString(),
+        marketing_consent_source: "welcome",
+      })
+      .eq("id", user.id);
+    if (marketingError) {
+      console.error("AVAIA marketing consent write failed:", marketingError.message);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

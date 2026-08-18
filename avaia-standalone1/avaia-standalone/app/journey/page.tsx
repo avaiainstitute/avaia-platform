@@ -13,7 +13,6 @@ import {
   createJourney,
   loadMessages,
 } from "@/lib/engine/conversation";
-import { OPERATING_PRINCIPLES } from "@/lib/institution";
 import { getIncomingRoomTitle } from "@/lib/defying-grief";
 import type { Program, Stage } from "@/lib/engine/prompts";
 
@@ -29,7 +28,7 @@ export default async function JourneyPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return <JourneyIntro />;
+  if (!user) redirect("/sign-in?from=/journey");
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -314,84 +313,3 @@ export function MembershipGate({
   );
 }
 
-/** Shown to visitors who aren't signed in — the invitation to begin, then the
- *  principles every part of AVAIA holds to. The Core Conversation Flow lives in
- *  the Constitution; here we only invite the Host in. */
-function JourneyIntro() {
-  return (
-    <div className="mx-auto max-w-5xl px-5">
-      {/* Hero */}
-      <section className="py-16 sm:py-24">
-        <p className="label mb-4">An operating system for guided conversations</p>
-        <h1 className="font-serif text-5xl leading-tight tracking-[0.12em] text-ink sm:text-7xl">
-          AVAIA
-        </h1>
-        <p className="mt-3 font-cinzel text-sm uppercase tracking-[0.28em] text-phoenix sm:text-base">
-          Clarity Starts With Integrity
-        </p>
-        <p className="mt-6 max-w-prose text-lg leading-relaxed text-ink">
-          One conversation, carried across time. AVAIA is a fixed way of holding
-          a conversation so that a person is seen, understanding comes before
-          action, and the Host owns every decision.
-        </p>
-        <div className="mt-8">
-          <Link
-            href="/sign-in"
-            className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-          >
-            Begin the journey
-          </Link>
-        </div>
-      </section>
-
-      {/* What happens in each part */}
-      <section className="py-12">
-        <p className="label mb-6">What happens in each part</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Link
-            href="/journey/iap"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="label text-muted">Awareness</p>
-            <p className="mt-1 font-serif text-lg text-ink">Individual Awareness Profile</p>
-            <p className="mt-1 text-sm text-muted">You get to say it.</p>
-          </Link>
-          <Link
-            href="/journey/cat"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="label text-muted">Understanding</p>
-            <p className="mt-1 font-serif text-lg text-ink">Conversations Across Time</p>
-            <p className="mt-1 text-sm text-muted">You get to understand it.</p>
-          </Link>
-          <Link
-            href="/journey/innercompass"
-            className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4 transition-colors hover:border-seal"
-          >
-            <p className="label text-muted">Agency</p>
-            <p className="mt-1 font-serif text-lg text-ink">InnerCompass</p>
-            <p className="mt-1 text-sm text-muted">You get to decide what belongs to you from here.</p>
-          </Link>
-        </div>
-      </section>
-
-      {/* Principles */}
-      <section className="py-12">
-        <p className="label mb-6">What every part of AVAIA holds to</p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {OPERATING_PRINCIPLES.slice(0, 6).map((p) => (
-            <div key={p.title} className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4">
-              <p className="font-serif text-ink">{p.title}</p>
-              <p className="mt-1 text-sm text-muted">{p.text}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          <Link href="/institution" className="label hover:text-seal">
-            The Constitution &amp; all 18 principles →
-          </Link>
-        </div>
-      </section>
-    </div>
-  );
-}

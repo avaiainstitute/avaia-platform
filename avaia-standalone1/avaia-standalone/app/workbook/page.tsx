@@ -289,6 +289,15 @@ export default async function WorkbookPage() {
         {journeys.length > 0 && <ShareButton scope="workbook" label="Share entire Workbook" />}
       </div>
 
+      {/* Shared with Me lives here rather than in top-level navigation --
+          it's a receiving view for AVAIA's sharing feature, not a
+          destination a stranger or first-time Host needs to see. */}
+      <p className="mt-4 text-sm">
+        <Link href="/shared-with-me" className="text-muted hover:text-seal">
+          Looking for what others have shared with you? →
+        </Link>
+      </p>
+
       {journeys.length > 0 && (
         <section className="mt-10">
           <p className="label text-muted">Shared with</p>

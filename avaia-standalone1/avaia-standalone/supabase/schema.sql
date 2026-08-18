@@ -12,14 +12,20 @@
 -- profiles — one row per Host, with consent + eligibility record
 -- ---------------------------------------------------------------------------
 create table if not exists public.profiles (
-  id                  uuid primary key references auth.users (id) on delete cascade,
-  consent_at          timestamptz,           -- when the Host accepted the disclaimer
-  disclaimer_version  text,                  -- which disclaimer they accepted
-  adult_confirmed     boolean not null default false,
-  minor_with_guardian boolean not null default false,
-  membership_status   text not null default 'free' check (membership_status in ('free', 'member')),
-  role                text not null default 'member' check (role in ('member', 'community_leader')),
-  created_at          timestamptz not null default now()
+  id                    uuid primary key references auth.users (id) on delete cascade,
+  consent_at            timestamptz,           -- when the Host accepted the disclaimer
+  disclaimer_version    text,                  -- which disclaimer they accepted
+  adult_confirmed       boolean not null default false,
+  minor_with_guardian   boolean not null default false,
+  membership_status     text not null default 'free' check (membership_status in ('free', 'member')),
+  role                  text not null default 'member' check (role in ('member', 'community_leader')),
+  -- Marketing consent is deliberately separate from consent_at above -- the
+  -- account/legal disclaimer never implies permission to send marketing.
+  -- Optional, off by default, capturable (and later changeable) on its own.
+  marketing_consent     boolean not null default false,
+  marketing_consent_at  timestamptz,
+  marketing_consent_source text,
+  created_at            timestamptz not null default now()
 );
 
 alter table public.profiles enable row level security;

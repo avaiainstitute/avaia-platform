@@ -16,6 +16,10 @@ import { consumePostSignInRedirect } from "@/lib/post-signin-redirect";
 export default function ConsentForm() {
   const [age, setAge] = useState<"" | "adult" | "minor">("");
   const [understood, setUnderstood] = useState(false);
+  // Fully separate from `understood` above -- optional, off by default,
+  // never required for canSubmit. See app/api/consent/route.ts for how the
+  // two are kept apart in storage too.
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,7 +34,7 @@ export default function ConsentForm() {
       const res = await fetch("/api/consent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ age }),
+        body: JSON.stringify({ age, marketingConsent }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
       const dest = consumePostSignInRedirect();
@@ -89,6 +93,23 @@ export default function ConsentForm() {
         <span className="text-ink">
           I have read and understand the above, and I understand that I remain
           the owner of my story and every decision I make.
+        </span>
+      </label>
+
+      {/* Deliberately separate from the required consent above -- its own
+          quieter styling, explicitly optional, off by default, and never
+          part of canSubmit. This isn't a second thing to agree to in order
+          to begin; it's a fully independent, skippable choice. */}
+      <label className="mt-5 flex cursor-pointer items-start gap-3 border-t border-rule pt-5 text-sm">
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={marketingConsent}
+          onChange={(e) => setMarketingConsent(e.target.checked)}
+        />
+        <span className="text-muted">
+          <span className="text-ink">Keep me connected with AVAIA</span> (optional) — send me
+          occasional updates about programs, classes, resources, workshops, and opportunities.
         </span>
       </label>
 
