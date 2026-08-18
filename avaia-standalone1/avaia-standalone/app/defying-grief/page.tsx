@@ -161,6 +161,14 @@ function ThresholdContent({
             Explore the Secondary Loss Engine →
           </Link>
         </div>
+        <p className="mt-4 text-sm">
+          <Link
+            href="/books/the-view-from-above"
+            className="text-muted hover:text-seal"
+          >
+            From Dorian&rsquo;s own story →
+          </Link>
+        </p>
       </div>
 
       {/* What journey will I take — AVAIA is the house; Defying Grief is the
