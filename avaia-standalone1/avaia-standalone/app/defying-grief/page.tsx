@@ -178,10 +178,11 @@ function ThresholdContent({
               CAT doesn&rsquo;t ask you to keep listing what&rsquo;s wrong — it already has
               what became visible in IAP. Its work is to sit with that and help you see it more
               clearly: how it formed, what it&rsquo;s connected to, what it may still be
-              costing you. This is usually where a stubbornness that isn&rsquo;t sadness and
-              isn&rsquo;t strength exactly first makes itself known — the Audacity of Grief,
-              the force that keeps a person showing up inside loss even when nothing about it
-              has resolved.
+              costing you.
+            </p>
+            <p className="mt-4 border-l-4 border-[#c1502e]/60 pl-4 font-serif text-lg italic text-ink">
+              The Audacity of Grief — the force that makes a person insist on their own
+              aliveness in the face of loss.
             </p>
             <Link
               href="/journey/cat"
@@ -198,9 +199,11 @@ function ThresholdContent({
               The question changes here — no longer what happened, or what does it mean, but
               what does this understanding allow me to do now? InnerCompass helps you see
               what&rsquo;s actually influencing a pull toward a direction, and whether that
-              direction really belongs to you. Here, that becomes the Audacity of Happiness —
-              the nerve it takes to hope again, to dream something for yourself again, to laugh
-              without it meaning you&rsquo;ve forgotten.
+              direction really belongs to you.
+            </p>
+            <p className="mt-4 border-l-4 border-[#c1502e]/60 pl-4 font-serif text-lg italic text-ink">
+              The Audacity of Happiness — the nerve it takes to hope again, to dream something
+              for yourself again, to laugh without it meaning you&rsquo;ve forgotten.
             </p>
             <Link
               href="/journey/innercompass"

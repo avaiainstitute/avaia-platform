@@ -35,6 +35,21 @@ export default function AboutContent() {
       <h1 className="font-serif text-4xl text-ink">An institution for guided conversations.</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">{CONSTITUTION_PREAMBLE}</p>
 
+      {/* Primary CTA -- moved up from the bottom of the page and upsized to
+          match Home's treatment. About's job is still to explain, not just
+          convert, but a visitor reading this far shouldn't have to scroll
+          past GIVE/Roles/Principles/Go-deeper to find how to actually begin. */}
+      <div className="mt-8">
+        <Link
+          href="/journey"
+          prefetch={false}
+          className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Start Your Individual Awareness Profile
+        </Link>
+        <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
+      </div>
+
       {/* GIVE Method */}
       <section id="give" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
         <p className="label mb-2">The Method</p>
@@ -119,15 +134,6 @@ export default function AboutContent() {
           </li>
         </ul>
       </section>
-
-      {/* About's job is to explain, not to convert -- the homepage owns the
-          primary CTA. This is a modest way back to starting, not a repeat
-          of it, so this page doesn't dead-end. */}
-      <p className="rule-t mt-16 border-t border-rule pt-8 text-sm">
-        <Link href="/journey" prefetch={false} className="text-ink hover:text-seal">
-          Ready to begin? Start your Individual Awareness Profile — it&rsquo;s free →
-        </Link>
-      </p>
     </div>
   );
 }

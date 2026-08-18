@@ -68,68 +68,13 @@ export default function ChemistryPage() {
         source materials.
       </p>
 
-      {/* Orientation — read before dropping into the interactive table. */}
-      <section className="mt-8 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
-        <p className="label mb-2 text-muted">How to read this</p>
-        <p className="text-ink">
-          AVAIA calls this the Chemistry of Virtue because it works the way the real periodic
-          table does: 10 broad families of strength — like Wisdom or Justice — each contain
-          several individual elements, like Discernment or Fairness. Every element here is a
-          virtue; &ldquo;family&rdquo; and &ldquo;element&rdquo; are just two different scales
-          of the same 123 virtues.
-        </p>
-        <p className="mt-5 text-center font-serif text-lg text-seal">
-          Families → Elements → Formulas → How it shows up in your life
-        </p>
-        <div className="mt-6 grid gap-2 sm:grid-cols-2">
-          {VIRTUE_FAMILIES.map((f) => (
-            <div
-              key={f.key}
-              className="flex items-start gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3"
-            >
-              <span
-                className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: f.color }}
-                aria-hidden
-              />
-              <div>
-                <p className="font-serif text-ink">{f.name}</p>
-                <p className="text-sm text-muted">{f.definition}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 border-t border-rule pt-5">
-          <p className="label mb-2 text-muted">What you can do here</p>
-          <ul className="space-y-1 text-sm text-ink">
-            <li>Browse the table below and tap any element to read its definition.</li>
-            <li>Generate a Virtue Formula for a role, feeling, or situation you name.</li>
-            <li>Spell your name and see which elements it maps to.</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Three doors framing */}
-      <div className="mt-8 rounded-lg border border-dashed border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
-        <p className="label mb-2 text-muted">Three ways in</p>
-        <p className="text-ink">
-          Identity, Capacity, and Connection aren&rsquo;t three separate features here — they&rsquo;re
-          three doors into the same thing. What Your Name Spells is who you already are. A Virtue
-          Formula names capacities available to you. And{" "}
-          <Link href="/unsung-heroes" className="underline decoration-rule underline-offset-2 hover:text-seal">
-            Unsung Heroes
-          </Link>{" "}
-          is where you learn to recognize those same capacities alive in someone else.
-        </p>
-        <p className="mt-3 text-sm text-muted">
-          This same table is what every AVAIA conversation draws on — it&rsquo;s also how the{" "}
-          <Link href="/secondary-loss" className="underline decoration-rule underline-offset-2 hover:text-seal">
-            Secondary Loss Engine
-          </Link>{" "}
-          pairs each loss with the virtue that tends to feel absent alongside it.
-        </p>
-      </div>
+      {/* Short orientation -- the fuller explanation, family definitions,
+          "what you can do here," and "three ways in" now live after the
+          table (the visual hook), not before it. */}
+      <p className="mt-6 max-w-prose text-ink">
+        AVAIA calls this the Chemistry of Virtue because it works like a periodic table — 123
+        elements of virtue organized across 10 families. Explore the table below.
+      </p>
 
       {/* Legend / family filter */}
       <div className="mt-10 flex flex-wrap gap-2">
@@ -252,6 +197,71 @@ export default function ChemistryPage() {
         {(active ? VIRTUES.filter((v) => v.family === active) : VIRTUES).length} virtues.
         Tap any element to read its definition. On a phone, scroll the table sideways.
       </p>
+
+      {/* How to read this / family explanations — moved here, after the
+          table, so the visual hook comes first. */}
+      <section className="mt-10 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">How to read this</p>
+        <p className="text-ink">
+          AVAIA calls this the Chemistry of Virtue because it works the way the real periodic
+          table does: 10 broad families of strength — like Wisdom or Justice — each contain
+          several individual elements, like Discernment or Fairness. Every element here is a
+          virtue; &ldquo;family&rdquo; and &ldquo;element&rdquo; are just two different scales
+          of the same 123 virtues.
+        </p>
+        <p className="mt-5 text-center font-serif text-lg text-seal">
+          Families → Elements → Formulas → How it shows up in your life
+        </p>
+        <div className="mt-6 grid gap-2 sm:grid-cols-2">
+          {VIRTUE_FAMILIES.map((f) => (
+            <div
+              key={f.key}
+              className="flex items-start gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3"
+            >
+              <span
+                className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: f.color }}
+                aria-hidden
+              />
+              <div>
+                <p className="font-serif text-ink">{f.name}</p>
+                <p className="text-sm text-muted">{f.definition}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* What you can do here */}
+      <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">What you can do here</p>
+        <ul className="space-y-1 text-sm text-ink">
+          <li>Browse the table above and tap any element to read its definition.</li>
+          <li>Generate a Virtue Formula for a role, feeling, or situation you name.</li>
+          <li>Spell your name and see which elements it maps to.</li>
+        </ul>
+      </div>
+
+      {/* Three ways in */}
+      <div className="mt-6 rounded-lg border border-dashed border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">Three ways in</p>
+        <p className="text-ink">
+          Identity, Capacity, and Connection aren&rsquo;t three separate features here — they&rsquo;re
+          three doors into the same thing. What Your Name Spells is who you already are. A Virtue
+          Formula names capacities available to you. And{" "}
+          <Link href="/unsung-heroes" className="underline decoration-rule underline-offset-2 hover:text-seal">
+            Unsung Heroes
+          </Link>{" "}
+          is where you learn to recognize those same capacities alive in someone else.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          This same table is what every AVAIA conversation draws on — it&rsquo;s also how the{" "}
+          <Link href="/secondary-loss" className="underline decoration-rule underline-offset-2 hover:text-seal">
+            Secondary Loss Engine
+          </Link>{" "}
+          pairs each loss with the virtue that tends to feel absent alongside it.
+        </p>
+      </div>
 
       {/* Virtue formulas — generated live from the real 123 elements */}
       <section className="rule-t mt-14 border-t border-rule pt-10">
