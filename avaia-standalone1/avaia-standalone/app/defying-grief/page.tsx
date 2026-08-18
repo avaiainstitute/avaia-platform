@@ -103,6 +103,41 @@ function ThresholdContent({
         </p>
       )}
 
+      {/* Defying Grief orientation — placed before the existing IAP/CAT/
+          InnerCompass "room by room" section. Explains the program itself
+          before explaining the conversations that carry it. */}
+      <div className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-2 text-muted">What Defying Grief is</p>
+        <p className="text-lg leading-relaxed text-ink">
+          Defying Grief is AVAIA applied specifically to loss and disruption. Here, grief
+          isn&rsquo;t only about death. It&rsquo;s what shows up whenever something real is
+          disrupted: a relationship, an identity, a plan for your life, a sense of who you
+          were. If it was real and it&rsquo;s gone or changed, grief is the honest word for
+          what&rsquo;s left.
+        </p>
+        <p className="mt-4 text-muted">
+          A loss rarely takes only the one thing it&rsquo;s named for. What it quietly takes
+          alongside it — meaning, trust, a sense of control, connection, a piece of your own
+          identity — are Secondary Losses, and they&rsquo;re often where the real weight lives,
+          even when nobody names them out loud.
+        </p>
+        <p className="mt-4 text-muted">
+          Defying Grief doesn&rsquo;t start by telling you what to do or how you should grieve.
+          It starts the way every AVAIA conversation does — with understanding before action.
+          Nothing here prescribes an outcome or a timeline.{" "}
+          <span className="text-ink">We don&rsquo;t move on, we move with.</span>
+        </p>
+        <p className="mt-4 text-muted">
+          The movement is the same one every AVAIA journey follows: Awareness, then
+          Understanding, then Agency. You say what&rsquo;s true first. Then it&rsquo;s
+          understood — the Secondary Losses named, and the virtues connected to them brought
+          into view. Only then does it become something you can actually decide about.
+        </p>
+        <p className="mt-4 text-muted">
+          What that actually looks like, conversation by conversation, is below.
+        </p>
+      </div>
+
       {/* What journey will I take — AVAIA is the house; Defying Grief is the
           program/journey; IAP, CAT, and InnerCompass are the same three
           AVAIA conversations that carry a Host through it. Content below is

@@ -12,13 +12,16 @@ type NavLink = { href: string; label: string; prefetch: boolean };
 
 // Signed-out visitors only need enough to understand AVAIA, understand
 // Defying Grief, and begin -- not the full signed-in toolset (Workbook,
-// Shared with Me, Unsung Heroes) sitting in front of them before they've
-// done anything. That distinction is the whole point of this Nav being
-// auth-aware instead of one static list.
+// Shared with Me) sitting in front of them before they've done anything.
+// Unsung Heroes belongs here now that its signed-out page (see
+// UnsungHeroesIntro.tsx) actually explains what it is, instead of being a
+// bare "sign in to begin" stub. That distinction is the whole point of
+// this Nav being auth-aware instead of one static list.
 const PUBLIC_LINKS: NavLink[] = [
   { href: "/about", label: "About", prefetch: true },
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
+  { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/sign-in", label: "Sign in", prefetch: true },
 ];
 
