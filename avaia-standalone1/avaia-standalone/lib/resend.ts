@@ -55,3 +55,41 @@ export function inviteEmailHtml({
     <p style="color:#888">If you weren't expecting this, you can safely ignore this email.</p>
   `.trim();
 }
+
+/** Unlike ownerLabel/scopeLabel/signUpUrl above (all server-controlled
+ *  strings), the contact form below interpolates raw Host-typed text into
+ *  HTML for the first time in this file -- escape it so a name or message
+ *  containing HTML can't inject markup into the notification email. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** The /contact form's notification email — sent to
+ *  CONTACT_NOTIFICATION_EMAIL (if configured) whenever someone submits the
+ *  public form. The submission itself is always saved to
+ *  contact_submissions regardless of whether this send succeeds. */
+export function contactSubmissionEmailHtml({
+  name,
+  email,
+  reasonLabel,
+  message,
+}: {
+  name: string;
+  email: string;
+  reasonLabel: string;
+  message: string;
+}): string {
+  return `
+    <h2>New AVAIA contact form submission</h2>
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    <p><strong>Reason:</strong> ${escapeHtml(reasonLabel)}</p>
+    <p><strong>Message:</strong></p>
+    <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
+  `.trim();
+}

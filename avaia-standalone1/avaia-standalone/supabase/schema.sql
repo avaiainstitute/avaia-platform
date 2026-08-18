@@ -485,3 +485,22 @@ alter table public.unsung_heroes_messages enable row level security;
 create policy "unsung heroes messages are self-only"
   on public.unsung_heroes_messages for all
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
+
+-- ---------------------------------------------------------------------------
+-- contact_submissions — the public, unauthenticated form at /contact
+-- ---------------------------------------------------------------------------
+create table if not exists public.contact_submissions (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null,
+  email      text not null,
+  reason     text not null check (reason in (
+                'general', 'guiding', 'workshops', 'schools', 'certification', 'other'
+              )),
+  message    text not null,
+  created_at timestamptz not null default now()
+);
+
+-- No RLS policies at all (service-role only, same posture as the Stripe
+-- webhook and the GPT OAuth tables) -- only /api/contact, via the admin
+-- client, can ever touch this table. There is no signed-in Host to scope to.
+alter table public.contact_submissions enable row level security;

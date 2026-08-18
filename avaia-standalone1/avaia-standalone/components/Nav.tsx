@@ -22,6 +22,7 @@ const PUBLIC_LINKS: NavLink[] = [
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
+  { href: "/contact", label: "Contact", prefetch: true },
   { href: "/sign-in", label: "Sign in", prefetch: true },
 ];
 
@@ -33,6 +34,7 @@ const SIGNED_IN_LINKS: NavLink[] = [
   { href: "/workbook", label: "Workbook", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
+  { href: "/contact", label: "Contact", prefetch: true },
 ];
 
 export default async function Nav() {
