@@ -138,6 +138,31 @@ function ThresholdContent({
         </p>
       </div>
 
+      {/* Secondary Losses — its own callout, not just the passing mention
+          above. Deliberately not styled in the ember accent -- that color
+          is reserved for Audacity specifically (see the pull-quotes below),
+          so Secondary Losses gets the page's neutral card treatment. */}
+      <div className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-2 text-muted">Secondary Losses</p>
+        <div className="rounded-lg border border-rule bg-white/[0.04] px-5 py-5 backdrop-blur-sm">
+          <p className="text-lg leading-relaxed text-ink">
+            The loss you can name is rarely the only one. When something real is taken, the
+            primary loss is usually seen right away — but what it quietly takes alongside it
+            often stays hidden, and that is frequently where the real weight lives.
+          </p>
+          <p className="mt-3 text-muted">
+            Naming those Secondary Losses is part of what makes real understanding possible,
+            before anything else happens.
+          </p>
+          <Link
+            href="/secondary-loss"
+            className="mt-4 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            Explore the Secondary Loss Engine →
+          </Link>
+        </div>
+      </div>
+
       {/* What journey will I take — AVAIA is the house; Defying Grief is the
           program/journey; IAP, CAT, and InnerCompass are the same three
           AVAIA conversations that carry a Host through it. Content below is

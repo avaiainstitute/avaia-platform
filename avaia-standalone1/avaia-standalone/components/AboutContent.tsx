@@ -117,6 +117,28 @@ export default function AboutContent() {
         </ol>
       </section>
 
+      {/* Secondary Losses — upgraded from a Go-deeper bullet to its own
+          modest callout, since it's substantive (and now central to how
+          Defying Grief explains itself), not just a footer reference.
+          Sized to stay clearly secondary to the primary CTA above. */}
+      <section className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
+        <p className="label mb-2 text-muted">A Closer Look</p>
+        <div className="rounded-lg border border-rule bg-white/[0.04] px-5 py-5 backdrop-blur-sm">
+          <p className="font-serif text-xl text-ink">The Secondary Loss Engine</p>
+          <p className="mt-2 text-muted">
+            A loss rarely takes only the one thing it&rsquo;s named for. What it quietly takes
+            alongside it — meaning, trust, connection, a piece of your own identity — can
+            affect more than what was directly taken.
+          </p>
+          <Link
+            href="/secondary-loss"
+            className="mt-3 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            Explore the Secondary Loss Engine →
+          </Link>
+        </div>
+      </section>
+
       {/* Go deeper — quiet reference links, not primary actions. The depth
           of AVAIA becomes available as a visitor wants it, not before. */}
       <section className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
@@ -125,11 +147,6 @@ export default function AboutContent() {
           <li>
             <Link href="/institution" className="text-ink hover:text-seal">
               The Institution — the full Constitution, principles, and governance behind AVAIA →
-            </Link>
-          </li>
-          <li>
-            <Link href="/secondary-loss" className="text-ink hover:text-seal">
-              The Secondary Loss Engine — why a loss can affect more than what was directly taken →
             </Link>
           </li>
         </ul>
