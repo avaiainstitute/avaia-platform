@@ -18,13 +18,17 @@ create table if not exists public.profiles (
   adult_confirmed       boolean not null default false,
   minor_with_guardian   boolean not null default false,
   membership_status     text not null default 'free' check (membership_status in ('free', 'member')),
-  role                  text not null default 'member' check (role in ('member', 'community_leader')),
+  role                  text not null default 'member' check (role in ('member', 'community_leader', 'guide')),
   -- Marketing consent is deliberately separate from consent_at above -- the
   -- account/legal disclaimer never implies permission to send marketing.
   -- Optional, off by default, capturable (and later changeable) on its own.
   marketing_consent     boolean not null default false,
   marketing_consent_at  timestamptz,
   marketing_consent_source text,
+  -- Set alongside role = 'guide' -- a simple audit record of when someone
+  -- was certified, not a tiered/per-tool certification system (not required
+  -- by the Guide Toolkit's first build).
+  guide_certified_at    timestamptz,
   created_at            timestamptz not null default now()
 );
 
@@ -504,3 +508,52 @@ create table if not exists public.contact_submissions (
 -- webhook and the GPT OAuth tables) -- only /api/contact, via the admin
 -- client, can ever touch this table. There is no signed-in Host to scope to.
 alter table public.contact_submissions enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- guide_participants / guide_sessions — the AVAIA Guide Toolkit's
+-- lightweight participant/session model. A participant needs no AVAIA
+-- account; a Guide-facilitated conversation still lives in the ordinary
+-- conversations/messages/referrals tables with host_id = the Guide's own
+-- account (see lib/guide.ts) -- these two tables only track who a session
+-- was really for, not the conversation content itself.
+-- ---------------------------------------------------------------------------
+create table if not exists public.guide_participants (
+  id              uuid primary key default gen_random_uuid(),
+  guide_id        uuid not null references auth.users (id) on delete cascade,
+  name            text not null,
+  email           text,
+  linked_host_id  uuid references auth.users (id) on delete set null,
+  notes           text,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists guide_participants_guide_idx
+  on public.guide_participants (guide_id, created_at);
+
+alter table public.guide_participants enable row level security;
+create policy "guide participants are owner-only"
+  on public.guide_participants for all
+  using (auth.uid() = guide_id) with check (auth.uid() = guide_id);
+
+create table if not exists public.guide_sessions (
+  id               uuid primary key default gen_random_uuid(),
+  guide_id         uuid not null references auth.users (id) on delete cascade,
+  participant_id   uuid references public.guide_participants (id) on delete set null,
+  tool             text not null check (tool in (
+                      'preparation', 'iap', 'cat', 'innercompass',
+                      'secondary-loss', 'chemistry', 'table-formation',
+                      'council', 'give', 'defying-grief', 'unsung-heroes',
+                      'library', 'youth-group'
+                    )),
+  conversation_id  uuid references public.conversations (id) on delete set null,
+  status           text not null default 'active' check (status in ('active', 'complete')),
+  created_at       timestamptz not null default now()
+);
+
+create index if not exists guide_sessions_guide_idx
+  on public.guide_sessions (guide_id, created_at);
+
+alter table public.guide_sessions enable row level security;
+create policy "guide sessions are owner-only"
+  on public.guide_sessions for all
+  using (auth.uid() = guide_id) with check (auth.uid() = guide_id);
