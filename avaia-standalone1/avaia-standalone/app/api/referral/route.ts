@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { type Program, type Stage } from "@/lib/engine/prompts";
 import { isMember } from "@/lib/membership";
+import { isAuthorizedGuideConversation } from "@/lib/guide";
 import { generateReferral } from "@/lib/engine/referral-generation";
 
 export const runtime = "nodejs";
@@ -33,7 +34,13 @@ export async function POST(request: Request) {
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
-  if (stage !== "iap" && !(await isMember(supabase, user.id))) {
+  // Same narrow Guide exception as /api/conversation -- see
+  // isAuthorizedGuideConversation's comment.
+  if (
+    stage !== "iap" &&
+    !(await isMember(supabase, user.id)) &&
+    !(await isAuthorizedGuideConversation(supabase, user.id, conversationId))
+  ) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
   }
 

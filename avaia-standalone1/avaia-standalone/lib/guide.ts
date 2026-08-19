@@ -112,6 +112,33 @@ export async function hasReferralForConversation(
   return !!data;
 }
 
+/** Whether a Guide is authorized to run this specific conversation --
+ *  requires both a live 'guide' role (checked fresh, not cached from a
+ *  historical row) and an actual guide_sessions row tying this exact
+ *  conversation to this exact Guide. This is the narrow exception
+ *  /api/conversation and /api/referral check before falling back to their
+ *  ordinary isMember() gate: it only ever unlocks a conversation the
+ *  Guide's own Toolkit already created and owns, never an arbitrary Host's
+ *  conversation, and never grants a Guide unrestricted access on the
+ *  strength of role alone. */
+export async function isAuthorizedGuideConversation(
+  supabase: SupabaseClient,
+  userId: string,
+  conversationId: string
+): Promise<boolean> {
+  const [guide, session] = await Promise.all([
+    isGuide(supabase, userId),
+    supabase
+      .from("guide_sessions")
+      .select("id")
+      .eq("guide_id", userId)
+      .eq("conversation_id", conversationId)
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  return guide && !!session.data;
+}
+
 /** Finds the conversation for a given stage within a Journey -- used after
  *  a stage's conversation reaches status: "complete" to find the next-stage
  *  conversation the frozen engine's own generateReferral() already created

@@ -15,6 +15,7 @@ import {
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { isMember } from "@/lib/membership";
+import { isAuthorizedGuideConversation } from "@/lib/guide";
 import { isFinishIntent } from "@/lib/engine/finish-intent";
 import { generateReferral } from "@/lib/engine/referral-generation";
 
@@ -51,7 +52,14 @@ export async function POST(request: Request) {
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
-  if (stage !== "iap" && !(await isMember(supabase, user.id))) {
+  // A Guide running this exact conversation through their own Guide Toolkit
+  // session is admitted even without personal membership -- see
+  // isAuthorizedGuideConversation's comment for why this stays narrow.
+  if (
+    stage !== "iap" &&
+    !(await isMember(supabase, user.id)) &&
+    !(await isAuthorizedGuideConversation(supabase, user.id, conversationId))
+  ) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
   }
 
