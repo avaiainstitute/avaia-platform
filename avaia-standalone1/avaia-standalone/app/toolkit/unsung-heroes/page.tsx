@@ -22,6 +22,14 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
   return null;
 }
 
+/** Every failure branch below redirects back to this page with ?error= set,
+ *  rendered as a banner in the page component -- a bare redirect to the
+ *  same page with no feedback is indistinguishable from the button doing
+ *  nothing at all, which is exactly the symptom this replaces. */
+function failPath(message: string): string {
+  return `/toolkit/unsung-heroes?error=${encodeURIComponent(message)}`;
+}
+
 /** Unsung Heroes runs on its own engine (lib/engine/unsung-heroes.ts) --
  *  fully separate tables, not the IAP/CAT/InnerCompass conversation engine
  *  at all. Reused exactly as-is; the only new thing is creating the
@@ -42,7 +50,7 @@ async function startUnsungHeroesSession(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const path = String(formData.get("path") ?? "") as UnsungHeroesPath;
-  if (!name || !PATHS.includes(path)) redirect("/toolkit/unsung-heroes");
+  if (!name || !PATHS.includes(path)) redirect(failPath("Enter a name and choose a path."));
 
   const linkedHostId = email ? await findHostIdByEmail(email) : null;
 
@@ -51,9 +59,15 @@ async function startUnsungHeroesSession(formData: FormData) {
     .insert({ guide_id: user.id, name, email: email || null, linked_host_id: linkedHostId })
     .select("id")
     .single();
-  if (participantError || !participant) redirect("/toolkit/unsung-heroes");
+  if (participantError || !participant)
+    redirect(failPath(participantError?.message ?? "Could not create the participant."));
 
-  const convo = await createUnsungHeroesConversation(supabase, user.id, path);
+  let convo;
+  try {
+    convo = await createUnsungHeroesConversation(supabase, user.id, path);
+  } catch (e) {
+    redirect(failPath(e instanceof Error ? e.message : "Could not start the conversation."));
+  }
 
   const { data: session, error: sessionError } = await supabase
     .from("guide_sessions")
@@ -65,12 +79,17 @@ async function startUnsungHeroesSession(formData: FormData) {
     })
     .select("id")
     .single();
-  if (sessionError || !session) redirect("/toolkit/unsung-heroes");
+  if (sessionError || !session)
+    redirect(failPath(sessionError?.message ?? "Could not create the session."));
 
   redirect(`/toolkit/unsung-heroes/${session.id}`);
 }
 
-export default async function ToolkitUnsungHeroesPage() {
+export default async function ToolkitUnsungHeroesPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -90,6 +109,12 @@ export default async function ToolkitUnsungHeroesPage() {
         A short, guided conversation to help a participant name a quiet act of virtue — one they
         witnessed, one they received, or one they&rsquo;re hoping to grow into.
       </p>
+
+      {searchParams?.error && (
+        <p className="mt-6 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {searchParams.error}
+        </p>
+      )}
 
       <form action={startUnsungHeroesSession} className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
         <div className="grid gap-4 sm:grid-cols-2">

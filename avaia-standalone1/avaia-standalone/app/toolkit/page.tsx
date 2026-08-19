@@ -239,21 +239,37 @@ export default async function ToolkitDashboardPage() {
           continuity view (referrals, transcripts, patterns across
           journeys); it isn't a separate Guide-only record, since
           Guide-facilitated conversations live under the Guide's own
-          account. No "Master Connection Map" or equivalent was found
-          anywhere in the codebase -- not built here, not invented. */}
+          account. Unsung Heroes recognitions are a separate table with no
+          Workbook presence at all (public /unsung-heroes/dashboard is
+          their only view, already self-scoped by RLS to observer_id, so it
+          works unchanged for a Guide's own recognitions too) -- linked
+          here rather than folded into Workbook, since folding it in would
+          mean editing that frozen page for a table it was never built to
+          read. No "Master Connection Map" or equivalent was found anywhere
+          in the codebase -- not built here, not invented. */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Records &amp; Continuity</p>
         <p className="text-muted">
           Every referral generated through the Toolkit is saved to your own Guide&rsquo;s Record,
-          the same Workbook every AVAIA Host has.
+          the same Workbook every AVAIA Host has. Unsung Heroes recognitions are saved to their
+          own record, the same one the public flow uses.
         </p>
-        <Link
-          href="/workbook"
-          prefetch={false}
-          className="mt-3 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
-        >
-          View Guide&rsquo;s Record
-        </Link>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <Link
+            href="/workbook"
+            prefetch={false}
+            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            View Guide&rsquo;s Record
+          </Link>
+          <Link
+            href="/unsung-heroes/dashboard"
+            prefetch={false}
+            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            View Unsung Heroes Record
+          </Link>
+        </div>
       </section>
 
       {/* Tool registry */}
