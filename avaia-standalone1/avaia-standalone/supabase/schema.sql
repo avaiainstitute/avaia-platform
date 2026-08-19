@@ -490,6 +490,21 @@ create policy "unsung heroes messages are self-only"
   on public.unsung_heroes_messages for all
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
 
+-- Which unsung_heroes_conversations row produced a given recognition --
+-- added in 0013_guide_toolkit_participant_record.sql, as an alter (rather
+-- than inline on public.recognitions above) since that table is declared
+-- before this one exists. Nullable: recognitions created before this
+-- migration have no way to be backfilled, and stay honestly unlinked rather
+-- than guessed at. This is what lets the Guide Toolkit's Participant Record
+-- trace a recognition back to the guide_sessions row (and therefore
+-- participant) that produced it.
+alter table public.recognitions
+  add column if not exists conversation_id uuid
+    references public.unsung_heroes_conversations (id) on delete set null;
+
+create index if not exists recognitions_conversation_idx
+  on public.recognitions (conversation_id);
+
 -- ---------------------------------------------------------------------------
 -- contact_submissions — the public, unauthenticated form at /contact
 -- ---------------------------------------------------------------------------
@@ -554,6 +569,12 @@ create table if not exists public.guide_sessions (
   -- conversation under. CAT/InnerCompass sessions are always a handoff
   -- from an existing conversation, which already carries its own program.
   program          text not null default 'general' check (program in ('general', 'defying-grief')),
+  -- Infrastructure only -- see 0013_guide_toolkit_participant_record.sql's
+  -- comment. Every currently-installed tool only ever runs as an adult
+  -- individual session, so this reads 'adult_individual' everywhere until a
+  -- youth or group tool actually exists to set it otherwise.
+  session_context  text not null default 'adult_individual'
+                     check (session_context in ('adult_individual', 'youth_individual', 'group')),
   status           text not null default 'active' check (status in ('active', 'complete')),
   created_at       timestamptz not null default now()
 );

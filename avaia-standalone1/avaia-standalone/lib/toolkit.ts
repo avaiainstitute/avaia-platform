@@ -42,9 +42,9 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "preparation",
     label: "Preparation",
-    description: "Prepares the Guide before a conversation by organizing available information. Occurs before any core conversation.",
-    status: "not-yet-specified",
-    href: null,
+    description: "Organizes what's already on record for a participant before a session -- never interprets, diagnoses, or prescribes what should happen next.",
+    status: "installed",
+    href: "/toolkit/preparation",
   },
   {
     key: "iap",

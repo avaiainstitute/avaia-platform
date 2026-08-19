@@ -3,6 +3,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ToolKey } from "./toolkit";
 import type { DbConversation } from "./engine/conversation";
 import type { Stage, Program } from "./engine/prompts";
+import type { UnsungHeroesConversation } from "./engine/unsung-heroes";
+
+/** Which authorized context a Guide-facilitated session ran under --
+ *  infrastructure for youth/group work that doesn't exist yet (see
+ *  0013_guide_toolkit_participant_record.sql's comment). Every tool
+ *  installed so far only ever creates 'adult_individual' sessions. */
+export type SessionContext = "adult_individual" | "youth_individual" | "group";
 
 /** Mirrors isMember() (lib/membership.ts) and isAdmin() (the unmerged
  *  `library` branch's lib/admin.ts) exactly -- same shape, same one-column
@@ -36,6 +43,7 @@ export type GuideSession = {
   tool: ToolKey;
   conversation_id: string | null;
   program: Program;
+  session_context: SessionContext;
   status: "active" | "complete";
   created_at: string;
 };
@@ -192,4 +200,163 @@ export async function findOrCreateGuideSessionForConversation(
     .single();
   if (error || !created) throw new Error(error?.message ?? "Could not create the next session.");
   return created.id;
+}
+
+export type ReferralRow = {
+  id: string;
+  host_id: string;
+  from_stage: Stage;
+  to_stage: string;
+  content: Record<string, unknown>;
+  conversation_id: string | null;
+  created_at: string;
+};
+
+export type RecognitionRow = {
+  id: string;
+  observer_id: string;
+  title: string;
+  who_became_visible: string;
+  story: string;
+  virtue_family: string;
+  primary_virtue: string | null;
+  conversation_path: string;
+  conversation_id: string | null;
+  created_at: string;
+};
+
+export type ParticipantSessionRecord = {
+  session: GuideSession;
+  // Populated only for tool in (iap, cat, innercompass) -- the frozen
+  // Journey engine's own conversation/referral, resolved via
+  // session.conversation_id. Defying Grief isn't a distinct `tool`; it's
+  // these same three tools with session.program === 'defying-grief'.
+  conversation: DbConversation | null;
+  referral: ReferralRow | null;
+  // Populated only for tool === 'unsung-heroes'.
+  unsungHeroesConversation: UnsungHeroesConversation | null;
+  recognition: RecognitionRow | null;
+};
+
+export type ParticipantHistory = {
+  participant: GuideParticipant;
+  /** Reverse chronological -- newest first, matching listGuideSessions. */
+  sessions: ParticipantSessionRecord[];
+};
+
+/** Everything currently on record for one of a Guide's participants,
+ *  organized by session -- the shared data behind both the Participant
+ *  Record (continuity/history) and Preparation (pre-session briefing)
+ *  pages, so the two surfaces never independently re-derive or drift from
+ *  what "this participant's history" actually means. Resolves each
+ *  guide_sessions row to its real underlying conversation/referral or
+ *  Unsung Heroes conversation/recognition purely by following existing
+ *  foreign keys (session.conversation_id, referrals.conversation_id,
+ *  recognitions.conversation_id) -- never inventing an association a join
+ *  doesn't actually support. A session whose tool isn't one of the above
+ *  (future Toolkit activity) still appears, just with every resolved field
+ *  null; the caller renders it from `session` alone. */
+export async function getParticipantHistory(
+  supabase: SupabaseClient,
+  guideId: string,
+  participantId: string
+): Promise<ParticipantHistory | null> {
+  const { data: participantData } = await supabase
+    .from("guide_participants")
+    .select("*")
+    .eq("id", participantId)
+    .eq("guide_id", guideId)
+    .maybeSingle();
+  if (!participantData) return null;
+  const participant = participantData as GuideParticipant;
+
+  const { data: sessionsData } = await supabase
+    .from("guide_sessions")
+    .select("*")
+    .eq("guide_id", guideId)
+    .eq("participant_id", participantId)
+    .order("created_at", { ascending: false });
+  const sessions = (sessionsData as GuideSession[]) ?? [];
+
+  const journeyToolIds = [
+    ...new Set(
+      sessions
+        .filter((s) => s.tool === "iap" || s.tool === "cat" || s.tool === "innercompass")
+        .map((s) => s.conversation_id)
+        .filter((id): id is string => !!id)
+    ),
+  ];
+  const unsungHeroesIds = [
+    ...new Set(
+      sessions
+        .filter((s) => s.tool === "unsung-heroes")
+        .map((s) => s.conversation_id)
+        .filter((id): id is string => !!id)
+    ),
+  ];
+
+  const [conversationsRes, referralsRes, uhConvosRes, recognitionsRes] = await Promise.all([
+    journeyToolIds.length
+      ? supabase.from("conversations").select("*").in("id", journeyToolIds)
+      : Promise.resolve({ data: [] as DbConversation[] }),
+    journeyToolIds.length
+      ? supabase.from("referrals").select("*").in("conversation_id", journeyToolIds)
+      : Promise.resolve({ data: [] as ReferralRow[] }),
+    unsungHeroesIds.length
+      ? supabase.from("unsung_heroes_conversations").select("*").in("id", unsungHeroesIds)
+      : Promise.resolve({ data: [] as UnsungHeroesConversation[] }),
+    unsungHeroesIds.length
+      ? supabase.from("recognitions").select("*").in("conversation_id", unsungHeroesIds)
+      : Promise.resolve({ data: [] as RecognitionRow[] }),
+  ]);
+
+  const conversationById = new Map(
+    ((conversationsRes.data as DbConversation[]) ?? []).map((c) => [c.id, c])
+  );
+  const referralByConversationId = new Map(
+    ((referralsRes.data as ReferralRow[]) ?? [])
+      .filter((r) => r.conversation_id)
+      .map((r) => [r.conversation_id as string, r])
+  );
+  const uhConvoById = new Map(
+    ((uhConvosRes.data as UnsungHeroesConversation[]) ?? []).map((c) => [c.id, c])
+  );
+  const recognitionByConversationId = new Map(
+    ((recognitionsRes.data as RecognitionRow[]) ?? [])
+      .filter((r) => r.conversation_id)
+      .map((r) => [r.conversation_id as string, r])
+  );
+
+  const records: ParticipantSessionRecord[] = sessions.map((session) => {
+    if (
+      (session.tool === "iap" || session.tool === "cat" || session.tool === "innercompass") &&
+      session.conversation_id
+    ) {
+      return {
+        session,
+        conversation: conversationById.get(session.conversation_id) ?? null,
+        referral: referralByConversationId.get(session.conversation_id) ?? null,
+        unsungHeroesConversation: null,
+        recognition: null,
+      };
+    }
+    if (session.tool === "unsung-heroes" && session.conversation_id) {
+      return {
+        session,
+        conversation: null,
+        referral: null,
+        unsungHeroesConversation: uhConvoById.get(session.conversation_id) ?? null,
+        recognition: recognitionByConversationId.get(session.conversation_id) ?? null,
+      };
+    }
+    return {
+      session,
+      conversation: null,
+      referral: null,
+      unsungHeroesConversation: null,
+      recognition: null,
+    };
+  });
+
+  return { participant, sessions: records };
 }

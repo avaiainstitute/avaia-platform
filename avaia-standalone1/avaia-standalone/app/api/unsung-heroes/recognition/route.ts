@@ -146,6 +146,10 @@ export async function POST(request: Request) {
     .insert({
       observer_id: user.id,
       observed_user_id: observedUserId ?? null,
+      // Traces this recognition back to the conversation that produced it
+      // (see 0013_guide_toolkit_participant_record.sql) -- doesn't change
+      // anything about this route's request/response shape or behavior.
+      conversation_id: conversationId,
       title: content.title,
       who_became_visible: content.whoBecameVisible,
       story: content.story,
