@@ -2,38 +2,24 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import JourneyChat from "@/components/JourneyChat";
-import {
-  createJourney,
-  createConversation,
-  loadMessages,
-  STAGE_LABEL,
-  type DbConversation,
-} from "@/lib/engine/conversation";
+import { loadMessages, STAGE_LABEL, type DbConversation } from "@/lib/engine/conversation";
 import {
   getGuideSession,
-  setGuideSessionConversation,
   hasReferralForConversation,
   findConversationByJourneyStage,
   findOrCreateGuideSessionForConversation,
 } from "@/lib/guide";
 
-export const metadata = { title: "Individual Awareness Profile — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Conversations Across Time — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** The installed IAP tool. Reuses the exact same engine, API routes, and
- *  JourneyChat component the public Journey uses -- nothing here is a
- *  second implementation of IAP. The only thing new is how the
- *  conversation gets found: a Guide may run several participants' IAP
- *  sessions at once, so this looks up the conversation via this specific
- *  guide_sessions row (set once, at first use) rather than
- *  getActiveConversation(), which assumes one active conversation per
- *  account -- true for an ordinary Host, not true for a Guide.
- *
- *  Completion is detected by conversation.status === "complete", NOT
- *  conversation.stage -- each stage is its own permanent conversation row
- *  (stage never changes on an existing row), so this row's stage is always
- *  "iap"; status is what changes when the referral fires. */
-export default async function ToolkitIapSessionPage({
+/** The installed CAT tool. Unlike IAP, a CAT session is never started fresh
+ *  from the dashboard -- it only comes into being via the IAP tool's own
+ *  handoff (see app/toolkit/iap/[sessionId]/page.tsx), the same
+ *  referral-driven progression every Host gets. This page never creates a
+ *  conversation; it only ever finds the one the frozen engine already
+ *  created. */
+export default async function ToolkitCatSessionPage({
   params,
 }: {
   params: { sessionId: string };
@@ -46,46 +32,54 @@ export default async function ToolkitIapSessionPage({
 
   const session = await getGuideSession(supabase, user.id, params.sessionId);
   if (!session) notFound();
-  if (session.tool !== "iap") notFound();
-
-  let conversationId = session.conversation_id;
-  if (!conversationId) {
-    const journeyId = await createJourney(supabase, user.id, session.program);
-    const convo = await createConversation(supabase, user.id, "iap", undefined, session.program, journeyId);
-    conversationId = convo.id;
-    await setGuideSessionConversation(supabase, session.id, conversationId);
+  if (session.tool !== "cat") notFound();
+  if (!session.conversation_id) {
+    return (
+      <div>
+        <p className="label mb-3">Conversations Across Time</p>
+        <h1 className="font-serif text-3xl text-ink">This session has no conversation yet.</h1>
+        <p className="mt-4 text-muted">
+          CAT sessions only begin as a handoff from a completed Individual Awareness Profile.
+          This one doesn&rsquo;t have one attached, which shouldn&rsquo;t happen -- worth a closer
+          look.
+        </p>
+        <Link href="/toolkit" className="mt-6 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal">
+          Back to Dashboard
+        </Link>
+      </div>
+    );
   }
 
   const { data: convoData } = await supabase
     .from("conversations")
     .select("*")
-    .eq("id", conversationId)
+    .eq("id", session.conversation_id)
     .maybeSingle();
   const convo = convoData as DbConversation | null;
   if (!convo) notFound();
 
   if (convo.status === "complete") {
-    const referralSaved = await hasReferralForConversation(supabase, conversationId);
-    const catConvo = convo.journey_id
-      ? await findConversationByJourneyStage(supabase, convo.journey_id, "cat")
+    const referralSaved = await hasReferralForConversation(supabase, convo.id);
+    const innerConvo = convo.journey_id
+      ? await findConversationByJourneyStage(supabase, convo.journey_id, "innercompass")
       : null;
 
     let continueHref: string | null = null;
-    if (catConvo) {
-      const catSessionId = await findOrCreateGuideSessionForConversation(
+    if (innerConvo) {
+      const innerSessionId = await findOrCreateGuideSessionForConversation(
         supabase,
         user.id,
         session.participant_id,
-        "cat",
-        catConvo.id
+        "innercompass",
+        innerConvo.id
       );
-      continueHref = `/toolkit/cat/${catSessionId}`;
+      continueHref = `/toolkit/innercompass/${innerSessionId}`;
     }
 
     return (
       <div>
-        <p className="label mb-3">Individual Awareness Profile</p>
-        <h1 className="font-serif text-3xl text-ink">This session&rsquo;s IAP is complete.</h1>
+        <p className="label mb-3">Conversations Across Time</p>
+        <h1 className="font-serif text-3xl text-ink">This session&rsquo;s CAT is complete.</h1>
         <p className="mt-4 text-muted">
           {referralSaved
             ? "The referral has been saved to your Workbook."
@@ -97,7 +91,7 @@ export default async function ToolkitIapSessionPage({
               href={continueHref}
               className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
             >
-              Continue to Conversations Across Time
+              Continue to InnerCompass
             </Link>
           )}
           <Link
@@ -118,7 +112,7 @@ export default async function ToolkitIapSessionPage({
     );
   }
 
-  const rawMessages = await loadMessages(supabase, conversationId);
+  const rawMessages = await loadMessages(supabase, convo.id);
   const messages = rawMessages.map((m) => ({ role: m.role, content: m.content }));
 
   return (
@@ -132,7 +126,7 @@ export default async function ToolkitIapSessionPage({
         key={convo.id}
         conversationId={convo.id}
         stageLabel={STAGE_LABEL[convo.stage]}
-        nextStageLabel={STAGE_LABEL.cat}
+        nextStageLabel={STAGE_LABEL.innercompass}
         isLast={false}
         initialMessages={messages}
         program={convo.program}

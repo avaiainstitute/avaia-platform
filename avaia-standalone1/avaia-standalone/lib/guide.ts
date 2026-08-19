@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ToolKey } from "./toolkit";
+import type { DbConversation } from "./engine/conversation";
+import type { Stage, Program } from "./engine/prompts";
 
 /** Mirrors isMember() (lib/membership.ts) and isAdmin() (the unmerged
  *  `library` branch's lib/admin.ts) exactly -- same shape, same one-column
@@ -33,6 +35,7 @@ export type GuideSession = {
   participant_id: string | null;
   tool: ToolKey;
   conversation_id: string | null;
+  program: Program;
   status: "active" | "complete";
   created_at: string;
 };
@@ -107,4 +110,59 @@ export async function hasReferralForConversation(
     .limit(1)
     .maybeSingle();
   return !!data;
+}
+
+/** Finds the conversation for a given stage within a Journey -- used after
+ *  a stage's conversation reaches status: "complete" to find the next-stage
+ *  conversation the frozen engine's own generateReferral() already created
+ *  automatically (the exact same handoff every Host gets), so the Toolkit
+ *  can offer a deliberate "Continue to X" action rather than the Guide
+ *  having no way back in. Never creates anything -- if this returns null
+ *  after a stage is complete, that's a real problem to surface, not paper
+ *  over. */
+export async function findConversationByJourneyStage(
+  supabase: SupabaseClient,
+  journeyId: string,
+  stage: Stage
+): Promise<DbConversation | null> {
+  const { data } = await supabase
+    .from("conversations")
+    .select("*")
+    .eq("journey_id", journeyId)
+    .eq("stage", stage)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as DbConversation) ?? null;
+}
+
+/** Finds an existing guide_sessions row already tracking this exact
+ *  (conversation, tool) pair, or creates one. This is how a session "hands
+ *  off" from one Toolkit stage page to the next while sharing the same
+ *  participant -- e.g. the IAP page calls this with the CAT conversation
+ *  the engine just created, tool: "cat", to get (or reuse) the session id
+ *  to send the Guide to. */
+export async function findOrCreateGuideSessionForConversation(
+  supabase: SupabaseClient,
+  guideId: string,
+  participantId: string | null,
+  tool: ToolKey,
+  conversationId: string
+): Promise<string> {
+  const { data: existing } = await supabase
+    .from("guide_sessions")
+    .select("id")
+    .eq("guide_id", guideId)
+    .eq("conversation_id", conversationId)
+    .eq("tool", tool)
+    .maybeSingle();
+  if (existing) return existing.id;
+
+  const { data: created, error } = await supabase
+    .from("guide_sessions")
+    .insert({ guide_id: guideId, participant_id: participantId, tool, conversation_id: conversationId })
+    .select("id")
+    .single();
+  if (error || !created) throw new Error(error?.message ?? "Could not create the next session.");
+  return created.id;
 }

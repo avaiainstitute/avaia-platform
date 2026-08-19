@@ -3,13 +3,13 @@
 // dashboard and the participant-creation form need to render/validate
 // against, and a plain object is simplest for both server and client use.
 //
-// This represents the *complete* canonical inventory now, per the approved
-// build direction, even though only IAP has an installed route so far.
-// "installed" = has a working route in this app. "specified-not-installed"
-// = fully specified in the existing engine/content but not yet wired into
-// the Toolkit shell. "not-yet-specified" = named and real in AVAIA's own
-// institutional source (institution/source/*.md) but has no behavioral
-// specification anywhere yet -- not invented here, not blocking the build.
+// This represents the *complete* canonical inventory, per the approved
+// build direction. "installed" = has a working route in this app.
+// "specified-not-installed" = fully specified in the existing engine/
+// content but not yet wired into the Toolkit shell. "not-yet-specified" =
+// named and real in AVAIA's own institutional source
+// (institution/source/*.md) but has no behavioral specification anywhere
+// yet -- not invented here, not blocking the build.
 
 export type ToolKey =
   | "preparation"
@@ -56,30 +56,30 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "cat",
     label: "Conversations Across Time",
-    description: "Creates Understanding.",
-    status: "specified-not-installed",
+    description: "Creates Understanding. Begins as a handoff from a completed IAP session, the same referral-driven progression every Host gets.",
+    status: "installed",
     href: null,
   },
   {
     key: "innercompass",
     label: "InnerCompass",
-    description: "Creates Agency.",
-    status: "specified-not-installed",
+    description: "Creates Agency. Begins as a handoff from a completed CAT session.",
+    status: "installed",
     href: null,
   },
   {
     key: "secondary-loss",
     label: "Secondary Loss Engine",
     description: "Why a loss can affect more than what was directly taken.",
-    status: "specified-not-installed",
-    href: null,
+    status: "installed",
+    href: "/secondary-loss",
   },
   {
     key: "chemistry",
     label: "Chemistry of Virtue",
     description: "The 123 elements of virtue, and Virtue Formulas.",
-    status: "specified-not-installed",
-    href: null,
+    status: "installed",
+    href: "/chemistry",
   },
   {
     key: "table-formation",
@@ -105,23 +105,23 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "defying-grief",
     label: "Defying Grief",
-    description: "AVAIA applied specifically to loss and disruption.",
-    status: "specified-not-installed",
-    href: null,
+    description: "AVAIA applied specifically to loss and disruption -- the same IAP/CAT/InnerCompass tools, threaded with the Audacity framing.",
+    status: "installed",
+    href: "/toolkit/defying-grief",
   },
   {
     key: "unsung-heroes",
     label: "Unsung Heroes",
     description: "Noticing, recognizing, and making visible quiet acts of virtue.",
-    status: "specified-not-installed",
-    href: null,
+    status: "installed",
+    href: "/toolkit/unsung-heroes",
   },
   {
     key: "library",
     label: "Library",
-    description: "Browsable AVAIA resources. A complete implementation exists on an unmerged branch, preserved as source material to port from.",
-    status: "specified-not-installed",
-    href: null,
+    description: "Browsable AVAIA resources. Data layer and Guide read access are ported from the unmerged branch; the admin content-management UI is not installed yet.",
+    status: "installed",
+    href: "/toolkit/library",
   },
   {
     key: "youth-group",

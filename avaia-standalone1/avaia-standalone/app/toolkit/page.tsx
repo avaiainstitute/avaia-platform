@@ -152,8 +152,10 @@ export default async function ToolkitDashboardPage() {
             </div>
           </div>
           <p className="mt-4 text-sm text-muted">
-            Tool: <span className="text-ink">Individual Awareness Profile</span> — the only
-            installed tool so far.
+            Tool: <span className="text-ink">Individual Awareness Profile</span> — CAT and
+            InnerCompass follow automatically as this session progresses, the same handoff every
+            Host gets. For Defying Grief or Unsung Heroes, use their own entries in the Toolkit
+            below.
           </p>
           <button
             type="submit"
@@ -218,9 +220,9 @@ export default async function ToolkitDashboardPage() {
                       {referralSaved ? " · Referral saved" : ""}
                     </p>
                   </div>
-                  {s.tool === "iap" && (
+                  {(s.tool === "iap" || s.tool === "cat" || s.tool === "innercompass" || s.tool === "unsung-heroes") && (
                     <Link
-                      href={`/toolkit/iap/${s.id}`}
+                      href={`/toolkit/${s.tool}/${s.id}`}
                       className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
                     >
                       Open
@@ -232,6 +234,27 @@ export default async function ToolkitDashboardPage() {
           </div>
         </section>
       )}
+
+      {/* Records / continuity -- the Workbook is the existing, real
+          continuity view (referrals, transcripts, patterns across
+          journeys); it isn't a separate Guide-only record, since
+          Guide-facilitated conversations live under the Guide's own
+          account. No "Master Connection Map" or equivalent was found
+          anywhere in the codebase -- not built here, not invented. */}
+      <section className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Records &amp; Continuity</p>
+        <p className="text-muted">
+          Every referral generated through the Toolkit is saved to your own Guide&rsquo;s Record,
+          the same Workbook every AVAIA Host has.
+        </p>
+        <Link
+          href="/workbook"
+          prefetch={false}
+          className="mt-3 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          View Guide&rsquo;s Record
+        </Link>
+      </section>
 
       {/* Tool registry */}
       <section className="rule-t mt-14 border-t border-rule pt-8">

@@ -18,7 +18,7 @@ create table if not exists public.profiles (
   adult_confirmed       boolean not null default false,
   minor_with_guardian   boolean not null default false,
   membership_status     text not null default 'free' check (membership_status in ('free', 'member')),
-  role                  text not null default 'member' check (role in ('member', 'community_leader', 'guide')),
+  role                  text not null default 'member' check (role in ('member', 'community_leader', 'guide', 'admin')),
   -- Marketing consent is deliberately separate from consent_at above -- the
   -- account/legal disclaimer never implies permission to send marketing.
   -- Optional, off by default, capturable (and later changeable) on its own.
@@ -545,7 +545,15 @@ create table if not exists public.guide_sessions (
                       'council', 'give', 'defying-grief', 'unsung-heroes',
                       'library', 'youth-group'
                     )),
-  conversation_id  uuid references public.conversations (id) on delete set null,
+  -- No foreign key: this may hold either a public.conversations id (IAP/
+  -- CAT/InnerCompass/Defying Grief) or a public.unsung_heroes_conversations
+  -- id (Unsung Heroes) -- one column can't reference two tables. Which
+  -- table to query is always determined by `tool` in lib/guide.ts.
+  conversation_id  uuid,
+  -- Only meaningful for 'iap' sessions -- which program to create the
+  -- conversation under. CAT/InnerCompass sessions are always a handoff
+  -- from an existing conversation, which already carries its own program.
+  program          text not null default 'general' check (program in ('general', 'defying-grief')),
   status           text not null default 'active' check (status in ('active', 'complete')),
   created_at       timestamptz not null default now()
 );
@@ -557,3 +565,66 @@ alter table public.guide_sessions enable row level security;
 create policy "guide sessions are owner-only"
   on public.guide_sessions for all
   using (auth.uid() = guide_id) with check (auth.uid() = guide_id);
+
+-- ---------------------------------------------------------------------------
+-- library_entries — ported from the unmerged `library` branch, unchanged in
+-- shape. library_suggestions and the admin CRUD/review UI are not ported in
+-- this pass -- this is the data layer plus a read-only Guide browse view.
+-- ---------------------------------------------------------------------------
+create table if not exists public.library_entries (
+  id                    uuid primary key default gen_random_uuid(),
+  title                 text not null,
+  great_idea            text not null,
+  overview              text not null,
+  virtues               jsonb not null default '[]',
+  secondary_losses      text[] not null default '{}',
+  journey_stages        text[] not null default '{}'
+                          check (journey_stages <@ array['iap', 'cat', 'innercompass']),
+  programs              text[] not null default '{}'
+                          check (programs <@ array['general', 'defying-grief']),
+  content_type          text not null check (content_type in ('avaia-owned', 'external-resource')),
+  body                  text,
+  external_url          text,
+  external_author       text,
+  external_description  text,
+  status                text not null default 'draft'
+                          check (status in ('draft', 'published', 'archived')),
+  visibility            text not null default 'member'
+                          check (visibility in ('public', 'member')),
+  tags                  text[] not null default '{}',
+  editor_id             uuid references auth.users (id) on delete set null,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
+);
+
+create index if not exists library_entries_status_visibility_idx
+  on public.library_entries (status, visibility);
+create index if not exists library_entries_virtues_idx on public.library_entries using gin (virtues);
+create index if not exists library_entries_secondary_losses_idx on public.library_entries using gin (secondary_losses);
+create index if not exists library_entries_programs_idx on public.library_entries using gin (programs);
+create index if not exists library_entries_tags_idx on public.library_entries using gin (tags);
+
+alter table public.library_entries enable row level security;
+
+create policy "library entries public read"
+  on public.library_entries for select
+  using (status = 'published' and visibility = 'public');
+
+create policy "library entries member read"
+  on public.library_entries for select
+  using (
+    status = 'published' and visibility = 'member'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.membership_status = 'member')
+  );
+
+create policy "library entries guide read"
+  on public.library_entries for select
+  using (
+    status = 'published'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'guide')
+  );
+
+create policy "library entries admin all"
+  on public.library_entries for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
