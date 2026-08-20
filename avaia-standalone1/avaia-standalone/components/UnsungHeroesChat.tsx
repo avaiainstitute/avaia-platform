@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import RichText from "@/components/RichText";
+import MicButton from "@/components/MicButton";
+import SpeakButton from "@/components/SpeakButton";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
 
 type Msg = { role: "host" | "guide"; content: string };
@@ -27,6 +29,9 @@ export default function UnsungHeroesChat({
   const prevHostCount = useRef(0);
   const [focus, setFocus] = useState<ResolvedFocus | null>(null);
   const lastFocusKeyRef = useRef("");
+  // Bumped on send so dictation stops and can't re-fill the cleared input --
+  // same pattern as JourneyChat's micStop.
+  const [micStop, setMicStop] = useState(0);
   const [formulaFocus, setFormulaFocus] = useState<{ virtues: string[]; outcome: string } | null>(
     null
   );
@@ -95,6 +100,7 @@ export default function UnsungHeroesChat({
     const text = input.trim();
     if (!text || sending) return;
     setInput("");
+    setMicStop((n) => n + 1);
     setError("");
     setSending(true);
     broadcastFocus(null);
@@ -272,6 +278,11 @@ export default function UnsungHeroesChat({
                     <span className="text-muted">…</span>
                   ) : null}
                 </div>
+                {i === messages.length - 1 && !sending && m.content && (
+                  <div className="mt-1.5">
+                    <SpeakButton text={m.content} />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -396,10 +407,11 @@ export default function UnsungHeroesChat({
                 }
               }}
               rows={3}
-              placeholder="Write as much or as little as you like…"
+              placeholder="Write or speak — as much or as little as you like…"
               disabled={sending}
-              className="w-full resize-none rounded-lg border border-rule bg-white/[0.04] py-3 px-4 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
+              className="w-full resize-none rounded-lg border border-rule bg-white/[0.04] py-3 pl-4 pr-16 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
             />
+            <MicButton value={input} onChange={setInput} disabled={sending} stopSignal={micStop} />
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button
