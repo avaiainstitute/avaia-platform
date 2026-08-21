@@ -298,6 +298,15 @@ export default async function WorkbookPage() {
         </Link>
       </p>
 
+      {/* The Library's permanent entrance -- plain /library, not a
+          Journey-specific URL, so it stays reachable on its own regardless
+          of which (if any) journey below a Host arrived from. */}
+      <p className="mt-2 text-sm">
+        <Link href="/library" className="text-muted hover:text-seal">
+          Explore the AVAIA Library →
+        </Link>
+      </p>
+
       {journeys.length > 0 && (
         <section className="mt-10">
           <p className="label text-muted">Shared with</p>
@@ -418,6 +427,21 @@ export default async function WorkbookPage() {
               )}
               filename={`AVAIA-Journey-${j.n}-${j.startedAt.slice(0, 10)}.txt`}
             />
+
+            {/* Only offered once this Journey is complete and its
+                journey_id is actually known -- a historical conversation
+                predating the journeys table has journey_id: null and gets
+                no link here rather than a guessed one. */}
+            {j.complete && j.convos[0]?.convo.journey_id && (
+              <p className="mt-4 text-sm">
+                <Link
+                  href={`/library?journey=${j.convos[0].convo.journey_id}`}
+                  className="text-muted hover:text-seal"
+                >
+                  Explore the Library from this Journey →
+                </Link>
+              </p>
+            )}
 
             {(() => {
               const collect = (key: string) =>

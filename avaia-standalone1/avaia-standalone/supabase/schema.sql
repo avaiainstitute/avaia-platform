@@ -649,3 +649,28 @@ create policy "library entries admin all"
   on public.library_entries for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- library_host_entries — Phase 1 Living Library, the Host's own private
+-- relationship to a Library Entry (explored / saved / dismissed / noted).
+-- See 0014_library_host_entries.sql for the full rationale.
+-- ---------------------------------------------------------------------------
+create table if not exists public.library_host_entries (
+  id                uuid primary key default gen_random_uuid(),
+  host_id           uuid not null references auth.users (id) on delete cascade,
+  library_entry_id  uuid not null references public.library_entries (id) on delete cascade,
+  explored_at       timestamptz,
+  state             text check (state in ('save', 'not_for_me')),
+  note              text,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  unique (host_id, library_entry_id)
+);
+
+create index if not exists library_host_entries_host_idx
+  on public.library_host_entries (host_id, updated_at);
+
+alter table public.library_host_entries enable row level security;
+create policy "library host entries are owner-only"
+  on public.library_host_entries for all
+  using (auth.uid() = host_id) with check (auth.uid() = host_id);
