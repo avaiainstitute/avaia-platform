@@ -232,6 +232,42 @@ export default function ChemistryPage() {
         </div>
       </section>
 
+      {/* Recognition, not judgment -- the explicit "this is not a
+          personality test/score/ranking/diagnosis" statement the page
+          didn't previously make outright. */}
+      <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">Recognition, not judgment</p>
+        <p className="text-ink">
+          Virtue may already be present in you — in a choice, a relationship, a responsibility
+          you carry, a boundary you hold, how you respond to difficulty, a hope you
+          haven&rsquo;t let go of, an action you took, or a tension between two things you both
+          care about. AVAIA may help make that more visible.
+        </p>
+        <p className="mt-3 text-muted">
+          Chemistry of Virtue is not a personality type, a score, or a ranking, and it
+          doesn&rsquo;t determine anyone&rsquo;s worth. AVAIA recognizes courage, patience,
+          integrity, love, wisdom, gratitude, fortitude, restraint, or any of these 123 elements
+          only when a Host&rsquo;s own words or actions support that recognition — never as a
+          guess, and never to tell someone which virtues they lack.
+        </p>
+      </div>
+
+      {/* Chemistry and Agency -- the connection to the reconciled Journey
+          and to InnerCompass, kept deliberately short and non-prescriptive. */}
+      <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">Chemistry and Agency</p>
+        <p className="text-ink">
+          Chemistry becomes especially useful once someone reaches a particular kind of
+          question: given what I understand now, how do I want to participate? Virtue provides
+          language for the qualities that may give that participation direction.
+        </p>
+        <p className="mt-3 text-muted">
+          InnerCompass may draw on virtue as part of discernment — but it doesn&rsquo;t select a
+          required virtue for you, and the Guide doesn&rsquo;t decide your direction. Virtue
+          informs discernment; it doesn&rsquo;t replace it.
+        </p>
+      </div>
+
       {/* What you can do here */}
       <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
         <p className="label mb-2 text-muted">What you can do here</p>
@@ -255,11 +291,13 @@ export default function ChemistryPage() {
           is where you learn to recognize those same capacities alive in someone else.
         </p>
         <p className="mt-3 text-sm text-muted">
-          This same table is what every AVAIA conversation draws on — it&rsquo;s also how the{" "}
+          This same table is what every AVAIA conversation draws on. AVAIA also carries a
+          historical lineage connecting each of the Ten Secondary Losses to one of these
+          families as a possible lens for exploration — never a required pairing, and never
+          proof a virtue is missing.{" "}
           <Link href="/secondary-loss" className="underline decoration-rule underline-offset-2 hover:text-seal">
-            Secondary Loss Engine
-          </Link>{" "}
-          pairs each loss with the virtue that tends to feel absent alongside it.
+            Explore the Secondary Losses →
+          </Link>
         </p>
       </div>
 
@@ -308,6 +346,24 @@ export default function ChemistryPage() {
           official AVAIA content is developed. No definitions or logic are
           implemented until then.
         </p>
+      </section>
+
+      <section className="mt-14 max-w-prose rule-t border-t border-rule pt-10">
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            href="/journey"
+            prefetch={false}
+            className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+          >
+            Begin the Journey
+          </Link>
+          <Link
+            href="/library"
+            className="inline-block rounded-md border border-rule px-6 py-3 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            Visit the Living Library
+          </Link>
+        </div>
       </section>
     </div>
   );
