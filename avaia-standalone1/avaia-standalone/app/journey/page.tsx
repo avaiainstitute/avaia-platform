@@ -5,6 +5,7 @@ import SignOutButton from "@/components/SignOutButton";
 import JourneyChat from "@/components/JourneyChat";
 import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
+import JourneyIntro from "@/components/JourneyIntro";
 import {
   STAGE_ORDER,
   STAGE_LABEL,
@@ -172,6 +173,19 @@ export default async function JourneyPage({
       <div className="mx-auto max-w-prose px-5 py-16">
         {header}
         <DefyingGriefCrossing stage={stage} roomTitle={roomTitle} />
+      </div>
+    );
+  }
+
+  // The general-program counterpart to the block above -- same exact
+  // first-message-not-yet-sent moment, for every case Defying Grief's
+  // crossing doesn't cover (every program's first IAP message, and general
+  // program's CAT/InnerCompass entries). See JourneyIntro's own comment.
+  if (rawMessages.length === 1 && searchParams?.enter !== "1" && convo.program !== "defying-grief") {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-16">
+        {header}
+        <JourneyIntro stage={stage} />
       </div>
     );
   }
