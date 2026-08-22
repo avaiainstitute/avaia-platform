@@ -5,7 +5,7 @@
  * Not linked from anywhere in the public app. Protected by TEST_TOKEN as
  * the dynamic [token] segment (see page.tsx) -- a 256-bit random value,
  * not derived from anything guessable, known only via this chat. Delete
- * this whole app/_internal-test directory once validation is complete;
+ * this whole app/internal-test directory once validation is complete;
  * never merge it to main.
  *
  * Deliberately uses ONLY the anonymous test user's own authenticated
@@ -24,7 +24,7 @@ export const TEST_TOKEN = "1ed455593d4a080a728e19ce86dcd8a326f0e6831373e5cbdb6b5
 
 const SESSION_COOKIE = "avaia_test_session";
 const RESULT_COOKIE = "avaia_test_result";
-const ROUTE_PATH = `/_internal-test/${TEST_TOKEN}`;
+const ROUTE_PATH = `/internal-test/${TEST_TOKEN}`;
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: true,

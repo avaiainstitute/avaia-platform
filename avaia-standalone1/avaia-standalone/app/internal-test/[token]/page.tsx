@@ -2,7 +2,7 @@
 // anywhere in the public app; protected by the random TEST_TOKEN path
 // segment. Loading this page does nothing by itself -- only the "Run
 // Test" button (a POST server action) creates anything. Delete this
-// whole app/_internal-test directory once validation is complete; never
+// whole app/internal-test directory once validation is complete; never
 // merge it to main.
 
 import { notFound } from "next/navigation";
