@@ -19,8 +19,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createJourney, createConversation } from "@/lib/engine/conversation";
-
-export const TEST_TOKEN = "1ed455593d4a080a728e19ce86dcd8a326f0e6831373e5cbdb6b56b82dc40060";
+import { TEST_TOKEN } from "./token";
 
 const SESSION_COOKIE = "avaia_test_session";
 const RESULT_COOKIE = "avaia_test_result";
@@ -110,6 +109,8 @@ export async function runTest(token: string) {
       COOKIE_OPTS
     );
   }
+
+  if (!userId) redirect(ROUTE_PATH);
 
   const { data: profile } = await client
     .from("profiles")

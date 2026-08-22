@@ -7,7 +7,8 @@
 
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { runTest, attachTestEmail, TEST_TOKEN } from "./actions";
+import { runTest, attachTestEmail } from "./actions";
+import { TEST_TOKEN } from "./token";
 
 export const dynamic = "force-dynamic";
 
