@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { CONSTITUTION_PREAMBLE, GIVE_METHOD, OPERATING_PRINCIPLES } from "@/lib/institution";
+import {
+  CONSTITUTION_PREAMBLE,
+  GIVE_METHOD,
+  OPERATING_PRINCIPLES,
+  JOURNEY_MOVEMENTS,
+  conversation,
+} from "@/lib/institution";
 
 /**
  * The public About page — the deeper explanation of AVAIA as an institute
@@ -28,6 +34,15 @@ const featuredPrinciples = FEATURED_PRINCIPLE_TITLES.map((title) =>
   OPERATING_PRINCIPLES.find((p) => p.title === title)
 ).filter((p): p is NonNullable<typeof p> => Boolean(p));
 
+// The three Host-facing conversations, in order -- Preparation is
+// deliberately excluded (it's a Guide-only step before the Host ever
+// arrives), matching what a Host actually experiences as "the Journey."
+// Looked up against the real CONVERSATIONS array so text stays verbatim.
+const HOST_JOURNEY_STAGE_SLUGS = ["iap", "cat", "innercompass"] as const;
+const hostJourneyStages = HOST_JOURNEY_STAGE_SLUGS.map((slug) => conversation(slug)).filter(
+  (c): c is NonNullable<typeof c> => Boolean(c)
+);
+
 export default function AboutContent() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -49,6 +64,122 @@ export default function AboutContent() {
         </Link>
         <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
       </div>
+
+      {/* The Roadmap -- the missing piece this renovation adds. The public
+          shape of the Journey: the three movements (JOURNEY_MOVEMENTS) and
+          the three conversations that carry them (CONVERSATIONS, filtered to
+          what a Host actually experiences). JOURNEY_MOVEMENTS' third entry
+          was renamed from "Discernment" to "Agency" in the canonical
+          terminology reconciliation -- this page reads the array directly,
+          so no separate change was needed here. Discernment remains the
+          (correctly distinct) process InnerCompass practices to strengthen
+          Agency -- see INNERCOMPASS_DISCERNMENT_FUNCTION in
+          lib/engine/prompts.ts, untouched by that reconciliation. */}
+      <section id="roadmap" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
+        <p className="label mb-2">The Roadmap</p>
+        <h2 className="font-serif text-3xl text-ink">The Shape of the Journey</h2>
+        <p className="mt-3 text-muted">
+          Every AVAIA Journey moves through the same three movements, carried by three
+          conversations.
+        </p>
+
+        <p className="mt-8 font-serif text-lg text-ink">
+          {JOURNEY_MOVEMENTS.map((m) => m.name).join(" → ")}
+        </p>
+        <ol className="mt-4 space-y-4">
+          {JOURNEY_MOVEMENTS.map((m, i) => (
+            <li key={m.name} className="flex gap-4">
+              <span className="font-serif text-lg text-muted tabular-nums">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <p className="font-serif text-lg text-ink">{m.name}</p>
+                <p className="text-sm text-muted">{m.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <p className="mt-10 font-serif text-lg text-ink">
+          {hostJourneyStages.map((c) => c.name).join(" → ")}
+        </p>
+        <ol className="mt-4 space-y-4">
+          {hostJourneyStages.map((c, i) => (
+            <li key={c.slug} className="flex gap-4">
+              <span className="font-serif text-lg text-muted tabular-nums">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <p className="font-serif text-lg text-ink">
+                  {c.name}
+                  {c.abbr ? <span className="text-muted"> ({c.abbr})</span> : null}
+                </p>
+                <p className="text-sm text-muted">{c.purpose}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-10 rounded-lg border border-rule bg-white/[0.04] px-5 py-5 backdrop-blur-sm">
+          <p className="text-lg leading-relaxed text-ink">
+            The Host owns their story, meaning, decisions, and participation. The Guide protects
+            the process, not the outcome.
+          </p>
+        </div>
+      </section>
+
+      {/* Beyond the Conversation -- restrained pointer to how the Workbook,
+          Living Library, Programs, and Institution relate to the Journey
+          above. One line each, existing routes only -- no new pages, no
+          feature-card grid. The Institution is deliberately not re-linked
+          here; the existing "Go deeper" link below stays the one place for
+          that. */}
+      <section id="beyond" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
+        <p className="label mb-2">Beyond the Conversation</p>
+        <h2 className="font-serif text-3xl text-ink">What Carries the Journey Forward</h2>
+        <p className="mt-3 text-muted">
+          A few things sit around every AVAIA Journey, without being another conversation to
+          have.
+        </p>
+        <ul className="mt-6 space-y-3">
+          <li>
+            <Link href="/workbook" className="text-ink hover:text-seal">
+              The Workbook
+            </Link>
+            <span className="text-muted">
+              {" "}
+              — everything that became visible along the way, kept in one place you can return
+              to.
+            </span>
+          </li>
+          <li>
+            <Link href="/library" className="text-ink hover:text-seal">
+              The Living Library
+            </Link>
+            <span className="text-muted">
+              {" "}
+              — reflections and questions to explore on your own, between or beyond
+              conversations.
+            </span>
+          </li>
+          <li>
+            <span className="text-ink">Programs</span>
+            <span className="text-muted"> — the same Journey, shaped for a specific path. </span>
+            <Link href="/defying-grief" className="text-ink hover:text-seal">
+              Defying Grief
+            </Link>
+            <span className="text-muted"> is AVAIA&rsquo;s flagship.</span>
+          </li>
+          <li>
+            <span className="text-ink">The Institution</span>
+            <span className="text-muted">
+              {" "}
+              — the Constitution and governance that keep all of it consistent, covered further
+              below.
+            </span>
+          </li>
+        </ul>
+      </section>
 
       {/* GIVE Method */}
       <section id="give" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">

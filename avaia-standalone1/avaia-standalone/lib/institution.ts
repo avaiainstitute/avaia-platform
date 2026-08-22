@@ -104,7 +104,7 @@ export const JOURNEY_ARC = [
 export const JOURNEY_MOVEMENTS = [
   { name: "Awareness", text: "Naming what is present and recognizing what has become disrupted." },
   { name: "Understanding", text: "Exploring relationships, meaning, patterns, tensions, losses, virtues, and perspectives." },
-  { name: "Discernment", text: "Identifying what the Host can choose, what integrity requires, and how they can participate intentionally in life." },
+  { name: "Agency", text: "Identifying what the Host can choose, what integrity requires, and how they can participate intentionally in life." },
 ];
 
 // ---------------------------------------------------------------------------

@@ -123,7 +123,7 @@ export default async function JourneyPage({
         {header}
         <h1 className="mt-8 font-serif text-4xl text-ink">Your journey, so far</h1>
         <p className="mt-4 text-lg text-muted">
-          You&rsquo;ve walked through Awareness, Understanding, and Discernment. Everything is saved
+          You&rsquo;ve walked through Awareness, Understanding, and Agency. Everything is saved
           to your Workbook, and you can return anytime to continue.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">

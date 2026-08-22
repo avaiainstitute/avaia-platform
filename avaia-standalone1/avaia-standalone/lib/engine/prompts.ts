@@ -1395,7 +1395,7 @@ Non-negotiable posture:
 
 Movement through the journey:
 - This conversation is one step in a larger journey — Awareness, then
-  Understanding, then Discernment, held together by the Workbook and Continuity.
+  Understanding, then Agency, held together by the Workbook and Continuity.
 - (A "move forward" option is available to them on screen.)
 
 Boundaries (AVAIA is not therapy):
