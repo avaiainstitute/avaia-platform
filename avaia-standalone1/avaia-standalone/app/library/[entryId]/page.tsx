@@ -187,9 +187,13 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
               <p className="label mb-2 text-muted">Related ideas</p>
               <div className="flex flex-wrap gap-2">
                 {relatedConcepts.map(({ concept }) => (
-                  <span key={concept.id} className="rounded-full border border-rule px-3 py-0.5 text-xs text-ink">
+                  <Link
+                    key={concept.id}
+                    href={`/library/concepts/${concept.id}`}
+                    className="rounded-full border border-rule px-3 py-0.5 text-xs text-ink transition-colors hover:border-seal"
+                  >
                     {concept.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>

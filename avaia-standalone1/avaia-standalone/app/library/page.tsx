@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
  *  optional-searchParam pattern already used by /journey?new=1&program=...
  *  and /unsung-heroes?path=... -- no new session state, no second
  *  persistence mechanism. */
-function EntryCard({ entry, reasons }: { entry: LibraryEntry; reasons?: string[] }) {
+export function EntryCard({ entry, reasons }: { entry: LibraryEntry; reasons?: string[] }) {
   return (
     <Link
       href={`/library/${entry.id}`}

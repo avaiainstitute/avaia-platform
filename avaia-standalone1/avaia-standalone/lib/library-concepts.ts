@@ -1,14 +1,16 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { LibraryEntry } from "./library";
 
 // Types and read-only data access for the Living Library's concept/
-// cross-reference foundation (see 0015_library_concepts.sql). No concept
-// content exists yet -- every function here returns an empty result today
-// and is meant to be wired into the Library UI and, later, Preparation/
-// Guide Toolkit once real, editorially reviewed content exists. Every read
+// cross-reference foundation (see 0015_library_concepts.sql). Every read
 // filters status = 'published' explicitly, on top of RLS already
 // enforcing the same thing -- matching the existing pattern in
-// app/toolkit/library/page.tsx.
+// app/toolkit/library/page.tsx. A function here returning an empty
+// result means either nothing published exists yet for that concept/
+// entry/question, or (for most of the Library's history so far) nothing
+// has been wired to read it -- not necessarily that the underlying data
+// is missing.
 //
 // Deliberately two-step (fetch the junction rows, then batch-fetch the
 // referenced rows by id, then join in TypeScript) rather than a
@@ -187,4 +189,78 @@ export async function getConceptsForQuestion(
   return rows
     .filter((r) => byId.has(r.concept_id))
     .map((r) => ({ concept: byId.get(r.concept_id)!, note: r.note }));
+}
+
+/** A single published concept by id, or null if it doesn't exist or
+ *  isn't published -- the same "not found or not yours to see" shape
+ *  every other Library detail lookup already uses (e.g. the entry detail
+ *  page's own `.eq("status", "published").maybeSingle()`). */
+export async function getConcept(
+  supabase: SupabaseClient,
+  conceptId: string
+): Promise<LibraryConcept | null> {
+  const { data } = await supabase
+    .from("library_concepts")
+    .select("*")
+    .eq("id", conceptId)
+    .eq("status", "published")
+    .maybeSingle();
+  return (data as LibraryConcept) ?? null;
+}
+
+/** Questions directly connected to a concept through library_question_concepts
+ *  -- a question belonging in this concept's own exploration neighborhood.
+ *  Deliberately NOT derived by walking Concept -> Entries -> Entry
+ *  Questions; that's a different relationship (a question a specific
+ *  entry happens to touch), and conflating the two would make a concept
+ *  page show questions no one ever reviewed as belonging to the concept
+ *  itself. */
+export async function getQuestionsForConcept(
+  supabase: SupabaseClient,
+  conceptId: string
+): Promise<Array<{ question: LibraryQuestion; note: string | null }>> {
+  const { data: links } = await supabase
+    .from("library_question_concepts")
+    .select("question_id, note")
+    .eq("concept_id", conceptId)
+    .eq("status", "published");
+  const rows = (links as { question_id: string; note: string | null }[]) ?? [];
+  if (rows.length === 0) return [];
+
+  const { data: questions } = await supabase
+    .from("library_questions")
+    .select("*")
+    .in("id", rows.map((r) => r.question_id))
+    .eq("status", "published");
+  const byId = new Map(((questions as LibraryQuestion[]) ?? []).map((q) => [q.id, q]));
+
+  return rows
+    .filter((r) => byId.has(r.question_id))
+    .map((r) => ({ question: byId.get(r.question_id)!, note: r.note }));
+}
+
+/** Library Entries directly connected to a concept through
+ *  library_entry_concepts -- the reverse of getConceptsForEntry. */
+export async function getEntriesForConcept(
+  supabase: SupabaseClient,
+  conceptId: string
+): Promise<Array<{ entry: LibraryEntry; note: string | null }>> {
+  const { data: links } = await supabase
+    .from("library_entry_concepts")
+    .select("library_entry_id, note")
+    .eq("concept_id", conceptId)
+    .eq("status", "published");
+  const rows = (links as { library_entry_id: string; note: string | null }[]) ?? [];
+  if (rows.length === 0) return [];
+
+  const { data: entries } = await supabase
+    .from("library_entries")
+    .select("*")
+    .in("id", rows.map((r) => r.library_entry_id))
+    .eq("status", "published");
+  const byId = new Map(((entries as LibraryEntry[]) ?? []).map((e) => [e.id, e]));
+
+  return rows
+    .filter((r) => byId.has(r.library_entry_id))
+    .map((r) => ({ entry: byId.get(r.library_entry_id)!, note: r.note }));
 }
