@@ -259,6 +259,40 @@ function ThresholdContent({
           can help you understand what you&rsquo;re drawing on.
         </p>
       </div>
+
+      {/* The bridge between Audacity of Grief and Audacity of Happiness --
+          connects two pull-quotes the page already makes separately (CAT's
+          and InnerCompass's, above) into the one idea the source material
+          actually holds: one audacious force, redirected by intent. Not a
+          new theory of audacity -- restating what's already there,
+          explicitly. */}
+      <div className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-2 text-muted">One force, two directions</p>
+        <p className="text-lg leading-relaxed text-ink">
+          The Audacity of Grief and the Audacity of Happiness are not two different things
+          competing for control. For all intents and purposes, they can be the same audacious
+          force. Audacity itself is boldness — and boldness can move in more than one
+          direction. It can become destructive, arrogant, or consuming. It can also become
+          courageous, noble, hopeful, loving, grateful, wise, or virtuous.
+        </p>
+        <p className="mt-4 text-muted">
+          Defying Grief never asks you to become less audacious. It explores what becomes
+          possible when the intent and direction of that same audacity begin to change. That
+          starts with understanding what is real, and with what AVAIA calls Integrity Without
+          Outcome Control — you can want, hope for, and work toward something with your whole
+          self without pretending you can force reality to comply. That is not giving up, and
+          it is not passivity. It is choosing, on purpose, what your boldness now serves.
+          Virtue is what gives that choice its direction.
+        </p>
+        <p className="mt-4 text-muted">
+          None of that requires happiness to replace grief. The Audacity of Happiness is not
+          the absence of grief — it doesn&rsquo;t ask you to stop loving, stop remembering, or
+          pretend nothing changed. Grief and happiness are allowed to exist within the same
+          life, at the same time, in whatever proportion is actually true for you. What that
+          looks like is yours to discover here — not something this page can tell you in
+          advance.
+        </p>
+      </div>
     </>
   );
 }
