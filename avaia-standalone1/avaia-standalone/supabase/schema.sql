@@ -674,3 +674,155 @@ alter table public.library_host_entries enable row level security;
 create policy "library host entries are owner-only"
   on public.library_host_entries for all
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
+
+-- ---------------------------------------------------------------------------
+-- Living Library concept/cross-reference foundation -- see
+-- 0015_library_concepts.sql for full rationale. Purely additive: no
+-- library_entries column changes, current retrieval and current tags/
+-- virtues/secondary_losses are untouched. "proposed" vs "published" on
+-- every relationship/junction row makes the Important Source Discipline
+-- requirement structural -- a "proposed" row is invisible to a Host by
+-- RLS, not merely by app-level filtering.
+-- ---------------------------------------------------------------------------
+create table if not exists public.library_concepts (
+  id                uuid primary key default gen_random_uuid(),
+  name              text not null,
+  description       text,
+  alternate_terms   text[] not null default '{}',
+  distinctions      jsonb not null default '[]',
+  tensions          jsonb not null default '[]',
+  status            text not null default 'draft' check (status in ('draft', 'published', 'archived')),
+  editor_id         uuid references auth.users (id) on delete set null,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
+);
+
+create unique index if not exists library_concepts_name_idx on public.library_concepts (lower(name));
+create index if not exists library_concepts_status_idx on public.library_concepts (status);
+
+alter table public.library_concepts enable row level security;
+create policy "library concepts published read"
+  on public.library_concepts for select using (status = 'published');
+create policy "library concepts admin all"
+  on public.library_concepts for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+create table if not exists public.library_questions (
+  id           uuid primary key default gen_random_uuid(),
+  question     text not null,
+  status       text not null default 'draft' check (status in ('draft', 'published', 'archived')),
+  editor_id    uuid references auth.users (id) on delete set null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+
+create index if not exists library_questions_status_idx on public.library_questions (status);
+
+alter table public.library_questions enable row level security;
+create policy "library questions published read"
+  on public.library_questions for select using (status = 'published');
+create policy "library questions admin all"
+  on public.library_questions for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+create table if not exists public.library_concept_relations (
+  id                uuid primary key default gen_random_uuid(),
+  from_concept_id   uuid not null references public.library_concepts (id) on delete cascade,
+  to_concept_id     uuid not null references public.library_concepts (id) on delete cascade,
+  relation_type     text not null check (relation_type in (
+                       'related_to', 'contrasts_with', 'commonly_confused_with', 'dimension_of'
+                     )),
+  note              text,
+  proposed_by       text not null default 'editor' check (proposed_by in ('editor', 'model')),
+  status            text not null default 'proposed' check (status in ('proposed', 'published')),
+  editor_id         uuid references auth.users (id) on delete set null,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now(),
+  check (from_concept_id <> to_concept_id),
+  unique (from_concept_id, to_concept_id, relation_type)
+);
+
+create index if not exists library_concept_relations_from_idx on public.library_concept_relations (from_concept_id);
+create index if not exists library_concept_relations_to_idx on public.library_concept_relations (to_concept_id);
+
+alter table public.library_concept_relations enable row level security;
+create policy "library concept relations published read"
+  on public.library_concept_relations for select using (status = 'published');
+create policy "library concept relations admin all"
+  on public.library_concept_relations for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+create table if not exists public.library_entry_concepts (
+  id                 uuid primary key default gen_random_uuid(),
+  library_entry_id   uuid not null references public.library_entries (id) on delete cascade,
+  concept_id         uuid not null references public.library_concepts (id) on delete cascade,
+  note               text,
+  proposed_by        text not null default 'editor' check (proposed_by in ('editor', 'model')),
+  status             text not null default 'proposed' check (status in ('proposed', 'published')),
+  editor_id          uuid references auth.users (id) on delete set null,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+  unique (library_entry_id, concept_id)
+);
+
+create index if not exists library_entry_concepts_entry_idx on public.library_entry_concepts (library_entry_id);
+create index if not exists library_entry_concepts_concept_idx on public.library_entry_concepts (concept_id);
+
+alter table public.library_entry_concepts enable row level security;
+create policy "library entry concepts published read"
+  on public.library_entry_concepts for select using (status = 'published');
+create policy "library entry concepts admin all"
+  on public.library_entry_concepts for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+create table if not exists public.library_question_concepts (
+  id             uuid primary key default gen_random_uuid(),
+  question_id    uuid not null references public.library_questions (id) on delete cascade,
+  concept_id     uuid not null references public.library_concepts (id) on delete cascade,
+  note           text,
+  proposed_by    text not null default 'editor' check (proposed_by in ('editor', 'model')),
+  status         text not null default 'proposed' check (status in ('proposed', 'published')),
+  editor_id      uuid references auth.users (id) on delete set null,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  unique (question_id, concept_id)
+);
+
+create index if not exists library_question_concepts_question_idx on public.library_question_concepts (question_id);
+create index if not exists library_question_concepts_concept_idx on public.library_question_concepts (concept_id);
+
+alter table public.library_question_concepts enable row level security;
+create policy "library question concepts published read"
+  on public.library_question_concepts for select using (status = 'published');
+create policy "library question concepts admin all"
+  on public.library_question_concepts for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+create table if not exists public.library_entry_questions (
+  id                 uuid primary key default gen_random_uuid(),
+  library_entry_id   uuid not null references public.library_entries (id) on delete cascade,
+  question_id        uuid not null references public.library_questions (id) on delete cascade,
+  note               text,
+  proposed_by        text not null default 'editor' check (proposed_by in ('editor', 'model')),
+  status             text not null default 'proposed' check (status in ('proposed', 'published')),
+  editor_id          uuid references auth.users (id) on delete set null,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now(),
+  unique (library_entry_id, question_id)
+);
+
+create index if not exists library_entry_questions_entry_idx on public.library_entry_questions (library_entry_id);
+create index if not exists library_entry_questions_question_idx on public.library_entry_questions (question_id);
+
+alter table public.library_entry_questions enable row level security;
+create policy "library entry questions published read"
+  on public.library_entry_questions for select using (status = 'published');
+create policy "library entry questions admin all"
+  on public.library_entry_questions for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));

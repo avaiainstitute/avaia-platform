@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SpeakButton from "@/components/SpeakButton";
 import type { LibraryEntry } from "@/lib/library";
 import { familyOf } from "@/lib/virtues";
+import { getConceptsForEntry, getQuestionsForEntry } from "@/lib/library-concepts";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +108,15 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
   const isNotForMe = hostEntry?.state === "not_for_me";
   const spokenText = [entry.overview, entry.body].filter(Boolean).join("\n\n");
 
+  // No concept/question content is published yet -- these resolve to
+  // empty arrays today, and the section below renders nothing until real,
+  // editorially reviewed connections exist. Wired in now so nothing else
+  // needs to change when they do.
+  const [relatedConcepts, relatedQuestions] = await Promise.all([
+    getConceptsForEntry(supabase, entry.id),
+    getQuestionsForEntry(supabase, entry.id),
+  ]);
+
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
       <p className="mb-6">
@@ -157,6 +167,35 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
               Secondary Loss: {s}
             </span>
           ))}
+        </div>
+      )}
+
+      {(relatedConcepts.length > 0 || relatedQuestions.length > 0) && (
+        <div className="mt-8 space-y-4">
+          {relatedConcepts.length > 0 && (
+            <div>
+              <p className="label mb-2 text-muted">Related ideas</p>
+              <div className="flex flex-wrap gap-2">
+                {relatedConcepts.map(({ concept }) => (
+                  <span key={concept.id} className="rounded-full border border-rule px-3 py-0.5 text-xs text-ink">
+                    {concept.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {relatedQuestions.length > 0 && (
+            <div>
+              <p className="label mb-2 text-muted">Questions this touches</p>
+              <ul className="space-y-1">
+                {relatedQuestions.map(({ question }) => (
+                  <li key={question.id} className="text-sm italic text-ink">
+                    &ldquo;{question.question}&rdquo;
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

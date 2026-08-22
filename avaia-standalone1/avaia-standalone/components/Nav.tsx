@@ -32,6 +32,7 @@ const SIGNED_IN_LINKS: NavLink[] = [
   { href: "/journey", label: "Journey", prefetch: false },
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/workbook", label: "Workbook", prefetch: false },
+  { href: "/library", label: "Library", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/contact", label: "Contact", prefetch: true },
