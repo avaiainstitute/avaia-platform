@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import SignOutButton from "@/components/SignOutButton";
 
 // /journey, /defying-grief, /workbook, and /unsung-heroes all render
 // completely differently signed in vs signed out. Next prefetches links by
@@ -16,7 +17,8 @@ type NavLink = { href: string; label: string; prefetch: boolean };
 // Unsung Heroes belongs here now that its signed-out page (see
 // UnsungHeroesIntro.tsx) actually explains what it is, instead of being a
 // bare "sign in to begin" stub. That distinction is the whole point of
-// this Nav being auth-aware instead of one static list.
+// this Nav being auth-aware instead of one static list. Left completely
+// unchanged by the role-based navigation pass below.
 const PUBLIC_LINKS: NavLink[] = [
   { href: "/", label: "Home", prefetch: true },
   { href: "/about", label: "About", prefetch: true },
@@ -27,14 +29,24 @@ const PUBLIC_LINKS: NavLink[] = [
   { href: "/sign-in", label: "Sign in", prefetch: true },
 ];
 
-// Shared with Me isn't here -- it's reachable from Workbook instead (where
-// the sharing feature itself lives), not as a top-level destination.
-const SIGNED_IN_LINKS: NavLink[] = [
+// Signed-in Host navigation, split into two visual tiers rather than one
+// flat list of equal weight. Primary = continuity/participation (what the
+// returning-member reconciliation was about); secondary = the same public/
+// program destinations as before, still one click away, just no longer
+// competing visually with Home/Journey/Workbook/Library. Both tiers still
+// render as ordinary flex-wrap lists -- the same responsive mechanism the
+// Nav already used, not a new dropdown/menu component. Shared with Me isn't
+// here -- it's reachable from Workbook instead (where the sharing feature
+// itself lives), not as a top-level destination.
+const HOST_PRIMARY_LINKS: NavLink[] = [
   { href: "/", label: "Home", prefetch: true },
   { href: "/journey", label: "Journey", prefetch: false },
-  { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/workbook", label: "Workbook", prefetch: false },
   { href: "/library", label: "Library", prefetch: false },
+];
+
+const HOST_SECONDARY_LINKS: NavLink[] = [
+  { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/contact", label: "Contact", prefetch: true },
@@ -45,7 +57,21 @@ export default async function Nav() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const links = user ? SIGNED_IN_LINKS : PUBLIC_LINKS;
+
+  // Role lookup exists purely for nav discoverability -- app/toolkit/
+  // layout.tsx's own role === 'guide' check remains the real authorization
+  // gate. Showing or hiding this link changes nothing about who can
+  // actually reach /toolkit; a non-Guide typing the URL is still redirected
+  // there exactly as before.
+  let isGuide = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    isGuide = profile?.role === "guide";
+  }
 
   return (
     <header className="rule-t border-b border-rule bg-parchment/80 backdrop-blur sticky top-0 z-10">
@@ -56,19 +82,65 @@ export default async function Nav() {
             Clarity Starts With Integrity
           </span>
         </Link>
-        <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
-          {links.map((l) => (
-            <li key={l.href}>
-              <Link
-                href={l.href}
-                prefetch={l.prefetch}
-                className="label hover:text-seal transition-colors"
-              >
-                {l.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+
+        {user ? (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
+              {HOST_PRIMARY_LINKS.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    prefetch={l.prefetch}
+                    className="label text-ink hover:text-seal transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="flex flex-wrap items-center gap-x-5 gap-y-1 border-l border-rule pl-6">
+              {HOST_SECONDARY_LINKS.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    prefetch={l.prefetch}
+                    className="label hover:text-seal transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+              {isGuide && (
+                <li>
+                  <Link
+                    href="/toolkit"
+                    prefetch={false}
+                    className="label text-seal hover:opacity-80 transition-opacity"
+                  >
+                    Guide
+                  </Link>
+                </li>
+              )}
+              <li>
+                <SignOutButton />
+              </li>
+            </ul>
+          </div>
+        ) : (
+          <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            {PUBLIC_LINKS.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  prefetch={l.prefetch}
+                  className="label hover:text-seal transition-colors"
+                >
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </nav>
     </header>
   );
