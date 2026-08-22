@@ -10,6 +10,7 @@ import {
   type LibraryConcept,
   type LibraryConceptRelation,
 } from "@/lib/library-concepts";
+import { getPassagesForConcept, type HistoricalPassage } from "@/lib/library-passages";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,57 @@ function describeRelation(
   if (r.relation.relation_type === "contrasts_with") return `Contrasts with ${other}`;
   if (r.relation.relation_type === "commonly_confused_with") return `Commonly confused with ${other}`;
   return `Related to ${other}`;
+}
+
+/** One historical source, attributed -- never voiced. The AVAIA-authored
+ *  paraphrase is the primary content (it's the one field guaranteed
+ *  publishable regardless of quotation rights); exact_text renders only
+ *  when actually populated, as a clearly secondary, separately-set-off
+ *  quotation, not the headline. No "At This Table" framing and no
+ *  generated Then/Across Time/Now content -- this renders only what's
+ *  already stored, nothing synthesized here. */
+function HistoricalVoiceCard({ item }: { item: HistoricalPassage }) {
+  const { person, work, sourceVersion, passage, note } = item;
+  const personLabel = person.disambiguation
+    ? `${person.canonical_name} (${person.disambiguation})`
+    : person.canonical_name;
+
+  return (
+    <div className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+      <p className="font-serif text-lg text-ink">{personLabel}</p>
+      <p className="mt-1 text-sm text-muted">
+        {work.title} · {passage.locator}
+      </p>
+      {(sourceVersion.version_label || sourceVersion.translator_editor) && (
+        <p className="text-xs text-muted">
+          {sourceVersion.version_label}
+          {sourceVersion.translator_editor ? ` · trans. ${sourceVersion.translator_editor}` : ""}
+        </p>
+      )}
+
+      {passage.avaia_paraphrase && <p className="mt-3 text-ink">{passage.avaia_paraphrase}</p>}
+
+      {passage.exact_text && (
+        <blockquote className="mt-3 border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink">
+          &ldquo;{passage.exact_text}&rdquo;
+        </blockquote>
+      )}
+
+      {passage.context_note && <p className="mt-3 text-sm text-muted">{passage.context_note}</p>}
+      {note && <p className="mt-2 text-xs text-muted">{note}</p>}
+
+      {sourceVersion.source_url && (
+        <a
+          href={sourceVersion.source_url}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mt-3 inline-block text-sm text-seal underline decoration-rule underline-offset-2"
+        >
+          View the source →
+        </a>
+      )}
+    </div>
+  );
 }
 
 /** A published concept's neighborhood -- generated entirely from
@@ -63,10 +115,11 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
   const concept = await getConcept(supabase, params.conceptId);
   if (!concept) notFound();
 
-  const [questions, entries, related] = await Promise.all([
+  const [questions, entries, related, historicalPassages] = await Promise.all([
     getQuestionsForConcept(supabase, concept.id),
     getEntriesForConcept(supabase, concept.id),
     getRelatedConcepts(supabase, concept.id),
+    getPassagesForConcept(supabase, concept.id),
   ]);
 
   const distinctions = concept.distinctions.filter((d): d is string => typeof d === "string");
@@ -130,6 +183,17 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
           <div className="space-y-3">
             {entries.map(({ entry }) => (
               <EntryCard key={entry.id} entry={entry} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {historicalPassages.length > 0 && (
+        <div className="mt-8">
+          <p className="label mb-2 text-muted">Historical voices</p>
+          <div className="space-y-3">
+            {historicalPassages.map((item) => (
+              <HistoricalVoiceCard key={item.passage.id} item={item} />
             ))}
           </div>
         </div>
