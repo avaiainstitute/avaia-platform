@@ -57,6 +57,12 @@ export default function SecondaryLossPage() {
             <p className="label text-muted">Loss of</p>
             <p className="font-serif text-lg text-ink">{s.loss}</p>
             <p className="mt-1 text-sm text-muted">{RECOGNITION_LINE[s.loss]}</p>
+            <Link
+              href={`/library?secondary_loss=${encodeURIComponent(s.loss)}`}
+              className="mt-2 inline-block text-sm text-muted underline decoration-rule underline-offset-2 hover:text-seal"
+            >
+              See related Library entries →
+            </Link>
           </div>
         ))}
       </div>
