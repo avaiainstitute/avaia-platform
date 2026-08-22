@@ -18,6 +18,7 @@ type NavLink = { href: string; label: string; prefetch: boolean };
 // bare "sign in to begin" stub. That distinction is the whole point of
 // this Nav being auth-aware instead of one static list.
 const PUBLIC_LINKS: NavLink[] = [
+  { href: "/", label: "Home", prefetch: true },
   { href: "/about", label: "About", prefetch: true },
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
@@ -29,6 +30,7 @@ const PUBLIC_LINKS: NavLink[] = [
 // Shared with Me isn't here -- it's reachable from Workbook instead (where
 // the sharing feature itself lives), not as a top-level destination.
 const SIGNED_IN_LINKS: NavLink[] = [
+  { href: "/", label: "Home", prefetch: true },
   { href: "/journey", label: "Journey", prefetch: false },
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/workbook", label: "Workbook", prefetch: false },
