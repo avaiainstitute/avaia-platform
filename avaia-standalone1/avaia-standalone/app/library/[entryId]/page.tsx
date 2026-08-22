@@ -129,7 +129,17 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
       <h1 className="font-serif text-4xl text-ink">{entry.title}</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">{entry.overview}</p>
 
-      {entry.content_type === "avaia-owned" && entry.body && (
+      {/* Body renders whenever it's present, independent of content_type.
+          Gating this on content_type === 'avaia-owned' would force
+          non-AVAIA (historical/research/contemporary) material to falsely
+          claim avaia-owned just to be readable -- a provenance error, not
+          a rendering shortcut. The external-resource attribution block
+          below is unaffected -- it still only appears for
+          content_type === 'external-resource', so an AVAIA-owned entry
+          never shows external attribution it doesn't have, and an
+          external-resource entry's real authorship stays visible
+          alongside its body. */}
+      {entry.body && (
         <div className="mt-6 whitespace-pre-wrap text-ink leading-relaxed">{entry.body}</div>
       )}
 
