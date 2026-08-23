@@ -34,9 +34,13 @@ const COOKIE_OPTS = {
 
 type StoredSession = { access_token: string; refresh_token: string };
 
+type Identity = { id: string; email: string | null; isAnonymous: boolean };
+
 type TestResult = {
   error?: string;
   userId?: string;
+  email?: string | null;
+  isAnonymous?: boolean;
   profileFound?: boolean;
   role?: string | null;
   membershipStatus?: string | null;
@@ -62,13 +66,17 @@ function setResult(jar: ReturnType<typeof cookies>, result: TestResult) {
   jar.set(RESULT_COOKIE, JSON.stringify(result), COOKIE_OPTS);
 }
 
-/** Restores the anonymous session from the stored cookie, if any and
- *  still valid. Returns null (does NOT create a new identity) when
- *  there's nothing to restore -- callers decide whether to sign in. */
+/** Restores the anonymous (or since-converted) session from the stored
+ *  cookie, if any and still valid. getUser() always re-fetches the
+ *  current record from Supabase's auth server (not just the JWT's
+ *  original claims), so email/isAnonymous reflect the latest state --
+ *  including after an email-confirmation link has been clicked in a
+ *  separate browser tab. Returns null (does NOT create a new identity)
+ *  when there's nothing to restore -- callers decide whether to sign in. */
 async function restoreSession(
   client: ReturnType<typeof anonClient>,
   jar: ReturnType<typeof cookies>
-): Promise<string | null> {
+): Promise<Identity | null> {
   const stored = jar.get(SESSION_COOKIE)?.value;
   if (!stored) return null;
   try {
@@ -76,7 +84,12 @@ async function restoreSession(
     const { error } = await client.auth.setSession({ access_token, refresh_token });
     if (error) return null;
     const { data } = await client.auth.getUser();
-    return data.user?.id ?? null;
+    if (!data.user) return null;
+    return {
+      id: data.user.id,
+      email: data.user.email ?? null,
+      isAnonymous: !!data.user.is_anonymous,
+    };
   } catch {
     return null;
   }
@@ -91,15 +104,19 @@ export async function runTest(token: string) {
   const jar = cookies();
   const client = anonClient();
 
-  let userId = await restoreSession(client, jar);
+  let identity = await restoreSession(client, jar);
 
-  if (!userId) {
+  if (!identity) {
     const { data, error } = await client.auth.signInAnonymously();
     if (error || !data.session || !data.user) {
       setResult(jar, { error: error?.message ?? "Anonymous sign-in returned no session." });
       redirect(ROUTE_PATH);
     }
-    userId = data.user!.id;
+    identity = {
+      id: data.user!.id,
+      email: data.user!.email ?? null,
+      isAnonymous: !!data.user!.is_anonymous,
+    };
     jar.set(
       SESSION_COOKIE,
       JSON.stringify({
@@ -110,7 +127,9 @@ export async function runTest(token: string) {
     );
   }
 
-  if (!userId) redirect(ROUTE_PATH);
+  if (!identity) redirect(ROUTE_PATH);
+
+  const userId = identity.id;
 
   const { data: profile } = await client
     .from("profiles")
@@ -158,8 +177,15 @@ export async function runTest(token: string) {
     .neq("host_id", userId)
     .limit(1);
 
+  const existingRaw = jar.get(RESULT_COOKIE)?.value;
+  const base: TestResult = existingRaw ? JSON.parse(existingRaw) : {};
+
   setResult(jar, {
+    ...base,
+    error: undefined,
     userId,
+    email: identity.email,
+    isAnonymous: identity.isAnonymous,
     profileFound: !!profile,
     role: profile?.role ?? null,
     membershipStatus: profile?.membership_status ?? null,
@@ -179,9 +205,9 @@ export async function attachTestEmail(token: string, formData: FormData) {
 
   const jar = cookies();
   const client = anonClient();
-  const userId = await restoreSession(client, jar);
+  const identity = await restoreSession(client, jar);
 
-  if (!userId) {
+  if (!identity) {
     setResult(jar, { error: "No active test session. Run the test first." });
     redirect(ROUTE_PATH);
   }

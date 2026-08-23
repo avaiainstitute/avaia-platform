@@ -15,6 +15,8 @@ export const dynamic = "force-dynamic";
 type TestResult = {
   error?: string;
   userId?: string;
+  email?: string | null;
+  isAnonymous?: boolean;
   profileFound?: boolean;
   role?: string | null;
   membershipStatus?: string | null;
@@ -61,6 +63,15 @@ export default function InternalTestPage({ params }: { params: { token: string }
           <ul>
             <li>Test user ID: {result.userId}</li>
             <li>Anonymous sign-in: PASS</li>
+            <li>
+              is_anonymous: {String(result.isAnonymous)}{" "}
+              {result.isAnonymous === false
+                ? "— converted to a permanent identity"
+                : result.isAnonymous === true
+                  ? "— still anonymous"
+                  : ""}
+            </li>
+            <li>Email attached: {result.email ?? "(none yet)"}</li>
             <li>
               Profile auto-created by trigger:{" "}
               {result.profileFound ? "PASS" : "FAIL — no profile row found"}
