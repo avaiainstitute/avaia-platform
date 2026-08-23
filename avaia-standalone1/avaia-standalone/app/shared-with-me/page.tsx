@@ -16,7 +16,7 @@ export default async function SharedWithMePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
+  if (!user) redirect("/sign-in?from=/shared-with-me");
 
   // RLS ("shared_access recipient read") already scopes this to grants made
   // TO this account — nothing here can surface another recipient's shares.
