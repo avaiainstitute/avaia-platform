@@ -17,6 +17,7 @@ import {
   loadMessages,
 } from "@/lib/engine/conversation";
 import { getIncomingRoomTitle } from "@/lib/defying-grief";
+import { getIncomingSummary } from "@/lib/engine/referral-provenance";
 import type { Program, Stage } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Your Journey — AVAIA" };
@@ -220,10 +221,21 @@ export default async function JourneyPage({
   // crossing doesn't cover (every program's first IAP message, and general
   // program's CAT/InnerCompass entries). See JourneyIntro's own comment.
   if (rawMessages.length === 1 && searchParams?.enter !== "1" && convo.program !== "defying-grief") {
+    // Room Identity + a short description of what the Host is entering --
+    // reused from the referral already generated at the previous stage,
+    // not shown on IAP entry (nothing precedes it). Shared across every
+    // program using this screen, general and Youth alike -- same data,
+    // same presentation, no program branch needed here.
+    const incoming =
+      stage !== "iap" ? await getIncomingSummary(supabase, user.id, stage) : null;
     return (
       <div className="mx-auto max-w-prose px-5 py-16">
         {header}
-        <JourneyIntro stage={stage} />
+        <JourneyIntro
+          stage={stage}
+          roomTitle={incoming?.roomIdentity ?? null}
+          description={incoming?.description ?? null}
+        />
       </div>
     );
   }

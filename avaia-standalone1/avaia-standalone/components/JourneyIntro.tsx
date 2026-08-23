@@ -23,7 +23,17 @@ import type { Stage } from "@/lib/engine/prompts";
  * repeated at every stage, and once a Host sends their first message this
  * screen never shows again for that stage, exactly like DefyingGriefCrossing.
  */
-export default function JourneyIntro({ stage }: { stage: Stage }) {
+export default function JourneyIntro({
+  stage,
+  roomTitle,
+  description,
+}: {
+  stage: Stage;
+  /** From the referral generated at the previous stage -- null on IAP
+   *  entry (nothing precedes it) or when there's nothing to show yet. */
+  roomTitle?: string | null;
+  description?: string | null;
+}) {
   if (stage === "iap") {
     return (
       <div className="mt-8">
@@ -78,6 +88,19 @@ export default function JourneyIntro({ stage }: { stage: Stage }) {
         <p className="mt-2 font-serif text-lg italic text-muted">
           How do the different parts of what became visible become understandable together?
         </p>
+
+        {roomTitle && (
+          <div className="mt-6 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+            <p className="font-sans text-xs uppercase tracking-wide text-muted">
+              Room Identity — what emerged from your own words
+            </p>
+            <p className="mt-1 font-serif text-xl text-ink">&ldquo;{roomTitle}&rdquo;</p>
+            {description && (
+              <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>
+            )}
+          </div>
+        )}
+
         <p className="mt-4 text-lg leading-relaxed text-ink">
           Conversations Across Time begins from what emerged during the Individual Awareness
           Profile. Experiences, relationships, responsibilities, hopes, fears, losses,
@@ -109,6 +132,17 @@ export default function JourneyIntro({ stage }: { stage: Stage }) {
       <p className="mt-2 font-serif text-lg italic text-muted">
         Given what I now understand, how do I choose to participate?
       </p>
+
+      {roomTitle && (
+        <div className="mt-6 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+          <p className="font-sans text-xs uppercase tracking-wide text-muted">
+            Room Identity — what emerged from your own words
+          </p>
+          <p className="mt-1 font-serif text-xl text-ink">&ldquo;{roomTitle}&rdquo;</p>
+          {description && <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>}
+        </div>
+      )}
+
       <p className="mt-4 text-lg leading-relaxed text-ink">
         InnerCompass begins from the understanding developed through the earlier conversations.
         It helps you discern:
