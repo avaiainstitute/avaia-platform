@@ -9,20 +9,24 @@ import { peekPostSignInRedirect } from "@/lib/post-signin-redirect";
  * Magic-link landing. Establishes the session from the sign-in link, then
  * forwards into the journey.
  *
- * We do NOT call setSession()/exchangeCodeForSession() ourselves here.
+ * We do NOT call setSession()/exchangeCodeForSession() ourselves *up front*.
  * createBrowserClient() (lib/supabase/client.ts) forces detectSessionInUrl:
  * true and cannot be configured otherwise — merely constructing the client
  * (here, or in SupabaseSessionSync in the root layout, which mounts on every
  * page including this one) already triggers Supabase's own automatic
  * exchange of whatever's in the URL (hash tokens or a PKCE ?code=) the
- * moment it runs. A second, manual exchange call here would race that
- * automatic one for the SAME single-use code/verifier — and reliably lose,
- * since Supabase deletes the PKCE verifier the instant either attempt
- * redeems (or fails to redeem) the code. That race was the actual cause of
- * "PKCE code verifier not found in storage": not a missing or misplaced
- * cookie, but the cookie being consumed out from under us by our own
- * duplicate exchange attempt. So we only ever *observe* for the session the
- * automatic exchange produces, never redeem the code ourselves.
+ * moment it runs. Calling exchangeCodeForSession() ourselves at the same
+ * time would race that automatic one for the SAME single-use code/verifier
+ * — and reliably lose, since Supabase deletes the PKCE verifier the instant
+ * either attempt redeems (or fails to redeem) the code. That race was the
+ * actual cause of "PKCE code verifier not found in storage": not a missing
+ * or misplaced cookie, but the cookie being consumed out from under us by
+ * our own duplicate exchange attempt. So we only ever *observe* for the
+ * session the automatic exchange produces at first, and only fall back to
+ * an explicit exchangeCodeForSession() call ourselves (below, for the
+ * ?code= case) after a multi-second delay with nothing having landed --
+ * late enough that a still-in-flight automatic attempt is very unlikely,
+ * never as a simultaneous duplicate.
  *
  * finish() uses a hard window.location navigation, not next/navigation's
  * router. Nav.tsx links to /journey from every page, including pre-auth ones
@@ -102,10 +106,30 @@ export default function AuthCallbackPage() {
         const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
           if (session) finish();
         });
-        setTimeout(() => {
-          sub.subscription.unsubscribe();
-          fail("We couldn't find valid sign-in details in that link.");
-        }, 8000);
+
+        const code = sp.get("code");
+        if (code) {
+          // A PKCE ?code= link (email-change confirmation links look like
+          // this). Give the automatic detectSessionInUrl exchange a head
+          // start -- only attempt our own exchange if nothing has landed
+          // after a few seconds, so this never races the automatic one for
+          // the same single-use code (see the file-level comment above on
+          // why a simultaneous duplicate attempt reliably loses that race).
+          setTimeout(async () => {
+            if (done) return;
+            const { data: exchanged, error: exchangeError } =
+              await supabase.auth.exchangeCodeForSession(code);
+            if (done) return;
+            if (exchanged.session) return finish();
+            sub.subscription.unsubscribe();
+            fail(exchangeError?.message ?? "We couldn't find valid sign-in details in that link.");
+          }, 3000);
+        } else {
+          setTimeout(() => {
+            sub.subscription.unsubscribe();
+            fail("We couldn't find valid sign-in details in that link.");
+          }, 8000);
+        }
       } catch (e) {
         fail(e instanceof Error ? e.message : "Something went wrong signing you in.");
       }

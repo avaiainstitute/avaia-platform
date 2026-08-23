@@ -187,7 +187,7 @@ export default async function JourneyPage({
       <MembershipGate
         header={renderHeader(false)}
         checkout={searchParams?.checkout}
-        isAnonymous={!user.email}
+        isAnonymous={!!user.is_anonymous}
         justSaved={searchParams?.saved === "1"}
       />
     );
