@@ -45,10 +45,25 @@ export default function AuthCallbackPage() {
     const rawSearch = window.location.search.replace(/^\?/, "");
     const supabase = createClient();
 
+    // GoTrue includes `type` alongside the tokens (e.g. "email_change",
+    // "magiclink", "signup"). Read it once, up front, since the hash is
+    // otherwise only inspected for an error below.
+    const type =
+      new URLSearchParams(rawHash).get("type") || new URLSearchParams(rawSearch).get("type");
+
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
+      // The Free IAP "save your progress" email attachment is the one
+      // flow through this page that isn't a normal sign-in -- send it
+      // back to the Journey with an explicit "saved" acknowledgment
+      // instead of wherever peekPostSignInRedirect() would otherwise
+      // send a signed-in visitor.
+      if (type?.startsWith("email_change")) {
+        window.location.replace("/journey?saved=1");
+        return;
+      }
       window.location.replace(peekPostSignInRedirect());
     };
     const fail = (msg: string) => {
@@ -79,8 +94,13 @@ export default function AuthCallbackPage() {
         const { data } = await supabase.auth.getSession();
         if (data.session) return finish();
 
-        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "SIGNED_IN" && session) finish();
+        // Not filtered to a specific event name: the event fired for an
+        // email-change confirmation isn't reliably documented (SIGNED_IN
+        // vs USER_UPDATED are both plausible depending on flow), so this
+        // finishes on any event that comes with a session rather than
+        // gambling on one exact name.
+        const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (session) finish();
         });
         setTimeout(() => {
           sub.subscription.unsubscribe();

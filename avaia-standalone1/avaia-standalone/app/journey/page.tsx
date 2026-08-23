@@ -25,7 +25,7 @@ export const dynamic = "force-dynamic";
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string; checkout?: string; program?: string; enter?: string };
+  searchParams?: { new?: string; checkout?: string; program?: string; enter?: string; saved?: string };
 }) {
   const supabase = createClient();
   const {
@@ -188,6 +188,7 @@ export default async function JourneyPage({
         header={renderHeader(false)}
         checkout={searchParams?.checkout}
         isAnonymous={!user.email}
+        justSaved={searchParams?.saved === "1"}
       />
     );
   }
@@ -329,6 +330,7 @@ export function MembershipGate({
   checkout,
   returnTo,
   isAnonymous,
+  justSaved,
 }: {
   header: React.ReactNode;
   checkout?: string;
@@ -344,10 +346,20 @@ export function MembershipGate({
    *  must never be collapsed into one combined ask. Skippable -- a Host
    *  who declines still sees the membership option below unchanged. */
   isAnonymous?: boolean;
+  /** True immediately after returning from a successful email-confirmation
+   *  link (app/auth/callback's ?saved=1). isAnonymous is already false by
+   *  then, so the form above wouldn't render anyway -- this replaces that
+   *  gap with an explicit acknowledgment instead of silence. */
+  justSaved?: boolean;
 }) {
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
       {header}
+      {justSaved && (
+        <p className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 text-sm text-ink">
+          Your progress has been saved.
+        </p>
+      )}
       {isAnonymous && (
         <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
           <p className="font-serif text-lg text-ink">Save your progress</p>

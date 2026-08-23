@@ -21,7 +21,10 @@ export default function SaveProgressForm() {
     setStatus("loading");
     setMessage(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ email });
+    const { error } = await supabase.auth.updateUser(
+      { email },
+      { emailRedirectTo: `${window.location.origin}/auth/callback` }
+    );
     if (error) {
       setStatus("error");
       setMessage(error.message);
