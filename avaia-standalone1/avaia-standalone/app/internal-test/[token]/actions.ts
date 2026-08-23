@@ -15,7 +15,7 @@
  * reserved for the separate, explicit cleanup step after validation.
  */
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createJourney, createConversation } from "@/lib/engine/conversation";
@@ -65,6 +65,14 @@ function anonClient() {
 
 function setResult(jar: ReturnType<typeof cookies>, result: TestResult) {
   jar.set(RESULT_COOKIE, JSON.stringify(result), COOKIE_OPTS);
+}
+
+/** Server actions have no `window`, so unlike SaveProgressForm.tsx this
+ *  reads the actual incoming request's own Host header instead --
+ *  resolves to whichever domain (preview or production) this request
+ *  genuinely came in on, exactly like window.location.origin would. */
+function currentOrigin(): string {
+  return `https://${headers().get("host")}`;
 }
 
 /** Restores the anonymous (or since-converted) session from the stored
@@ -252,7 +260,10 @@ export async function attachTestEmail(token: string, formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   if (!email) redirect(ROUTE_PATH);
 
-  const { error } = await client.auth.updateUser({ email });
+  const { error } = await client.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${currentOrigin()}/auth/callback` }
+  );
 
   const existingRaw = jar.get(RESULT_COOKIE)?.value;
   const base: TestResult = existingRaw ? JSON.parse(existingRaw) : {};
