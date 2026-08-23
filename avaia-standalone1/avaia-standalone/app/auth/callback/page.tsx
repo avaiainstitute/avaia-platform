@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { peekPostSignInRedirect } from "@/lib/post-signin-redirect";
 
 /**
  * Magic-link landing. Establishes the session from the sign-in link, then
  * forwards into the journey.
+ *
+ * token_hash links (checked first, below) are stateless -- verifyOtp()
+ * needs nothing but what's already in the URL, so unlike everything else
+ * on this page they work regardless of which browser, device, or profile
+ * opens them. The "Change Email Address" template now emits this shape
+ * instead of a PKCE ?code=, specifically because that PKCE link depends on
+ * a code_verifier surviving in local storage until the link is clicked --
+ * confirmed, live, to fail with "PKCE code verifier not found in storage"
+ * when the email is opened somewhere other than where the flow started,
+ * which is an ordinary, expected way for a Host to check their email.
  *
  * We do NOT call setSession()/exchangeCodeForSession() ourselves *up front*.
  * createBrowserClient() (lib/supabase/client.ts) forces detectSessionInUrl:
@@ -90,6 +101,22 @@ export default function AuthCallbackPage() {
           sp.get("error_description") ||
           sp.get("error");
         if (err) return fail(err.replace(/\+/g, " "));
+
+        // Stateless path -- a token_hash link needs no locally stored
+        // verifier at all. Checked first; on success it returns directly.
+        // Every other link shape (magic-link sign-in, etc.) never has this
+        // param and falls straight through to the PKCE paths below,
+        // untouched.
+        const tokenHash = sp.get("token_hash");
+        if (tokenHash && type) {
+          const { data: verified, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type as EmailOtpType,
+          });
+          if (verifyError) return fail(verifyError.message);
+          if (verified.session) return finish();
+          return fail("We couldn't verify that link.");
+        }
 
         // No explicit error, and there's something to redeem (hash tokens or
         // a code) — the client's automatic detectSessionInUrl handling is
