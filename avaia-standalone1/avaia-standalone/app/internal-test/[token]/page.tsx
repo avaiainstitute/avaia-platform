@@ -5,12 +5,28 @@
 // whole app/internal-test directory once validation is complete; never
 // merge it to main.
 
+import type { CSSProperties } from "react";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { runTest, attachTestEmail } from "./actions";
 import { TEST_TOKEN } from "./token";
 
 export const dynamic = "force-dynamic";
+
+// Explicit styling on every button below -- this page renders inside
+// AVAIA's normal site layout, whose global CSS reset strips default
+// browser button chrome down to something that can look like plain,
+// unclickable text. Inline styles here are deliberate and self-
+// contained so button visibility never again depends on inherited CSS.
+const buttonStyle: CSSProperties = {
+  padding: "10px 20px",
+  fontSize: 16,
+  background: "#1a1a1a",
+  color: "#fff",
+  border: "1px solid #1a1a1a",
+  borderRadius: 4,
+  cursor: "pointer",
+};
 
 type TestResult = {
   error?: string;
@@ -49,7 +65,7 @@ export default function InternalTestPage({ params }: { params: { token: string }
 
       {(!result || result.error) && (
         <form action={boundRunTest}>
-          <button type="submit" style={{ padding: "10px 20px", fontSize: 16 }}>
+          <button type="submit" style={buttonStyle}>
             {result?.error ? "Try again" : "Run Test"}
           </button>
         </form>
@@ -107,8 +123,10 @@ export default function InternalTestPage({ params }: { params: { token: string }
             </li>
           </ul>
 
-          <form action={boundRunTest}>
-            <button type="submit">Run again (idempotent — reuses this same identity)</button>
+          <form action={boundRunTest} style={{ marginTop: 20 }}>
+            <button type="submit" style={buttonStyle}>
+              Run again (idempotent — reuses this same identity)
+            </button>
           </form>
 
           {!result.emailAttachAttempted && (
@@ -125,7 +143,9 @@ export default function InternalTestPage({ params }: { params: { token: string }
                   required
                   style={{ padding: 8, marginRight: 8 }}
                 />
-                <button type="submit">Attach email</button>
+                <button type="submit" style={buttonStyle}>
+                  Attach email
+                </button>
               </form>
             </>
           )}
