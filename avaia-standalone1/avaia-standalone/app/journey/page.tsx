@@ -6,6 +6,8 @@ import JourneyChat from "@/components/JourneyChat";
 import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import JourneyIntro from "@/components/JourneyIntro";
+import BeginFreeJourney from "@/components/BeginFreeJourney";
+import SaveProgressForm from "@/components/SaveProgressForm";
 import {
   STAGE_ORDER,
   STAGE_LABEL,
@@ -29,7 +31,27 @@ export default async function JourneyPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in?from=/journey");
+
+  // Free IAP entry: a signed-out visitor is no longer redirected away.
+  // BeginFreeJourney starts a real (anonymous) Supabase identity on
+  // deliberate click only -- never automatically on page load -- then
+  // refreshes so this Server Component re-runs with a session and falls
+  // straight into the same consent -> auto-provision path below,
+  // unchanged for every other caller. A signed-in Host never sees this.
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <p className="label mb-3">Individual Awareness Profile</p>
+        <h1 className="font-serif text-4xl text-ink">Begin your Journey</h1>
+        <p className="mt-4 text-lg text-muted">
+          The first step is free, and you can begin right now — no account required yet.
+        </p>
+        <div className="mt-8">
+          <BeginFreeJourney />
+        </div>
+      </div>
+    );
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -161,7 +183,13 @@ export default async function JourneyPage({
   // Host who has just been carried into CAT sees the membership gate instead
   // of the chat; a member continues exactly as before.
   if (stage !== "iap" && !isMember) {
-    return <MembershipGate header={renderHeader(false)} checkout={searchParams?.checkout} />;
+    return (
+      <MembershipGate
+        header={renderHeader(false)}
+        checkout={searchParams?.checkout}
+        isAnonymous={!user.email}
+      />
+    );
   }
 
   const rawMessages = await loadMessages(supabase, convo.id);
@@ -300,6 +328,7 @@ export function MembershipGate({
   header,
   checkout,
   returnTo,
+  isAnonymous,
 }: {
   header: React.ReactNode;
   checkout?: string;
@@ -308,10 +337,29 @@ export function MembershipGate({
    *  who pays from there lands back where they actually were, not on the
    *  general Journey page. */
   returnTo?: string;
+  /** True for a Free-IAP visitor who hasn't attached an email yet --
+   *  renders an extra "save your progress" section above the membership
+   *  pitch. Deliberately its own heading, copy, and form: saving progress
+   *  (free) and becoming a paying Member are two different moments and
+   *  must never be collapsed into one combined ask. Skippable -- a Host
+   *  who declines still sees the membership option below unchanged. */
+  isAnonymous?: boolean;
 }) {
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
       {header}
+      {isAnonymous && (
+        <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+          <p className="font-serif text-lg text-ink">Save your progress</p>
+          <p className="mt-1 text-sm text-muted">
+            Your Individual Awareness Profile isn&rsquo;t attached to an email yet — add one so
+            you can find your way back to it. This is free and separate from Membership.
+          </p>
+          <div className="mt-3">
+            <SaveProgressForm />
+          </div>
+        </div>
+      )}
       <h1 className="mt-8 font-serif text-4xl text-ink">Continue your journey</h1>
       <p className="mt-4 text-lg text-muted">
         Your Individual Awareness Profile is complete — that first step is free, and it&rsquo;s
