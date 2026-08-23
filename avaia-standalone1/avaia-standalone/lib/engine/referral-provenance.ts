@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { VIRTUE_FAMILIES, isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
 import { isValidSecondaryLoss } from "@/lib/institution";
 import type { Stage } from "@/lib/engine/prompts";
@@ -299,6 +300,11 @@ export type CompletionSummary = {
   roomIdentity?: string;
   outcomeLabel?: string;
   direction?: string;
+  /** A short, already-generated field describing what the *next*
+   *  conversation is about -- used for the incoming-referral hand-off
+   *  screen (JourneyIntro), not the completion card. Sourced per stage
+   *  below; absent for stages nothing follows. */
+  description?: string;
 };
 
 // A short established-direction field exists for some stages, not others --
@@ -308,6 +314,17 @@ export type CompletionSummary = {
 const DIRECTION_FIELD_FOR: Partial<Record<Stage, string>> = {
   iap: "desiredDirection",
   innercompass: "centralDecisionOrDirection",
+};
+
+// Which already-generated field best describes the conversation a Host is
+// about to enter, keyed by the stage that PRODUCED the referral (not the
+// stage it's headed to) -- IAP's currentConcern for the CAT hand-off,
+// CAT's own nextConversationPurpose (literally written for this) for the
+// InnerCompass hand-off. No equivalent for innercompass -- nothing follows
+// it in the three-stage Journey.
+const DESCRIPTION_FIELD_FOR: Partial<Record<Stage, string>> = {
+  iap: "currentConcern",
+  cat: "nextConversationPurpose",
 };
 
 /** A handful of fields selected from the already-generated, already-stored
@@ -346,5 +363,37 @@ export function getCompletionSummary(
     if (typeof v === "string" && v.trim()) summary.direction = v.trim();
   }
 
+  const descriptionKey = DESCRIPTION_FIELD_FOR[stage];
+  if (descriptionKey) {
+    const v = content[descriptionKey];
+    if (typeof v === "string" && v.trim()) summary.description = v.trim();
+  }
+
   return summary;
+}
+
+/** The Room Identity + short description a Host should see on the
+ *  hand-off screen entering `forStage` -- e.g. entering "cat" reads the
+ *  most recent referral addressed to CAT (produced by IAP) and reuses
+ *  getCompletionSummary's own field extraction for it, exactly as the
+ *  completion card already does for the stage that just finished. Same
+ *  already-stored data, different moment it's shown. Returns null when
+ *  there's no incoming referral yet (e.g. entering IAP, which has none).
+ */
+export async function getIncomingSummary(
+  supabase: SupabaseClient,
+  hostId: string,
+  forStage: Stage
+): Promise<CompletionSummary | null> {
+  const { data } = await supabase
+    .from("referrals")
+    .select("content, from_stage")
+    .eq("host_id", hostId)
+    .eq("to_stage", forStage)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  const content = data.content as Record<string, unknown> | null;
+  return getCompletionSummary(data.from_stage as Stage, content);
 }
