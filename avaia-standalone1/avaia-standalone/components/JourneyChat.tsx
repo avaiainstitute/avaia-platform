@@ -12,6 +12,9 @@ import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-foc
 // ships to the client. Reused so the card's shape can't drift from what
 // getCompletionSummary() actually returns.
 import type { CompletionSummary } from "@/lib/engine/referral-provenance";
+// Type-only, same reasoning as CompletionSummary above -- prompts.ts is
+// also "server-only"; this import is fully erased before bundling.
+import type { Program } from "@/lib/engine/prompts";
 
 type Msg = { role: "host" | "guide"; content: string };
 
@@ -34,8 +37,10 @@ export default function JourneyChat({
   initialMessages: Msg[];
   /** Which program this conversation belongs to — decides where finishing
    *  the whole journey lands the Host (general Workbook vs. the Defying
-   *  Grief dashboard). Defaults to "general" for every existing caller. */
-  program?: "general" | "defying-grief";
+   *  Grief dashboard; a Youth conversation falls through to Workbook,
+   *  same as general, since there's no Youth dashboard yet). Defaults to
+   *  "general" for every existing caller. */
+  program?: Program;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
