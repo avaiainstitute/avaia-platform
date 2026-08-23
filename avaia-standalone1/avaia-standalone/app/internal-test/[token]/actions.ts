@@ -22,6 +22,7 @@ import { createJourney, createConversation } from "@/lib/engine/conversation";
 import { TEST_TOKEN } from "./token";
 
 const SESSION_COOKIE = "avaia_test_session";
+const USER_ID_COOKIE = "avaia_test_user_id";
 const RESULT_COOKIE = "avaia_test_result";
 const ROUTE_PATH = `/internal-test/${TEST_TOKEN}`;
 const COOKIE_OPTS = {
@@ -95,18 +96,47 @@ async function restoreSession(
   }
 }
 
-/** Idempotent: reuses the existing test identity/Journey/conversation
- *  (via the session cookie) if this has already run once, rather than
- *  creating new ones on every click, refresh, or repeated submit. */
+/** Idempotent, and fails closed: a fresh anonymous identity is only ever
+ *  created when there is truly no prior state at all (no session cookie,
+ *  no recorded user id -- i.e. the very first run in a clean browser).
+ *  Any later failure to restore the existing session (expired token,
+ *  invalidated by the email-confirmation flow, etc.) stops with a clear
+ *  error naming the known test user id -- it never silently creates a
+ *  second identity. This is the one thing last round's harness got
+ *  wrong: it fell back to signInAnonymously() on any restore failure. */
 export async function runTest(token: string) {
   if (token !== TEST_TOKEN) redirect("/");
 
   const jar = cookies();
   const client = anonClient();
 
-  let identity = await restoreSession(client, jar);
+  const knownUserId = jar.get(USER_ID_COOKIE)?.value ?? null;
+  const hasStoredSession = !!jar.get(SESSION_COOKIE)?.value;
 
-  if (!identity) {
+  let identity: Identity | null = null;
+
+  if (hasStoredSession) {
+    identity = await restoreSession(client, jar);
+    if (!identity) {
+      setResult(jar, {
+        error: knownUserId
+          ? `Could not restore the existing test session for user ${knownUserId} (likely expired, or invalidated by the email-confirmation step). Stopping -- not creating a new identity.`
+          : "Could not restore the existing test session, and no known test user id is on record. Stopping -- not creating a new identity.",
+        userId: knownUserId ?? undefined,
+      });
+      redirect(ROUTE_PATH);
+    }
+  } else if (knownUserId) {
+    // A user id is on record but its session cookie is gone -- this is
+    // a restore failure too, not a first run. Never fall through to a
+    // fresh sign-in here.
+    setResult(jar, {
+      error: `No session on file for the known test user ${knownUserId}. Stopping -- not creating a new identity.`,
+      userId: knownUserId,
+    });
+    redirect(ROUTE_PATH);
+  } else {
+    // Truly the first run: nothing stored yet in this browser.
     const { data, error } = await client.auth.signInAnonymously();
     if (error || !data.session || !data.user) {
       setResult(jar, { error: error?.message ?? "Anonymous sign-in returned no session." });
@@ -130,6 +160,7 @@ export async function runTest(token: string) {
   if (!identity) redirect(ROUTE_PATH);
 
   const userId = identity.id;
+  jar.set(USER_ID_COOKIE, userId, COOKIE_OPTS);
 
   const { data: profile } = await client
     .from("profiles")
@@ -205,10 +236,16 @@ export async function attachTestEmail(token: string, formData: FormData) {
 
   const jar = cookies();
   const client = anonClient();
+  const knownUserId = jar.get(USER_ID_COOKIE)?.value ?? null;
   const identity = await restoreSession(client, jar);
 
   if (!identity) {
-    setResult(jar, { error: "No active test session. Run the test first." });
+    setResult(jar, {
+      error: knownUserId
+        ? `Could not restore the existing test session for user ${knownUserId}. Not attaching an email to an unverified session -- run the test again from a clean state first.`
+        : "No active test session. Run the test first.",
+      userId: knownUserId ?? undefined,
+    });
     redirect(ROUTE_PATH);
   }
 

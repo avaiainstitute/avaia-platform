@@ -47,15 +47,20 @@ export default function InternalTestPage({ params }: { params: { token: string }
         Temporary route. Not linked from the public site. Removed after validation.
       </p>
 
-      {!result && (
+      {(!result || result.error) && (
         <form action={boundRunTest}>
           <button type="submit" style={{ padding: "10px 20px", fontSize: 16 }}>
-            Run Test
+            {result?.error ? "Try again" : "Run Test"}
           </button>
         </form>
       )}
 
-      {result?.error && <p style={{ color: "crimson" }}>FAIL: {result.error}</p>}
+      {result?.error && (
+        <div>
+          <p style={{ color: "crimson" }}>FAIL: {result.error}</p>
+          {result.userId && <p>Known test user ID: {result.userId}</p>}
+        </div>
+      )}
 
       {result && !result.error && (
         <div>
