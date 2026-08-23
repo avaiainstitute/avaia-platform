@@ -98,7 +98,7 @@ export default async function WorkbookPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in");
+  if (!user) redirect("/sign-in?from=/workbook");
 
   const { data: profile } = await supabase
     .from("profiles")
