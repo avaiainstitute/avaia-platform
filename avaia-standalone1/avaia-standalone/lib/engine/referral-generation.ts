@@ -12,6 +12,7 @@ import {
   INNERCOMPASS_OPENING_GENERATION,
   type Program,
   type Stage,
+  type DevelopmentalBand,
 } from "@/lib/engine/prompts";
 import {
   STAGE_ORDER,
@@ -296,9 +297,16 @@ export type GenerateReferralResult =
 export async function generateReferral(
   supabase: SupabaseClient,
   hostId: string,
-  conversation: { id: string; stage: Stage; program: Program; journeyId: string | null }
+  conversation: {
+    id: string;
+    stage: Stage;
+    program: Program;
+    journeyId: string | null;
+    /** Youth Journey, Phase 1 only -- ignored for every other program. */
+    developmentalBand?: DevelopmentalBand | null;
+  }
 ): Promise<GenerateReferralResult> {
-  const { id: conversationId, stage, program, journeyId } = conversation;
+  const { id: conversationId, stage, program, journeyId, developmentalBand } = conversation;
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
 
   // Generate the AVAIA Standard Referral as structured data.
@@ -313,7 +321,7 @@ export async function generateReferral(
   // Carry the incoming referral (if any) into context, so fields meant to persist
   // across stages — like the conversation's title — can be reused or consciously
   // revised instead of generated fresh with no awareness of what came before.
-  let system = `${systemPromptFor(stage, program)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
+  let system = `${systemPromptFor(stage, program, developmentalBand ?? null)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
   const { data: incoming } = await supabase
     .from("referrals")
     .select("content")

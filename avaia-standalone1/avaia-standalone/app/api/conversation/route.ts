@@ -7,6 +7,7 @@ import {
   REFERRAL_HANDLED_BY_SITE,
   type Program,
   type Stage,
+  type DevelopmentalBand,
 } from "@/lib/engine/prompts";
 import {
   formatCatReferralForInnerCompass,
@@ -49,6 +50,20 @@ export async function POST(request: Request) {
   const stage = convo.stage as Stage;
   const program = convo.program as Program;
   const journeyId = convo.journey_id as string | null;
+
+  // Youth Journey, Phase 1: the developmental band lives on the Host's
+  // profile, not the conversation -- only fetched for Youth, so every
+  // adult/general/defying-grief message (the overwhelming majority of
+  // traffic) is unaffected by an extra query.
+  let developmentalBand: DevelopmentalBand | null = null;
+  if (program === "youth") {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("developmental_band")
+      .eq("id", user.id)
+      .maybeSingle();
+    developmentalBand = (profile?.developmental_band as DevelopmentalBand | null) ?? null;
+  }
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
@@ -96,6 +111,7 @@ export async function POST(request: Request) {
       stage,
       program,
       journeyId,
+      developmentalBand,
     });
     if (!result.ok) {
       return NextResponse.json(
@@ -117,7 +133,7 @@ export async function POST(request: Request) {
 
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).
-  let system = `${systemPromptFor(stage, program)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
+  let system = `${systemPromptFor(stage, program, developmentalBand)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
   const { data: referral } = await supabase
     .from("referrals")
     .select("content")

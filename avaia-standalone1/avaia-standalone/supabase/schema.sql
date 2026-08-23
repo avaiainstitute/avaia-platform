@@ -29,6 +29,12 @@ create table if not exists public.profiles (
   -- was certified, not a tiered/per-tool certification system (not required
   -- by the Guide Toolkit's first build).
   guide_certified_at    timestamptz,
+  -- Youth Journey, Phase 1 (0017) -- the smallest signal that selects
+  -- Youth's starting developmental guidance (8-11 / 12-14 / 15-17); the
+  -- Guide still adapts to the individual Host from there. Nullable and
+  -- meaningless for every adult profile. Deliberately not a birthdate --
+  -- see 0017's comment.
+  developmental_band    text check (developmental_band in ('8-11', '12-14', '15-17')),
   created_at            timestamptz not null default now()
 );
 
@@ -82,7 +88,7 @@ create trigger on_auth_user_created
 create table if not exists public.journeys (
   id            uuid primary key default gen_random_uuid(),
   host_id       uuid not null references auth.users (id) on delete cascade,
-  program       text not null default 'general' check (program in ('general', 'defying-grief')),
+  program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth')),
   started_at    timestamptz not null default now(),
   completed_at  timestamptz
 );
@@ -106,7 +112,7 @@ create table if not exists public.conversations (
   -- (e.g. Defying Grief's dashboard), not a continuity mechanism — Room
   -- Identity/referral content/completion state all still live entirely in
   -- this table and referrals, keyed by conversation_id as they always have.
-  program       text not null default 'general' check (program in ('general', 'defying-grief')),
+  program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth')),
   -- Explicit Journey this conversation belongs to — see journeys above.
   journey_id    uuid references public.journeys (id) on delete set null,
   created_at    timestamptz not null default now(),

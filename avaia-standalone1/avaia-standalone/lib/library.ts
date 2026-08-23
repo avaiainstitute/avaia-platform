@@ -47,6 +47,10 @@ export const JOURNEY_STAGES: Stage[] = ["iap", "cat", "innercompass"];
 export const PROGRAM_LABEL: Record<Program, string> = {
   general: "General Journey",
   "defying-grief": "Defying Grief",
+  // Youth Journey, Phase 1: label only exists to satisfy Record<Program, ...>
+  // completeness -- Youth is deliberately absent from PROGRAM_KEYS below, so
+  // this never actually surfaces in the Library's program filter UI yet.
+  youth: "Youth Journey",
 };
 export const PROGRAM_KEYS: Program[] = ["general", "defying-grief"];
 
