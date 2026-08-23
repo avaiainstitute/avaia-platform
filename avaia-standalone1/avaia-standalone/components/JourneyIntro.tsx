@@ -43,8 +43,8 @@ export default function JourneyIntro({
           <span className="text-muted">→</span> Agency
         </p>
         <p className="mt-4 text-muted">
-          The Journey moves through three connected conversations. They aren&rsquo;t three
-          unrelated products — they&rsquo;re three movements within one continuing conversation.
+          The Journey moves through three connected conversations — three movements within one
+          continuing conversation.
         </p>
 
         <p className="label mb-2 mt-10">1 — Awareness</p>
