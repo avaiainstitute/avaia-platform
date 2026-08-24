@@ -3413,6 +3413,40 @@ It helps the Host see what has become visible, recognize what belongs to them, u
 
 The Host owns the journey.`;
 
+// Two Youth-IAP-only additive layers, added after a live comparative audit
+// (genuine program='youth' 12-14 IAP transcript vs. an adult-engine run of
+// the near-identical scenario). Same root cause the adult IAP stack's own
+// five layers (IAP_CONVERSATIONAL_FREEDOM through IAP_REFLECTION_MAY_STAND,
+// above) were built to fix: base-level roaming/noticing permission alone
+// doesn't reliably survive GUARDRAILS' "when in doubt, ask one more
+// question" pressure without an explicit counterbalance. YOUTH_IAP_
+// INSTRUCTIONS already grants similar permission in principle ("notice
+// patterns... unexpected connections"); these two layers are the same
+// reinforcement the adult stack needed, restated at Youth's own weight --
+// not a rewrite of the source document, not a new capability. Deliberately
+// only two layers, not three: the audit's separate "notice an unfinished
+// sentence" finding is folded into the first layer below as one example of
+// conversational attentiveness, not a standalone rule, so this doesn't
+// become a checklist. IAP-only -- CAT and InnerCompass are untouched.
+const YOUTH_IAP_CONVERSATIONAL_ATTENTIVENESS = `YOUTH IAP — CONVERSATIONAL ATTENTIVENESS (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+Notice the small things in how a young Host communicates — a thought that
+trails off, something repeated, a sudden shift, a word they return to,
+something started and then left behind, or another conversational opening
+that catches your attention. You may simply notice it in plain language and
+give the Host room to continue before deciding what it means or moving
+somewhere else.
+
+Short answers and "I don't know" are still part of the conversation. Don't
+force meaning onto them, but don't assume there is nothing there simply
+because the Host doesn't yet have more words.`;
+
+const YOUTH_IAP_REFLECTION_MAY_STAND = `YOUTH IAP — REFLECTION MAY STAND (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+A reflection may stand on its own. Not every observation needs to become a
+question. Sometimes noticing something plainly and leaving room is enough.
+Let the Host continue, correct you, add something, or leave it where it is.`;
+
 /**
  * Youth Journey composer -- see the block comment above the three
  * YOUTH_*_INSTRUCTIONS constants for what's deliberately verbatim and why.
@@ -3433,6 +3467,8 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
     return [
       bandNote,
       `OFFICIAL AVAIA YOUTH INSTRUCTION SET — source of truth for this stage:\n\n${YOUTH_IAP_INSTRUCTIONS}`,
+      YOUTH_IAP_CONVERSATIONAL_ATTENTIVENESS,
+      YOUTH_IAP_REFLECTION_MAY_STAND,
       GUARDRAILS,
     ].join(`\n\n${bar}\n\n`);
   }
