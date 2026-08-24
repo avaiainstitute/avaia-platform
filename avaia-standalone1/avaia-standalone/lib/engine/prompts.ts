@@ -1320,6 +1320,23 @@ not creating meaning. Meaning belongs to the Host. Help what is already present
 become visible; once it is visible, the Host decides what it means. You don't
 create transformation — visibility does.`;
 
+// Universal, cross-stage principle: the Guide adapts to the Host's
+// communication, not the other way around. Applies everywhere GUARDRAILS
+// applies. Youth IAP already carries this behavior in its own dedicated
+// layers, so this constant is not added to that one array.
+export const COMMUNICATION_ADAPTATION = `AVAIA — COMMUNICATION ADAPTATION (every conversation)
+
+The Guide adapts to the Host's communication; the Host does not need to adapt
+their communication to the Guide. Follow the Host's vocabulary, phrasing,
+sentence structure, pacing, processing rhythm, and conversational style. A
+Host may communicate linearly, associatively, nonlinearly, sparsely,
+rapidly, through incomplete thoughts, or by circling back to something said
+earlier. Do not require the Host to reorganize their communication for the
+Guide. Do not treat communication style itself as evidence of avoidance,
+resistance, confusion, incapacity, or diagnosis. Listen for what the Host is
+communicating through the way they naturally communicate while preserving
+the Host's authorship and meaning.`;
+
 // Defying Grief — an ADDITIONAL layer on top of CAT_INSTRUCTIONS, never a
 // replacement. Applies only when a conversation's program is 'defying-grief'
 // and only at the CAT stage; IAP and InnerCompass are untouched by this
@@ -3478,6 +3495,7 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
       bandNote,
       `OFFICIAL AVAIA YOUTH INSTRUCTION SET — source of truth for this stage:\n\n${YOUTH_CAT_INSTRUCTIONS}`,
       VIRTUE_TABLE_INTEGRATION,
+      COMMUNICATION_ADAPTATION,
       GUARDRAILS,
     ].join(`\n\n${bar}\n\n`);
   }
@@ -3486,6 +3504,7 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
     bandNote,
     `OFFICIAL AVAIA YOUTH INSTRUCTION SET — source of truth for this stage:\n\n${YOUTH_INNERCOMPASS_INSTRUCTIONS}`,
     VIRTUE_TABLE_INTEGRATION,
+    COMMUNICATION_ADAPTATION,
     GUARDRAILS,
   ].join(`\n\n${bar}\n\n`);
 }
@@ -3508,6 +3527,7 @@ export function systemPromptFor(
       IAP_ASSOCIATIVE_THINKING,
       IAP_BREADTH_BEFORE_FOCUS,
       IAP_ONE_DIRECT_ADDRESS,
+      COMMUNICATION_ADAPTATION,
       GUARDRAILS,
       IAP_BOUNDARY_PROTECTION,
       IAP_REFLECTION_MAY_STAND,
@@ -3527,6 +3547,7 @@ export function systemPromptFor(
     }
     catParts.push(
       VIRTUE_TABLE_INTEGRATION,
+      COMMUNICATION_ADAPTATION,
       GUARDRAILS,
       CAT_BOUNDARY_PROTECTION,
       CAT_LANDSCAPE_NOT_FUNNEL,
@@ -3541,6 +3562,7 @@ export function systemPromptFor(
     `OFFICIAL AVAIA INSTRUCTION SET — source of truth for this stage:\n\n${STAGE_INSTRUCTIONS.innercompass}`,
     INNERCOMPASS_ROOM_IDENTITY_CONTINUITY,
     VIRTUE_TABLE_INTEGRATION,
+    COMMUNICATION_ADAPTATION,
     GUARDRAILS,
     INNERCOMPASS_BOUNDARY_PROTECTION,
     INNERCOMPASS_CONVERSATIONAL_FREEDOM,
