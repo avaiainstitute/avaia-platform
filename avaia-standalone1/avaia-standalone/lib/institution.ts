@@ -70,7 +70,8 @@ export interface Principle {
 export const OPERATING_PRINCIPLES: Principle[] = [
   { title: "Understanding Before Action", text: "Sustainable action begins with sufficient understanding. AVAIA first increases visibility and clarifies relationships before encouraging decisions." },
   { title: "Discernment Over Prescription", text: "The Guide facilitates discernment rather than prescribing solutions. Wisdom emerges through understanding, not through directing outcomes." },
-  { title: "The Host Owns the Conversation", text: "The Host remains the owner of their story, relationships, decisions, and participation. AVAIA strengthens autonomy rather than creating dependence." },
+  { title: "The Host Owns the Conversation", text: "The Host remains the owner of their story, relationships, decisions, and participation. AVAIA strengthens autonomy rather than creating dependence. Providing, paying for, sponsoring, or facilitating a Host's access to AVAIA does not create a right to the Host's private conversation, referral, or record. The Host owns what was said, and the Host decides what leaves the table." },
+  { title: "Necessary Visibility Is Not Full Disclosure", text: "Someone may appropriately need to know that something is affecting a Host without being entitled to know the private details behind it. Need-to-know does not create a right-to-know. Visibility does not require full disclosure. A Host may choose to make just enough known to secure understanding, support, or accommodation, without surrendering the conversation, referral, or story beneath it. This is not something AVAIA initiates or reports on its own — it exists only as a form of Host-directed sharing, exercised when and how the Host chooses." },
   { title: "The Guide Protects the Process", text: "The Guide safeguards the integrity of the conversation — protecting the table, increasing visibility, and maintaining curiosity." },
   { title: "The Witness Preserves Visibility", text: "The Witness ensures that what becomes visible is acknowledged, remembered, and integrated without judgment or control." },
   { title: "Every Voice Deserves to Be Heard; No Voice Deserves Control", text: "Every perspective has value; no single perspective should dominate the conversation or determine the outcome without discernment." },
@@ -153,6 +154,7 @@ export const CONVERSATION_WORKS = {
   ],
   principles: [
     "The Host owns the table.",
+    "Visibility does not require full disclosure.",
     "The Guide protects the table.",
     "The Witness preserves the journey.",
     "Every voice deserves to be heard; no voice deserves control.",
