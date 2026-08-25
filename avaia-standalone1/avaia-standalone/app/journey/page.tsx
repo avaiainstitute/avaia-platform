@@ -108,7 +108,11 @@ export default async function JourneyPage({
     }
 
     const requestedProgram: Program =
-      searchParams?.program === "defying-grief" ? "defying-grief" : "general";
+      searchParams?.program === "defying-grief"
+        ? "defying-grief"
+        : searchParams?.program === "youth"
+        ? "youth"
+        : "general";
     if (convo) {
       await supabase
         .from("conversations")
