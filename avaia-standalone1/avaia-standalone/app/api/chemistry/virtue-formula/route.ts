@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { anthropic } from "@/lib/engine/anthropic";
 import { AVAIA_MODEL } from "@/lib/engine/prompts";
 import { VIRTUES, VIRTUE_FAMILIES } from "@/lib/virtues";
+import { recordAiUsage } from "@/lib/engine/ai-usage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,6 +70,14 @@ Every virtue name you output must exactly match an entry in the list above.`;
       output_config: { format: { type: "json_schema", schema: FORMULA_SCHEMA } },
     };
     const resp: any = await client.messages.create(params);
+    await recordAiUsage({
+      hostId: null,
+      conversationId: null,
+      feature: "chemistry_virtue_formula",
+      stage: null,
+      model: resp.model,
+      usage: resp.usage,
+    });
     const text = (resp.content as Array<{ type: string; text?: string }>).find(
       (b) => b.type === "text"
     )?.text;

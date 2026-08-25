@@ -5,6 +5,7 @@ import { AVAIA_MODEL, unsungHeroesSystemPrompt, type UnsungHeroesPath } from "@/
 import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { VIRTUES, VIRTUE_FAMILIES, type VirtueFamilyKey } from "@/lib/virtues";
+import { recordAiUsage } from "@/lib/engine/ai-usage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -114,6 +115,14 @@ export async function POST(request: Request) {
       output_config: { format: { type: "json_schema", schema: RECOGNITION_SCHEMA } },
     };
     const resp: any = await client.messages.create(params);
+    await recordAiUsage({
+      hostId: user.id,
+      conversationId: conversationId ?? null,
+      feature: "unsung_heroes_recognition",
+      stage: null,
+      model: resp.model,
+      usage: resp.usage,
+    });
     const text = (resp.content as Array<{ type: string; text?: string }>).find(
       (b) => b.type === "text"
     )?.text;

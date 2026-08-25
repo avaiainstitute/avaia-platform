@@ -26,6 +26,7 @@ import {
   INNERCOMPASS_REFERRAL_WRAPPER,
 } from "@/lib/engine/referral-presentation";
 import { getCompletionSummary, type CompletionSummary } from "@/lib/engine/referral-provenance";
+import { recordAiUsage, type AiUsageFeature } from "@/lib/engine/ai-usage";
 
 // The AVAIA Standard Referral generation logic -- shared between
 // /api/referral (the Host's explicit "I'm ready to..." button) and
@@ -261,7 +262,11 @@ function sanitizeSecondaryLossClassifications(value: unknown): unknown[] {
 // fallback-on-failure behavior. Uses formatCatReferralForInnerCompass so
 // the opening line is never generated from raw referral JSON -- see that
 // function's own comment for why.
-async function generateInnerCompassOpening(referralContent: unknown): Promise<string | undefined> {
+async function generateInnerCompassOpening(
+  referralContent: unknown,
+  hostId: string,
+  conversationId: string | null
+): Promise<string | undefined> {
   try {
     const client = anthropic();
     const resp: any = await client.messages.create({
@@ -274,6 +279,14 @@ async function generateInnerCompassOpening(referralContent: unknown): Promise<st
           content: `${INNERCOMPASS_REFERRAL_WRAPPER}\n\n${formatCatReferralForInnerCompass(referralContent as Record<string, unknown>)}`,
         },
       ],
+    });
+    await recordAiUsage({
+      hostId,
+      conversationId,
+      feature: "innercompass_opening",
+      stage: "innercompass",
+      model: resp.model,
+      usage: resp.usage,
     });
     const text = (resp.content as Array<{ type: string; text?: string }>).find(
       (b) => b.type === "text"
@@ -372,6 +385,14 @@ export async function generateReferral(
       output_config: { format: { type: "json_schema", schema: SCHEMA_FOR[stage] } },
     };
     const resp: any = await client.messages.create(params);
+    await recordAiUsage({
+      hostId,
+      conversationId,
+      feature: `${stage}_referral` as AiUsageFeature,
+      stage,
+      model: resp.model,
+      usage: resp.usage,
+    });
     const text = (resp.content as Array<{ type: string; text?: string }>).find(
       (b) => b.type === "text"
     )?.text;
@@ -467,9 +488,9 @@ export async function generateReferral(
     // doesn't silently fall back to 'general' on the next stage.
     const opening =
       nextStage === "cat"
-        ? await generateCatOpening(finalContent)
+        ? await generateCatOpening(finalContent, hostId, conversationId)
         : nextStage === "innercompass"
-          ? await generateInnerCompassOpening(finalContent)
+          ? await generateInnerCompassOpening(finalContent, hostId, conversationId)
           : undefined;
     await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
     return { ok: true, done: false, nextStage, summary };

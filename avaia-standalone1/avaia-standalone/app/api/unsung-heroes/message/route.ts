@@ -5,6 +5,7 @@ import { AVAIA_MODEL, unsungHeroesSystemPrompt, type UnsungHeroesPath } from "@/
 import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { extractFocus } from "@/lib/virtue-focus";
+import { recordAiUsage } from "@/lib/engine/ai-usage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,7 +81,15 @@ export async function POST(request: Request) {
           full += delta;
           controller.enqueue(encoder.encode(delta));
         });
-        await ms.finalMessage();
+        const final = await ms.finalMessage();
+        await recordAiUsage({
+          hostId: user.id,
+          conversationId: conversationId ?? null,
+          feature: "unsung_heroes_conversation",
+          stage: null,
+          model: final.model,
+          usage: final.usage,
+        });
 
         const clean = extractFocus(full).text;
         if (clean.trim()) {

@@ -19,6 +19,7 @@ import { isMember } from "@/lib/membership";
 import { isAuthorizedGuideConversation } from "@/lib/guide";
 import { isFinishIntent } from "@/lib/engine/finish-intent";
 import { generateReferral } from "@/lib/engine/referral-generation";
+import { recordAiUsage, type AiUsageFeature } from "@/lib/engine/ai-usage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -207,7 +208,15 @@ export async function POST(request: Request) {
           full += delta;
           controller.enqueue(encoder.encode(delta));
         });
-        await ms.finalMessage();
+        const final = await ms.finalMessage();
+        await recordAiUsage({
+          hostId: user.id,
+          conversationId,
+          feature: `${stage}_conversation` as AiUsageFeature,
+          stage,
+          model: final.model,
+          usage: final.usage,
+        });
 
         // Persist the reply WITHOUT the focus marker — it's a UI signal, not
         // part of the transcript the Host or Workbook should ever see.

@@ -180,7 +180,8 @@ export async function POST(request: Request) {
     // without this it fell back to the generic static opener. InnerCompass's
     // opening isn't generated on this path yet -- unchanged, out of scope
     // for this fix.
-    const opening = nextStage === "cat" ? await generateCatOpening(referral) : undefined;
+    const opening =
+      nextStage === "cat" ? await generateCatOpening(referral, hostId, activeConvo.id) : undefined;
     await createConversation(admin, hostId, nextStage, opening, activeConvo.program, activeConvo.journey_id);
   }
 
