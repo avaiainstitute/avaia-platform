@@ -19,6 +19,7 @@ import {
 import { getIncomingRoomTitle } from "@/lib/defying-grief";
 import { getIncomingSummary } from "@/lib/engine/referral-provenance";
 import type { Program, Stage } from "@/lib/engine/prompts";
+import { isMember as checkIsMember } from "@/lib/membership";
 
 export const metadata = { title: "Your Journey — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ export default async function JourneyPage({
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("consent_at, membership_status")
+    .select("consent_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -81,7 +82,7 @@ export default async function JourneyPage({
   }
 
   if (!profile?.consent_at) redirect("/welcome");
-  const isMember = profile.membership_status === "member";
+  const isMember = await checkIsMember(supabase, user.id);
 
   // Resolve the conversation to show: the active one, or open IAP on first entry.
   let convo = await getActiveConversation(supabase, user.id);

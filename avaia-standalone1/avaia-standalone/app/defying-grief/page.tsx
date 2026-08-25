@@ -10,6 +10,7 @@ import {
   DEFYING_GRIEF_PROGRAM_NAME,
   DEFYING_GRIEF_STAGE_LABEL,
 } from "@/lib/defying-grief";
+import { isMember as checkIsMember } from "@/lib/membership";
 
 export const metadata = { title: `${DEFYING_GRIEF_PROGRAM_NAME} — AVAIA` };
 export const dynamic = "force-dynamic";
@@ -363,7 +364,7 @@ export default async function DefyingGriefPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("membership_status, consent_at")
+    .select("consent_at")
     .eq("id", user.id)
     .maybeSingle();
   // Checked here, before the Threshold screen ever renders -- not just
@@ -390,7 +391,7 @@ export default async function DefyingGriefPage({
     redirect("/journey");
   }
 
-  const isMember = profile?.membership_status === "member";
+  const isMember = await checkIsMember(supabase, user.id);
 
   const header = (
     <div className="flex items-baseline justify-between">

@@ -641,7 +641,11 @@ create policy "library entries member read"
   on public.library_entries for select
   using (
     status = 'published' and visibility = 'member'
-    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.membership_status = 'member')
+    and exists (
+      select 1 from public.entitlements e
+      where e.host_id = auth.uid() and e.status = 'active'
+        and (e.expires_at is null or e.expires_at > now())
+    )
   );
 
 create policy "library entries guide read"
@@ -1006,3 +1010,41 @@ create index if not exists ai_usage_events_feature_idx on public.ai_usage_events
 alter table public.ai_usage_events enable row level security;
 -- Deliberately no policy: operational telemetry, not Host content. Only the
 -- service-role client (bypasses RLS) ever reads or writes this table.
+
+-- Membership entitlement foundation -- Phase 1 of the Universal Membership
+-- architecture. Separates WHO currently has access (this table) from
+-- profiles.membership_status, which is a frozen, unread legacy column as
+-- of this migration -- kept in place, not dropped, not modified.
+-- isMember() (lib/membership.ts) resolves access from here instead.
+create table if not exists public.entitlements (
+  id          uuid primary key default gen_random_uuid(),
+  host_id     uuid not null references auth.users (id) on delete cascade,
+  status      text not null default 'active' check (status in ('active', 'revoked')),
+  -- null = open-ended (an ongoing subscription, the only kind granted in
+  -- this phase). Set only for a future fixed-term arrangement (e.g.
+  -- Organization access -- not built yet). Checked live at query time,
+  -- so no background expiry job is required for correctness.
+  expires_at  timestamptz,
+  -- Reporting/attribution only -- never used for authorization logic.
+  -- 'individual' is the only source any code path grants in this phase;
+  -- the others are named here so later phases don't need a schema change
+  -- just to record a new funding arrangement.
+  source      text not null check (source in
+                ('individual', 'supported', 'family', 'gift', 'sponsored', 'organization')),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+create index if not exists entitlements_host_active_idx
+  on public.entitlements (host_id) where status = 'active';
+
+alter table public.entitlements enable row level security;
+-- A Host may read their own entitlement rows -- this is the Host's own
+-- access/billing status, not private conversation content, and
+-- isMember() itself queries through the caller's own per-request client,
+-- so it needs this policy to see anything at all. Only the service-role
+-- client (the Stripe webhook, and the one-time backfill in migration
+-- 0019) ever writes to this table.
+create policy "entitlements self read"
+  on public.entitlements for select
+  using (auth.uid() = host_id);
