@@ -8,7 +8,7 @@ import ShareButton from "@/components/ShareButton";
 import SharedWithList from "@/components/SharedWithList";
 import RichText from "@/components/RichText";
 import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/conversation";
-import type { Stage } from "@/lib/engine/prompts";
+import type { Stage, Program } from "@/lib/engine/prompts";
 import type { SharedAccessGrantWithEmail } from "@/lib/sharing";
 import {
   formatVirtueClassifications,
@@ -154,6 +154,10 @@ export default async function WorkbookPage() {
   );
 
   const hasActive = conversations.some((c) => c.status === "active");
+  // Preserves the Host's most recent program for the "Begin a new journey"
+  // link below -- conversations is already ordered oldest-first, so the
+  // last element is the most recent one on record. No new query needed.
+  const lastProgram: Program = conversations[conversations.length - 1]?.program ?? "general";
   const exportedOn = new Date().toISOString().slice(0, 10);
 
   // Group conversations into journeys. Each IAP begins a new journey; the CAT and
@@ -281,7 +285,13 @@ export default async function WorkbookPage() {
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <Link
-          href={hasActive ? "/journey" : "/journey?new=1"}
+          href={
+            hasActive
+              ? "/journey"
+              : lastProgram === "general"
+              ? "/journey?new=1"
+              : `/journey?new=1&program=${lastProgram}`
+          }
           className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
           {hasActive ? "Continue your journey" : "Begin a new journey"}

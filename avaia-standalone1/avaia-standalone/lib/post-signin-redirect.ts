@@ -31,6 +31,7 @@ const ALLOWED = [
   "/library",
   "/workbook",
   "/shared-with-me",
+  "/youth",
 ];
 
 export function setPostSignInRedirect(path: string) {

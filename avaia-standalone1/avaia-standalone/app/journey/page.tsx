@@ -127,23 +127,36 @@ export default async function JourneyPage({
   }
 
   let journeyComplete = false;
+  // Carries the Host's most recent program forward for the "begin again"
+  // links below (header's "Start a new conversation" and the completed-
+  // journey screen's "Begin a new journey") -- so a Youth or Defying Grief
+  // Host restarting doesn't silently fall back to general. When there's an
+  // active conversation, its own program is already known; otherwise this
+  // is resolved from the most recent conversation on record.
+  let programForRestart: Program = convo?.program ?? "general";
   if (!convo) {
-    const { count } = await supabase
+    const { data: mostRecentConvo } = await supabase
       .from("conversations")
-      .select("id", { count: "exact", head: true })
-      .eq("host_id", user.id);
-    if ((count ?? 0) === 0) {
+      .select("id, program")
+      .eq("host_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!mostRecentConvo) {
       const firstJourneyId = await createJourney(supabase, user.id, "general");
       convo = await createConversation(supabase, user.id, "iap", undefined, "general", firstJourneyId);
     } else {
       journeyComplete = true;
+      programForRestart = (mostRecentConvo.program as Program) ?? "general";
     }
   }
+  const restartHref =
+    programForRestart === "general" ? "/journey?new=1" : `/journey?new=1&program=${programForRestart}`;
 
   // showRestart is false only for the membership gate below -- a non-member
   // sitting there has nothing "Start a new conversation" could meaningfully
   // do for them now (see the ?new=1 guard above), so the link isn't offered.
-  const header = renderHeader(true);
+  const header = renderHeader(true, restartHref);
 
   if (journeyComplete || !convo) {
     return (
@@ -165,7 +178,7 @@ export default async function JourneyPage({
             Open your Workbook
           </Link>
           <Link
-            href="/journey?new=1"
+            href={restartHref}
             className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
           >
             Begin a new journey
@@ -316,7 +329,7 @@ export default async function JourneyPage({
 /** The page header, with "Start a new conversation" shown except on the
  *  membership gate -- see the ?new=1 guard above for why that link has
  *  nothing meaningful to do for a non-member sitting there. */
-function renderHeader(showRestart: boolean) {
+function renderHeader(showRestart: boolean, restartHref: string = "/journey?new=1") {
   return (
     <div className="flex items-baseline justify-between">
       <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
@@ -325,7 +338,7 @@ function renderHeader(showRestart: boolean) {
       <div className="flex items-center gap-4">
         {showRestart && (
           <Link
-            href="/journey?new=1"
+            href={restartHref}
             className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
           >
             Start a new conversation
