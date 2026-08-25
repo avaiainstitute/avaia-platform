@@ -90,7 +90,8 @@ function scoreEntry(
 export async function getLibraryEntriesForHost(
   supabase: SupabaseClient,
   hostId: string,
-  journeyId: string | null
+  journeyId: string | null,
+  viewerIsMember: boolean
 ): Promise<RetrievalResult> {
   let validJourneyId: string | null = null;
   let program: Program | null = null;
@@ -171,7 +172,12 @@ export async function getLibraryEntriesForHost(
     .select("*")
     .eq("status", "published")
     .limit(500);
-  const published = (publishedData as LibraryEntry[]) ?? [];
+  // Same visibility filter as lib/library-search.ts -- applied once here,
+  // before scoring, so a member-only entry can never surface in either
+  // personalized or broad results for a non-member.
+  const published = ((publishedData as LibraryEntry[]) ?? []).filter(
+    (e) => viewerIsMember || e.visibility === "public"
+  );
 
   const hasSignal =
     matchedLossCategories.size > 0 || matchedVirtueFamilies.size > 0 || program === "defying-grief";

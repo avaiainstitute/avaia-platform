@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SpeakButton from "@/components/SpeakButton";
+import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
 import type { LibraryEntry } from "@/lib/library";
 import { familyOf } from "@/lib/virtues";
 import { getConceptsForEntry, getQuestionsForEntry } from "@/lib/library-concepts";
+import { isMember } from "@/lib/membership";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +82,37 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
     .maybeSingle();
   const entry = entryData as LibraryEntry | null;
   if (!entry) notFound();
+
+  // A member-only entry is never rendered to a non-member, including via a
+  // direct URL -- this is the same rule search/retrieval/orientation/concept
+  // pages already enforce before an entry ever appears as a link; this is
+  // the backstop for reaching one straight by id. Acknowledges the entry
+  // exists (title/category) rather than a bare 404, but withholds the
+  // actual content. MembershipGate (app/journey/page.tsx) isn't reused here
+  // -- its copy is written specifically for the IAP/CAT/InnerCompass
+  // boundary ("Your Individual Awareness Profile is complete...") and would
+  // be inaccurate shown against a Library entry, so this reuses the same
+  // underlying MembershipCheckoutButton with Library-appropriate copy
+  // instead of that wrapper.
+  if (entry.visibility === "member" && !(await isMember(supabase, user.id))) {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-16">
+        <p className="mb-6">
+          <Link href="/library" className="label hover:text-seal">
+            ← Back to the Library
+          </Link>
+        </p>
+        <p className="label mb-3">{entry.great_idea}</p>
+        <h1 className="font-serif text-4xl text-ink">{entry.title}</h1>
+        <p className="mt-4 text-lg text-muted">
+          This entry is part of AVAIA Membership.
+        </p>
+        <div className="mt-8">
+          <MembershipCheckoutButton returnTo={`/library/${entry.id}`} />
+        </div>
+      </div>
+    );
+  }
 
   // Explore = the Host opened this, nothing more inferred -- recorded once,
   // the first time, alongside reading whatever Save/Not for me/Note state

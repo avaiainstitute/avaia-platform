@@ -240,10 +240,17 @@ export async function getQuestionsForConcept(
 }
 
 /** Library Entries directly connected to a concept through
- *  library_entry_concepts -- the reverse of getConceptsForEntry. */
+ *  library_entry_concepts -- the reverse of getConceptsForEntry. The only
+ *  function in this file that returns LibraryEntry rows (concepts and
+ *  questions have no visibility tiering of their own), so it's the one
+ *  place here that needs the same public/member filter already applied in
+ *  lib/library-search.ts, lib/library-retrieval.ts, and
+ *  lib/library-orientation.ts -- otherwise a concept's neighborhood page
+ *  would leak member-only entries to a non-member. */
 export async function getEntriesForConcept(
   supabase: SupabaseClient,
-  conceptId: string
+  conceptId: string,
+  viewerIsMember: boolean
 ): Promise<Array<{ entry: LibraryEntry; note: string | null }>> {
   const { data: links } = await supabase
     .from("library_entry_concepts")
@@ -258,7 +265,11 @@ export async function getEntriesForConcept(
     .select("*")
     .in("id", rows.map((r) => r.library_entry_id))
     .eq("status", "published");
-  const byId = new Map(((entries as LibraryEntry[]) ?? []).map((e) => [e.id, e]));
+  const byId = new Map(
+    ((entries as LibraryEntry[]) ?? [])
+      .filter((e) => viewerIsMember || e.visibility === "public")
+      .map((e) => [e.id, e])
+  );
 
   return rows
     .filter((r) => byId.has(r.library_entry_id))

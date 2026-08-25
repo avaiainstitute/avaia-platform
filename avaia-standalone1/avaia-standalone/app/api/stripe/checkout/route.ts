@@ -22,8 +22,19 @@ export async function POST(request: Request) {
   // allowlist rather than trusted as-is, since this becomes part of a URL
   // handed to Stripe. Falls back to /journey for anything unrecognized.
   const ALLOWED_RETURN_PATHS = ["/journey", "/defying-grief"];
+  // A Library entry's return path is per-entry (its id), so it can't live
+  // in the fixed array above -- validated by shape instead of membership,
+  // same defensive posture: never trust the client value as-is. Strict
+  // UUID match only, same-origin by construction (used as `${origin}${returnTo}`
+  // below), so this can't become an open redirect.
+  const LIBRARY_ENTRY_RETURN_PATH =
+    /^\/library\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
   const body = await request.json().catch(() => ({}));
-  const returnTo = ALLOWED_RETURN_PATHS.includes(body?.returnTo) ? body.returnTo : "/journey";
+  const requestedReturnTo = typeof body?.returnTo === "string" ? body.returnTo : "";
+  const returnTo =
+    ALLOWED_RETURN_PATHS.includes(requestedReturnTo) || LIBRARY_ENTRY_RETURN_PATH.test(requestedReturnTo)
+      ? requestedReturnTo
+      : "/journey";
 
   try {
     const session = await stripe().checkout.sessions.create({

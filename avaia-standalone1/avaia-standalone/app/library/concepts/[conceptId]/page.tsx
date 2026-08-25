@@ -11,6 +11,7 @@ import {
   type LibraryConceptRelation,
 } from "@/lib/library-concepts";
 import { getPassagesForConcept, type HistoricalPassage } from "@/lib/library-passages";
+import { isMember } from "@/lib/membership";
 
 export const dynamic = "force-dynamic";
 
@@ -115,9 +116,11 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
   const concept = await getConcept(supabase, params.conceptId);
   if (!concept) notFound();
 
+  const viewerIsMember = await isMember(supabase, user.id);
+
   const [questions, entries, related, historicalPassages] = await Promise.all([
     getQuestionsForConcept(supabase, concept.id),
-    getEntriesForConcept(supabase, concept.id),
+    getEntriesForConcept(supabase, concept.id, viewerIsMember),
     getRelatedConcepts(supabase, concept.id),
     getPassagesForConcept(supabase, concept.id),
   ]);

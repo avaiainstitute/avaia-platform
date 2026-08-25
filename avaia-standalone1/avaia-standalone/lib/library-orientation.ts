@@ -39,7 +39,8 @@ export type SecondaryLossOrientation = {
  *  validate with isValidSecondaryLoss first for anything URL-supplied. */
 export async function getOrientationForSecondaryLoss(
   supabase: SupabaseClient,
-  lossName: string
+  lossName: string,
+  viewerIsMember: boolean
 ): Promise<SecondaryLossOrientation | null> {
   const loss = SECONDARY_LOSSES.find(
     (s) => s.loss.toLowerCase() === lossName.trim().toLowerCase()
@@ -61,7 +62,11 @@ export async function getOrientationForSecondaryLoss(
     .select("*")
     .eq("status", "published")
     .limit(500);
-  const published = (entriesData as LibraryEntry[]) ?? [];
+  // Same visibility filter as lib/library-search.ts and
+  // lib/library-retrieval.ts.
+  const published = ((entriesData as LibraryEntry[]) ?? []).filter(
+    (e) => viewerIsMember || e.visibility === "public"
+  );
 
   const entries = published.filter((entry) =>
     entry.secondary_losses.some((l) => l.toLowerCase() === loss.loss.toLowerCase())

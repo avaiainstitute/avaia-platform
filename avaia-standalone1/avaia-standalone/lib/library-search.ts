@@ -22,7 +22,8 @@ import type { LibraryEntry } from "./library";
  *  now would test nothing real. */
 export async function searchLibraryEntries(
   supabase: SupabaseClient,
-  query: string
+  query: string,
+  viewerIsMember: boolean
 ): Promise<LibraryEntry[]> {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -32,7 +33,13 @@ export async function searchLibraryEntries(
     .select("*")
     .eq("status", "published")
     .limit(500);
-  const published = (data as LibraryEntry[]) ?? [];
+  // visibility: 'member' entries are excluded here, not just left to the
+  // caller -- every path that can return a LibraryEntry to a Host filters
+  // this itself, so there's no single call site whose omission would leak
+  // member content.
+  const published = ((data as LibraryEntry[]) ?? []).filter(
+    (e) => viewerIsMember || e.visibility === "public"
+  );
 
   const matches = published.filter((entry) => {
     const haystack = [

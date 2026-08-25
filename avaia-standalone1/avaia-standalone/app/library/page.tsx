@@ -5,6 +5,7 @@ import { getLibraryEntriesForHost, formatReason } from "@/lib/library-retrieval"
 import { searchLibraryEntries } from "@/lib/library-search";
 import { getOrientationForSecondaryLoss } from "@/lib/library-orientation";
 import { SECONDARY_LOSSES, isValidSecondaryLoss } from "@/lib/institution";
+import { isMember } from "@/lib/membership";
 import type { LibraryEntry } from "@/lib/library";
 
 export const metadata = { title: "Library — AVAIA" };
@@ -78,13 +79,15 @@ export default async function LibraryPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?from=/library`);
 
+  const viewerIsMember = await isMember(supabase, user.id);
+
   const query = searchParams?.q?.trim() ?? "";
-  const searchResults = query ? await searchLibraryEntries(supabase, query) : null;
+  const searchResults = query ? await searchLibraryEntries(supabase, query, viewerIsMember) : null;
 
   const lossParam = searchParams?.secondary_loss?.trim() ?? "";
   const orientation =
     !searchResults && lossParam && isValidSecondaryLoss(lossParam)
-      ? await getOrientationForSecondaryLoss(supabase, lossParam)
+      ? await getOrientationForSecondaryLoss(supabase, lossParam, viewerIsMember)
       : null;
 
   // A definitive concept match (Connection, today) is the answer -- its
@@ -100,7 +103,7 @@ export default async function LibraryPage({
   const result =
     searchResults || orientation
       ? null
-      : await getLibraryEntriesForHost(supabase, user.id, searchParams?.journey ?? null);
+      : await getLibraryEntriesForHost(supabase, user.id, searchParams?.journey ?? null, viewerIsMember);
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
