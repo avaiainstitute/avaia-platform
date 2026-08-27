@@ -1148,3 +1148,46 @@ create policy "experience classes admin all"
   on public.experience_classes for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- experience_sections (migration 0021) -- ordered, typed content blocks per
+-- Experience. Guide read requires both the section's own status and its
+-- parent Experience's status to be 'published' -- a section can never leak
+-- ahead of its Experience. Admin access reuses the same admin-all pattern
+-- already used on experiences/classes/experience_classes.
+-- ---------------------------------------------------------------------------
+create table if not exists public.experience_sections (
+  id            uuid primary key default gen_random_uuid(),
+  experience_id uuid not null references public.experiences (id) on delete cascade,
+  section_type  text not null check (section_type in (
+                  'orientation','governing_distinction','anchor','movement','question',
+                  'reference','activity','conversation_window','guide_preparation',
+                  'boundary','take_home','format_variant','success_definition'
+                )),
+  position      integer not null default 0,
+  title         text,
+  body          text not null,
+  status        text not null default 'draft' check (status in ('draft','published','archived')),
+  editor_id     uuid references auth.users (id) on delete set null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index if not exists experience_sections_experience_idx
+  on public.experience_sections (experience_id, section_type, position);
+
+alter table public.experience_sections enable row level security;
+
+create policy "experience sections guide read"
+  on public.experience_sections for select
+  using (
+    status = 'published'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'guide')
+    and exists (select 1 from public.experiences e
+                where e.id = experience_sections.experience_id and e.status = 'published')
+  );
+
+create policy "experience sections admin all"
+  on public.experience_sections for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
