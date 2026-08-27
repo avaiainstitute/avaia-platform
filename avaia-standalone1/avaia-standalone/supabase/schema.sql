@@ -1048,3 +1048,103 @@ alter table public.entitlements enable row level security;
 create policy "entitlements self read"
   on public.entitlements for select
   using (auth.uid() = host_id);
+
+-- ---------------------------------------------------------------------------
+-- AVAIA Experience/Class Toolkit -- minimum data model, first slice
+-- (migration 0020). Purely additive. "Room" is explicitly NOT this --
+-- the Room is the Host's own experiential architecture, not a
+-- multi-Host container; nothing here represents an event, a group, or
+-- multiple Hosts sharing one record. Component references reuse the
+-- existing ToolKey vocabulary (lib/toolkit.ts) rather than a second
+-- taxonomy, validated at the application layer
+-- (lib/experiences.ts), not a rigid database check. No
+-- required_permission / certification-tier field -- that data model
+-- isn't finalized and nothing here reads one; deferred to a future
+-- additive migration once it exists.
+-- ---------------------------------------------------------------------------
+create table if not exists public.experiences (
+  id                   uuid primary key default gen_random_uuid(),
+  title                text not null,
+  summary              text,
+  status               text not null default 'draft'
+                         check (status in ('draft', 'published', 'archived')),
+  components           text[] not null default '{}',
+  conversation_stages  text[] not null default '{}'
+                         check (conversation_stages <@ array['iap', 'cat', 'innercompass']),
+  editor_id            uuid references auth.users (id) on delete set null,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+
+create unique index if not exists experiences_title_idx on public.experiences (lower(title));
+create index if not exists experiences_status_idx on public.experiences (status);
+
+alter table public.experiences enable row level security;
+create policy "experiences guide read"
+  on public.experiences for select
+  using (
+    status = 'published'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'guide')
+  );
+create policy "experiences admin all"
+  on public.experiences for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- classes -- the modular Class Library. `family` is the Class system's
+-- own five-way grouping (Self / Relationships / Life & Change / Virtue &
+-- Contribution / Clarity & Agency) -- a separate taxonomy from the ten
+-- canonical Virtue Families in lib/virtues.ts, not to be confused with it.
+create table if not exists public.classes (
+  id                   uuid primary key default gen_random_uuid(),
+  title                text not null,
+  family               text not null
+                         check (family in ('self', 'relationships', 'life_change',
+                                            'virtue_contribution', 'clarity_agency')),
+  summary              text,
+  status               text not null default 'draft'
+                         check (status in ('draft', 'published', 'archived')),
+  components           text[] not null default '{}',
+  conversation_stages  text[] not null default '{}'
+                         check (conversation_stages <@ array['iap', 'cat', 'innercompass']),
+  editor_id            uuid references auth.users (id) on delete set null,
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+
+create unique index if not exists classes_title_idx on public.classes (lower(title));
+create index if not exists classes_status_idx on public.classes (status);
+create index if not exists classes_family_idx on public.classes (family);
+
+alter table public.classes enable row level security;
+create policy "classes guide read"
+  on public.classes for select
+  using (
+    status = 'published'
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'guide')
+  );
+create policy "classes admin all"
+  on public.classes for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- experience_classes -- which Classes support which full Experiences.
+-- No rows exist by default -- no Experience-to-Class relationships were
+-- specified in the approved source material, so none are invented here.
+create table if not exists public.experience_classes (
+  id             uuid primary key default gen_random_uuid(),
+  experience_id  uuid not null references public.experiences (id) on delete cascade,
+  class_id       uuid not null references public.classes (id) on delete cascade,
+  note           text,
+  created_at     timestamptz not null default now(),
+  unique (experience_id, class_id)
+);
+
+alter table public.experience_classes enable row level security;
+create policy "experience classes guide read"
+  on public.experience_classes for select
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'guide'));
+create policy "experience classes admin all"
+  on public.experience_classes for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));

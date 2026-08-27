@@ -286,6 +286,33 @@ export default async function ToolkitDashboardPage() {
         </div>
       </section>
 
+      {/* Experiences / Classes -- minimum first slice. Read-only browse
+          only; the 11 Experiences and 20 Classes are seeded as
+          status='draft' (migration 0020), so these pages legitimately
+          show "nothing published yet" until publication is explicitly
+          approved. No Experience Builder yet. */}
+      <section className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Experiences &amp; Classes</p>
+        <p className="text-muted">
+          Together in the experience. Individual in the conversation. Full AVAIA Experiences and
+          the modular Class Library — browsing only in this pass.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <Link
+            href="/toolkit/experiences"
+            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            Full AVAIA Experiences
+          </Link>
+          <Link
+            href="/toolkit/classes"
+            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+          >
+            Class Library
+          </Link>
+        </div>
+      </section>
+
       {/* Tool registry */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">The Toolkit</p>
