@@ -52,7 +52,10 @@ export async function POST(request: Request) {
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
       client_reference_id: user.id,
-      customer_email: user.email ?? undefined,
+      // "??" only falls back for null/undefined -- an anonymous Free-IAP
+      // Host's email is "" (empty string), which Stripe rejects outright
+      // as an invalid address, so an empty string needs the same fallback.
+      customer_email: user.email || undefined,
       metadata: { supabase_user_id: user.id },
       subscription_data: { metadata: { supabase_user_id: user.id } },
       success_url: `${origin}${returnTo}?checkout=success`,
