@@ -2,7 +2,19 @@
 
 import { useState } from "react";
 
-export default function MembershipCheckoutButton({ returnTo }: { returnTo?: string } = {}) {
+type MembershipPlan = "monthly" | "annual";
+
+export default function MembershipCheckoutButton({
+  returnTo,
+  plan = "monthly",
+  label = "Continue with AVAIA Membership",
+}: {
+  returnTo?: string;
+  /** Which Stripe price to check out with. Defaults to monthly so existing
+   *  call sites (e.g. the Library membership gate) are unaffected. */
+  plan?: MembershipPlan;
+  label?: string;
+} = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -14,7 +26,7 @@ export default function MembershipCheckoutButton({ returnTo }: { returnTo?: stri
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ returnTo }),
+        body: JSON.stringify({ returnTo, plan }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.url) throw new Error(data.error || "Could not start checkout.");
@@ -33,7 +45,7 @@ export default function MembershipCheckoutButton({ returnTo }: { returnTo?: stri
         disabled={loading}
         className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {loading ? "Redirecting…" : "Continue with AVAIA Membership"}
+        {loading ? "Redirecting…" : label}
       </button>
       {error && <p className="mt-3 text-sm text-[#e0857d]">{error}</p>}
     </div>

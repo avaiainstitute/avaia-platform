@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { stripe, MEMBERSHIP_PRICE_ID } from "@/lib/stripe";
+import { stripe, membershipPriceId, type MembershipPlan } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MEMBERSHIP_PLANS: MembershipPlan[] = ["monthly", "annual"];
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -11,10 +13,6 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-
-  if (!process.env.STRIPE_SECRET_KEY || !MEMBERSHIP_PRICE_ID) {
-    return NextResponse.json({ error: "Stripe is not configured in this deployment." }, { status: 500 });
-  }
 
   const origin = new URL(request.url).origin;
 
@@ -36,10 +34,23 @@ export async function POST(request: Request) {
       ? requestedReturnTo
       : "/journey";
 
+  // Plan selection -- validated against a fixed whitelist rather than
+  // trusted as an arbitrary string, same defensive posture as returnTo.
+  // Defaults to monthly for any call site that doesn't pass one yet.
+  const requestedPlan = typeof body?.plan === "string" ? body.plan : "monthly";
+  const plan: MembershipPlan = MEMBERSHIP_PLANS.includes(requestedPlan as MembershipPlan)
+    ? (requestedPlan as MembershipPlan)
+    : "monthly";
+  const priceId = membershipPriceId(plan);
+
+  if (!process.env.STRIPE_SECRET_KEY || !priceId) {
+    return NextResponse.json({ error: "Stripe is not configured in this deployment." }, { status: 500 });
+  }
+
   try {
     const session = await stripe().checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: MEMBERSHIP_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       client_reference_id: user.id,
       customer_email: user.email ?? undefined,
       metadata: { supabase_user_id: user.id },

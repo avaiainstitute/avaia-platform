@@ -411,6 +411,7 @@ export function MembershipGate({
       <p className="mt-4 text-lg text-muted">
         Your referral is saved and waiting. Join to continue exactly where you left off.
       </p>
+      <p className="mt-4 text-sm text-muted">AVAIA Membership is $19/month or $190/year.</p>
       {checkout === "cancelled" && (
         <p className="mt-4 text-sm text-muted">Checkout was cancelled — no charge was made.</p>
       )}
@@ -419,8 +420,9 @@ export function MembershipGate({
           Payment received — if your membership isn&rsquo;t reflected yet, refresh in a moment.
         </p>
       )}
-      <div className="mt-8">
-        <MembershipCheckoutButton returnTo={returnTo} />
+      <div className="mt-8 flex flex-wrap gap-3">
+        <MembershipCheckoutButton returnTo={returnTo} plan="monthly" label="Monthly — $19/month" />
+        <MembershipCheckoutButton returnTo={returnTo} plan="annual" label="Annual — $190/year" />
       </div>
     </div>
   );
