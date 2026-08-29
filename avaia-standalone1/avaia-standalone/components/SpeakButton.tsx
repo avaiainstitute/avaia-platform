@@ -9,6 +9,17 @@ import { useEffect, useState } from "react";
  */
 // Devices default to a flat, robotic voice even when a far more natural one is
 // installed. Prefer the known-good natural voices, in order.
+//
+// Checked before PREFERRED below -- Web Speech exposes no quality/tier
+// field to query directly, only a voice's `name`, so these substrings are
+// the only available signal that a name like "Samantha" or "Ava" is the
+// higher-fidelity voice a Host has downloaded (iOS's own naming for this,
+// e.g. "Samantha (Enhanced)"/"Ava (Premium)") rather than the lower-quality
+// default installed under the same base name. Most mobile devices ship
+// only the default; this only helps when a better one is actually present
+// on the device -- it can't select a voice that isn't installed.
+const QUALITY_MARKERS = ["enhanced", "premium", "neural"];
+
 const PREFERRED = [
   "google us english",
   "samantha",
@@ -17,7 +28,6 @@ const PREFERRED = [
   "aria",
   "jenny",
   "natural",
-  "neural",
   "siri",
 ];
 
@@ -115,6 +125,10 @@ function pickVoice(): SpeechSynthesisVoice | null {
   if (voices.length === 0) return null;
   const en = voices.filter((v) => v.lang?.toLowerCase().startsWith("en"));
   const pool = en.length > 0 ? en : voices;
+  for (const marker of QUALITY_MARKERS) {
+    const hit = pool.find((v) => v.name.toLowerCase().includes(marker));
+    if (hit) return hit;
+  }
   for (const want of PREFERRED) {
     const hit = pool.find((v) => v.name.toLowerCase().includes(want));
     if (hit) return hit;
