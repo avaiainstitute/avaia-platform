@@ -120,6 +120,8 @@ function stripPresentationalMarkdown(text: string): string {
     .replace(new RegExp(ESCAPED_DASH, "g"), "-");
 }
 
+/** The automatic pick -- unchanged, and still the default whenever the
+ *  Host hasn't chosen a voice of their own (see resolveVoice below). */
 function pickVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis?.getVoices?.() ?? [];
   if (voices.length === 0) return null;
@@ -137,23 +139,95 @@ function pickVoice(): SpeechSynthesisVoice | null {
   return pool.find((v) => !v.name.toLowerCase().includes("compact")) ?? pool[0];
 }
 
+// Host voice choice, remembered per browser/device only -- no account
+// field, no server round-trip, same as every other purely-local UI
+// preference in this app. A device that changes its installed voices
+// (or a different browser/device entirely) simply won't find a match
+// below and falls back to pickVoice() automatically -- see resolveVoice.
+const VOICE_STORAGE_KEY = "avaia:read-aloud-voice";
+
+function getSavedVoiceName(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(VOICE_STORAGE_KEY);
+  } catch {
+    // Private browsing / storage disabled -- selection just won't persist.
+    return null;
+  }
+}
+
+function setSavedVoiceName(name: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (name) window.localStorage.setItem(VOICE_STORAGE_KEY, name);
+    else window.localStorage.removeItem(VOICE_STORAGE_KEY);
+  } catch {
+    /* ignore -- same as above */
+  }
+}
+
+/** The Host's saved choice if it still exists among the device's current
+ *  voices, otherwise the existing automatic pick -- never a broken
+ *  selection, never a silent failure to speak at all. */
+function resolveVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis?.getVoices?.() ?? [];
+  const savedName = getSavedVoiceName();
+  if (savedName) {
+    const match = voices.find((v) => v.name === savedName);
+    if (match) return match;
+  }
+  return pickVoice();
+}
+
+/** English voices (falling back to every voice if the device somehow
+ *  reports none as English), deduplicated by name -- some browsers list
+ *  the same voice twice (e.g. a local and a network copy under the exact
+ *  same name). Used only to populate the selector below; pickVoice's own
+ *  pool-building is untouched. */
+function listSelectableVoices(): SpeechSynthesisVoice[] {
+  const voices = window.speechSynthesis?.getVoices?.() ?? [];
+  const en = voices.filter((v) => v.lang?.toLowerCase().startsWith("en"));
+  const pool = en.length > 0 ? en : voices;
+  const seen = new Set<string>();
+  const out: SpeechSynthesisVoice[] = [];
+  for (const v of pool) {
+    if (seen.has(v.name)) continue;
+    seen.add(v.name);
+    out.push(v);
+  }
+  return out;
+}
+
 export default function SpeakButton({ text }: { text: string }) {
   const [supported, setSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  // Lazy initializer so this reads localStorage once, on the client only
+  // (getSavedVoiceName is itself SSR-safe, but there's no reason to call
+  // it more than once for a value that only changes via the select below).
+  const [selectedName, setSelectedName] = useState<string>(() => getSavedVoiceName() ?? "");
 
   useEffect(() => {
     setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
-    // Voice list often loads asynchronously — touch it so it's ready.
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    // Voice list often loads asynchronously -- populate now, and again
+    // whenever the browser reports the list has changed (this is also
+    // what makes the selector below appear once voices actually arrive,
+    // rather than staying empty on first paint).
+    function refreshVoices() {
+      setVoices(listSelectableVoices());
+    }
     try {
-      window.speechSynthesis?.getVoices();
-      window.speechSynthesis?.addEventListener?.("voiceschanged", pickVoice);
+      refreshVoices();
+      synth.addEventListener?.("voiceschanged", refreshVoices);
     } catch {
       /* ignore */
     }
     return () => {
       try {
-        window.speechSynthesis?.removeEventListener?.("voiceschanged", pickVoice);
-        window.speechSynthesis?.cancel();
+        synth.removeEventListener?.("voiceschanged", refreshVoices);
+        synth.cancel();
       } catch {
         /* ignore */
       }
@@ -180,7 +254,7 @@ export default function SpeakButton({ text }: { text: string }) {
       console.debug("[AVAIA Read Aloud] RAW:", text, "\n[AVAIA Read Aloud] SPOKEN:", spoken);
     }
     const u = new SpeechSynthesisUtterance(spoken);
-    const voice = pickVoice();
+    const voice = resolveVoice();
     if (voice) {
       u.voice = voice;
       u.lang = voice.lang;
@@ -192,40 +266,77 @@ export default function SpeakButton({ text }: { text: string }) {
     synth.speak(u);
   }
 
+  function handleVoiceChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const name = e.target.value;
+    setSelectedName(name);
+    setSavedVoiceName(name || null);
+    // A voice switched mid-playback would otherwise finish in the old
+    // voice -- stopping keeps "switch voices, hear it on the next
+    // playback" honest rather than surprising on the current one.
+    if (speaking) {
+      window.speechSynthesis?.cancel();
+      setSpeaking(false);
+    }
+  }
+
   if (!supported || !text.trim()) return null;
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={speaking ? "Stop reading aloud" : "Read this aloud"}
-      title={speaking ? "Stop" : "Read aloud"}
-      className={`inline-flex items-center gap-1.5 text-xs transition-colors ${
-        speaking ? "text-seal" : "text-muted hover:text-ink"
-      }`}
-    >
-      {speaking ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <rect x="6" y="6" width="12" height="12" rx="1.5" />
-        </svg>
-      ) : (
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={speaking ? "Stop reading aloud" : "Read this aloud"}
+        title={speaking ? "Stop" : "Read aloud"}
+        className={`inline-flex items-center gap-1.5 text-xs transition-colors ${
+          speaking ? "text-seal" : "text-muted hover:text-ink"
+        }`}
+      >
+        {speaking ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <rect x="6" y="6" width="12" height="12" rx="1.5" />
+          </svg>
+        ) : (
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M11 5 6 9H2v6h4l5 4V5z" />
+            <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+            <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+          </svg>
+        )}
+        {speaking ? "Stop" : "Read aloud"}
+      </button>
+      {/* Only appears once the device has actually reported voices --
+       *  see requirement #9's async-population handling above. Native
+       *  <select> rather than a custom menu: zero new UI architecture,
+       *  keyboard/accessible for free, and its own displayed value
+       *  already shows "Auto" or the chosen voice's name with no extra
+       *  label needed. */}
+      {voices.length > 0 && (
+        <select
+          value={selectedName}
+          onChange={handleVoiceChange}
+          aria-label="Read Aloud voice"
+          title="Read Aloud voice"
+          className="rounded border border-rule bg-transparent px-1 py-0.5 text-xs text-muted outline-none hover:text-ink"
         >
-          <path d="M11 5 6 9H2v6h4l5 4V5z" />
-          <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-          <path d="M18.5 5.5a9 9 0 0 1 0 13" />
-        </svg>
+          <option value="">Auto</option>
+          {voices.map((v) => (
+            <option key={v.name} value={v.name}>
+              {v.name}
+            </option>
+          ))}
+        </select>
       )}
-      {speaking ? "Stop" : "Read aloud"}
-    </button>
+    </span>
   );
 }
