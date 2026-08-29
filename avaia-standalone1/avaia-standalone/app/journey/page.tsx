@@ -213,6 +213,15 @@ export default async function JourneyPage({
 
   const rawMessages = await loadMessages(supabase, convo.id);
 
+  // True only for the one page load immediately after a genuine, successful
+  // Stripe redirect for this same Host -- checkout=success only ever arrives
+  // via that redirect (see app/api/stripe/checkout/route.ts's success_url),
+  // and we already know isMember is true here or the gate above would have
+  // returned first. Not persisted anywhere -- once the Host clicks through
+  // to /journey?enter=1 (or navigates anywhere else), this URL param is gone
+  // and the acknowledgment doesn't reappear on any later visit.
+  const justBecameMember = stage !== "iap" && searchParams?.checkout === "success";
+
   // Defying Grief's crossing screens (entering CAT, entering InnerCompass) —
   // shown exactly once, before the Host's first message in the new stage.
   // rawMessages.length === 1 means only the seeded opening line exists yet;
@@ -228,7 +237,7 @@ export default async function JourneyPage({
     return (
       <div className="mx-auto max-w-prose px-5 py-16">
         {header}
-        <DefyingGriefCrossing stage={stage} roomTitle={roomTitle} />
+        <DefyingGriefCrossing stage={stage} roomTitle={roomTitle} justBecameMember={justBecameMember} />
       </div>
     );
   }
@@ -252,6 +261,7 @@ export default async function JourneyPage({
           stage={stage}
           roomTitle={incoming?.roomIdentity ?? null}
           description={incoming?.description ?? null}
+          justBecameMember={justBecameMember}
         />
       </div>
     );
@@ -412,7 +422,8 @@ export function MembershipGate({
       )}
       {checkout === "success" && (
         <p className="mt-4 text-sm text-muted">
-          Payment received — if your membership isn&rsquo;t reflected yet, refresh in a moment.
+          Your payment was received. We&rsquo;re confirming your membership now. This usually takes
+          just a moment.
         </p>
       )}
       <div className="mt-8">

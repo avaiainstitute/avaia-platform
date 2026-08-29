@@ -69,6 +69,30 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/** The AVAIA Member Welcome email — sent once, from the Stripe webhook,
+ *  at the exact moment a new active entitlement is actually granted (never
+ *  on a webhook redelivery for an already-active member — see
+ *  grantEntitlement's own idempotency check in
+ *  app/api/stripe/webhook/route.ts, which is what this reuses to decide
+ *  whether to send). Transactional — triggered by the Host's own payment,
+ *  not a scheduled/marketing send, so no unsubscribe mechanism is needed
+ *  for it. journeyUrl is server-constructed (never Host-typed), so unlike
+ *  contactSubmissionEmailHtml below it doesn't need escaping. */
+export function memberWelcomeEmailHtml({ journeyUrl }: { journeyUrl: string }): string {
+  return `
+    <p>You started with a conversation.</p>
+    <p>Now you have a place to continue it.</p>
+    <p>Your AVAIA Membership gives you access to the complete AVAIA Journey, your continuing
+    Workbook, the member Living Library, Unsung Heroes, and the conversations and tools
+    available to AVAIA members.</p>
+    <p>You don't have to use everything at once.</p>
+    <p>Start with what brought you here.</p>
+    <p>Your Journey is waiting whenever you're ready to continue.</p>
+    <p><a href="${journeyUrl}">Continue My Journey</a></p>
+    <p>Welcome to AVAIA.</p>
+  `.trim();
+}
+
 /** The /contact form's notification email — sent to
  *  CONTACT_NOTIFICATION_EMAIL (if configured) whenever someone submits the
  *  public form. The submission itself is always saved to

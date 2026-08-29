@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail, memberWelcomeEmailHtml } from "@/lib/resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,8 +15,11 @@ const REVOKING_STATUSES = new Set(["canceled", "unpaid", "incomplete_expired"]);
 
 /** Grants this Host an active Individual entitlement. Idempotent -- Stripe
  *  may redeliver the same event, and this must never create a second
- *  active entitlement for a Host who already has one. */
-async function grantEntitlement(hostId: string | null | undefined) {
+ *  active entitlement for a Host who already has one. The `existing` check
+ *  below is also the safe point to decide whether to send the member
+ *  welcome email exactly once: a redelivered event for an already-active
+ *  member returns before ever reaching the email send. */
+async function grantEntitlement(hostId: string | null | undefined, origin: string) {
   if (!hostId) {
     console.error("AVAIA Stripe webhook: no supabase_user_id on the event, skipping.");
     return;
@@ -31,7 +35,36 @@ async function grantEntitlement(hostId: string | null | undefined) {
   const { error } = await admin
     .from("entitlements")
     .insert({ host_id: hostId, status: "active", source: "individual" });
-  if (error) console.error("AVAIA Stripe webhook: failed to grant entitlement:", error);
+  if (error) {
+    console.error("AVAIA Stripe webhook: failed to grant entitlement:", error);
+    return;
+  }
+  await sendMemberWelcomeEmail(admin, hostId, origin);
+}
+
+/** Best-effort only -- never blocks or fails entitlement granting itself; a
+ *  Host who paid gets access whether or not this email succeeds. Only
+ *  called from the branch above where a NEW entitlement row was just
+ *  inserted, so this never re-sends on a webhook redelivery. Silently does
+ *  nothing if the Host has no email on file yet (e.g. still anonymous at
+ *  the moment of payment) -- there's nowhere to send it. */
+async function sendMemberWelcomeEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  hostId: string,
+  origin: string
+) {
+  try {
+    const { data, error } = await admin.auth.admin.getUserById(hostId);
+    const email = data?.user?.email;
+    if (error || !email) return;
+    await sendEmail({
+      to: email,
+      subject: "Welcome to AVAIA",
+      html: memberWelcomeEmailHtml({ journeyUrl: `${origin}/journey` }),
+    });
+  } catch (e) {
+    console.error("AVAIA Stripe webhook: failed to send member welcome email:", e);
+  }
 }
 
 /** Revokes this Host's active entitlement when their paid subscription
@@ -71,7 +104,11 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const hostId = session.client_reference_id ?? session.metadata?.supabase_user_id;
-    await grantEntitlement(hostId);
+    // Stripe calls this endpoint directly, so request.url's origin is
+    // AVAIA's own live domain -- the same value the checkout route itself
+    // would compute -- used only for the welcome email's Journey link.
+    const origin = new URL(request.url).origin;
+    await grantEntitlement(hostId, origin);
   } else if (event.type === "customer.subscription.deleted") {
     // subscription_data.metadata (set at checkout) carries supabase_user_id
     // onto the Subscription object itself -- no stored Stripe-customer

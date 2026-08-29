@@ -27,12 +27,17 @@ export default function JourneyIntro({
   stage,
   roomTitle,
   description,
+  justBecameMember,
 }: {
   stage: Stage;
   /** From the referral generated at the previous stage -- null on IAP
    *  entry (nothing precedes it) or when there's nothing to show yet. */
   roomTitle?: string | null;
   description?: string | null;
+  /** True for the one page load immediately after a genuine Stripe
+   *  checkout success redirect -- see app/journey/page.tsx's own comment
+   *  on justBecameMember for why this never persists beyond that load. */
+  justBecameMember?: boolean;
 }) {
   if (stage === "iap") {
     return (
@@ -83,6 +88,13 @@ export default function JourneyIntro({
   if (stage === "cat") {
     return (
       <div className="mt-8">
+        {justBecameMember && (
+          <p className="mb-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 text-sm text-ink">
+            Welcome to AVAIA Membership.
+            <br />
+            Your Journey is ready to continue.
+          </p>
+        )}
         <p className="label mb-2">2 — Understanding</p>
         <h2 className="font-serif text-3xl text-ink">Conversations Across Time</h2>
         <p className="mt-2 font-serif text-lg italic text-muted">

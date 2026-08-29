@@ -16,13 +16,25 @@ import type { Stage } from "@/lib/engine/prompts";
 export default function DefyingGriefCrossing({
   stage,
   roomTitle,
+  justBecameMember,
 }: {
   stage: Stage;
   roomTitle: string | null;
+  /** True for the one page load immediately after a genuine Stripe
+   *  checkout success redirect -- see app/journey/page.tsx's own comment
+   *  on justBecameMember for why this never persists beyond that load. */
+  justBecameMember?: boolean;
 }) {
   if (stage === "cat") {
     return (
       <div className="mt-8">
+        {justBecameMember && (
+          <p className="mb-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 text-sm text-ink">
+            Welcome to AVAIA Membership.
+            <br />
+            Your Journey is ready to continue.
+          </p>
+        )}
         <p className="label mb-2">Your room has a name</p>
 
         {roomTitle && (
