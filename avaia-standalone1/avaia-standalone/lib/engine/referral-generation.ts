@@ -301,26 +301,47 @@ export type GenerateReferralResult =
   | { ok: true; done: boolean; nextStage?: Stage; summary: CompletionSummary }
   | { ok: false; error: string; status: number };
 
-/** Generates the AVAIA Standard Referral for an active conversation, stores
- *  it, completes the conversation, and opens the next stage (if any) --
- *  everything /api/referral's POST handler used to do inline. The caller is
- *  responsible for auth, loading the conversation, and the membership
- *  check; this assumes the conversation is already known to be the caller's
- *  own and active. */
-export async function generateReferral(
+export type GenerateGuidesRecordResult =
+  | {
+      ok: true;
+      content: Record<string, unknown>;
+      summary: CompletionSummary;
+      /** False when this call lost a race to a concurrent completion
+       *  signal for the same conversation (see the 23505 handling below --
+       *  a typed request and a button click, or a double-submit, can both
+       *  pass the caller's "still active" check before either has written
+       *  back). content/summary reflect whatever the OTHER call already
+       *  stored; the caller must not advance the stage again. */
+      freshlyGenerated: boolean;
+    }
+  | { ok: false; error: string; status: number };
+
+/** Generates and stores the Guide's Record -- the AVAIA Standard Referral
+ *  content -- for an active conversation, and marks that conversation
+ *  complete. This is the Host-facing preservation half of what completing
+ *  a stage does; it deliberately does NOT create the next stage's
+ *  conversation (see advanceToNextStage below) -- a caller that wants the
+ *  record preserved without advancing the Journey (e.g. "Start a New
+ *  Journey" leaving an in-progress conversation behind) calls only this.
+ *  referrals.conversation_id is unique at the database level, so this can
+ *  never produce two records for the same conversation -- a caller that
+ *  later wants to hand this same conversation off just passes the
+ *  already-stored `content` straight into advanceToNextStage, never
+ *  regenerating it. The caller is responsible for auth, loading the
+ *  conversation, and any membership check; this assumes the conversation
+ *  is already known to be the caller's own and active. */
+export async function generateGuidesRecord(
   supabase: SupabaseClient,
   hostId: string,
   conversation: {
     id: string;
     stage: Stage;
     program: Program;
-    journeyId: string | null;
     /** Youth Journey, Phase 1 only -- ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
   }
-): Promise<GenerateReferralResult> {
-  const { id: conversationId, stage, program, journeyId, developmentalBand } = conversation;
-  const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
+): Promise<GenerateGuidesRecordResult> {
+  const { id: conversationId, stage, program, developmentalBand } = conversation;
 
   // Generate the AVAIA Standard Referral as structured data.
   const history = toAnthropicMessages(await loadMessages(supabase, conversationId));
@@ -435,14 +456,15 @@ export async function generateReferral(
 
   const finalContent = content as Record<string, unknown>;
 
-  // Store the referral, complete this stage, and open the next (if any).
-  // conversation_id lets a 'conversation'-scope Workbook share (see
-  // shared_access) identify exactly this referral, not just any referral
-  // that happens to share the same from_stage name.
+  // Store the Guide's Record. conversation_id lets a 'conversation'-scope
+  // Workbook share (see shared_access) identify exactly this record, not
+  // just any referral that happens to share the same from_stage name; it's
+  // also what makes referrals.conversation_id's unique constraint the
+  // natural "has this conversation's record already been generated" check.
   const { error: insertError } = await supabase.from("referrals").insert({
     host_id: hostId,
     from_stage: stage,
-    to_stage: nextStage ?? "continuity",
+    to_stage: STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? "continuity",
     content: finalContent,
     conversation_id: conversationId,
   });
@@ -454,8 +476,8 @@ export async function generateReferral(
     // the caller's "still active" check before either has written back --
     // the second call's insert loses the race. Treat that as success, not
     // failure: the Host's completion intent was already honored by the
-    // other call. Do not create a second referral or a second next-stage
-    // conversation.
+    // other call. freshlyGenerated: false tells the caller not to advance
+    // the stage again.
     if ((insertError as { code?: string }).code === "23505") {
       const { data: existing } = await supabase
         .from("referrals")
@@ -465,9 +487,9 @@ export async function generateReferral(
       const existingContent = (existing?.content as Record<string, unknown>) ?? finalContent;
       return {
         ok: true,
-        done: !nextStage,
-        nextStage: nextStage ?? undefined,
+        content: existingContent,
         summary: getCompletionSummary(stage, existingContent),
+        freshlyGenerated: false,
       };
     }
     return { ok: false, error: "Could not save the referral. Please try again.", status: 502 };
@@ -482,18 +504,71 @@ export async function generateReferral(
   // Guide-role message. The full referral is readable only in Workbook's
   // Guide's Record (formatReferralFields), unaffected by this.
   const summary = getCompletionSummary(stage, finalContent);
+  return { ok: true, content: finalContent, summary, freshlyGenerated: true };
+}
 
-  if (nextStage) {
-    // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
-    // doesn't silently fall back to 'general' on the next stage.
-    const opening =
-      nextStage === "cat"
-        ? await generateCatOpening(finalContent, hostId, conversationId)
-        : nextStage === "innercompass"
-          ? await generateInnerCompassOpening(finalContent, hostId, conversationId)
-          : undefined;
-    await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
-    return { ok: true, done: false, nextStage, summary };
+/** Hands off to the next stage using an already-generated Guide's Record
+ *  (see generateGuidesRecord above) -- generates that stage's referral-
+ *  aware opening and creates its conversation row. This is the only step
+ *  that actually advances the Journey; a caller that wants a Guide's
+ *  Record preserved WITHOUT advancing (e.g. "Start a New Journey" leaving
+ *  an in-progress conversation behind) simply never calls this. `content`
+ *  must be an already-stored referral for `conversation.id` -- this never
+ *  regenerates or duplicates it. Returns `{ nextStage: null }` at
+ *  InnerCompass (no further stage to advance to). */
+export async function advanceToNextStage(
+  supabase: SupabaseClient,
+  hostId: string,
+  conversation: { id: string; stage: Stage; program: Program; journeyId: string | null },
+  content: Record<string, unknown>
+): Promise<{ nextStage: Stage } | { nextStage: null }> {
+  const { id: conversationId, stage, program, journeyId } = conversation;
+  const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
+  if (!nextStage) return { nextStage: null };
+
+  // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
+  // doesn't silently fall back to 'general' on the next stage.
+  const opening =
+    nextStage === "cat"
+      ? await generateCatOpening(content, hostId, conversationId)
+      : nextStage === "innercompass"
+        ? await generateInnerCompassOpening(content, hostId, conversationId)
+        : undefined;
+  await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
+  return { nextStage };
+}
+
+/** Normal stage completion: generates and stores the Guide's Record, then
+ *  immediately advances to the next stage (if any) -- the combined
+ *  behavior /api/referral and /api/conversation's finish-intent detection
+ *  already expect, functionally unchanged from before this function was
+ *  split into generateGuidesRecord + advanceToNextStage above. */
+export async function generateReferral(
+  supabase: SupabaseClient,
+  hostId: string,
+  conversation: {
+    id: string;
+    stage: Stage;
+    program: Program;
+    journeyId: string | null;
+    /** Youth Journey, Phase 1 only -- ignored for every other program. */
+    developmentalBand?: DevelopmentalBand | null;
   }
-  return { ok: true, done: true, summary };
+): Promise<GenerateReferralResult> {
+  const record = await generateGuidesRecord(supabase, hostId, conversation);
+  if (!record.ok) return record;
+
+  if (!record.freshlyGenerated) {
+    // Another concurrent call already advanced the stage for this
+    // conversation (see the 23505 handling above) -- do not create a
+    // second next-stage conversation.
+    const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(conversation.stage) + 1] ?? null;
+    return { ok: true, done: !nextStage, nextStage: nextStage ?? undefined, summary: record.summary };
+  }
+
+  const advanced = await advanceToNextStage(supabase, hostId, conversation, record.content);
+  if (advanced.nextStage) {
+    return { ok: true, done: false, nextStage: advanced.nextStage, summary: record.summary };
+  }
+  return { ok: true, done: true, summary: record.summary };
 }

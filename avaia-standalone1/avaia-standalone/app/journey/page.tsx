@@ -17,8 +17,9 @@ import {
 } from "@/lib/engine/conversation";
 import { getIncomingRoomTitle } from "@/lib/defying-grief";
 import { getIncomingSummary } from "@/lib/engine/referral-provenance";
-import type { Program, Stage } from "@/lib/engine/prompts";
+import type { Program, Stage, DevelopmentalBand } from "@/lib/engine/prompts";
 import { isMember as checkIsMember } from "@/lib/membership";
+import { generateGuidesRecord } from "@/lib/engine/referral-generation";
 
 export const metadata = { title: "Your Journey — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -88,10 +89,12 @@ export default async function JourneyPage({
 
   // "Begin again" — start a brand-new journey with a fresh IAP conversation,
   // no matter what stage (or which leftover active conversation) the Host was
-  // last in. If something's still marked active, archive it as complete first
-  // so it stops being picked up as "the" active conversation, then create a
-  // clean IAP conversation. Redirect to a clean URL so a refresh doesn't spawn
-  // another empty conversation.
+  // last in. If something's still active, its Guide's Record is generated
+  // and stored (see generateGuidesRecord's own comment) before a clean IAP
+  // conversation is created -- deliberately NOT advanceToNextStage, so no
+  // CAT/next-stage conversation is created for the Journey being left.
+  // Redirect to a clean URL so a refresh doesn't spawn another empty
+  // conversation.
   if (searchParams?.new === "1") {
     // One complimentary IAP per Host: once a non-member has already completed
     // an IAP, this must not let them begin another one -- that would silently
@@ -114,10 +117,29 @@ export default async function JourneyPage({
         ? "youth"
         : "general";
     if (convo) {
-      await supabase
-        .from("conversations")
-        .update({ status: "complete", completed_at: new Date().toISOString() })
-        .eq("id", convo.id);
+      let developmentalBand: DevelopmentalBand | null = null;
+      if (convo.program === "youth") {
+        const { data: bandProfile } = await supabase
+          .from("profiles")
+          .select("developmental_band")
+          .eq("id", user.id)
+          .maybeSingle();
+        developmentalBand = (bandProfile?.developmental_band as DevelopmentalBand | null) ?? null;
+      }
+      const record = await generateGuidesRecord(supabase, user.id, {
+        id: convo.id,
+        stage: convo.stage,
+        program: convo.program,
+        developmentalBand,
+      });
+      // Generation failed (e.g. a transient AI error) -- leave the Host's
+      // current conversation untouched rather than silently losing the
+      // record, and don't start a new Journey this click. Same failure
+      // posture as normal completion (/api/referral), just without a
+      // dedicated error screen: this falls through to the ordinary
+      // /journey render, showing their still-active, still-intact
+      // conversation so they can try again.
+      if (!record.ok) redirect("/journey");
     }
     // A fresh IAP entered here always begins a new Journey -- never reuses
     // an existing journey_id, even if one was active a moment ago.
