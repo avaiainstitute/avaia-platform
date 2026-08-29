@@ -40,10 +40,19 @@ export default function ConsentForm() {
       const dest = consumePostSignInRedirect();
       // Defying Grief specifically skips the extra click of landing on that
       // page and having to press "I'm Still Here" a second time -- see the
-      // autostart handling in app/defying-grief/page.tsx. /journey has no
-      // equivalent extra click to skip (its first question already renders
-      // inline, no button needed), so it's left exactly as it was.
-      window.location.replace(dest === "/defying-grief" ? "/defying-grief?autostart=1" : dest);
+      // autostart handling in app/defying-grief/page.tsx. The plain /journey
+      // destination gets the same treatment now that IAP orientation lives
+      // here on the consent screen: ?enter=1 skips the now-redundant
+      // JourneyIntro gate (app/journey/page.tsx) and lands directly in the
+      // conversation. Every other destination (library, workbook, toolkit,
+      // youth, etc.) is untouched.
+      window.location.replace(
+        dest === "/defying-grief"
+          ? "/defying-grief?autostart=1"
+          : dest === "/journey"
+          ? "/journey?enter=1"
+          : dest
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setSubmitting(false);

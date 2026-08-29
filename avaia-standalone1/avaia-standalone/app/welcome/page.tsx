@@ -76,6 +76,49 @@ export default async function WelcomePage() {
             AVAIA is a guided, virtue-centered conversation — not therapy. Please read
             this and confirm you understand.
           </p>
+
+          {/* IAP orientation, moved here from the separate JourneyIntro gate
+           *  that used to appear after consent (components/JourneyIntro.tsx
+           *  still has that same content for its stage === "iap" branch --
+           *  unchanged, and still shown as a fallback if a Host navigates
+           *  back to /journey before ever sending a first message). Consent
+           *  becomes the one remaining entry action; see ConsentForm's
+           *  ?enter=1 redirect for the plain-/journey destination. */}
+          <p className="label mb-2 mt-10">The AVAIA Journey</p>
+          <p className="font-serif text-lg text-ink">
+            Awareness <span className="text-muted">→</span> Understanding{" "}
+            <span className="text-muted">→</span> Agency
+          </p>
+          <p className="mt-4 text-muted">
+            The Journey moves through three connected conversations — three movements within one
+            continuing conversation.
+          </p>
+
+          <p className="label mb-2 mt-10">1 — Awareness</p>
+          <h2 className="font-serif text-3xl text-ink">Individual Awareness Profile</h2>
+          <p className="mt-2 font-serif text-lg italic text-muted">What became visible?</p>
+          <p className="mt-4 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 font-serif text-lg leading-relaxed text-ink">
+            You don&rsquo;t have to figure out how to talk to me. I will figure out how to listen
+            to you.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-ink">
+            The Individual Awareness Profile is where the Journey begins. You can bring what is
+            present without needing to organize it first, explain it perfectly, or know where the
+            conversation is going.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-ink">
+            Its purpose is not to diagnose, evaluate, or tell you what your experience means. It
+            creates room for more of your experience to become visible.
+          </p>
+
+          <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] px-5 py-5 backdrop-blur-sm">
+            <p className="leading-relaxed text-ink">
+              You remain the owner of your story, meaning, decisions, and participation throughout
+              the Journey. AVAIA protects the conditions for awareness, understanding, and
+              discernment. It does not determine the outcome for you.
+            </p>
+          </div>
+
           <ConsentForm />
         </>
       )}

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import SignOutButton from "@/components/SignOutButton";
 import JourneyChat from "@/components/JourneyChat";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import JourneyIntro from "@/components/JourneyIntro";
@@ -338,24 +337,25 @@ export default async function JourneyPage({
 
 /** The page header, with "Start a new conversation" shown except on the
  *  membership gate -- see the ?new=1 guard above for why that link has
- *  nothing meaningful to do for a non-member sitting there. */
+ *  nothing meaningful to do for a non-member sitting there.
+ *
+ *  No Sign Out here -- it's already in the global Nav (components/Nav.tsx)
+ *  on every page including this one, so it was showing twice. Removed only
+ *  from this page-specific header; global Sign Out is untouched. */
 function renderHeader(showRestart: boolean, restartHref: string = "/journey?new=1") {
   return (
     <div className="flex items-baseline justify-between">
       <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
         AVAIA
       </Link>
-      <div className="flex items-center gap-4">
-        {showRestart && (
-          <Link
-            href={restartHref}
-            className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
-          >
-            Start a new conversation
-          </Link>
-        )}
-        <SignOutButton />
-      </div>
+      {showRestart && (
+        <Link
+          href={restartHref}
+          className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
+        >
+          Start a new conversation
+        </Link>
+      )}
     </div>
   );
 }
