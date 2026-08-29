@@ -79,6 +79,10 @@ export default async function MembershipPage({
               title: "The Living Library",
               text: "Full member access to AVAIA Library material connected to understanding, virtue, disruption, restoration, and intentional participation.",
             },
+            {
+              title: "Unsung Heroes",
+              text: "Recognize how virtue becomes visible through everyday actions in yourself and others.",
+            },
           ].map((item) => (
             <li key={item.title}>
               <p className="font-serif text-lg text-ink">{item.title}</p>

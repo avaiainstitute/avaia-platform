@@ -10,6 +10,7 @@ import {
   loadUnsungHeroesMessages,
 } from "@/lib/engine/unsung-heroes";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
+import { isMember as checkIsMember } from "@/lib/membership";
 
 export const metadata = { title: "Unsung Heroes — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -33,6 +34,42 @@ export default async function UnsungHeroesPage({
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
+
+  // Individual/self-directed Unsung Heroes is an AVAIA Membership benefit.
+  // This page is only ever reached for a Host's own conversation
+  // (getActiveUnsungHeroesConversation below is always scoped to this
+  // user's own host_id) -- Guide-facilitated sessions run through the
+  // separate /toolkit/unsung-heroes/[sessionId] route entirely, so no
+  // guide_sessions fallback is needed at this page level, mirroring how
+  // /journey's own membership gate works. The shared message/recognition
+  // API routes are the real enforcement boundary for both entry points.
+  const isMember = await checkIsMember(supabase, user.id);
+  if (!isMember) {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <div className="flex items-baseline justify-between">
+          <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
+            AVAIA
+          </Link>
+          <SignOutButton />
+        </div>
+        <p className="label mb-3 mt-8">Unsung Heroes</p>
+        <h1 className="font-serif text-4xl text-ink">This is an AVAIA Membership benefit</h1>
+        <p className="mt-4 text-lg text-muted">
+          Unsung Heroes is part of AVAIA Membership. Join to recognize how virtue becomes visible
+          through everyday actions in yourself and others.
+        </p>
+        <div className="mt-8">
+          <Link
+            href="/membership"
+            className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+          >
+            Continue to Membership
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const header = (
     <div className="flex items-baseline justify-between">

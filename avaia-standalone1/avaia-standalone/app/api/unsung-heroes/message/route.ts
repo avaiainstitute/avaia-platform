@@ -6,6 +6,8 @@ import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { extractFocus } from "@/lib/virtue-focus";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
+import { isMember } from "@/lib/membership";
+import { isAuthorizedGuideConversation } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +35,24 @@ export async function POST(request: Request) {
   if (convo.status !== "active") {
     return NextResponse.json({ error: "This conversation is complete." }, { status: 409 });
   }
+
+  // Individual/self-directed Unsung Heroes is an AVAIA Membership benefit.
+  // A Guide running this exact conversation through their own authorized
+  // Guide Toolkit session is admitted even without personal membership --
+  // the same narrow exception /api/conversation already applies for the
+  // core Journey engine. Never granted on role='guide' alone --
+  // isAuthorizedGuideConversation requires a real guide_sessions row
+  // tying this exact conversationId to this exact Guide.
+  if (
+    !(await isMember(supabase, user.id)) &&
+    !(await isAuthorizedGuideConversation(supabase, user.id, conversationId))
+  ) {
+    return NextResponse.json(
+      { error: "Unsung Heroes requires AVAIA Membership." },
+      { status: 403 }
+    );
+  }
+
   const path = convo.path as UnsungHeroesPath;
   let system = unsungHeroesSystemPrompt(path);
 

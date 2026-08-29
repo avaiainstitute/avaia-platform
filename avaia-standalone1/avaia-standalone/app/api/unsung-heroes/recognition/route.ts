@@ -6,6 +6,8 @@ import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { VIRTUES, VIRTUE_FAMILIES, type VirtueFamilyKey } from "@/lib/virtues";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
+import { isMember } from "@/lib/membership";
+import { isAuthorizedGuideConversation } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,6 +77,21 @@ export async function POST(request: Request) {
   if (convo.status !== "active") {
     return NextResponse.json({ error: "Already complete." }, { status: 409 });
   }
+
+  // Same authorization rule as /api/unsung-heroes/message -- member, or an
+  // authorized Guide Toolkit session for this exact conversation. Enforced
+  // here too so a non-member can't save a recognition for a conversation
+  // they were never authorized to run in the first place.
+  if (
+    !(await isMember(supabase, user.id)) &&
+    !(await isAuthorizedGuideConversation(supabase, user.id, conversationId))
+  ) {
+    return NextResponse.json(
+      { error: "Unsung Heroes requires AVAIA Membership." },
+      { status: 403 }
+    );
+  }
+
   const path = convo.path as UnsungHeroesPath;
 
   const history = toAnthropicMessages(await loadUnsungHeroesMessages(supabase, conversationId));
