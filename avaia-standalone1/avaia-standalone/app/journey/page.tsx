@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import JourneyChat from "@/components/JourneyChat";
-import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
 import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import JourneyIntro from "@/components/JourneyIntro";
 import BeginFreeJourney from "@/components/BeginFreeJourney";
@@ -403,15 +402,11 @@ export function MembershipGate({
         </div>
       )}
       <h1 className="mt-8 font-serif text-4xl text-ink">Continue your journey</h1>
+      <p className="mt-4 text-lg text-muted">Your Individual Awareness Profile is the beginning.</p>
       <p className="mt-4 text-lg text-muted">
-        Your Individual Awareness Profile is complete — that first step is free, and it&rsquo;s
-        yours to keep. Conversations Across Time and InnerCompass, where understanding turns into
-        discernment, are part of AVAIA Membership.
+        Become an AVAIA member to continue into Conversations Across Time and access your ongoing
+        AVAIA membership.
       </p>
-      <p className="mt-4 text-lg text-muted">
-        Your referral is saved and waiting. Join to continue exactly where you left off.
-      </p>
-      <p className="mt-4 text-sm text-muted">AVAIA Membership is $19/month or $190/year.</p>
       {checkout === "cancelled" && (
         <p className="mt-4 text-sm text-muted">Checkout was cancelled — no charge was made.</p>
       )}
@@ -420,9 +415,13 @@ export function MembershipGate({
           Payment received — if your membership isn&rsquo;t reflected yet, refresh in a moment.
         </p>
       )}
-      <div className="mt-8 flex flex-wrap gap-3">
-        <MembershipCheckoutButton returnTo={returnTo} plan="monthly" label="Monthly — $19/month" />
-        <MembershipCheckoutButton returnTo={returnTo} plan="annual" label="Annual — $190/year" />
+      <div className="mt-8">
+        <Link
+          href={`/membership${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+          className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Continue with Membership
+        </Link>
       </div>
     </div>
   );

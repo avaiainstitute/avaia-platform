@@ -25,6 +25,7 @@ const PUBLIC_LINKS: NavLink[] = [
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
+  { href: "/membership", label: "Membership", prefetch: true },
   { href: "/contact", label: "Contact", prefetch: true },
   { href: "/sign-in", label: "Sign in", prefetch: true },
 ];
@@ -49,6 +50,7 @@ const HOST_SECONDARY_LINKS: NavLink[] = [
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
+  { href: "/membership", label: "Membership", prefetch: true },
   { href: "/contact", label: "Contact", prefetch: true },
 ];
 
