@@ -6,6 +6,7 @@ import DefyingGriefCrossing from "@/components/DefyingGriefCrossing";
 import JourneyIntro from "@/components/JourneyIntro";
 import BeginFreeJourney from "@/components/BeginFreeJourney";
 import SaveProgressForm from "@/components/SaveProgressForm";
+import StartNewJourneyLink from "@/components/StartNewJourneyLink";
 import {
   STAGE_ORDER,
   STAGE_LABEL,
@@ -335,9 +336,13 @@ export default async function JourneyPage({
   );
 }
 
-/** The page header, with "Start a new conversation" shown except on the
+/** The page header, with "Start a New Journey" (StartNewJourneyLink, with
+ *  its own confirmation -- see that component) shown except on the
  *  membership gate -- see the ?new=1 guard above for why that link has
- *  nothing meaningful to do for a non-member sitting there.
+ *  nothing meaningful to do for a non-member sitting there. Renamed from
+ *  "Start a new conversation" -- verified this actually archives whatever
+ *  conversation is active and begins a brand-new Journey, not just another
+ *  conversation inside the current one.
  *
  *  No Sign Out here -- it's already in the global Nav (components/Nav.tsx)
  *  on every page including this one, so it was showing twice. Removed only
@@ -348,14 +353,7 @@ function renderHeader(showRestart: boolean, restartHref: string = "/journey?new=
       <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
         AVAIA
       </Link>
-      {showRestart && (
-        <Link
-          href={restartHref}
-          className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
-        >
-          Start a new conversation
-        </Link>
-      )}
+      {showRestart && <StartNewJourneyLink href={restartHref} />}
     </div>
   );
 }
