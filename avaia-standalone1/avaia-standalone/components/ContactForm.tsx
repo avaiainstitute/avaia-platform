@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const REASONS: { value: string; label: string }[] = [
   { value: "general", label: "General Inquiry" },
@@ -24,6 +24,24 @@ export default function ContactForm() {
   const [sent, setSent] = useState(false);
 
   const canSubmit = name.trim() !== "" && email.trim() !== "" && message.trim() !== "";
+
+  // Pre-select the reason from ?reason=... when it's a genuine, already-
+  // supported value (e.g. /certified-guide's CTA links to
+  // /contact?reason=certification) -- never trusted as-is, only ever set
+  // to one of REASONS' own existing values. Read via a plain client-side
+  // effect (not next/navigation's useSearchParams) specifically so the
+  // server-rendered/first-paint markup always matches today's "general"
+  // default -- no Suspense boundary needed, no hydration mismatch, and no
+  // change required to app/contact/page.tsx. Every visitor arriving at
+  // /contact with no (or an invalid) reason param sees exactly today's
+  // unchanged default.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const param = new URLSearchParams(window.location.search).get("reason");
+    if (param && REASONS.some((r) => r.value === param)) {
+      setReason(param);
+    }
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -118,7 +136,11 @@ export default function ContactForm() {
           rows={6}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Tell us a little about what brought you here."
+          placeholder={
+            reason === "certification"
+              ? "What draws you to Guide work, and how do you imagine using AVAIA?"
+              : "Tell us a little about what brought you here."
+          }
           className={`${FIELD_CLASSES} resize-none`}
         />
       </div>

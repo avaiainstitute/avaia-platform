@@ -33,7 +33,7 @@ export default function CertifiedGuidePage() {
 
       <div className="mt-8">
         <Link
-          href="/contact"
+          href="/contact?reason=certification"
           className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
           I&rsquo;m Interested in Becoming a Guide
@@ -245,7 +245,7 @@ export default function CertifiedGuidePage() {
         </p>
         <div className="mt-8">
           <Link
-            href="/contact"
+            href="/contact?reason=certification"
             className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
             I&rsquo;m Interested in Becoming a Guide
