@@ -290,6 +290,20 @@ export default async function AdminGuideCandidateDetailPage({
     .order("recorded_at", { ascending: false });
   const evidence = evidenceRows ?? [];
 
+  // Evidence Review (Phase C.6): the latest recorded finding per evidence
+  // type, derived in application code from the rows already fetched above
+  // -- no view, no SQL function, no schema change. `evidence` is already
+  // ordered newest-first (see the query above), so the first row seen for
+  // a given evidence_type here IS its latest finding; every row after that
+  // for the same type is earlier history and is skipped for this map only
+  // -- nothing is mutated, deleted, or hidden from the Evidence Records
+  // list below, which still shows every row.
+  const latestByType = new Map<EvidenceType, (typeof evidence)[number]>();
+  for (const e of evidence) {
+    const type = e.evidence_type as EvidenceType;
+    if (!latestByType.has(type)) latestByType.set(type, e);
+  }
+
   // Identity resolution only -- account email, admitting admin's email,
   // each history entry's recorder's email, and each evidence row's
   // recorder's email. Never used to read or write guide_candidates/
@@ -440,6 +454,39 @@ export default async function AdminGuideCandidateDetailPage({
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Certification Evidence</p>
 
+        {/* Evidence Review -- current/latest finding per required evidence
+            type, always all 12, review only. Deliberately no readiness
+            calculation, no percentage, no pass/fail language -- just the
+            most recent human finding, or that none exists yet. */}
+        <div className="mb-8">
+          <p className="label mb-3 text-muted">Evidence Review</p>
+          <div className="rounded-lg border border-rule bg-white/[0.04] px-4">
+            {EVIDENCE_TYPES.map((t) => {
+              const latest = latestByType.get(t);
+              return (
+                <div
+                  key={t}
+                  className="flex flex-wrap items-center justify-between gap-2 border-b border-rule/60 py-3 last:border-b-0"
+                >
+                  <span className="text-ink">{EVIDENCE_TYPE_LABEL[t]}</span>
+                  {latest ? (
+                    <span className="text-right text-sm">
+                      <span className="text-seal">{RATING_LABEL[latest.rating as EvidenceRating]}</span>
+                      <span className="ml-2 text-xs text-muted">
+                        {new Date(latest.recorded_at).toLocaleDateString()}
+                        {latest.recorded_by ? ` · ${emailById.get(latest.recorded_by) ?? "Unknown"}` : ""}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted">No Evidence Yet</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <p className="label mb-3 text-muted">Evidence Records</p>
         {evidence.length === 0 ? (
           <p className="text-muted">No evidence recorded yet.</p>
         ) : (
