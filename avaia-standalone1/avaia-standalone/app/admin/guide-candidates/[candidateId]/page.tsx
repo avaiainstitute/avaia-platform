@@ -122,6 +122,25 @@ const DECISION_ERROR_MESSAGE: Record<string, string> = {
   insert_failed: "Could not record this certification decision. Please try again.",
 };
 
+const STANDINGS = ["active", "paused", "revoked"] as const;
+type Standing = (typeof STANDINGS)[number];
+
+const STANDING_LABEL: Record<Standing, string> = {
+  active: "Active",
+  paused: "Paused",
+  revoked: "Revoked",
+};
+
+const CERTIFICATION_ERROR_MESSAGE: Record<string, string> = {
+  missing_candidate: "Candidate not found.",
+  closed: "This candidacy is closed. Certification cannot be granted through this form.",
+  no_certified_decision: "The latest certification decision must be Certified before granting.",
+  missing_confirmation: "You must confirm this institutional grant to proceed.",
+  invalid_certification_date: "A valid certification date is required.",
+  already_certified: "Certification has already been granted.",
+  insert_failed: "Could not grant certification. Please try again.",
+};
+
 /** Formats a Date as a datetime-local input value ("YYYY-MM-DDTHH:mm") for
  *  the Decision Date field's default -- local to wherever this renders,
  *  which is acceptable for a default the admin can freely change; nothing
@@ -403,10 +422,125 @@ async function recordCertificationDecision(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?decisionRecorded=1`);
 }
 
+/** Grants the Certified AVAIA Guide credential (Phase C.9) -- the
+ *  institutional act of creating exactly one guide_certifications row.
+ *  This does NOT independently judge the candidate: it enforces only the
+ *  institutional sequence approved for this phase -- a human 'certified'
+ *  decision must already exist in guide_certification_decisions (the
+ *  authority for this transition), and this action never reads
+ *  guide_candidate_evidence, never interprets ratings, and never
+ *  calculates readiness. Refuses a second grant for the same candidacy or
+ *  the same host account (checked independently, not merely relied on as
+ *  a UI state) so no duplicate credential can be created. Certification is
+ *  deliberately NOT platform authorization: nothing here touches
+ *  profiles.role, entitlements, Toolkit access, Guided Journey access,
+ *  shared_access, Youth permissions, or any other capability -- and
+ *  nothing here changes guide_candidates.status, which has no 'certified'
+ *  value by design (certification lives only in guide_certifications).
+ *  Uses the signed-in admin's own RLS-bound client for every read and
+ *  write; createAdminClient() is not involved in this action. */
+async function grantGuideCertification(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/guide-candidates");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const candidateId = String(formData.get("candidateId") ?? "");
+  const certificationDateRaw = String(formData.get("certificationDate") ?? "");
+  const certificationNote = String(formData.get("certificationNote") ?? "").trim();
+  const confirmed = formData.get("confirmGrant") === "on";
+
+  if (!candidateId) redirect("/admin/guide-candidates");
+
+  const { data: candidate } = await supabase
+    .from("guide_candidates")
+    .select("id, host_id, status")
+    .eq("id", candidateId)
+    .maybeSingle();
+  if (!candidate) {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=missing_candidate`);
+  }
+  if (CLOSED_STATUSES.includes(candidate.status as CandidateStatus)) {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=closed`);
+  }
+
+  const { data: latestDecision } = await supabase
+    .from("guide_certification_decisions")
+    .select("decision")
+    .eq("candidate_id", candidateId)
+    .order("decision_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!latestDecision || latestDecision.decision !== "certified") {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=no_certified_decision`);
+  }
+
+  if (!confirmed) {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=missing_confirmation`);
+  }
+
+  const certificationDate = certificationDateRaw ? new Date(certificationDateRaw) : null;
+  if (!certificationDate || Number.isNaN(certificationDate.getTime())) {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=invalid_certification_date`);
+  }
+
+  // Duplicate-credential guard -- checked independently here, not merely
+  // relied on as a UI state, exactly as this phase requires. Two separate
+  // lookups (by candidate_id, then by host_id) rather than a single .or()
+  // filter, so no raw filter string is ever built from form input.
+  const { data: existingByCandidate } = await supabase
+    .from("guide_certifications")
+    .select("id")
+    .eq("candidate_id", candidateId)
+    .maybeSingle();
+  const { data: existingByHost } = existingByCandidate
+    ? { data: null }
+    : await supabase.from("guide_certifications").select("id").eq("host_id", candidate.host_id).maybeSingle();
+  if (existingByCandidate || existingByHost) {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=already_certified`);
+  }
+
+  const certifiedAtIso = certificationDate.toISOString();
+  const { error } = await supabase.from("guide_certifications").insert({
+    candidate_id: candidateId,
+    host_id: candidate.host_id,
+    certified_at: certifiedAtIso,
+    certified_by: user.id,
+    standing: "active",
+    standing_changed_at: certifiedAtIso,
+    standing_changed_by: user.id,
+    standing_notes: certificationNote || null,
+  });
+  if (error) {
+    redirect(`/admin/guide-candidates/${candidateId}?certificationError=insert_failed`);
+  }
+
+  const body = `Certified AVAIA Guide credential granted.${certificationNote ? `\n\n${certificationNote}` : ""}`;
+  await supabase.from("guide_candidate_history").insert({
+    candidate_id: candidateId,
+    entry_type: "certification_event",
+    body,
+    recorded_by: user.id,
+  });
+
+  redirect(`/admin/guide-candidates/${candidateId}?certificationGranted=1`);
+}
+
 /** Candidacy record + lifecycle status control (Phase C.3) + certification
  *  evidence recording (Phase C.5) + certification decision recording
- *  (Phase C.8). Still no Grant Certification here -- guide_certifications
- *  remains a later, separately-approved phase. */
+ *  (Phase C.8) + certification granting (Phase C.9). Certification remains
+ *  a credential fact only -- no platform authorization is ever granted
+ *  here. */
 export default async function AdminGuideCandidateDetailPage({
   params,
   searchParams,
@@ -420,6 +554,8 @@ export default async function AdminGuideCandidateDetailPage({
     evidenceError?: string;
     decisionRecorded?: string;
     decisionError?: string;
+    certificationGranted?: string;
+    certificationError?: string;
   };
 }) {
   const supabase = createClient();
@@ -479,14 +615,42 @@ export default async function AdminGuideCandidateDetailPage({
     .eq("candidate_id", candidate.id)
     .order("decision_date", { ascending: false });
   const decisions = decisionRows ?? [];
+  // decisions is already ordered newest-first by decision_date -- its first
+  // element IS the latest decision, reused below for the Grant Certification
+  // eligibility check so no second "latest decision" query is needed.
+  const latestDecision = decisions[0] ?? null;
+
+  // Certification (Phase C.9) -- checked by candidate_id first (the direct,
+  // natural scope of this page), then by host_id, so this display can never
+  // disagree with grantGuideCertification's own duplicate-credential guard
+  // (a person shouldn't appear "Not Granted" here while a grant attempt
+  // would immediately be refused as a duplicate).
+  const { data: certificationByCandidate } = await supabase
+    .from("guide_certifications")
+    .select("id, certified_at, certified_by, standing, standing_changed_at, standing_changed_by, standing_notes")
+    .eq("candidate_id", candidate.id)
+    .maybeSingle();
+  const { data: certificationByHost } = certificationByCandidate
+    ? { data: null }
+    : await supabase
+        .from("guide_certifications")
+        .select(
+          "id, certified_at, certified_by, standing, standing_changed_at, standing_changed_by, standing_notes"
+        )
+        .eq("host_id", candidate.host_id)
+        .maybeSingle();
+  const certification = certificationByCandidate ?? certificationByHost ?? null;
+  const canGrantCertification =
+    !certification && !isClosed && latestDecision?.decision === "certified";
 
   // Identity resolution only -- account email, admitting admin's email,
   // each history entry's recorder's email, each evidence row's recorder's
-  // email, and each decision's evaluator/authorizer email. Never used to
+  // email, each decision's evaluator/authorizer email, and the
+  // certification's certified-by/standing-changed-by email. Never used to
   // read or write guide_candidates/guide_candidate_history/
-  // guide_candidate_evidence/guide_certification_decisions themselves
-  // (those already came from the signed-in admin's own RLS-bound client
-  // above).
+  // guide_candidate_evidence/guide_certification_decisions/
+  // guide_certifications themselves (those already came from the signed-in
+  // admin's own RLS-bound client above).
   const admin = createAdminClient();
   const idsToResolve = new Set<string>([candidate.host_id]);
   if (candidate.admitted_by) idsToResolve.add(candidate.admitted_by);
@@ -495,6 +659,10 @@ export default async function AdminGuideCandidateDetailPage({
   for (const d of decisions) {
     if (d.evaluated_by) idsToResolve.add(d.evaluated_by);
     if (d.authorized_by) idsToResolve.add(d.authorized_by);
+  }
+  if (certification) {
+    if (certification.certified_by) idsToResolve.add(certification.certified_by);
+    if (certification.standing_changed_by) idsToResolve.add(certification.standing_changed_by);
   }
   const emailById = new Map<string, string>();
   await Promise.all(
@@ -549,6 +717,18 @@ export default async function AdminGuideCandidateDetailPage({
       {searchParams?.decisionError && (
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
           {DECISION_ERROR_MESSAGE[searchParams.decisionError] ?? "Something went wrong."}
+        </p>
+      )}
+
+      {searchParams?.certificationGranted === "1" && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Certification granted.
+        </p>
+      )}
+
+      {searchParams?.certificationError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+          {CERTIFICATION_ERROR_MESSAGE[searchParams.certificationError] ?? "Something went wrong."}
         </p>
       )}
 
@@ -1056,6 +1236,135 @@ export default async function AdminGuideCandidateDetailPage({
               Record Certification Decision
             </button>
           </form>
+        )}
+      </section>
+
+      <section className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Certification</p>
+
+        {certification ? (
+          <div className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
+            <p className="text-ink">Certified AVAIA Guide</p>
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <dt className="label text-muted">Certification Date</dt>
+                <dd className="mt-1 text-ink">{new Date(certification.certified_at).toLocaleString()}</dd>
+              </div>
+              <div>
+                <dt className="label text-muted">Certified By</dt>
+                <dd className="mt-1 text-ink">
+                  {certification.certified_by ? emailById.get(certification.certified_by) ?? "Unknown" : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="label text-muted">Standing</dt>
+                <dd className="mt-1 text-ink">{STANDING_LABEL[certification.standing as Standing] ?? certification.standing}</dd>
+              </div>
+              <div>
+                <dt className="label text-muted">Standing Last Changed</dt>
+                <dd className="mt-1 text-ink">
+                  {new Date(certification.standing_changed_at).toLocaleString()}
+                  {certification.standing_changed_by
+                    ? ` · ${emailById.get(certification.standing_changed_by) ?? "Unknown"}`
+                    : ""}
+                </dd>
+              </div>
+            </dl>
+            {certification.standing_notes && (
+              <div className="mt-3 border-t border-rule pt-3">
+                <p className="label text-muted">Standing Notes</p>
+                <p className="mt-1 whitespace-pre-wrap text-ink">{certification.standing_notes}</p>
+              </div>
+            )}
+          </div>
+        ) : canGrantCertification && latestDecision ? (
+          <>
+            <p className="mb-3 text-muted">Certification: Not Granted</p>
+            <div className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
+              <p className="label mb-2 text-muted">Latest Certification Decision</p>
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <dt className="label text-muted">Decision Date</dt>
+                  <dd className="mt-1 text-ink">{new Date(latestDecision.decision_date).toLocaleString()}</dd>
+                </div>
+                <div>
+                  <dt className="label text-muted">Decision</dt>
+                  <dd className="mt-1 text-ink">{DECISION_LABEL[latestDecision.decision as Decision]}</dd>
+                </div>
+                <div>
+                  <dt className="label text-muted">Evaluator</dt>
+                  <dd className="mt-1 text-ink">
+                    {latestDecision.evaluated_by ? emailById.get(latestDecision.evaluated_by) ?? "Unknown" : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="label text-muted">AVAIA Authorization</dt>
+                  <dd className="mt-1 text-ink">
+                    {latestDecision.authorized_by ? emailById.get(latestDecision.authorized_by) ?? "Unknown" : "—"}
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-3 border-t border-rule pt-3">
+                <p className="label text-muted">Decision Rationale</p>
+                <p className="mt-1 whitespace-pre-wrap text-ink">{latestDecision.decision_rationale}</p>
+              </div>
+            </div>
+
+            <form
+              action={grantGuideCertification}
+              className="mt-6 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm"
+            >
+              <input type="hidden" name="candidateId" value={candidate.id} />
+              <p className="label mb-3 text-muted">Grant Certified AVAIA Guide Credential</p>
+
+              <div>
+                <label className="label mb-2 block" htmlFor="certificationDate">
+                  Certification Date
+                </label>
+                <input
+                  id="certificationDate"
+                  name="certificationDate"
+                  type="datetime-local"
+                  required
+                  defaultValue={toDatetimeLocalValue(new Date())}
+                  className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="label mb-2 block" htmlFor="certificationNote">
+                  Certification Note (optional)
+                </label>
+                <p className="mb-2 text-xs text-muted">
+                  Describe the institutional grant only. Do not include private Host conversation
+                  content.
+                </p>
+                <textarea
+                  id="certificationNote"
+                  name="certificationNote"
+                  rows={3}
+                  className="w-full resize-none rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+                />
+              </div>
+
+              <label className="mt-5 flex cursor-pointer items-start gap-3 border-t border-rule pt-5">
+                <input type="checkbox" name="confirmGrant" className="mt-1" required />
+                <span className="text-ink">
+                  I confirm that AVAIA is granting the Certified AVAIA Guide credential to this
+                  candidate.
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                className="mt-4 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+              >
+                Grant Certification
+              </button>
+            </form>
+          </>
+        ) : (
+          <p className="text-muted">Certification: Not Granted</p>
         )}
       </section>
 
