@@ -15,16 +15,115 @@ const HISTORY_ENTRY_LABEL: Record<string, string> = {
   document_received: "Document Received",
 };
 
-/** Read-only candidacy record (Phase C.2). Deliberately no lifecycle/status
- *  controls and no certification-granting controls here -- those are later,
- *  separately-approved phases; this page only shows what admitCandidate()
- *  in the parent page already recorded. */
+const VALID_STATUSES = [
+  "admitted",
+  "in_training",
+  "development_required",
+  "paused",
+  "hold",
+  "withdrawn",
+  "not_certified",
+] as const;
+type CandidateStatus = (typeof VALID_STATUSES)[number];
+
+// withdrawn/not_certified close a candidacy. Terminal in the ordinary
+// lifecycle control below by design -- reopening a closed candidacy is
+// deliberately not built in this phase (Phase C.3 scope).
+const CLOSED_STATUSES: CandidateStatus[] = ["withdrawn", "not_certified"];
+
+const STATUS_ERROR_MESSAGE: Record<string, string> = {
+  invalid_status: "That is not a recognized candidate status.",
+  closed: "This candidacy is closed and cannot be changed through this control.",
+  no_change: "No change was made -- that is already the current status.",
+  conflict: "The candidate's status changed since this page loaded. Please review and try again.",
+  not_found: "Candidate not found.",
+  update_failed: "Could not update this candidate's status. Please try again.",
+};
+
+/** Changes a candidate's lifecycle status and records exactly one
+ *  guide_candidate_history row describing the transition -- guide_candidates
+ *  holds current state, guide_candidate_history holds what happened over
+ *  time, per the approved Phase C.3 architecture. Re-reads the current
+ *  status fresh (never trusts a hidden form field for it), refuses any
+ *  change once the candidacy is already closed, refuses a submission that
+ *  doesn't actually change the status (no fake history rows), and guards
+ *  the update itself with .eq("status", currentStatus) so a concurrent
+ *  change from another admin can't be silently overwritten -- if the
+ *  guarded update affects no rows, that's reported as a conflict instead of
+ *  applied blindly. Uses the signed-in admin's own RLS-bound client
+ *  throughout; createAdminClient() is never involved in this action. */
+async function updateCandidateStatus(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/guide-candidates");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const candidateId = String(formData.get("candidateId") ?? "");
+  const newStatus = String(formData.get("status") ?? "") as CandidateStatus;
+  const note = String(formData.get("note") ?? "").trim();
+  if (!candidateId) redirect("/admin/guide-candidates");
+  if (!VALID_STATUSES.includes(newStatus)) {
+    redirect(`/admin/guide-candidates/${candidateId}?statusError=invalid_status`);
+  }
+
+  const { data: current } = await supabase
+    .from("guide_candidates")
+    .select("status")
+    .eq("id", candidateId)
+    .maybeSingle();
+  if (!current) {
+    redirect(`/admin/guide-candidates/${candidateId}?statusError=not_found`);
+  }
+
+  const currentStatus = current.status as CandidateStatus;
+  if (CLOSED_STATUSES.includes(currentStatus)) {
+    redirect(`/admin/guide-candidates/${candidateId}?statusError=closed`);
+  }
+  if (newStatus === currentStatus) {
+    redirect(`/admin/guide-candidates/${candidateId}?statusError=no_change`);
+  }
+
+  const { data: updated, error } = await supabase
+    .from("guide_candidates")
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq("id", candidateId)
+    .eq("status", currentStatus)
+    .select("id")
+    .maybeSingle();
+  if (error || !updated) {
+    redirect(`/admin/guide-candidates/${candidateId}?statusError=conflict`);
+  }
+
+  const body = `Status changed from ${currentStatus.replace(/_/g, " ")} to ${newStatus.replace(/_/g, " ")}.${note ? `\n\n${note}` : ""}`;
+  await supabase.from("guide_candidate_history").insert({
+    candidate_id: candidateId,
+    entry_type: "status_change",
+    body,
+    recorded_by: user.id,
+  });
+
+  redirect(`/admin/guide-candidates/${candidateId}?statusUpdated=1`);
+}
+
+/** Candidacy record + lifecycle status control (Phase C.3). Still no
+ *  certification-granting controls here -- guide_certifications is a later,
+ *  separately-approved phase. */
 export default async function AdminGuideCandidateDetailPage({
   params,
   searchParams,
 }: {
   params: { candidateId: string };
-  searchParams: { admitted?: string };
+  searchParams: { admitted?: string; statusUpdated?: string; statusError?: string };
 }) {
   const supabase = createClient();
   const {
@@ -52,6 +151,7 @@ export default async function AdminGuideCandidateDetailPage({
     .eq("candidate_id", candidate.id)
     .order("recorded_at", { ascending: true });
   const history = historyRows ?? [];
+  const isClosed = CLOSED_STATUSES.includes(candidate.status as CandidateStatus);
 
   // Identity resolution only -- account email, admitting admin's email, and
   // each history entry's recorder's email. Never used to read or write
@@ -78,6 +178,18 @@ export default async function AdminGuideCandidateDetailPage({
       {searchParams?.admitted === "1" && (
         <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
           Candidate admitted.
+        </p>
+      )}
+
+      {searchParams?.statusUpdated === "1" && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Status updated.
+        </p>
+      )}
+
+      {searchParams?.statusError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+          {STATUS_ERROR_MESSAGE[searchParams.statusError] ?? "Something went wrong."}
         </p>
       )}
 
@@ -116,6 +228,65 @@ export default async function AdminGuideCandidateDetailPage({
       </div>
 
       <section className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Manage Candidacy Status</p>
+        {isClosed ? (
+          <p className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3 text-muted">
+            This candidacy is closed ({candidate.status.replace(/_/g, " ")}). Reopening is not
+            available in this phase.
+          </p>
+        ) : (
+          <form
+            action={updateCandidateStatus}
+            className="rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm"
+          >
+            <input type="hidden" name="candidateId" value={candidate.id} />
+            <p className="text-ink">
+              Current status: <span className="text-seal">{candidate.status.replace(/_/g, " ")}</span>
+            </p>
+            <div className="mt-4">
+              <label className="label mb-2 block" htmlFor="status">
+                Change status to
+              </label>
+              <select
+                id="status"
+                name="status"
+                required
+                defaultValue=""
+                className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+              >
+                <option value="" disabled className="bg-[#05060b] text-ink">
+                  Select a status
+                </option>
+                {VALID_STATUSES.filter((s) => s !== candidate.status).map((s) => (
+                  <option key={s} value={s} className="bg-[#05060b] text-ink">
+                    {s.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-4">
+              <label className="label mb-2 block" htmlFor="note">
+                Institutional note (optional)
+              </label>
+              <textarea
+                id="note"
+                name="note"
+                rows={3}
+                className="w-full resize-none rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+                placeholder="Why this change is being made, if worth recording."
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-4 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Update Status
+            </button>
+          </form>
+        )}
+      </section>
+
+      <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Institutional History</p>
         {history.length === 0 ? (
           <p className="text-muted">No history recorded yet.</p>
@@ -132,7 +303,7 @@ export default async function AdminGuideCandidateDetailPage({
                     {h.recorded_by ? ` · ${emailById.get(h.recorded_by) ?? "Unknown"}` : ""}
                   </span>
                 </div>
-                <p className="mt-2 text-ink">{h.body}</p>
+                <p className="mt-2 whitespace-pre-wrap text-ink">{h.body}</p>
               </div>
             ))}
           </div>
