@@ -65,6 +65,75 @@ export default function AboutContent() {
         <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
       </div>
 
+      {/* The Name -- pronunciation + etymology discipline. AVAIA is
+          genuinely not an acronym; some name sources associate "Avaia"
+          with Greek origin / "one of a kind" / the word avos, but that
+          etymology isn't established well enough to state as linguistic
+          fact, so this uses only AVAIA's own truthful explanation of why
+          the name was chosen -- not a claim about where it historically
+          comes from. */}
+      <section id="name" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
+        <p className="label mb-2">The Name</p>
+        <h2 className="font-serif text-3xl text-ink">AVAIA</h2>
+        <p className="mt-1 text-muted">pronounced uh-VAY-uh</p>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          AVAIA is not an acronym. The name was chosen for its association with being one of a
+          kind — a fitting expression of a belief at the heart of the Institute: no two people,
+          stories, relationships, losses, or conversations are exactly alike.
+        </p>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          That is why AVAIA does not begin by deciding where your conversation should go. It
+          begins by listening to the person having it.
+        </p>
+      </section>
+
+      {/* How This Works -- who/what a visitor is actually talking to, why
+          that differs from a general-purpose AI chatbot, and who created
+          AVAIA. Deliberately does not position this as "AVAIA has better
+          AI" or disparage general-purpose AI -- the distinction drawn here
+          is architectural (what AVAIA is designed to do), not a claim about
+          the underlying technology. Founder identification and "what
+          stands behind the method" use only what's verifiably true today
+          (Dorian Johnson as founder; the Constitution, Journey
+          architecture, and certification standards that already exist) --
+          no credentials, efficacy claims, or research/clinical validation
+          are stated, because none exist in AVAIA's own governing
+          materials. */}
+      <section id="how-it-works" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
+        <p className="label mb-2">How This Works</p>
+        <h2 className="font-serif text-3xl text-ink">What You&rsquo;re Actually Talking To</h2>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          An AVAIA conversation is AI-supported. When you begin a Journey on your own, you are
+          not speaking with a staff member, a clinician, or a Certified Guide — a Guide is only
+          ever present when one has been specifically arranged, never automatically. AVAIA is
+          not therapy, counseling, or crisis care.
+        </p>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          General-purpose AI is designed to answer many kinds of questions. AVAIA is designed to
+          steward one particular kind of conversation. The underlying technology alone is not
+          AVAIA — AVAIA is the conversational architecture, the governing standards, and the
+          deliberate response discipline built around it: it does not rush toward solving,
+          diagnosing, or prescribing what something means. It follows what you&rsquo;re saying
+          rather than funneling it toward a conclusion, allows correction and uncertainty,
+          respects your capacity, and preserves continuity from one conversation to the next.
+        </p>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          Much of that design is about what the technology is taught not to take from the
+          conversation: your meaning, your authorship, and your ownership of what comes next.
+        </p>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          AVAIA was founded by Dorian Johnson, and is governed by a written{" "}
+          <Link href="/institution" className="text-seal hover:underline">
+            Constitution
+          </Link>
+          , a defined Journey architecture, and professional standards for anyone{" "}
+          <Link href="/certified-guide" className="text-seal hover:underline">
+            certified to steward an AVAIA conversation
+          </Link>
+          .
+        </p>
+      </section>
+
       {/* The Roadmap -- the missing piece this renovation adds. The public
           shape of the Journey: the three movements (JOURNEY_MOVEMENTS) and
           the three conversations that carry them (CONVERSATIONS, filtered to
