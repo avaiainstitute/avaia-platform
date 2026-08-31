@@ -142,9 +142,11 @@ const CERTIFICATION_ERROR_MESSAGE: Record<string, string> = {
 };
 
 // Phase D -- platform authorization is a separate institutional fact from
-// certification (guide_certifications). Only 'toolkit' exists as a
-// capability today; future capabilities widen this list without a schema
-// rebuild (see 0025_guide_platform_authorizations.sql).
+// certification (guide_certifications). 'toolkit' and (as of Phase E.1)
+// 'guided_journey_facilitation' are independent capabilities -- holding
+// one implies nothing about the other. Future capabilities widen this
+// list without a schema rebuild (see 0025_guide_platform_authorizations.sql
+// and 0026_guide_platform_authorizations_guided_journey_facilitation.sql).
 const TOOLKIT_AUTH_ERROR_MESSAGE: Record<string, string> = {
   missing_candidate: "Candidate not found.",
   not_certified: "Toolkit authorization requires an existing Certified AVAIA Guide credential.",
@@ -152,6 +154,20 @@ const TOOLKIT_AUTH_ERROR_MESSAGE: Record<string, string> = {
   already_authorized: "Toolkit authorization has already been granted.",
   missing_confirmation: "You must confirm this institutional grant to proceed.",
   insert_failed: "Could not grant Toolkit authorization. Please try again.",
+};
+
+// Guided Journey Facilitation authorization (Phase E.1) does NOT itself
+// grant access to any Host, Journey, conversation, message, Guide's
+// Record, or Workbook data -- it only establishes that AVAIA authorizes
+// this Guide to perform that work if/when a Host later, separately grants
+// scoped access to a specific Journey (a later phase, not built here).
+const GUIDED_JOURNEY_AUTH_ERROR_MESSAGE: Record<string, string> = {
+  missing_candidate: "Candidate not found.",
+  not_certified: "Guided Journey Facilitation authorization requires an existing Certified AVAIA Guide credential.",
+  not_active: "Guided Journey Facilitation authorization requires an active certification standing.",
+  already_authorized: "Guided Journey Facilitation authorization has already been granted.",
+  missing_confirmation: "You must confirm this institutional grant to proceed.",
+  insert_failed: "Could not grant Guided Journey Facilitation authorization. Please try again.",
 };
 
 /** Formats a Date as a datetime-local input value ("YYYY-MM-DDTHH:mm") for
@@ -643,11 +659,110 @@ async function grantToolkitAuthorization(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?toolkitAuthGranted=1`);
 }
 
+/** Grants Guided Journey Facilitation platform authorization (Phase E.1) --
+ *  independent of Toolkit authorization (Phase D.2); identical shape,
+ *  different capability value, its own explicit institutional act. This
+ *  authorization does NOT itself grant access to any Host's Journey,
+ *  conversation, message, Guide's Record, or Workbook -- it only
+ *  establishes that AVAIA authorizes this Guide to perform Guided Journey
+ *  facilitation if/when a Host later, separately grants scoped access to a
+ *  specific Journey (guide_journey_access, a later phase, not built here).
+ *  Re-derives the host's certification fresh from guide_certifications and
+ *  refuses to grant unless that certification exists and its standing is
+ *  exactly 'active' -- never inferred from profiles.role,
+ *  guide_certified_at, candidate status, certification decisions, or
+ *  Toolkit authorization. Refuses a duplicate grant independently
+ *  server-side. Uses the signed-in admin's own RLS-bound client
+ *  throughout; createAdminClient() is not involved. */
+async function grantGuidedJourneyFacilitationAuthorization(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/guide-candidates");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const candidateId = String(formData.get("candidateId") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim();
+  const confirmed = formData.get("confirmAuthorization") === "on";
+
+  if (!candidateId) redirect("/admin/guide-candidates");
+
+  const { data: candidate } = await supabase
+    .from("guide_candidates")
+    .select("id, host_id")
+    .eq("id", candidateId)
+    .maybeSingle();
+  if (!candidate) {
+    redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=missing_candidate`);
+  }
+
+  // The authoritative credential check -- by candidate_id first, then by
+  // host_id, the same two-step lookup the page display already uses so
+  // this action can never disagree with what the admin sees on screen.
+  const { data: certByCandidate } = await supabase
+    .from("guide_certifications")
+    .select("host_id, standing")
+    .eq("candidate_id", candidateId)
+    .maybeSingle();
+  const { data: certByHost } = certByCandidate
+    ? { data: null }
+    : await supabase
+        .from("guide_certifications")
+        .select("host_id, standing")
+        .eq("host_id", candidate.host_id)
+        .maybeSingle();
+  const certification = certByCandidate ?? certByHost ?? null;
+  if (!certification) {
+    redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=not_certified`);
+  }
+  if (certification.standing !== "active") {
+    redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=not_active`);
+  }
+
+  if (!confirmed) {
+    redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=missing_confirmation`);
+  }
+
+  const { data: existing } = await supabase
+    .from("guide_platform_authorizations")
+    .select("id")
+    .eq("host_id", certification.host_id)
+    .eq("capability", "guided_journey_facilitation")
+    .eq("status", "authorized")
+    .maybeSingle();
+  if (existing) {
+    redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=already_authorized`);
+  }
+
+  const { error } = await supabase.from("guide_platform_authorizations").insert({
+    host_id: certification.host_id,
+    capability: "guided_journey_facilitation",
+    granted_by: user.id,
+    notes: notes || null,
+  });
+  if (error) {
+    redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=insert_failed`);
+  }
+
+  redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthGranted=1`);
+}
+
 /** Candidacy record + lifecycle status control (Phase C.3) + certification
  *  evidence recording (Phase C.5) + certification decision recording
- *  (Phase C.8) + certification granting (Phase C.9) + Toolkit platform
- *  authorization (Phase D.2). Certification and platform authorization
- *  remain two separate institutional facts throughout. */
+ *  (Phase C.8) + certification granting (Phase C.9) + Toolkit and Guided
+ *  Journey Facilitation platform authorization (Phase D.2/E.1).
+ *  Certification and platform authorization remain two separate
+ *  institutional facts throughout; the two capabilities remain
+ *  independent of each other. */
 export default async function AdminGuideCandidateDetailPage({
   params,
   searchParams,
@@ -665,6 +780,8 @@ export default async function AdminGuideCandidateDetailPage({
     certificationError?: string;
     toolkitAuthGranted?: string;
     toolkitAuthError?: string;
+    guidedJourneyAuthGranted?: string;
+    guidedJourneyAuthError?: string;
   };
 }) {
   const supabase = createClient();
@@ -767,12 +884,25 @@ export default async function AdminGuideCandidateDetailPage({
   const canGrantToolkitAuthorization =
     !!certification && certification.standing === "active" && !toolkitAuthorization;
 
+  // Guided Journey Facilitation platform authorization (Phase E.1) -- same
+  // shape as Toolkit authorization, independent capability. Does not grant
+  // any Host/Journey access by itself; see the server action's own comment.
+  const { data: guidedJourneyAuthorization } = await supabase
+    .from("guide_platform_authorizations")
+    .select("id, status, granted_by, granted_at, notes")
+    .eq("host_id", candidate.host_id)
+    .eq("capability", "guided_journey_facilitation")
+    .eq("status", "authorized")
+    .maybeSingle();
+  const canGrantGuidedJourneyAuthorization =
+    !!certification && certification.standing === "active" && !guidedJourneyAuthorization;
+
   // Identity resolution only -- account email, admitting admin's email,
   // each history entry's recorder's email, each evidence row's recorder's
   // email, each decision's evaluator/authorizer email, the certification's
-  // certified-by/standing-changed-by email, and the Toolkit authorization's
-  // granted-by email. Never used to read or write guide_candidates/
-  // guide_candidate_history/guide_candidate_evidence/
+  // certified-by/standing-changed-by email, and each platform
+  // authorization's granted-by email. Never used to read or write
+  // guide_candidates/guide_candidate_history/guide_candidate_evidence/
   // guide_certification_decisions/guide_certifications/
   // guide_platform_authorizations themselves (those already came from the
   // signed-in admin's own RLS-bound client above).
@@ -790,6 +920,7 @@ export default async function AdminGuideCandidateDetailPage({
     if (certification.standing_changed_by) idsToResolve.add(certification.standing_changed_by);
   }
   if (toolkitAuthorization?.granted_by) idsToResolve.add(toolkitAuthorization.granted_by);
+  if (guidedJourneyAuthorization?.granted_by) idsToResolve.add(guidedJourneyAuthorization.granted_by);
   const emailById = new Map<string, string>();
   await Promise.all(
     Array.from(idsToResolve).map(async (id) => {
@@ -867,6 +998,18 @@ export default async function AdminGuideCandidateDetailPage({
       {searchParams?.toolkitAuthError && (
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
           {TOOLKIT_AUTH_ERROR_MESSAGE[searchParams.toolkitAuthError] ?? "Something went wrong."}
+        </p>
+      )}
+
+      {searchParams?.guidedJourneyAuthGranted === "1" && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Guided Journey Facilitation authorization granted.
+        </p>
+      )}
+
+      {searchParams?.guidedJourneyAuthError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+          {GUIDED_JOURNEY_AUTH_ERROR_MESSAGE[searchParams.guidedJourneyAuthError] ?? "Something went wrong."}
         </p>
       )}
 
@@ -1483,6 +1626,89 @@ export default async function AdminGuideCandidateDetailPage({
               </form>
             ) : (
               <p className="text-muted">Toolkit Authorization: Not Authorized</p>
+            )}
+          </div>
+        )}
+
+        {/* Guided Journey Facilitation Authorization (Phase E.1) -- same
+            institutional shape as Toolkit Authorization, an independent
+            capability. Explicitly does NOT grant access to any Host's
+            Journey, conversation, message, Guide's Record, or Workbook --
+            it only authorizes the Guide to perform that work once a Host
+            later, separately grants scoped access to a specific Journey
+            (a later, not-yet-built phase). */}
+        {certification && (
+          <div className="mt-6">
+            <p className="label mb-3 text-muted">Guided Journey Facilitation</p>
+            {guidedJourneyAuthorization ? (
+              <div className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
+                <dl className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <dt className="label text-muted">Status</dt>
+                    <dd className="mt-1 text-ink">Authorized</dd>
+                  </div>
+                  <div>
+                    <dt className="label text-muted">Granted</dt>
+                    <dd className="mt-1 text-ink">
+                      {new Date(guidedJourneyAuthorization.granted_at).toLocaleString()}
+                      {guidedJourneyAuthorization.granted_by
+                        ? ` · ${emailById.get(guidedJourneyAuthorization.granted_by) ?? "Unknown"}`
+                        : ""}
+                    </dd>
+                  </div>
+                </dl>
+                {guidedJourneyAuthorization.notes && (
+                  <div className="mt-3 border-t border-rule pt-3">
+                    <p className="label text-muted">Notes</p>
+                    <p className="mt-1 whitespace-pre-wrap text-ink">{guidedJourneyAuthorization.notes}</p>
+                  </div>
+                )}
+                <p className="mt-3 border-t border-rule pt-3 text-xs text-muted">
+                  This authorizes the Guide to perform Guided Journey facilitation. It does not by
+                  itself grant access to any Host's Journey — a Host must separately invite this
+                  Guide before any facilitation can occur.
+                </p>
+              </div>
+            ) : canGrantGuidedJourneyAuthorization ? (
+              <form
+                action={grantGuidedJourneyFacilitationAuthorization}
+                className="rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm"
+              >
+                <input type="hidden" name="candidateId" value={candidate.id} />
+                <p className="text-ink">Guided Journey Facilitation: Not Authorized</p>
+                <p className="mt-2 text-xs text-muted">
+                  This authorizes the Guide to perform Guided Journey facilitation. It does not
+                  grant access to any Host's Journey, conversation, message, Guide's Record, or
+                  Workbook — a Host must separately invite this Guide before any facilitation can
+                  occur.
+                </p>
+                <div className="mt-4">
+                  <label className="label mb-2 block" htmlFor="guidedJourneyNotes">
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    id="guidedJourneyNotes"
+                    name="notes"
+                    rows={3}
+                    className="w-full resize-none rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+                  />
+                </div>
+                <label className="mt-5 flex cursor-pointer items-start gap-3 border-t border-rule pt-5">
+                  <input type="checkbox" name="confirmAuthorization" className="mt-1" required />
+                  <span className="text-ink">
+                    I confirm that AVAIA is granting this Certified AVAIA Guide Guided Journey
+                    Facilitation authorization.
+                  </span>
+                </label>
+                <button
+                  type="submit"
+                  className="mt-4 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+                >
+                  Grant Guided Journey Facilitation Authorization
+                </button>
+              </form>
+            ) : (
+              <p className="text-muted">Guided Journey Facilitation: Not Authorized</p>
             )}
           </div>
         )}
