@@ -93,7 +93,95 @@ function buildWorkbookText(
   return out.join("\n");
 }
 
-export default async function WorkbookPage() {
+const GUIDE_ACCESS_ERROR_MESSAGE: Record<string, string> = {
+  missing_fields: "Please select a Guide before inviting.",
+  missing_confirmation: "Please confirm the invitation to proceed.",
+  guide_already_invited: "This Guide already has active access to this Journey.",
+  invite_failed: "Could not invite this Guide. They may no longer be eligible, or you may not own this Journey.",
+  missing_access_id: "That access record could not be found.",
+  missing_revoke_confirmation: "Please confirm before revoking access.",
+  revoke_failed: "Could not revoke this Guide's access. Please try again.",
+};
+
+/** Creates one guide_journey_access row (Phase E.3) -- an explicit,
+ *  Host-initiated invitation of a specific eligible Guide into a specific
+ *  Host-owned Journey. Does NOT grant the Guide any ability to read or
+ *  write Journey content; that remains a later, separately-approved phase.
+ *  Ownership integrity and Guide eligibility are enforced by the database
+ *  itself (the composite foreign key and the INSERT policy's eligibility
+ *  checks from migration 0027) -- this action never trusts client input
+ *  for host_id, always uses the signed-in Host's own id, and never bypasses
+ *  RLS via a service-role client. A duplicate-active or ineligible-Guide
+ *  attempt surfaces as a plain, non-technical message -- never a raw
+ *  database error. */
+async function inviteGuideToJourney(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/workbook");
+
+  const journeyId = String(formData.get("journeyId") ?? "");
+  const guideId = String(formData.get("guideId") ?? "");
+  const confirmed = formData.get("confirmInvite") === "on";
+
+  if (!journeyId || !guideId) redirect("/workbook?guideAccessError=missing_fields");
+  if (!confirmed) redirect("/workbook?guideAccessError=missing_confirmation");
+
+  const { error } = await supabase.from("guide_journey_access").insert({
+    journey_id: journeyId,
+    host_id: user.id,
+    guide_id: guideId,
+  });
+  if (error) {
+    const code = (error as { code?: string }).code;
+    redirect(`/workbook?guideAccessError=${code === "23505" ? "guide_already_invited" : "invite_failed"}`);
+  }
+
+  redirect("/workbook?guideAccessGranted=1");
+}
+
+/** Revokes one guide_journey_access row -- sets revoked_at, never deletes
+ *  the row, preserving it as historical evidence that access once
+ *  existed. Scoped to rows the signed-in Host owns and that are still
+ *  active; the database trigger from migration 0027 independently
+ *  guarantees only revoked_at changes and only from null to non-null. */
+async function revokeGuideJourneyAccess(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/workbook");
+
+  const accessId = String(formData.get("accessId") ?? "");
+  const confirmed = formData.get("confirmRevoke") === "on";
+  if (!accessId) redirect("/workbook?guideAccessError=missing_access_id");
+  if (!confirmed) redirect("/workbook?guideAccessError=missing_revoke_confirmation");
+
+  const { error } = await supabase
+    .from("guide_journey_access")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", accessId)
+    .eq("host_id", user.id)
+    .is("revoked_at", null);
+  if (error) redirect("/workbook?guideAccessError=revoke_failed");
+
+  redirect("/workbook?guideAccessRevoked=1");
+}
+
+export default async function WorkbookPage({
+  searchParams,
+}: {
+  searchParams: {
+    guideAccessGranted?: string;
+    guideAccessRevoked?: string;
+    guideAccessError?: string;
+  };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -148,6 +236,47 @@ export default async function WorkbookPage() {
       shared_with_email: emailById.get(g.shared_with_id) ?? null,
     }));
   }
+
+  // Guided Journey access (Phase E.3) -- this Host's own guide_journey_access
+  // rows (self-read RLS, see 0027) and the current list of eligible Guides
+  // (0028's list_eligible_guided_journey_guides() SECURITY DEFINER
+  // function -- never a direct profiles query, since profiles has no
+  // cross-account read policy). Identity is always the Guide Display Name,
+  // never email -- see 0028's comment on why.
+  const { data: guideAccessRows } = await supabase
+    .from("guide_journey_access")
+    .select("id, journey_id, guide_id, granted_at, revoked_at")
+    .eq("host_id", user.id)
+    .order("granted_at", { ascending: false });
+  const guideAccess = guideAccessRows ?? [];
+  const activeAccessByJourney = new Map<string, (typeof guideAccess)[number]>();
+  for (const a of guideAccess) {
+    if (!a.revoked_at && !activeAccessByJourney.has(a.journey_id)) {
+      activeAccessByJourney.set(a.journey_id, a);
+    }
+  }
+
+  const { data: eligibleGuidesData } = await supabase.rpc("list_eligible_guided_journey_guides");
+  const eligibleGuides = eligibleGuidesData ?? [];
+
+  // Resolve display names for every currently-active access row's guide,
+  // even one no longer in the eligible list (authorization can change
+  // after an invitation exists) -- get_guide_display_name() returns the
+  // name regardless of current eligibility, unlike the list above.
+  const guideNameById = new Map<string, string>(
+    eligibleGuides.map((g: { guide_id: string; guide_display_name: string }) => [
+      g.guide_id,
+      g.guide_display_name,
+    ])
+  );
+  await Promise.all(
+    Array.from(activeAccessByJourney.values())
+      .filter((a) => !guideNameById.has(a.guide_id))
+      .map(async (a) => {
+        const { data } = await supabase.rpc("get_guide_display_name", { p_guide_id: a.guide_id });
+        if (data) guideNameById.set(a.guide_id, data);
+      })
+  );
 
   const transcripts = await Promise.all(
     conversations.map((c) => loadMessages(supabase, c.id))
@@ -282,6 +411,24 @@ export default async function WorkbookPage() {
         referrals that carried you forward. Open any journey below to read, save, or print it.
         It&rsquo;s yours, and only yours.
       </p>
+
+      {searchParams?.guideAccessGranted === "1" && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Guide invited.
+        </p>
+      )}
+
+      {searchParams?.guideAccessRevoked === "1" && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Guide access revoked.
+        </p>
+      )}
+
+      {searchParams?.guideAccessError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+          {GUIDE_ACCESS_ERROR_MESSAGE[searchParams.guideAccessError] ?? "Something went wrong."}
+        </p>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <Link
@@ -451,6 +598,105 @@ export default async function WorkbookPage() {
                   Explore the Library from this Journey →
                 </Link>
               </p>
+            )}
+
+            {/* Guided Journey access (Phase E.3) -- Host-owned, Guide-
+                facilitation-only. Held out entirely for Youth Journeys
+                (program === "youth") until the separate verified
+                guardian-consent architecture exists -- not invented here.
+                Held out for a conversation predating the journeys table
+                (no journey_id) since there is nothing stable to grant
+                access to. */}
+            {j.convos[0]?.convo.journey_id && j.convos[0]?.convo.program !== "youth" && (
+              <section className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+                <p className="label mb-1 text-muted">Guided Journey</p>
+                {(() => {
+                  const journeyId = j.convos[0]!.convo.journey_id as string;
+                  const active = activeAccessByJourney.get(journeyId);
+                  if (active) {
+                    return (
+                      <>
+                        <p className="text-ink">
+                          Guide: {guideNameById.get(active.guide_id) ?? "A Certified AVAIA Guide"}
+                        </p>
+                        <p className="mt-1 text-sm text-muted">Status: Active Permission</p>
+                        <p className="mt-3 text-xs text-muted">
+                          You remain the owner of this Journey. This Guide has your permission to
+                          facilitate it — that permission does not transfer ownership of your
+                          Journey, story, or decisions.
+                        </p>
+                        <form action={revokeGuideJourneyAccess} className="mt-4">
+                          <input type="hidden" name="accessId" value={active.id} />
+                          <label className="flex cursor-pointer items-start gap-3 text-sm">
+                            <input type="checkbox" name="confirmRevoke" className="mt-1" required />
+                            <span className="text-ink">
+                              Revoking this Guide&rsquo;s access does not delete your Journey or
+                              conversation history.
+                            </span>
+                          </label>
+                          <button
+                            type="submit"
+                            className="mt-3 rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+                          >
+                            Revoke Guide Access
+                          </button>
+                        </form>
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <p className="text-ink">Invite a Certified AVAIA Guide</p>
+                      <p className="mt-2 text-sm text-muted">
+                        You remain the owner of your Journey. This creates your permission for a
+                        Guide to facilitate this Journey. You can revoke that permission later.
+                        Guide access to Journey content is enabled separately by AVAIA&rsquo;s
+                        Guided Journey system.
+                      </p>
+                      {eligibleGuides.length === 0 ? (
+                        <p className="mt-4 text-sm text-muted">
+                          No eligible Guides are currently available.
+                        </p>
+                      ) : (
+                        <form action={inviteGuideToJourney} className="mt-4">
+                          <input type="hidden" name="journeyId" value={journeyId} />
+                          <label className="label mb-2 block" htmlFor={`guideId-${journeyId}`}>
+                            Guide
+                          </label>
+                          <select
+                            id={`guideId-${journeyId}`}
+                            name="guideId"
+                            required
+                            defaultValue=""
+                            className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+                          >
+                            <option value="" disabled className="bg-[#05060b] text-ink">
+                              Select a Guide
+                            </option>
+                            {eligibleGuides.map((g: { guide_id: string; guide_display_name: string }) => (
+                              <option key={g.guide_id} value={g.guide_id} className="bg-[#05060b] text-ink">
+                                {g.guide_display_name}
+                              </option>
+                            ))}
+                          </select>
+                          <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm">
+                            <input type="checkbox" name="confirmInvite" className="mt-1" required />
+                            <span className="text-ink">
+                              I understand that I am inviting this Guide into this Journey.
+                            </span>
+                          </label>
+                          <button
+                            type="submit"
+                            className="mt-3 rounded-md bg-seal px-4 py-2 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+                          >
+                            Invite Guide
+                          </button>
+                        </form>
+                      )}
+                    </>
+                  );
+                })()}
+              </section>
             )}
 
             {(() => {

@@ -170,6 +170,14 @@ const GUIDED_JOURNEY_AUTH_ERROR_MESSAGE: Record<string, string> = {
   insert_failed: "Could not grant Guided Journey Facilitation authorization. Please try again.",
 };
 
+// Guide Display Name (Phase E.3 prerequisite) -- the narrow, admin-managed
+// Host-facing identity for an eligible Certified Guide. Not a general
+// profile/display-name system; see 0028_guide_display_name.sql.
+const GUIDE_NAME_ERROR_MESSAGE: Record<string, string> = {
+  missing_candidate: "Candidate not found.",
+  update_failed: "Could not update the Guide Display Name. Please try again.",
+};
+
 /** Formats a Date as a datetime-local input value ("YYYY-MM-DDTHH:mm") for
  *  the Decision Date field's default -- local to wherever this renders,
  *  which is acceptable for a default the admin can freely change; nothing
@@ -756,13 +764,62 @@ async function grantGuidedJourneyFacilitationAuthorization(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthGranted=1`);
 }
 
+/** Sets (or clears) this Guide's Host-facing display name (the Phase E.3
+ *  identity prerequisite) via the set_guide_display_name() SECURITY
+ *  DEFINER function (0028) -- profiles has no admin-all RLS policy by
+ *  design, so this narrow RPC is how the admin's own RLS-bound client
+ *  reaches this one field without a broader profiles policy. The function
+ *  itself re-checks admin role internally; this action's own check is
+ *  defense in depth, matching every other action on this page.
+ *  guide_display_name is never inferred from email, and this action
+ *  touches nothing else on the profile. */
+async function setGuideDisplayNameAction(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/guide-candidates");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const candidateId = String(formData.get("candidateId") ?? "");
+  const name = String(formData.get("guideDisplayName") ?? "").trim();
+  if (!candidateId) redirect("/admin/guide-candidates");
+
+  const { data: candidate } = await supabase
+    .from("guide_candidates")
+    .select("host_id")
+    .eq("id", candidateId)
+    .maybeSingle();
+  if (!candidate) {
+    redirect(`/admin/guide-candidates/${candidateId}?guideNameError=missing_candidate`);
+  }
+
+  const { error } = await supabase.rpc("set_guide_display_name", {
+    p_host_id: candidate.host_id,
+    p_name: name,
+  });
+  if (error) {
+    redirect(`/admin/guide-candidates/${candidateId}?guideNameError=update_failed`);
+  }
+
+  redirect(`/admin/guide-candidates/${candidateId}?guideNameUpdated=1`);
+}
+
 /** Candidacy record + lifecycle status control (Phase C.3) + certification
  *  evidence recording (Phase C.5) + certification decision recording
  *  (Phase C.8) + certification granting (Phase C.9) + Toolkit and Guided
- *  Journey Facilitation platform authorization (Phase D.2/E.1).
- *  Certification and platform authorization remain two separate
- *  institutional facts throughout; the two capabilities remain
- *  independent of each other. */
+ *  Journey Facilitation platform authorization (Phase D.2/E.1) + Guide
+ *  display name (Phase E.3 prerequisite). Certification and platform
+ *  authorization remain two separate institutional facts throughout; the
+ *  two capabilities remain independent of each other. */
 export default async function AdminGuideCandidateDetailPage({
   params,
   searchParams,
@@ -782,6 +839,8 @@ export default async function AdminGuideCandidateDetailPage({
     toolkitAuthError?: string;
     guidedJourneyAuthGranted?: string;
     guidedJourneyAuthError?: string;
+    guideNameUpdated?: string;
+    guideNameError?: string;
   };
 }) {
   const supabase = createClient();
@@ -897,6 +956,13 @@ export default async function AdminGuideCandidateDetailPage({
   const canGrantGuidedJourneyAuthorization =
     !!certification && certification.standing === "active" && !guidedJourneyAuthorization;
 
+  // Guide Display Name (Phase E.3 prerequisite) -- read via the same
+  // SECURITY DEFINER function a Host's own page will use, since profiles
+  // has no admin-all RLS policy to read another account's row directly.
+  const { data: guideDisplayName } = certification
+    ? await supabase.rpc("get_guide_display_name", { p_guide_id: certification.host_id })
+    : { data: null as string | null };
+
   // Identity resolution only -- account email, admitting admin's email,
   // each history entry's recorder's email, each evidence row's recorder's
   // email, each decision's evaluator/authorizer email, the certification's
@@ -1010,6 +1076,18 @@ export default async function AdminGuideCandidateDetailPage({
       {searchParams?.guidedJourneyAuthError && (
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
           {GUIDED_JOURNEY_AUTH_ERROR_MESSAGE[searchParams.guidedJourneyAuthError] ?? "Something went wrong."}
+        </p>
+      )}
+
+      {searchParams?.guideNameUpdated === "1" && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Guide Display Name updated.
+        </p>
+      )}
+
+      {searchParams?.guideNameError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+          {GUIDE_NAME_ERROR_MESSAGE[searchParams.guideNameError] ?? "Something went wrong."}
         </p>
       )}
 
@@ -1710,6 +1788,48 @@ export default async function AdminGuideCandidateDetailPage({
             ) : (
               <p className="text-muted">Guided Journey Facilitation: Not Authorized</p>
             )}
+          </div>
+        )}
+
+        {/* Guide Display Name (Phase E.3 prerequisite) -- the narrow,
+            admin-managed Host-facing identity for an eligible Certified
+            Guide. Not a general profile/display-name system; not
+            Guide-editable. */}
+        {certification && (
+          <div className="mt-6">
+            <p className="label mb-3 text-muted">Guide Display Name</p>
+            <p className="mb-3 text-xs text-muted">
+              Shown to Hosts when selecting or viewing a Guide attached to their Journey. Never the
+              Guide&rsquo;s email.
+            </p>
+            <form
+              action={setGuideDisplayNameAction}
+              className="rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm"
+            >
+              <input type="hidden" name="candidateId" value={candidate.id} />
+              <label className="label mb-2 block" htmlFor="guideDisplayName">
+                Display Name
+              </label>
+              <input
+                id="guideDisplayName"
+                name="guideDisplayName"
+                type="text"
+                defaultValue={guideDisplayName ?? ""}
+                placeholder="e.g. Dorian Johnson"
+                className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+              />
+              <p className="mt-2 text-xs text-muted">
+                {guideDisplayName
+                  ? "Currently visible to Hosts as an eligible Guide."
+                  : "Not set — this Guide will not appear in a Host's invitation list until a name is set."}
+              </p>
+              <button
+                type="submit"
+                className="mt-4 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+              >
+                Save Guide Display Name
+              </button>
+            </form>
           </div>
         )}
 
