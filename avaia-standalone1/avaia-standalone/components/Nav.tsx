@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { isToolkitAuthorized } from "@/lib/guide";
 import SignOutButton from "@/components/SignOutButton";
 
 // /journey, /defying-grief, /workbook, and /unsung-heroes all render
@@ -60,19 +61,14 @@ export default async function Nav() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Role lookup exists purely for nav discoverability -- app/toolkit/
-  // layout.tsx's own role === 'guide' check remains the real authorization
-  // gate. Showing or hiding this link changes nothing about who can
-  // actually reach /toolkit; a non-Guide typing the URL is still redirected
-  // there exactly as before.
-  let isGuide = false;
+  // Phase D.3: matches app/toolkit/layout.tsx's real authorization gate
+  // (guide_platform_authorizations, not profiles.role) purely for nav
+  // discoverability -- showing or hiding this link changes nothing about
+  // who can actually reach /toolkit; someone not authorized typing the URL
+  // is still redirected there exactly as before.
+  let toolkitAuthorized = false;
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-    isGuide = profile?.role === "guide";
+    toolkitAuthorized = await isToolkitAuthorized(supabase, user.id);
   }
 
   return (
@@ -112,7 +108,7 @@ export default async function Nav() {
                   </Link>
                 </li>
               ))}
-              {isGuide && (
+              {toolkitAuthorized && (
                 <li>
                   <Link
                     href="/toolkit"

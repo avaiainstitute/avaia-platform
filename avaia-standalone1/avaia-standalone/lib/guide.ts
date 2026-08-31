@@ -26,6 +26,27 @@ export async function isGuide(supabase: SupabaseClient, userId: string): Promise
   return data?.role === "guide";
 }
 
+/** True if this Host currently holds an active Toolkit platform
+ *  authorization (Phase D) -- mirrors isMember() (lib/membership.ts)
+ *  exactly: one small, live-checked table, no caching, no role fallback.
+ *  This is now the real Toolkit authorization source (see
+ *  app/toolkit/layout.tsx) -- profiles.role = 'guide' alone is no longer
+ *  sufficient to reach the Toolkit. Certification (guide_certifications)
+ *  is a separate institutional fact this function never reads; whether a
+ *  host was ever grantable in the first place was already enforced at
+ *  grant time (Phase D.2), not re-checked here. */
+export async function isToolkitAuthorized(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("guide_platform_authorizations")
+    .select("id")
+    .eq("host_id", userId)
+    .eq("capability", "toolkit")
+    .eq("status", "authorized")
+    .limit(1)
+    .maybeSingle();
+  return data !== null;
+}
+
 export type GuideParticipant = {
   id: string;
   guide_id: string;
