@@ -47,6 +47,30 @@ export async function isToolkitAuthorized(supabase: SupabaseClient, userId: stri
   return data !== null;
 }
 
+/** True if this Guide currently holds an active Guided Journey
+ *  Facilitation platform authorization (Phase E.1) -- same shape as
+ *  isToolkitAuthorized() above, deliberately not reused for it: Toolkit
+ *  and Guided Journey Facilitation are independent capabilities, and this
+ *  is never a substitute for the other. Used for Guide-facing UI display
+ *  only (e.g. deciding whether to render the Guided Journeys section on
+ *  /toolkit) -- the actual data access on journeys/conversations/messages/
+ *  referrals is enforced by RLS itself (see 0029_guide_journey_read_access.sql),
+ *  not by this function. */
+export async function isGuidedJourneyFacilitationAuthorized(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("guide_platform_authorizations")
+    .select("id")
+    .eq("host_id", userId)
+    .eq("capability", "guided_journey_facilitation")
+    .eq("status", "authorized")
+    .limit(1)
+    .maybeSingle();
+  return data !== null;
+}
+
 export type GuideParticipant = {
   id: string;
   guide_id: string;
