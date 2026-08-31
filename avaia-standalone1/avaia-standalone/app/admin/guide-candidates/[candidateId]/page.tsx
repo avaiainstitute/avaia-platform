@@ -960,7 +960,7 @@ export default async function AdminGuideCandidateDetailPage({
   // SECURITY DEFINER function a Host's own page will use, since profiles
   // has no admin-all RLS policy to read another account's row directly.
   const { data: guideDisplayName } = certification
-    ? await supabase.rpc("get_guide_display_name", { p_guide_id: certification.host_id })
+    ? await supabase.rpc("get_guide_display_name", { p_guide_id: candidate.host_id })
     : { data: null as string | null };
 
   // Identity resolution only -- account email, admitting admin's email,
