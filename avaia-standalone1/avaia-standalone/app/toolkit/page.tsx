@@ -114,36 +114,12 @@ export default async function ToolkitDashboardPage() {
     sessions.map((s) => (s.conversation_id ? hasReferralForConversation(supabase, s.conversation_id) : Promise.resolve(false)))
   );
 
-  // Guided Journeys (Phase E.4) -- Host-owned Journeys this Guide has been
-  // invited to facilitate. Deliberately checked in two steps rather than
-  // one: guide_journey_access's own self-read RLS ("guide journey access
-  // guide select") shows every non-revoked invitation regardless of
-  // current professional eligibility, so the Host's invitation stays
-  // visible even if this Guide's certification or Guided Journey
-  // Facilitation authorization has since lapsed. The second query re-asks
-  // the database, via the new Phase E.4 RLS policy, which of those
-  // Journeys are ACTUALLY readable right now -- RLS is the real
-  // authority here, not this page deciding eligibility itself. A
-  // Journey present in the first list but absent from the second is
-  // rendered as "invited, not currently accessible" rather than a link.
+  // Guided Journeys (Phase E.4) live at their own route, app/guided-journeys/,
+  // deliberately outside /toolkit -- Toolkit and Guided Journey Facilitation
+  // are independent professional capabilities (see app/guided-journeys/
+  // layout.tsx's own comment for why). This page only needs to know whether
+  // to show the link-out below, not the actual invitation list.
   const guidedJourneyFacilitationAuthorized = await isGuidedJourneyFacilitationAuthorized(supabase, user.id);
-  const { data: guidedJourneyAccessRows } = await supabase
-    .from("guide_journey_access")
-    .select("id, journey_id, granted_at")
-    .eq("guide_id", user.id)
-    .is("revoked_at", null)
-    .order("granted_at", { ascending: false });
-  const guidedJourneyAccess = guidedJourneyAccessRows ?? [];
-  const grantedJourneyIds = guidedJourneyAccess.map((a) => a.journey_id);
-  let readableJourneysData: { id: string; program: string; started_at: string }[] | null = null;
-  if (grantedJourneyIds.length > 0) {
-    const result = await supabase
-      .from("journeys")
-      .select("id, program, started_at")
-      .in("id", grantedJourneyIds);
-    readableJourneysData = result.data;
-  }
-  const readableJourneyById = new Map((readableJourneysData ?? []).map((j) => [j.id, j]));
 
   return (
     <div>
@@ -318,67 +294,31 @@ export default async function ToolkitDashboardPage() {
         </div>
       </section>
 
-      {/* Guided Journeys (Phase E.4) -- Host-owned Journeys a Host has
-          explicitly invited this Guide to facilitate, read-only. The
-          Host owns every Journey listed here; this section only ever
-          shows a Journey's date and program, never the Host's email or
-          any other account detail -- there is no stored Journey title to
-          show instead, and this is the smallest identity already
-          available. An invitation whose Journey isn't currently readable
-          (certification or Guided Journey Facilitation authorization has
-          lapsed) shows as unavailable rather than a broken link -- the
-          Host's invitation itself remains true even when it's temporarily
-          unusable. */}
-      <section className="rule-t mt-14 border-t border-rule pt-8">
-        <p className="label mb-3 text-muted">Guided Journeys</p>
-        <p className="text-muted">
-          Host-owned Journeys you have been invited to facilitate. You can read what the Host has
-          shared; you do not own the Journey, the Table, or the record.
-        </p>
-        {!guidedJourneyFacilitationAuthorized && (
-          <p className="mt-3 text-sm text-muted">
-            You do not currently hold Guided Journey Facilitation authorization, so any invitation
-            below is not currently accessible.
+      {/* Guided Journeys (Phase E.4) -- link out only. The feature itself
+          lives at app/guided-journeys/, its own route with its own gate
+          (active certification + Guided Journey Facilitation
+          authorization -- deliberately not Toolkit authorization, which
+          this section's own visibility check below also avoids treating
+          as a prerequisite). Shown only when this Guide actually holds
+          that authorization, so a Guide without it doesn't see a
+          dead-end link. */}
+      {guidedJourneyFacilitationAuthorized && (
+        <section className="rule-t mt-14 border-t border-rule pt-8">
+          <p className="label mb-3 text-muted">Guided Journeys</p>
+          <p className="text-muted">
+            Host-owned Journeys you have been invited to facilitate, read-only.
           </p>
-        )}
-        {guidedJourneyAccess.length === 0 ? (
-          <p className="mt-4 text-muted">No Guided Journey invitations yet.</p>
-        ) : (
-          <div className="mt-4 space-y-2">
-            {guidedJourneyAccess.map((a) => {
-              const journey = readableJourneyById.get(a.journey_id);
-              return (
-                <div
-                  key={a.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule bg-white/[0.04] px-4 py-3"
-                >
-                  <div>
-                    <p className="text-ink">
-                      {journey
-                        ? `${journey.program === "defying-grief" ? "Defying Grief" : "General"} Journey`
-                        : "Guided Journey"}
-                    </p>
-                    <p className="text-xs text-muted">
-                      Started {new Date(journey?.started_at ?? a.granted_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {journey ? (
-                    <Link
-                      href={`/toolkit/guided-journey/${journey.id}`}
-                      prefetch={false}
-                      className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
-                    >
-                      View Journey
-                    </Link>
-                  ) : (
-                    <span className="label text-muted">Not currently accessible</span>
-                  )}
-                </div>
-              );
-            })}
+          <div className="mt-3">
+            <Link
+              href="/guided-journeys"
+              prefetch={false}
+              className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+            >
+              View Guided Journeys
+            </Link>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Experiences / Classes -- minimum first slice. Read-only browse
           only; the 11 Experiences and 20 Classes are seeded as

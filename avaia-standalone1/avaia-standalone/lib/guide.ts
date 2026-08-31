@@ -51,11 +51,12 @@ export async function isToolkitAuthorized(supabase: SupabaseClient, userId: stri
  *  Facilitation platform authorization (Phase E.1) -- same shape as
  *  isToolkitAuthorized() above, deliberately not reused for it: Toolkit
  *  and Guided Journey Facilitation are independent capabilities, and this
- *  is never a substitute for the other. Used for Guide-facing UI display
- *  only (e.g. deciding whether to render the Guided Journeys section on
- *  /toolkit) -- the actual data access on journeys/conversations/messages/
- *  referrals is enforced by RLS itself (see 0029_guide_journey_read_access.sql),
- *  not by this function. */
+ *  is never a substitute for the other. Used to gate app/guided-journeys/
+ *  (its own route, deliberately separate from /toolkit -- see that
+ *  layout's comment) and for the small link-out shown on /toolkit itself.
+ *  The actual data access on journeys/conversations/messages/referrals is
+ *  enforced by RLS itself (see 0029_guide_journey_read_access.sql), not by
+ *  this function. */
 export async function isGuidedJourneyFacilitationAuthorized(
   supabase: SupabaseClient,
   userId: string
@@ -66,6 +67,24 @@ export async function isGuidedJourneyFacilitationAuthorized(
     .eq("host_id", userId)
     .eq("capability", "guided_journey_facilitation")
     .eq("status", "authorized")
+    .limit(1)
+    .maybeSingle();
+  return data !== null;
+}
+
+/** True if this Guide's guide_certifications standing is currently
+ *  'active' -- mirrors isToolkitAuthorized()/isGuidedJourneyFacilitationAuthorized()'s
+ *  shape. Used alongside isGuidedJourneyFacilitationAuthorized() to gate
+ *  app/guided-journeys/, matching exactly the two account-level conditions
+ *  the Phase E.4 RLS policies also require (the third, an active Host
+ *  invitation for a specific Journey, is necessarily per-journey and
+ *  checked by that Journey's own RLS-protected query, not here). */
+export async function isActivelyCertified(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("guide_certifications")
+    .select("id")
+    .eq("host_id", userId)
+    .eq("standing", "active")
     .limit(1)
     .maybeSingle();
   return data !== null;

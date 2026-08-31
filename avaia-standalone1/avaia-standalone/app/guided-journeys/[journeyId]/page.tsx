@@ -6,7 +6,7 @@ import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/con
 import type { Stage } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
 
-export const metadata = { title: "Guided Journey — AVAIA Guide Toolkit" };
+export const metadata = { title: "Guided Journey — AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Read-only view of one Host-owned Journey a Host has invited this Guide
@@ -18,7 +18,10 @@ export const dynamic = "force-dynamic";
  *  read" / "referrals guide read", migration 0029), not this page. If the
  *  journey row doesn't come back -- revoked, certification/authorization
  *  lapsed, Youth, or genuinely not invited -- this page has nothing
- *  further to check or decide; it simply has nothing to show. */
+ *  further to check or decide; it simply has nothing to show. Gated one
+ *  level up, in app/guided-journeys/layout.tsx, on active certification +
+ *  Guided Journey Facilitation authorization -- not Toolkit authorization,
+ *  which this route deliberately has no dependency on. */
 export default async function GuidedJourneyDetailPage({
   params,
 }: {
@@ -28,7 +31,7 @@ export default async function GuidedJourneyDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/sign-in?from=/toolkit");
+  if (!user) redirect("/sign-in?from=/guided-journeys");
 
   const { data: journey } = await supabase
     .from("journeys")
@@ -39,8 +42,8 @@ export default async function GuidedJourneyDetailPage({
   if (!journey) {
     return (
       <div>
-        <Link href="/toolkit" className="label text-muted hover:text-seal">
-          &larr; Guide Toolkit
+        <Link href="/guided-journeys" className="label text-muted hover:text-seal">
+          &larr; Guided Journeys
         </Link>
         <p className="label mb-3 mt-6">Guided Journey</p>
         <h1 className="font-serif text-3xl text-ink">Not currently accessible</h1>
@@ -76,8 +79,8 @@ export default async function GuidedJourneyDetailPage({
 
   return (
     <div>
-      <Link href="/toolkit" className="label text-muted hover:text-seal">
-        &larr; Guide Toolkit
+      <Link href="/guided-journeys" className="label text-muted hover:text-seal">
+        &larr; Guided Journeys
       </Link>
 
       <p className="label mb-3 mt-6">Guided Journey</p>
