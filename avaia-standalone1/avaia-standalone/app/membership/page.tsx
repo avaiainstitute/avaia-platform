@@ -33,6 +33,11 @@ export default async function MembershipPage({
   searchParams?: { returnTo?: string };
 }) {
   const returnTo = searchParams?.returnTo;
+  // Same membership, same price, same Stripe flow -- only the copy below
+  // acknowledges the Host arrived from Defying Grief, using the returnTo
+  // value already carried here from the gate. No program-specific pricing
+  // or entitlement logic.
+  const isDefyingGrief = returnTo === "/defying-grief";
 
   const supabase = createClient();
   const {
@@ -45,12 +50,14 @@ export default async function MembershipPage({
       <p className="label mb-3">AVAIA Membership</p>
       <h1 className="font-serif text-4xl text-ink">AVAIA Membership</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">
-        Your free Individual Awareness Profile is one conversation.
+        {isDefyingGrief
+          ? "Your free Individual Awareness Profile was the beginning of Defying Grief."
+          : "Your free Individual Awareness Profile is one conversation."}
       </p>
       <p className="mt-4 text-lg leading-relaxed text-ink">
-        Membership gives you a continuing place in AVAIA — to continue your Journey, return for
-        future conversations, preserve what you discover, and access the tools and resources that
-        support what comes next.
+        {isDefyingGrief
+          ? "Membership continues your Defying Grief Journey into Conversations Across Time and InnerCompass, and keeps continuity through your Workbook and AVAIA's other resources."
+          : "Membership gives you a continuing place in AVAIA — to continue your Journey, return for future conversations, preserve what you discover, and access the tools and resources that support what comes next."}
       </p>
 
       <section className="rule-t mt-16 border-t border-rule pt-12">

@@ -436,6 +436,11 @@ export function MembershipGate({
    *  gap with an explicit acknowledgment instead of silence. */
   justSaved?: boolean;
 }) {
+  // Same gate, same price, same Stripe flow -- only the copy below
+  // acknowledges where the Host actually is, using the returnTo value
+  // /defying-grief already passes. No new data, no program-specific
+  // entitlement logic.
+  const isDefyingGrief = returnTo === "/defying-grief";
   return (
     <div className="mx-auto max-w-prose px-5 py-20">
       {header}
@@ -457,10 +462,15 @@ export function MembershipGate({
         </div>
       )}
       <h1 className="mt-8 font-serif text-4xl text-ink">Continue your journey</h1>
-      <p className="mt-4 text-lg text-muted">Your Individual Awareness Profile is the beginning.</p>
       <p className="mt-4 text-lg text-muted">
-        Become an AVAIA member to continue into Conversations Across Time and access your ongoing
-        AVAIA membership.
+        {isDefyingGrief
+          ? "Your Individual Awareness Profile was the beginning of Defying Grief."
+          : "Your Individual Awareness Profile is the beginning."}
+      </p>
+      <p className="mt-4 text-lg text-muted">
+        {isDefyingGrief
+          ? "Membership continues your Defying Grief Journey into Conversations Across Time and InnerCompass, with your Workbook carrying it forward."
+          : "Become an AVAIA member to continue into Conversations Across Time and access your ongoing AVAIA membership."}
       </p>
       {checkout === "cancelled" && (
         <p className="mt-4 text-sm text-muted">Checkout was cancelled — no charge was made.</p>

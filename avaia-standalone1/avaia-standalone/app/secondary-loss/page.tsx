@@ -99,11 +99,11 @@ export default function SecondaryLossPage() {
         </p>
         <div className="mt-6">
           <Link
-            href="/journey"
+            href="/defying-grief"
             prefetch={false}
             className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
-            Begin the Journey
+            Continue with Defying Grief
           </Link>
         </div>
       </div>

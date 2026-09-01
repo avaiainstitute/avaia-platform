@@ -62,7 +62,9 @@ export default function AboutContent() {
         >
           Start Your Individual Awareness Profile
         </Link>
-        <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
+        <p className="mt-3 text-sm text-muted">
+          It&rsquo;s free to begin — this is Defying Grief, AVAIA&rsquo;s current program.
+        </p>
       </div>
 
       {/* The Name -- pronunciation + etymology discipline. AVAIA is

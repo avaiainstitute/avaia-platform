@@ -11,7 +11,7 @@ export default function InnerCompassJourneyPage() {
     <div className="mx-auto max-w-prose px-5 py-16">
       <JourneyStageProgress current="innercompass" />
 
-      <p className="label mb-2 mt-8">The AVAIA Journey — Part Three</p>
+      <p className="label mb-2 mt-8">Defying Grief — Agency</p>
       <h1 className="font-serif text-4xl text-ink">InnerCompass</h1>
       <p className="mt-2 font-serif text-xl text-seal">
         You get to decide what belongs to you from here.
@@ -50,19 +50,15 @@ export default function InnerCompassJourneyPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-serif text-2xl text-ink">A concrete example</h2>
+        <h2 className="font-serif text-2xl text-ink">Inside Defying Grief</h2>
         <p className="mt-3 text-lg leading-relaxed text-muted">
-          In AVAIA&rsquo;s Defying Grief program specifically, this is where two forms of the
-          same audacity meet. The Audacity of Grief is the stubbornness that keeps a person
-          showing up inside loss, even when nothing about it has resolved. The Audacity of
-          Happiness is the nerve it takes to hope again, to dream something for yourself again,
-          to laugh without it meaning you&rsquo;ve forgotten. Someone may choose to stay with the
-          Audacity of Grief. They may move toward the Audacity of Happiness. AVAIA doesn&rsquo;t
-          prescribe either one — it only helps make sure the choice is actually theirs.
-        </p>
-        <p className="mt-3 text-sm text-muted">
-          (Again, a Defying Grief example, not something every InnerCompass conversation walks
-          through.)
+          In Defying Grief, this is where two forms of the same audacity meet. The Audacity of
+          Grief is the stubbornness that keeps a person showing up inside loss, even when nothing
+          about it has resolved. The Audacity of Happiness is the nerve it takes to hope again, to
+          dream something for yourself again, to laugh without it meaning you&rsquo;ve forgotten.
+          Someone may choose to stay with the Audacity of Grief. They may move toward the Audacity
+          of Happiness. AVAIA doesn&rsquo;t prescribe either one — it only helps make sure the
+          choice is actually theirs.
         </p>
       </section>
 
@@ -76,7 +72,7 @@ export default function InnerCompassJourneyPage() {
           prefetch={false}
           className="mt-5 inline-block font-serif text-xl text-seal hover:underline"
         >
-          Return to the Journey →
+          Return to Defying Grief →
         </Link>
       </div>
     </div>

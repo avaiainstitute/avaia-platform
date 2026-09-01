@@ -11,7 +11,7 @@ export default function IapJourneyPage() {
     <div className="mx-auto max-w-prose px-5 py-16">
       <JourneyStageProgress current="iap" />
 
-      <p className="label mb-2 mt-8">The AVAIA Journey — Part One</p>
+      <p className="label mb-2 mt-8">Defying Grief — Awareness</p>
       <h1 className="font-serif text-4xl text-ink">Individual Awareness Profile</h1>
       <p className="mt-2 font-serif text-xl text-seal">You get to say it.</p>
 

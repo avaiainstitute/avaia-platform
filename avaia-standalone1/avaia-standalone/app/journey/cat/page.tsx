@@ -11,7 +11,7 @@ export default function CatJourneyPage() {
     <div className="mx-auto max-w-prose px-5 py-16">
       <JourneyStageProgress current="cat" />
 
-      <p className="label mb-2 mt-8">The AVAIA Journey — Part Two</p>
+      <p className="label mb-2 mt-8">Defying Grief — Understanding</p>
       <h1 className="font-serif text-4xl text-ink">Conversations Across Time</h1>
       <p className="mt-2 font-serif text-xl text-seal">You get to understand it.</p>
 
@@ -46,17 +46,11 @@ export default function CatJourneyPage() {
         <h2 className="font-serif text-2xl text-ink">Same thing, different intent</h2>
         <p className="mt-3 text-lg leading-relaxed text-muted">
           Two things can look almost identical on the surface and come from completely different
-          places underneath. In AVAIA&rsquo;s Defying Grief program, for example, this is where
-          the idea of <em>Audacity</em> enters — not one of AVAIA&rsquo;s virtues, but, as the
-          program itself describes it, &ldquo;the force that makes a person insist on their own
-          aliveness in the face of loss.&rdquo; The same force can look different from person to
-          person, and CAT stays curious about how it&rsquo;s actually showing up for someone
-          rather than assuming the answer in advance.
-        </p>
-        <p className="mt-3 text-sm text-muted">
-          (This is specific to Defying Grief, not something every CAT conversation explores —
-          it&rsquo;s an example of what &ldquo;same thing, different intent&rdquo; can look
-          like.)
+          places underneath. In Defying Grief, this is where the idea of <em>Audacity</em> enters
+          — not one of AVAIA&rsquo;s virtues, but, as the program itself describes it, &ldquo;the
+          force that makes a person insist on their own aliveness in the face of loss.&rdquo; The
+          same force can look different from person to person, and CAT stays curious about how
+          it&rsquo;s actually showing up for someone rather than assuming the answer in advance.
         </p>
       </section>
 

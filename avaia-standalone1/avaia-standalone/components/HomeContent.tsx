@@ -175,7 +175,9 @@ export default function HomeContent() {
             Learn About AVAIA
           </Link>
         </div>
-        <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
+        <p className="mt-3 text-sm text-muted">
+          It&rsquo;s free to begin — this is Defying Grief, AVAIA&rsquo;s current program.
+        </p>
       </section>
     </div>
   );
