@@ -99,7 +99,7 @@ export default function DefyingGriefCurriculum({
     const used: string[] = [];
     for (const m of modules) {
       if (m.body.toLowerCase().includes(activityTitle.toLowerCase())) {
-        used.push(`Module ${m.position}${m.title ? ` — ${m.title}` : ""}`);
+        used.push(m.title ?? `Module ${m.position}`);
       }
     }
     return used;
@@ -220,9 +220,7 @@ export default function DefyingGriefCurriculum({
                           onClick={() => toggleModule(m.id)}
                           className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
                         >
-                          <span className="font-serif text-lg text-ink">
-                            Module {m.position} — {m.title}
-                          </span>
+                          <span className="font-serif text-lg text-ink">{m.title}</span>
                           <span className="label shrink-0 text-muted">
                             {isOpen ? "Close" : "Open"}
                           </span>
