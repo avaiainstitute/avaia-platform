@@ -6,11 +6,14 @@ import type { Experience } from "@/lib/experiences";
 export const metadata = { title: "Experiences — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Read-only Experience browse for Guides -- minimum first slice. The 11
- *  approved Experiences are seeded as status='draft' (migration 0020), so
- *  this page will legitimately show "nothing published yet" until they're
- *  explicitly published -- an honest empty state, not a broken one. No
- *  Experience Builder, no admin CRUD UI, in this pass. */
+/** Read-only Experience browse for Guides -- minimum first slice. Of the
+ *  11 approved Experiences seeded as status='draft' (migration 0020), one
+ *  -- "The Things We Lose After the Loss" -- is now published (migration
+ *  0031) and links through to its real detail route
+ *  (/toolkit/experiences/[experienceId]); the rest still show nothing
+ *  here until they're explicitly published too, an honest empty
+ *  contribution rather than a broken one. No Experience Builder, no admin
+ *  CRUD UI, in this pass. */
 export default async function ToolkitExperiencesPage() {
   const supabase = createClient();
   const {
@@ -46,15 +49,17 @@ export default async function ToolkitExperiencesPage() {
       ) : (
         <div className="mt-8 space-y-3">
           {experiences.map((experience) => (
-            <div
+            <Link
               key={experience.id}
-              className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4"
+              href={`/toolkit/experiences/${experience.id}`}
+              prefetch={false}
+              className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 transition-colors hover:border-seal"
             >
               <p className="font-serif text-lg text-ink">{experience.title}</p>
               {experience.summary && (
                 <p className="mt-1 text-sm text-muted">{experience.summary}</p>
               )}
-            </div>
+            </Link>
           ))}
         </div>
       )}
