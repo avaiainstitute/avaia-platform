@@ -117,10 +117,10 @@ function ThresholdContent({
           what&rsquo;s left.
         </p>
         <p className="mt-4 text-muted">
-          A loss rarely takes only the one thing it&rsquo;s named for. What it quietly takes
-          alongside it — meaning, trust, a sense of control, connection, a piece of your own
-          identity — are Secondary Losses, and they&rsquo;re often where the real weight lives,
-          even when nobody names them out loud.
+          A loss is a single point of impact — but the ripples move outward from there. What it
+          quietly takes alongside it — meaning, trust, a sense of control, connection, a piece of
+          your own identity — are Secondary Losses, and they&rsquo;re often where the real weight
+          lives, even when nobody names them out loud.
         </p>
         <p className="mt-4 text-muted">
           Defying Grief doesn&rsquo;t start by telling you what to do or how you should grieve.
@@ -260,11 +260,14 @@ function ThresholdContent({
           <Link href="/chemistry" className="text-ink underline decoration-rule underline-offset-2 hover:text-seal">
             Chemistry of Virtue
           </Link>{" "}
-          can help you understand what you&rsquo;re drawing on.
+          can help you recognize what&rsquo;s still here — the qualities, relationships, and
+          capacities that remain, even now.
         </p>
         <p className="mt-4 text-sm text-muted">
           You can move through this on your own, at your own pace. Human Guide support will also
-          be available through AVAIA&rsquo;s Guided Journey pathway as that becomes available.
+          be available through AVAIA&rsquo;s Guided Journey pathway as that becomes available, and
+          Defying Grief can also be experienced together — through presentations, workshops, and
+          other AVAIA Experiences — where those are available.
         </p>
       </div>
 
