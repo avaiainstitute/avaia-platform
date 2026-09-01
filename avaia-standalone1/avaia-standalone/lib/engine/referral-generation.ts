@@ -401,22 +401,22 @@ export async function generateGuidesRecord(
   // IAP and CAT only -- InnerCompass's schema has no secondary-loss field.
   // See SECONDARY_LOSS_DISCIPLINE's own comment in lib/engine/prompts.ts.
   //
-  // DELIBERATE CHOICE (Youth safety + conversation completion pass): never
-  // for program === "youth". The Youth Production-Readiness Audit found
-  // Youth's live conversation never teaches the canonical ten-item taxonomy
-  // (SECONDARY_LOSS_RECOGNITION is scoped to program === "defying-grief"
-  // only, and YOUTH_IAP_INSTRUCTIONS/YOUTH_CAT_INSTRUCTIONS speak only of
-  // "possible Active Secondary Losses" generically), yet this referral step
-  // was silently classifying the Youth Host's referral against that same
-  // taxonomy anyway -- recognizing a framework the Host's own conversation
-  // never established. That's diagnosis-by-omission, not recognition. The
-  // smallest architecture-preserving fix is to leave Youth referrals exactly
-  // as they were before this taxonomy existed (secondaryLossesIdentified /
-  // significantSecondaryLosses simply come back empty for Youth, same as
-  // before SECONDARY_LOSS_DISCIPLINE was ever added) until a deliberate
-  // Youth Defying Grief adaptation decides how -- or whether -- the Ten
-  // Secondary Losses should reach a Youth Host at all. Not implemented here.
-  if ((stage === "iap" || stage === "cat") && program !== "youth") {
+  // RESTORED for program === "youth" (Youth Defying Grief individual
+  // Journey pass). The prior safety pass excluded Youth here because at
+  // that time Youth's live conversation never taught the canonical taxonomy
+  // -- classifying against it anyway was diagnosis-by-omission, not
+  // recognition. That premise no longer holds: youthSystemPromptFor now
+  // unconditionally layers YOUTH_DEFYING_GRIEF_RECOGNITION into every
+  // individual Youth IAP/CAT conversation, which holds the same ten-item
+  // taxonomy in the background for recognition (never a checklist, never
+  // introduced to the Host) exactly as SECONDARY_LOSS_RECOGNITION does for
+  // adult 'defying-grief'. Since the conversation now actually establishes
+  // the framework, this referral step applies uniformly again, same as
+  // every other program -- SECONDARY_LOSS_DISCIPLINE itself already
+  // instructs "never invent... if it doesn't genuinely fit any of the ten,
+  // it... is not a secondary loss classification," so a Youth referral
+  // still only ever names what the Host's own words actually support.
+  if (stage === "iap" || stage === "cat") {
     system += `\n\n${"=".repeat(60)}\n\n${SECONDARY_LOSS_DISCIPLINE}`;
   }
 
