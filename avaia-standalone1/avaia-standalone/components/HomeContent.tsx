@@ -19,7 +19,7 @@ export default function HomeContent() {
       {/* ---------------------------------------------------------------
           Hero
       --------------------------------------------------------------- */}
-      <p className="label mb-2 text-2xl">AVAIA</p>
+      <p className="label mb-2" style={{ fontSize: "1.5rem" }}>AVAIA</p>
       <p className="mb-3 text-xs text-muted">pronounced uh-VAY-uh</p>
       <p className="font-cinzel text-sm uppercase tracking-[0.2em] text-phoenix">
         Clarity Starts With Integrity.
