@@ -1,6 +1,13 @@
 import "server-only";
 import { anthropic } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, CAT_OPENING_GENERATION } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  CAT_OPENING_GENERATION,
+  YOUTH_OPENING_ADAPTATION,
+  youthOpeningBandNote,
+  type Program,
+  type DevelopmentalBand,
+} from "@/lib/engine/prompts";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
 
 // Generates CAT's referral-aware opening once, at the IAP -> CAT handoff.
@@ -14,17 +21,31 @@ import { recordAiUsage } from "@/lib/engine/ai-usage";
 // file imported into another can fail the build. hostId/conversationId are
 // for AI-usage attribution only (see lib/engine/ai-usage.ts) -- optional so
 // this stays callable even if a future caller doesn't have them.
+//
+// program/developmentalBand are optional and additive -- every existing
+// caller that doesn't pass them (e.g. the GPT-handoff endpoint, which never
+// touches Youth) behaves exactly as before. When program === "youth", the
+// system prompt gets the same developmental-adaptation layer already
+// governing the rest of that Youth conversation (see YOUTH_OPENING_
+// ADAPTATION's own comment) -- CAT_OPENING_GENERATION itself is untouched
+// for every program, including Youth.
 export async function generateCatOpening(
   referralContent: unknown,
   hostId?: string | null,
-  conversationId?: string | null
+  conversationId?: string | null,
+  program?: Program,
+  developmentalBand?: DevelopmentalBand | null
 ): Promise<string | undefined> {
   try {
     const client = anthropic();
+    const system =
+      program === "youth"
+        ? `${CAT_OPENING_GENERATION}\n\n${"=".repeat(60)}\n\n${youthOpeningBandNote(developmentalBand ?? null)}\n\n${YOUTH_OPENING_ADAPTATION}`
+        : CAT_OPENING_GENERATION;
     const resp: any = await client.messages.create({
       model: AVAIA_MODEL,
       max_tokens: 600,
-      system: CAT_OPENING_GENERATION,
+      system,
       messages: [
         {
           role: "user",

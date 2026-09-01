@@ -30,7 +30,7 @@ export default async function UnsungHeroesPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("consent_at")
+    .select("consent_at, minor_with_guardian")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
@@ -65,6 +65,41 @@ export default async function UnsungHeroesPage({
             className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
             Continue to Membership
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Unsung Heroes' own conversation prompt (UNSUNG_HEROES_SHARED_POSTURE,
+  // lib/engine/prompts.ts) unconditionally tells the model "You are
+  // speaking with an adult Host" -- it has no program/developmentalBand
+  // parameter to change that (see unsungHeroesSystemPrompt's signature).
+  // Rather than let a self-identified minor start a conversation the model
+  // is actively told is with an adult, block it here until a genuine Youth
+  // Unsung Heroes adaptation is deliberately built -- same posture as the
+  // membership gate just above, not a redesign of Unsung Heroes itself.
+  if (profile?.minor_with_guardian) {
+    return (
+      <div className="mx-auto max-w-prose px-5 py-20">
+        <div className="flex items-baseline justify-between">
+          <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
+            AVAIA
+          </Link>
+          <SignOutButton />
+        </div>
+        <p className="label mb-3 mt-8">Unsung Heroes</p>
+        <h1 className="font-serif text-4xl text-ink">Not yet available for Youth</h1>
+        <p className="mt-4 text-lg text-muted">
+          Unsung Heroes hasn&rsquo;t been adapted for Youth Hosts yet. Your Youth Journey — IAP, CAT,
+          and InnerCompass — is fully available; this one feature isn&rsquo;t part of it yet.
+        </p>
+        <div className="mt-8">
+          <Link
+            href="/journey"
+            className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+          >
+            Return to your Journey
           </Link>
         </div>
       </div>

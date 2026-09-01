@@ -57,7 +57,7 @@ export default async function JourneyPage({
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("consent_at")
+    .select("consent_at, minor_with_guardian")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -116,6 +116,14 @@ export default async function JourneyPage({
         : searchParams?.program === "youth"
         ? "youth"
         : "general";
+
+    // Same protection as the silent brand-new-Host default below (see its
+    // comment for the full reasoning) -- a Host who self-identified as
+    // under 18 at /welcome must not be routed into a non-Youth program even
+    // via an explicit ?new=1&program=... request.
+    if (profile?.minor_with_guardian && requestedProgram !== "youth") {
+      redirect("/youth");
+    }
     if (convo) {
       let developmentalBand: DevelopmentalBand | null = null;
       if (convo.program === "youth") {
@@ -165,6 +173,21 @@ export default async function JourneyPage({
       .limit(1)
       .maybeSingle();
     if (!mostRecentConvo) {
+      // A Host who self-identified as under 18 at /welcome (minor_with_
+      // guardian, written alongside consent_at in app/api/consent/route.ts)
+      // must never be silently defaulted into the adult Defying Grief
+      // engine below -- route them into the existing Youth entry/band-
+      // selection pathway instead, before any Journey is created. This is
+      // self-attestation only, not verified guardian consent (see /youth's
+      // own migration and the Youth Production-Readiness Audit) -- it is
+      // used here only to prevent a known minor from entering the adult
+      // engine, never as a claim that guardian-consent architecture is
+      // complete. A Host who picked "18 or older," or a legacy account
+      // that predates this question, is unaffected and falls through to
+      // the existing default exactly as before.
+      if (profile?.minor_with_guardian) {
+        redirect("/youth");
+      }
       // Defying Grief is the current individual Host pathway (no separate
       // "General AVAIA Journey" is being positioned against it) -- a
       // genuinely brand-new Host's complimentary IAP is the beginning of

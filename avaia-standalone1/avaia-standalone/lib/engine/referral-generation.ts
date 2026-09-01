@@ -10,6 +10,8 @@ import {
   REFERRAL_CALIBRATION_DISCIPLINE,
   SECONDARY_LOSS_DISCIPLINE,
   INNERCOMPASS_OPENING_GENERATION,
+  YOUTH_OPENING_ADAPTATION,
+  youthOpeningBandNote,
   type Program,
   type Stage,
   type DevelopmentalBand,
@@ -262,17 +264,26 @@ function sanitizeSecondaryLossClassifications(value: unknown): unknown[] {
 // fallback-on-failure behavior. Uses formatCatReferralForInnerCompass so
 // the opening line is never generated from raw referral JSON -- see that
 // function's own comment for why.
+// program/developmentalBand: same additive treatment as generateCatOpening
+// in lib/engine/openings.ts -- optional, only changes behavior for
+// program === "youth", INNERCOMPASS_OPENING_GENERATION itself untouched.
 async function generateInnerCompassOpening(
   referralContent: unknown,
   hostId: string,
-  conversationId: string | null
+  conversationId: string | null,
+  program?: Program,
+  developmentalBand?: DevelopmentalBand | null
 ): Promise<string | undefined> {
   try {
     const client = anthropic();
+    const system =
+      program === "youth"
+        ? `${INNERCOMPASS_OPENING_GENERATION}\n\n${"=".repeat(60)}\n\n${youthOpeningBandNote(developmentalBand ?? null)}\n\n${YOUTH_OPENING_ADAPTATION}`
+        : INNERCOMPASS_OPENING_GENERATION;
     const resp: any = await client.messages.create({
       model: AVAIA_MODEL,
       max_tokens: 600,
-      system: INNERCOMPASS_OPENING_GENERATION,
+      system,
       messages: [
         {
           role: "user",
@@ -389,7 +400,23 @@ export async function generateGuidesRecord(
 
   // IAP and CAT only -- InnerCompass's schema has no secondary-loss field.
   // See SECONDARY_LOSS_DISCIPLINE's own comment in lib/engine/prompts.ts.
-  if (stage === "iap" || stage === "cat") {
+  //
+  // DELIBERATE CHOICE (Youth safety + conversation completion pass): never
+  // for program === "youth". The Youth Production-Readiness Audit found
+  // Youth's live conversation never teaches the canonical ten-item taxonomy
+  // (SECONDARY_LOSS_RECOGNITION is scoped to program === "defying-grief"
+  // only, and YOUTH_IAP_INSTRUCTIONS/YOUTH_CAT_INSTRUCTIONS speak only of
+  // "possible Active Secondary Losses" generically), yet this referral step
+  // was silently classifying the Youth Host's referral against that same
+  // taxonomy anyway -- recognizing a framework the Host's own conversation
+  // never established. That's diagnosis-by-omission, not recognition. The
+  // smallest architecture-preserving fix is to leave Youth referrals exactly
+  // as they were before this taxonomy existed (secondaryLossesIdentified /
+  // significantSecondaryLosses simply come back empty for Youth, same as
+  // before SECONDARY_LOSS_DISCIPLINE was ever added) until a deliberate
+  // Youth Defying Grief adaptation decides how -- or whether -- the Ten
+  // Secondary Losses should reach a Youth Host at all. Not implemented here.
+  if ((stage === "iap" || stage === "cat") && program !== "youth") {
     system += `\n\n${"=".repeat(60)}\n\n${SECONDARY_LOSS_DISCIPLINE}`;
   }
 
@@ -519,20 +546,29 @@ export async function generateGuidesRecord(
 export async function advanceToNextStage(
   supabase: SupabaseClient,
   hostId: string,
-  conversation: { id: string; stage: Stage; program: Program; journeyId: string | null },
+  conversation: {
+    id: string;
+    stage: Stage;
+    program: Program;
+    journeyId: string | null;
+    /** Youth Journey, Phase 1 only -- ignored for every other program. */
+    developmentalBand?: DevelopmentalBand | null;
+  },
   content: Record<string, unknown>
 ): Promise<{ nextStage: Stage } | { nextStage: null }> {
-  const { id: conversationId, stage, program, journeyId } = conversation;
+  const { id: conversationId, stage, program, journeyId, developmentalBand } = conversation;
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
   if (!nextStage) return { nextStage: null };
 
-  // Carry the program tag forward so IAP(defying-grief) -> CAT(defying-grief)
-  // doesn't silently fall back to 'general' on the next stage.
+  // Carry the program tag (and, for Youth, the developmental band) forward
+  // so IAP(defying-grief) -> CAT(defying-grief) doesn't silently fall back
+  // to 'general' on the next stage, and so a Youth opening is generated
+  // with the same developmental awareness as the rest of that Journey.
   const opening =
     nextStage === "cat"
-      ? await generateCatOpening(content, hostId, conversationId)
+      ? await generateCatOpening(content, hostId, conversationId, program, developmentalBand)
       : nextStage === "innercompass"
-        ? await generateInnerCompassOpening(content, hostId, conversationId)
+        ? await generateInnerCompassOpening(content, hostId, conversationId, program, developmentalBand)
         : undefined;
   await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
   return { nextStage };
