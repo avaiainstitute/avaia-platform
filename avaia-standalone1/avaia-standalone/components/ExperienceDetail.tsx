@@ -49,6 +49,7 @@ const LAYOUT_GROUPS: { heading: string; types: SectionType[] }[] = [
   { heading: "The Arc", types: ["movement"] },
   { heading: "Activities", types: ["activity"] },
   { heading: "Conversation Windows", types: ["conversation_window"] },
+  { heading: "Participant Guide", types: ["participant_guide"] },
   { heading: "Take-Home", types: ["take_home"] },
   { heading: "Formats", types: ["format_variant"] },
   { heading: "Definition of Success", types: ["success_definition"] },

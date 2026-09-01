@@ -16,7 +16,8 @@ export type SectionType =
   | "boundary"
   | "take_home"
   | "format_variant"
-  | "success_definition";
+  | "success_definition"
+  | "participant_guide";
 
 export const SECTION_TYPES: SectionType[] = [
   "orientation",
@@ -32,6 +33,7 @@ export const SECTION_TYPES: SectionType[] = [
   "take_home",
   "format_variant",
   "success_definition",
+  "participant_guide",
 ];
 
 export const SECTION_TYPE_LABEL: Record<SectionType, string> = {
@@ -48,6 +50,7 @@ export const SECTION_TYPE_LABEL: Record<SectionType, string> = {
   take_home: "Take-Home",
   format_variant: "Format Variants",
   success_definition: "Definition of Success",
+  participant_guide: "Participant Guide",
 };
 
 export type ExperienceSectionStatus = "draft" | "published" | "archived";

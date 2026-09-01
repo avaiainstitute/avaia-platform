@@ -183,7 +183,9 @@ function ThresholdContent({
         <p className="text-sm text-muted">
           The Individual Awareness Profile, Conversations Across Time, and InnerCompass are the
           same three AVAIA conversations that carry every Host through every journey — here,
-          they carry you through this one.
+          they carry you through this one. Around them, the experience also includes teaching,
+          activities, and reflection you can move through at your own pace — the conversations
+          are part of it, not all of it.
         </p>
 
         <div className="mt-8 space-y-8">

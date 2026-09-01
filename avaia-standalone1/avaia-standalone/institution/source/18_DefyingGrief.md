@@ -25,13 +25,46 @@ take-home continuity remain their own.
 
 ## Curriculum Sequence
 
-1.  What is Defying Grief?
-2.  What did I lose?
-3.  Why does it hurt?
-4.  What is Audacity?
-5.  What has grief been allowed to decide?
-6.  What is still here?
-7.  What can I choose?
+The seven-question sequence is taught as eleven modules — implemented as
+`movement` sections 1–11 on "The Things We Lose After the Loss" (the
+Experience this curriculum is delivered through; see Delivery below).
+
+1.  What Is Grief? *(Awareness)* — widens grief past death alone.
+2.  What Is Defying Grief? *(Awareness)* — what it is and is not.
+3.  The Stone and the Ripples *(Awareness)* — the Ripple architecture.
+4.  The Things We Lose After the Loss *(Understanding)* — the Ten
+    Secondary Losses.
+5.  What Have I Been Carrying? *(Understanding)* — the accumulated
+    weight.
+6.  What Is Audacity? *(Understanding)* — shared-room teaching; one
+    force, two directions.
+7.  What Has Grief Been Allowed to Decide? *(Understanding)* —
+    recognition, never blame.
+8.  What Is Still Here? *(Understanding)* — recognition of what
+    remains.
+9.  The Same Audacity *(Agency)* — the bridge into choice.
+10. The Audacity of Choice *(Agency)* — what I cannot control vs. what
+    I can choose.
+11. We Don't Move On. We Move With. *(Agency)* — integration and
+    take-home continuity.
+
+## Delivery
+
+Implemented on the Experience's existing content architecture
+(`experience_sections`), not a separate curriculum system:
+
+-   Modules 1–11 — `movement` sections, one per module
+-   Facilitator Delivery Guide — a `guide_preparation` section,
+    alongside the existing Presenter Freedom and Certified Guide
+    Preparation sections
+-   Participant Guide — a private, second-person `participant_guide`
+    section a participant can complete without showing anyone
+-   Take-Home Record — the existing `take_home` section, expanded with
+    three fields the modules now produce (What Grief Has Influenced,
+    What I Want to Remember, What I Want to Explore Next)
+-   All eight existing activities, the Ten Secondary Losses reference,
+    the Shared-Room Rule, and Presenter Freedom are reused by the
+    modules above, not duplicated
 
 ## Ripple Architecture
 
@@ -154,16 +187,20 @@ What I Can Choose, When the Ripple Returns.
 
 ## Scalable Formats
 
--   20–30 minute presentation
--   60–90 minute workshop
--   Half-day workshop
--   2-day retreat
--   3-day retreat
--   Community/grief event
--   Youth adaptation
+Each format selects or compresses modules from the same eleven —none
+introduce a different sequence.
 
-Each compresses or expands the same sequence; none introduce a
-different one.
+-   20–30 minute presentation — Modules 2, 3, 6, closing with a brief
+    Module 10
+-   60–90 minute workshop — Modules 2–6, 8, a shortened Module 10
+-   Half-day workshop — Modules 1–8
+-   2-day retreat — Day One: Modules 1–5; Day Two: Modules 6–11
+-   3-day retreat — Day One: Modules 1–3; Day Two: Modules 4–9; Day
+    Three: Modules 10–11
+-   Community/grief event — Modules 1–4, no private disclosure
+    required
+-   Youth adaptation — separate safeguarded architecture; not
+    remapped here
 
 ## Anchor
 
