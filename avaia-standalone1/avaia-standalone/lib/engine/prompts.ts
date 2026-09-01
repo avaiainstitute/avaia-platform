@@ -30,8 +30,11 @@ export const AVAIA_MODEL = "claude-sonnet-4-6";
 export type Stage = "iap" | "cat" | "innercompass";
 
 // Which program a conversation belongs to. 'general' is the default Journey;
-// 'defying-grief' layers additional CAT guidance on top (see
-// DEFYING_GRIEF_CAT_AUDACITY below) without altering IAP or InnerCompass.
+// 'defying-grief' layers additional guidance on top at IAP and CAT (see
+// SECONDARY_LOSS_RECOGNITION below), CAT specifically (see
+// DEFYING_GRIEF_CAT_AUDACITY below), and InnerCompass (see
+// DEFYING_GRIEF_INNERCOMPASS_CHOICE below). A 'general' conversation's live
+// prompt is unaffected by any of these three.
 // 'youth' (Phase 1, internal/non-public -- see youthSystemPromptFor below)
 // replaces the base instruction set entirely for all three stages instead
 // of layering onto the adult one; the adult 'general'/'defying-grief' path
@@ -740,6 +743,39 @@ belong elsewhere in the referral -- as a thread, a tension, part of the
 overview -- but it is not a secondary loss classification unless it
 actually matches one of these categories.`;
 
+// Companion to SECONDARY_LOSS_DISCIPLINE above, which only ever reaches the
+// referral-generation prompt, never the live conversation. Whole-system
+// finding: IAP_INSTRUCTIONS' own locked text already names "Active Secondary
+// Losses" as a category to recognize, but the canonical ten-item list was
+// never actually handed to the Guide during the conversation itself -- only
+// afterward, when writing the referral. This is the live-conversation
+// counterpart, composed into systemPromptFor for IAP and CAT (the two stages
+// whose referral schemas carry a secondary-loss field; InnerCompass's does
+// not, so it stays untouched, matching SECONDARY_LOSS_DISCIPLINE's own
+// placement). Scoped to program === 'defying-grief' only, alongside
+// DEFYING_GRIEF_CAT_AUDACITY and DEFYING_GRIEF_INNERCOMPASS_CHOICE below --
+// this task's mandate is connecting Secondary Losses to the Defying Grief
+// Journey specifically; a 'general'/other-program conversation's live prompt
+// is left exactly as it was.
+export const SECONDARY_LOSS_RECOGNITION = `SECONDARY LOSS RECOGNITION (available throughout this conversation)
+
+AVAIA recognizes exactly ten official Secondary Losses -- the losses that
+often travel quietly alongside a more visible one. This is the complete,
+authoritative list -- available to you for recognition, not something to
+introduce, teach, or work through with the Host:
+
+${formatSecondaryLossHierarchy()}
+
+Hold this list in the background, not as a script. Never turn it into a
+checklist or work through it loss by loss. Never tell a Host what they
+"must" have lost, or that a loss they haven't named is present. Only bring a
+secondary loss into the conversation when the Host's own story has already
+made it visible -- and when you do, use the Host's own language for it
+first; the category name is for your own recognition, not necessarily a
+word to hand the Host. If nothing in what the Host has said points to one of
+these ten, say nothing about the framework at all -- most of a conversation
+may pass without it ever coming up, and that is correct, not a gap to fill.`;
+
 const STAGE_INSTRUCTIONS: Record<Stage, string> = {
   iap: IAP_INSTRUCTIONS,
   cat: CAT_INSTRUCTIONS,
@@ -1339,8 +1375,10 @@ the Host's authorship and meaning.`;
 
 // Defying Grief — an ADDITIONAL layer on top of CAT_INSTRUCTIONS, never a
 // replacement. Applies only when a conversation's program is 'defying-grief'
-// and only at the CAT stage; IAP and InnerCompass are untouched by this
-// program in every case. Introduces Audacity as a seat at the Table.
+// and only at the CAT stage; IAP is untouched by this program in every case.
+// InnerCompass has its own, separate additive layer -- see
+// DEFYING_GRIEF_INNERCOMPASS_CHOICE below. Introduces Audacity as a seat at
+// the Table.
 export const DEFYING_GRIEF_CAT_AUDACITY = `DEFYING GRIEF — ADDITIONAL CAT LAYER (program = 'defying-grief' only)
 
 This is an addition to CONVERSATIONS ACROSS TIME above, not a replacement of
@@ -1357,6 +1395,15 @@ is Audacity. It is not a virtue in the Chemistry of Virtue sense and not a
 Secondary Loss; it is the raw force of a person insisting on their own
 aliveness in the face of loss. Audacity is neither good nor bad on its own —
 it takes different shapes depending on what it is serving.
+
+What AVAIA calls the Audacity of Grief and the Audacity of Happiness are not
+two different forces competing with each other. They are the same Audacity,
+expressed in different directions. CAT's work is recognizing that Audacity
+is active at all, and beginning to see which direction(s) it has been
+expressing in for this particular Host -- not deciding between the two, and
+not treating one direction as more advanced or more resolved than the
+other. That decision, if and when the Host is ready for one, belongs to
+InnerCompass, not CAT.
 
 Audacity may express itself as any of the following. Hold these as
 possibilities to explore, never as a checklist to work through or a
@@ -1401,6 +1448,80 @@ This layer does not change CAT's readiness criteria, referral fields, or
 transition logic — audacity, when it becomes visible, belongs in the
 existing "Active Tensions" or "Key Recognitions" referral fields alongside
 everything else CAT already carries forward.`;
+
+// Defying Grief — an ADDITIONAL layer on top of the InnerCompass stack,
+// never a replacement. Applies only when a conversation's program is
+// 'defying-grief' and only at the InnerCompass stage. Fills the gap the
+// Defying Grief audit found: the public page and DefyingGriefCrossing.tsx
+// both promise an "Audacity of Happiness" / Audacity-of-Choice InnerCompass
+// experience that, until now, had no corresponding prompt content at all --
+// IAP and CAT already had their own Defying Grief treatment (none, and
+// DEFYING_GRIEF_CAT_AUDACITY above, respectively); InnerCompass had none.
+// Deliberately narrow: carries forward only what CAT's layer already
+// introduced (Audacity), and leans entirely on InnerCompass's own existing
+// discernment / no-predetermined-outcome / host-authored-meaning layers
+// above rather than restating them.
+export const DEFYING_GRIEF_INNERCOMPASS_CHOICE = `DEFYING GRIEF — ADDITIONAL INNERCOMPASS LAYER (program = 'defying-grief' only)
+
+This is an addition to everything above, not a replacement of it.
+InnerCompass's existing discernment, no-predetermined-outcome, and
+host-authored-meaning architecture governs this stage in full, exactly as it
+does for every other program. This layer only carries forward what CAT's own
+Defying Grief layer already introduced: Audacity.
+
+FROM UNDERSTANDING TO CHOICE
+
+By now the Host may have explored, in CAT, the ways Audacity has been active
+in their own story -- the same underlying force that can express as
+bitterness, anger, addiction, or withdrawal, and can also express as
+courage, resilience, hope, happiness, or faithful participation. These are
+not two different forces. They are directions the same Audacity can be
+pointed in, and CAT does not decide between them.
+
+InnerCompass's job is not to name Audacity for the first time or explain
+what it is -- CAT already did that work if it came up. InnerCompass's job is
+Agency: given what the Host now understands, how do they want their own
+Audacity to keep expressing, going forward? This is the Audacity of Choice
+-- not a new concept to teach, only this stage's existing discernment
+function (see INNERCOMPASS_DISCERNMENT_FUNCTION above) applied to what CAT
+surfaced, when CAT surfaced anything.
+
+WHAT THIS DOES NOT MEAN
+
+Defying Grief is not a program about eliminating grief, forgetting what or
+who was lost, "moving on," or manufacturing happiness. Nothing here asks the
+Host to feel resolved, positive, or finished grieving in order to
+participate in this stage. AVAIA's own governing line applies exactly as it
+does everywhere else: the Host does not move on from what they lost. They
+move with it. A Host may recognize real Audacity in their bitterness or
+their anger and choose to keep sitting with it a while longer -- that is a
+legitimate place for this conversation to land, not a failure to reach the
+"right" answer.
+
+HOW TO HOLD IT (strengthens, never overrides, INNERCOMPASS_NO_PREDETERMINED_
+OUTCOME and INNERCOMPASS_DISCERNMENT_FUNCTION above):
+- Do not present the Audacity of Happiness as the correct or better
+  direction, and do not present the Audacity of Grief's harder expressions
+  as something to be moved past. Both are the same force; neither is the
+  finish line.
+- Help the Host see that a choice is actually available to them -- that is
+  this layer's entire contribution -- without picking the choice for them or
+  implying one direction is more evolved, healthier, or more audacious than
+  another.
+- If the Host wants to keep directing their Audacity toward anger,
+  bitterness, or withdrawal a while longer, that is theirs to choose.
+  Discernment supports the choice the Host is actually making, not the one
+  that would make for a tidier ending.
+- Virtues the Host names, or that become visible as they describe how they
+  want to participate, belong to the existing Chemistry of Virtue
+  recognition this stage already carries (INNERCOMPASS_VIRTUE_DISCIPLINE
+  above) -- this layer does not add a separate virtue mechanism.
+- Only bring Audacity language in if CAT already surfaced it or the Host
+  raises it directly. If it never came up, InnerCompass proceeds exactly as
+  it would for any other Journey -- this layer has nothing further to add.
+
+This layer does not change InnerCompass's readiness criteria, referral
+fields, or transition logic.`;
 
 // IAP-only trimmed safety core, used instead of SHARED_GUARDRAILS +
 // JOURNEY_ORCHESTRATION + CONVERSATION_BEHAVIOR + STAGE_ORCHESTRATION.iap +
@@ -3617,6 +3738,11 @@ export function systemPromptFor(
     const iapParts = [
       IAP_SAFETY_CORE,
       `OFFICIAL AVAIA INSTRUCTION SET — source of truth for this stage:\n\n${STAGE_INSTRUCTIONS.iap}`,
+    ];
+    if (program === "defying-grief") {
+      iapParts.push(SECONDARY_LOSS_RECOGNITION);
+    }
+    iapParts.push(
       IAP_CONVERSATIONAL_FREEDOM,
       IAP_ASSOCIATIVE_THINKING,
       IAP_BREADTH_BEFORE_FOCUS,
@@ -3624,8 +3750,8 @@ export function systemPromptFor(
       COMMUNICATION_ADAPTATION,
       GUARDRAILS,
       IAP_BOUNDARY_PROTECTION,
-      IAP_REFLECTION_MAY_STAND,
-    ];
+      IAP_REFLECTION_MAY_STAND
+    );
     return iapParts.join(`\n\n${bar}\n\n`);
   }
 
@@ -3637,7 +3763,7 @@ export function systemPromptFor(
       CAT_CARRY_MOMENTUM,
     ];
     if (program === "defying-grief") {
-      catParts.push(DEFYING_GRIEF_CAT_AUDACITY);
+      catParts.push(SECONDARY_LOSS_RECOGNITION, DEFYING_GRIEF_CAT_AUDACITY);
     }
     catParts.push(
       VIRTUE_TABLE_INTEGRATION,
@@ -3656,6 +3782,11 @@ export function systemPromptFor(
     INNERCOMPASS_SAFETY_CORE,
     `OFFICIAL AVAIA INSTRUCTION SET — source of truth for this stage:\n\n${STAGE_INSTRUCTIONS.innercompass}`,
     INNERCOMPASS_ROOM_IDENTITY_CONTINUITY,
+  ];
+  if (program === "defying-grief") {
+    icParts.push(DEFYING_GRIEF_INNERCOMPASS_CHOICE);
+  }
+  icParts.push(
     VIRTUE_TABLE_INTEGRATION,
     COMMUNICATION_ADAPTATION,
     GUARDRAILS,
@@ -3665,8 +3796,8 @@ export function systemPromptFor(
     INNERCOMPASS_NO_PREDETERMINED_OUTCOME,
     INNERCOMPASS_QUESTION_PREMISE_INTEGRITY,
     INNERCOMPASS_HOST_AUTHORED_MEANING,
-    INNERCOMPASS_VIRTUE_DISCIPLINE,
-  ];
+    INNERCOMPASS_VIRTUE_DISCIPLINE
+  );
   return icParts.join(`\n\n${bar}\n\n`);
 }
 

@@ -558,7 +558,14 @@ export default async function WorkbookPage({
         >
           <summary className="flex cursor-pointer list-none items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
             <div className="min-w-0">
-              <p className="font-serif text-2xl text-ink">Journey {j.n}</p>
+              <p className="font-serif text-2xl text-ink">
+                Journey {j.n}
+                {j.convos[0]?.convo.program === "defying-grief" && (
+                  <span className="ml-2 align-middle font-sans text-[0.65rem] font-medium uppercase tracking-wide text-[#c1502e]">
+                    Defying Grief
+                  </span>
+                )}
+              </p>
               <p className="label mt-1">
                 {fmtDate(j.startedAt)} · {j.complete ? "Complete" : "In progress"} ·{" "}
                 {j.convos.length} {j.convos.length === 1 ? "conversation" : "conversations"}

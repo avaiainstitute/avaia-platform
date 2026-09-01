@@ -188,7 +188,8 @@ function ThresholdContent({
 
         <div className="mt-8 space-y-8">
           <div>
-            <p className="font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.iap}</p>
+            <p className="label text-muted">Awareness</p>
+            <p className="mt-1 font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.iap}</p>
             <p className="mt-1 text-sm text-seal">You get to say it.</p>
             <p className="mt-3 text-muted">
               IAP comes first because nothing else can start until this is said. It gives you
@@ -206,7 +207,8 @@ function ThresholdContent({
           </div>
 
           <div>
-            <p className="font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.cat}</p>
+            <p className="label text-muted">Understanding</p>
+            <p className="mt-1 font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.cat}</p>
             <p className="mt-1 text-sm text-seal">You get to understand it.</p>
             <p className="mt-3 text-muted">
               CAT doesn&rsquo;t ask you to keep listing what&rsquo;s wrong — it already has
@@ -227,7 +229,8 @@ function ThresholdContent({
           </div>
 
           <div>
-            <p className="font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.innercompass}</p>
+            <p className="label text-muted">Agency</p>
+            <p className="mt-1 font-serif text-xl text-ink">{DEFYING_GRIEF_STAGE_LABEL.innercompass}</p>
             <p className="mt-1 text-sm text-seal">You get to decide what belongs to you from here.</p>
             <p className="mt-3 text-muted">
               The question changes here — no longer what happened, or what does it mean, but
@@ -258,6 +261,10 @@ function ThresholdContent({
             Chemistry of Virtue
           </Link>{" "}
           can help you understand what you&rsquo;re drawing on.
+        </p>
+        <p className="mt-4 text-sm text-muted">
+          You can move through this on your own, at your own pace. Human Guide support will also
+          be available through AVAIA&rsquo;s Guided Journey pathway as that becomes available.
         </p>
       </div>
 

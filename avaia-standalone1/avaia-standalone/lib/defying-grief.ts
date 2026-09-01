@@ -10,10 +10,11 @@ export const DEFYING_GRIEF_PROGRAM_NAME = "Defying Grief: A Sacred Rebellion";
 // receives what comes home from it (see the generalized referral-receiving
 // endpoint at app/api/gpt-actions/iap-referral/route.ts, and
 // beginDefyingGriefWorkshop in app/defying-grief/page.tsx). IAP is identical
-// whether a conversation belongs to the general Journey or Defying Grief
-// (Defying Grief's only content addition, DEFYING_GRIEF_CAT_AUDACITY,
-// applies at CAT only), so the same IAP GPT is reused for both rather than
-// needing a second one.
+// whether a conversation belongs to the general Journey or Defying Grief --
+// Defying Grief's content additions (DEFYING_GRIEF_CAT_AUDACITY and
+// DEFYING_GRIEF_INNERCOMPASS_CHOICE, see lib/engine/prompts.ts) apply at CAT
+// and InnerCompass only -- so the same IAP GPT is reused for both rather
+// than needing a second one.
 export const IAP_GPT_URL =
   "https://chatgpt.com/g/g-6a2cc069e6688191b02bff51c3067c6a-individual-awareness-profile-iap-gpt";
 export const CAT_GPT_URL =

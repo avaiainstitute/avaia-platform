@@ -165,8 +165,25 @@ export default async function JourneyPage({
       .limit(1)
       .maybeSingle();
     if (!mostRecentConvo) {
-      const firstJourneyId = await createJourney(supabase, user.id, "general");
-      convo = await createConversation(supabase, user.id, "iap", undefined, "general", firstJourneyId);
+      // Defying Grief is the current individual Host pathway (no separate
+      // "General AVAIA Journey" is being positioned against it) -- a
+      // genuinely brand-new Host's complimentary IAP is the beginning of
+      // Defying Grief, tagged as such from this very first conversation so
+      // the CAT Audacity layer, the InnerCompass Audacity-of-Choice layer,
+      // the crossing screens, and the Workbook's Defying Grief badge all
+      // apply to them the same way they already do for a Host who arrived
+      // through /defying-grief's own front door. See the matching adjustment
+      // to the JourneyIntro condition below, which keeps this population's
+      // IAP orientation screen intact.
+      const firstJourneyId = await createJourney(supabase, user.id, "defying-grief");
+      convo = await createConversation(
+        supabase,
+        user.id,
+        "iap",
+        undefined,
+        "defying-grief",
+        firstJourneyId
+      );
     } else {
       journeyComplete = true;
       programForRestart = (mostRecentConvo.program as Program) ?? "general";
@@ -268,7 +285,15 @@ export default async function JourneyPage({
   // first-message-not-yet-sent moment, for every case Defying Grief's
   // crossing doesn't cover (every program's first IAP message, and general
   // program's CAT/InnerCompass entries). See JourneyIntro's own comment.
-  if (rawMessages.length === 1 && searchParams?.enter !== "1" && convo.program !== "defying-grief") {
+  // IAP is included regardless of program -- DefyingGriefCrossing above
+  // never covers IAP (it only has CAT/InnerCompass content), so without this
+  // a Defying-Grief-tagged first IAP conversation would reach neither screen
+  // and drop the Host straight into an empty chat with no orientation at all.
+  if (
+    rawMessages.length === 1 &&
+    searchParams?.enter !== "1" &&
+    (stage === "iap" || convo.program !== "defying-grief")
+  ) {
     // Room Identity + a short description of what the Host is entering --
     // reused from the referral already generated at the previous stage,
     // not shown on IAP entry (nothing precedes it). Shared across every
