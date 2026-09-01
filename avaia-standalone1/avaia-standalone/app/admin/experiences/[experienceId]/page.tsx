@@ -4,6 +4,7 @@ import ExperienceDetail, {
   type ComponentAvailabilityItem,
   type RelatedClass,
 } from "@/components/ExperienceDetail";
+import DefyingGriefCurriculum from "@/components/DefyingGriefCurriculum";
 import type { Experience } from "@/lib/experiences";
 import type { ExperienceSection } from "@/lib/experience-sections";
 import { TOOL_REGISTRY, type ToolKey, type ToolStatus } from "@/lib/toolkit";
@@ -88,12 +89,21 @@ export default async function AdminExperiencePreviewPage({
         Admin draft preview — not visible to ordinary Guides. This renders the
         same shared component the eventual Guide-facing route will use.
       </p>
-      <ExperienceDetail
-        experience={experience}
-        sections={sections}
-        componentAvailability={componentAvailability}
-        relatedClasses={relatedClasses}
-      />
+      {experience.components.includes("defying-grief") ? (
+        <DefyingGriefCurriculum
+          experience={experience}
+          sections={sections}
+          componentAvailability={componentAvailability}
+          relatedClasses={relatedClasses}
+        />
+      ) : (
+        <ExperienceDetail
+          experience={experience}
+          sections={sections}
+          componentAvailability={componentAvailability}
+          relatedClasses={relatedClasses}
+        />
+      )}
     </div>
   );
 }
