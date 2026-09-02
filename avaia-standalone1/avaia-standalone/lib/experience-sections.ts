@@ -97,7 +97,7 @@ export function groupSectionsByType(
 export type ModuleField = { label: string; text: string };
 
 const MODULE_FIELD_PATTERN =
-  /\b(Movement|Purpose|Core idea|Facilitator teaching|Key distinctions?|Shared-room experience|Private reflection(?: \/ take-home)?|Activit(?:y|ies)|Optional AVAIA conversation|Guide boundaries|Transition|Closing):\s*/g;
+  /\b(Movement|Purpose|Core idea|Facilitator teaching|Key distinctions?|Shared-room experience|Private reflection(?: \/ take-home)?|Activit(?:y|ies)|Developmental adaptation|Optional AVAIA conversation|Guide boundaries|Transition|Closing):\s*/g;
 
 /** Canonical reading order for a module's parsed fields, independent of
  *  the order labels happen to appear in the stored body text (that order
@@ -115,6 +115,7 @@ const MODULE_FIELD_DISPLAY_ORDER = [
   "Shared-room experience",
   "Private reflection",
   "Private reflection / take-home",
+  "Developmental adaptation",
   "Optional AVAIA conversation",
   "Guide boundaries",
   "Transition",

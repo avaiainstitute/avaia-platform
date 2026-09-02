@@ -70,6 +70,7 @@ export function isValidComponentTag(tag: string): tag is ToolKey {
     "defying-grief",
     "unsung-heroes",
     "library",
+    "youth-defying-grief",
     "youth-group",
   ];
   return (known as string[]).includes(tag);
