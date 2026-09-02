@@ -185,21 +185,25 @@ export async function hasReferralForConversation(
 }
 
 /** Whether a Guide is authorized to run this specific conversation --
- *  requires both a live 'guide' role (checked fresh, not cached from a
- *  historical row) and an actual guide_sessions row tying this exact
- *  conversation to this exact Guide. This is the narrow exception
- *  /api/conversation and /api/referral check before falling back to their
- *  ordinary isMember() gate: it only ever unlocks a conversation the
- *  Guide's own Toolkit already created and owns, never an arbitrary Host's
- *  conversation, and never grants a Guide unrestricted access on the
- *  strength of role alone. */
+ *  requires a live 'guide' role, a live Toolkit platform authorization
+ *  (re-checked fresh here, not just at the /toolkit layout gate -- a Guide
+ *  whose Toolkit authorization is revoked must also lose the ability to
+ *  continue an already-started conversation by calling this API directly,
+ *  not just lose the UI route to it), and an actual guide_sessions row
+ *  tying this exact conversation to this exact Guide. This is the narrow
+ *  exception /api/conversation, /api/referral, and the Unsung Heroes API
+ *  routes check before falling back to their ordinary isMember() gate: it
+ *  only ever unlocks a conversation the Guide's own Toolkit already
+ *  created and owns, never an arbitrary Host's conversation, and never
+ *  grants a Guide unrestricted access on the strength of role alone. */
 export async function isAuthorizedGuideConversation(
   supabase: SupabaseClient,
   userId: string,
   conversationId: string
 ): Promise<boolean> {
-  const [guide, session] = await Promise.all([
+  const [guide, toolkitAuthorized, session] = await Promise.all([
     isGuide(supabase, userId),
+    isToolkitAuthorized(supabase, userId),
     supabase
       .from("guide_sessions")
       .select("id")
@@ -208,7 +212,7 @@ export async function isAuthorizedGuideConversation(
       .limit(1)
       .maybeSingle(),
   ]);
-  return guide && !!session.data;
+  return guide && toolkitAuthorized && !!session.data;
 }
 
 /** Finds the conversation for a given stage within a Journey -- used after
@@ -284,6 +288,9 @@ export type RecognitionRow = {
   story: string;
   virtue_family: string;
   primary_virtue: string | null;
+  // Required at the DB level (0005_unsung_heroes.sql) -- "why this
+  // mattered," core to the recognition, not optional.
+  reflection: string;
   conversation_path: string;
   conversation_id: string | null;
   created_at: string;
