@@ -15,11 +15,19 @@ export const dynamic = "force-dynamic";
  *  pending to active. A guardian visiting an already-confirmed or
  *  unknown link sees a plain, honest state -- never an error that implies
  *  something is broken. */
+type PendingConsent = {
+  id: string;
+  guardian_name: string | null;
+  disclosure_text: string;
+  scope: string;
+  status: string;
+};
+
 export default async function GuardianConsentPage({ params }: { params: { token: string } }) {
   const supabase = createClient();
   const { data, error } = await supabase
     .rpc("get_pending_consent_by_token", { p_token: params.token })
-    .maybeSingle();
+    .maybeSingle<PendingConsent>();
 
   if (error) {
     return (
