@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { setPostSignInRedirect, peekPostSignInRedirect } from "@/lib/post-signin-redirect";
 
 /**
- * Passwordless sign-in by 6-digit code. This is NOT two-factor — there is no
+ * Passwordless sign-in by 8-digit code (Supabase Auth's configured OTP
+ * length for this project). This is NOT two-factor — there is no
  * password; the emailed code IS the whole sign-in. We use a code (not a link)
  * so the Host verifies in the SAME tab/PWA — reliable on a phone, no dependence
  * on which browser opens an email link. Once verified, the session persists, so
@@ -120,7 +121,7 @@ export default function SignInPage() {
       ) : (
         <>
           <p className="mt-4 text-lg text-muted">
-            We sent a 6-digit code to <span className="text-ink">{email}</span>. Enter it below to
+            We sent an 8-digit code to <span className="text-ink">{email}</span>. Enter it below to
             continue. (Check spam if it&rsquo;s not there in a minute.)
           </p>
           <form onSubmit={verify} className="mt-10 space-y-4">

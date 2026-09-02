@@ -70,7 +70,12 @@ async function startYouthDefyingGriefSession(formData: FormData) {
     })
     .select("id")
     .single();
-  if (participantError || !participant) redirect("/toolkit/youth-defying-grief");
+  if (participantError || !participant) {
+    console.error("AVAIA youth-defying-grief error: participant insert failed", participantError);
+    redirect(
+      `/toolkit/youth-defying-grief?error=${encodeURIComponent(participantError?.message ?? "no participant returned")}`
+    );
+  }
 
   const { data: session, error: sessionError } = await supabase
     .from("guide_sessions")
@@ -83,12 +88,21 @@ async function startYouthDefyingGriefSession(formData: FormData) {
     })
     .select("id")
     .single();
-  if (sessionError || !session) redirect("/toolkit/youth-defying-grief");
+  if (sessionError || !session) {
+    console.error("AVAIA youth-defying-grief error: session insert failed", sessionError);
+    redirect(
+      `/toolkit/youth-defying-grief?error=${encodeURIComponent(sessionError?.message ?? "no session returned")}`
+    );
+  }
 
   redirect(`/toolkit/iap/${session.id}`);
 }
 
-export default async function ToolkitYouthDefyingGriefPage() {
+export default async function ToolkitYouthDefyingGriefPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -111,6 +125,12 @@ export default async function ToolkitYouthDefyingGriefPage() {
         at Understanding and Agency. Nothing about the underlying engine is different; only who is
         present in the room and how it begins.
       </p>
+
+      {searchParams.error && (
+        <div className="mt-6 rounded-lg border border-red-500/40 bg-red-500/[0.08] p-4 text-sm text-red-300">
+          Couldn&rsquo;t start this session: {searchParams.error}
+        </div>
+      )}
 
       <form
         action={startYouthDefyingGriefSession}
