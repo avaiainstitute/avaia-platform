@@ -6,6 +6,8 @@ import RichText from "@/components/RichText";
 import MicButton from "@/components/MicButton";
 import SpeakButton from "@/components/SpeakButton";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
+import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
+import WhatBecameVisible from "@/components/WhatBecameVisible";
 
 type Msg = { role: "host" | "guide"; content: string };
 type ContextType = "school" | "community" | "family";
@@ -204,6 +206,21 @@ export default function UnsungHeroesChat({
           <strong>{saved.whoBecameVisible}</strong> just got recognized for it.
           {saved.primaryVirtue ? ` What you noticed: ${saved.primaryVirtue}.` : ""}
         </p>
+
+        {saved.primaryVirtue && (
+          <WhatBecameVisible
+            // recognitions.virtue_family stores the family KEY
+            // ("positive-attitude"), not the display name CAT/InnerCompass
+            // referrals use -- resolved here so addSignatureEntryForHost's
+            // isValidVirtueFamily check (which validates against the
+            // canonical display name) sees the same shape either source
+            // produces.
+            virtues={[{ family: familyOf(saved.virtueFamily as VirtueFamilyKey)?.name ?? saved.virtueFamily, element: saved.primaryVirtue }]}
+            sourceType="unsung_heroes"
+            sourceReference={conversationId}
+          />
+        )}
+
         <div className="mt-6 flex flex-wrap gap-3">
           <a
             href="/unsung-heroes"

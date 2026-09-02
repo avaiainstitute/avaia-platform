@@ -7,6 +7,8 @@ import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import PreparationSnapshot from "@/components/PreparationSnapshot";
+import { listSignatureEntriesForParticipant } from "@/lib/virtue-signature";
+import { VirtueLink } from "@/components/VirtueLink";
 
 export const metadata = { title: "Preparation — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -168,6 +170,7 @@ export default async function PreparationPage({
   const history = await getParticipantHistory(supabase, user.id, params.participantId);
   if (!history) notFound();
   const { participant, sessions } = history;
+  const signatureEntries = await listSignatureEntriesForParticipant(supabase, participant.id);
 
   const active = sessions.filter((r) => effectiveStatus(r) !== "complete");
   const complete = sessions.filter((r) => effectiveStatus(r) === "complete");
@@ -216,6 +219,27 @@ export default async function PreparationPage({
             </span>
           ))}
         </div>
+      )}
+
+      {signatureEntries.length > 0 && (
+        <section className="mt-6 rounded-lg border border-rule bg-white/[0.03] p-5">
+          <p className="label mb-2 text-muted">Virtue Signature — qualities this participant has recognized</p>
+          <p className="mb-3 text-sm text-muted">
+            Evidence the participant has chosen to keep, not a statement of who they are.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {signatureEntries.map((e) => (
+              <VirtueLink
+                key={e.id}
+                family={e.family}
+                virtue={e.element}
+                className="rounded-full border border-rule px-3 py-1 text-xs text-ink transition-colors hover:border-seal"
+              >
+                {e.element ? `${e.family} — ${e.element}` : e.family}
+              </VirtueLink>
+            ))}
+          </div>
+        </section>
       )}
 
       <PreparationSnapshot participantId={participant.id} />

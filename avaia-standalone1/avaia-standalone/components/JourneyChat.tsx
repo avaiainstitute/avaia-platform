@@ -7,6 +7,7 @@ import MicButton from "@/components/MicButton";
 import SpeakButton from "@/components/SpeakButton";
 import RichText from "@/components/RichText";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
+import WhatBecameVisible from "@/components/WhatBecameVisible";
 // Type-only -- referral-provenance.ts is "server-only", but a type-only
 // import is fully erased before bundling, so nothing server-only actually
 // ships to the client. Reused so the card's shape can't drift from what
@@ -291,6 +292,14 @@ export default function JourneyChat({
             )}
             {finished.summary.direction && (
               <p className="mt-2 text-sm leading-relaxed text-ink">{finished.summary.direction}</p>
+            )}
+
+            {finished.summary.virtues && finished.summary.virtues.length > 0 && (
+              <WhatBecameVisible
+                virtues={finished.summary.virtues}
+                sourceType="conversation_referral"
+                sourceReference={conversationId}
+              />
             )}
 
             <p className="mt-4 text-sm text-muted">

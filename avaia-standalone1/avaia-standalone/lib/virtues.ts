@@ -188,6 +188,15 @@ export function familyOf(key: VirtueFamilyKey): VirtueFamily {
   return VIRTUE_FAMILIES.find((f) => f.key === key)!;
 }
 
+/** Same lookup as familyOf, keyed by the family's display name instead --
+ *  what stored data (referral virtue classifications, virtue_signature_
+ *  entries) actually holds, per VirtueClassification's own shape. Returns
+ *  undefined rather than throwing on an unrecognized name, since this is
+ *  used to color/render already-validated-elsewhere data, not to gate it. */
+export function familyByName(name: string): VirtueFamily | undefined {
+  return VIRTUE_FAMILIES.find((f) => f.name === name);
+}
+
 export function virtuesByFamily(key: VirtueFamilyKey): Virtue[] {
   return VIRTUES.filter((v) => v.family === key);
 }
