@@ -87,13 +87,23 @@ export async function POST(request: Request) {
       .insert({ host_id: user.id, conversation_id: conversationId });
   }
 
-  // Persist the Host's turn before anything else branches on it.
-  await supabase.from("messages").insert({
+  // Persist the Host's turn before anything else branches on it. A failed
+  // insert must stop the request here -- continuing to reply as if the
+  // Host's own words were saved is the exact "looked sent, wasn't there on
+  // reload" failure mode this check closes.
+  const { error: hostMessageError } = await supabase.from("messages").insert({
     conversation_id: conversationId,
     host_id: user.id,
     role: "host",
     content: message,
   });
+  if (hostMessageError) {
+    console.error("AVAIA conversation error: Host message failed to persist", hostMessageError);
+    return NextResponse.json(
+      { error: "Your message couldn't be saved. Please try again." },
+      { status: 500 }
+    );
+  }
 
   // Convergence: the Host may type completion in ordinary language instead
   // of clicking "I'm ready to move forward" -- see lib/engine/finish-intent.ts
@@ -222,12 +232,19 @@ export async function POST(request: Request) {
         // part of the transcript the Host or Workbook should ever see.
         const clean = extractFocus(full).text;
         if (clean.trim()) {
-          await supabase.from("messages").insert({
+          const { error: replyError } = await supabase.from("messages").insert({
             conversation_id: conversationId,
             host_id: user.id,
             role: "guide",
             content: clean,
           });
+          // The stream has already sent this text to the Host, so there's
+          // nothing left to change client-side -- but a silently-failed
+          // insert here is exactly what would make the reply vanish on
+          // reload, so it must not go unlogged the way it did before.
+          if (replyError) {
+            console.error("AVAIA conversation error: reply failed to persist", replyError);
+          }
         }
         controller.close();
       } catch (e) {
