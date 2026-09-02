@@ -38,7 +38,11 @@ export default async function ToolkitLayout({ children }: { children: React.Reac
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-16">
-      <div className="flex items-baseline justify-between">
+      {/* id="toolkit-chrome" is a print-CSS hook only -- any /toolkit/**
+          print view hides this via @media print rather than escaping this
+          shared layout, so every print route still inherits the ordinary
+          Toolkit authorization gate above with no duplicated auth check. */}
+      <div id="toolkit-chrome" className="flex items-baseline justify-between">
         <Link href="/toolkit" className="flex items-baseline gap-2.5">
           <span className="font-serif text-xl tracking-[0.16em] text-ink">AVAIA</span>
           <span className="label text-muted">Guide Toolkit</span>

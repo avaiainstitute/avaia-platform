@@ -137,6 +137,21 @@ export default function DefyingGriefCurriculum({
         </p>
       </div>
 
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          href={`/toolkit/experiences/${experience.id}/print/facilitator`}
+          className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          Print Facilitator Guide →
+        </Link>
+        <Link
+          href={`/toolkit/experiences/${experience.id}/print/participant`}
+          className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          Print Participant Materials →
+        </Link>
+      </div>
+
       <div className="mt-10 flex flex-wrap gap-2 border-t border-rule pt-8">
         {TABS.map((t) => (
           <button

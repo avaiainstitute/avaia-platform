@@ -149,3 +149,54 @@ export function parseModuleMovement(body: string): "Awareness" | "Understanding"
   const match = body.match(/^Movement:\s*(Awareness|Understanding|Agency)\./);
   return (match?.[1] as "Awareness" | "Understanding" | "Agency" | undefined) ?? null;
 }
+
+/** Same purpose as parseModuleFields, for a different authored
+ *  convention: participant_guide and take_home bodies (migration 0033)
+ *  use ALL-CAPS prompt labels followed by either a colon or an em dash
+ *  ("THE STONE: ..." / "WHAT CHANGED FIRST — ..."), never the Title-Case
+ *  "Label:" convention movement bodies use. Print views use this to give
+ *  each prompt its own block with real writing space, instead of one
+ *  unbroken paragraph. Returns an empty array (never the raw body, never
+ *  an invented split) when a body doesn't follow the convention -- the
+ *  caller falls back to the raw body text. */
+export type PromptField = { label: string; text: string };
+
+const PROMPT_FIELD_PATTERN = /\b([A-Z][A-Z0-9 /'-]{2,48}?)\s*(?::|—)\s*/g;
+
+export function parsePromptFields(body: string): PromptField[] {
+  const matches = [...body.matchAll(PROMPT_FIELD_PATTERN)];
+  if (matches.length === 0) return [];
+  const fields: PromptField[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const label = matches[i][1].trim();
+    const start = matches[i].index! + matches[i][0].length;
+    const end = i + 1 < matches.length ? matches[i + 1].index! : body.length;
+    const text = body.slice(start, end).trim();
+    if (text) fields.push({ label, text });
+  }
+  return fields;
+}
+
+/** Best-effort module numbers a format_variant's own official body text
+ *  actually names ("Modules 2, 3, and 6", "Modules 1 through 8"). Purely
+ *  additive: used only to softly highlight which modules a print
+ *  Facilitator Packet's full module library corresponds to for the
+ *  selected format -- every module still prints in full regardless, so a
+ *  missed or extra match here never hides or fabricates curriculum
+ *  content, it only affects a highlight badge. */
+export function parseReferencedModuleNumbers(formatBody: string): Set<number> {
+  const numbers = new Set<number>();
+  const rangePattern = /Modules?\s+(\d+)\s*(?:through|to|-)\s*(\d+)/gi;
+  for (const m of formatBody.matchAll(rangePattern)) {
+    const start = parseInt(m[1], 10);
+    const end = parseInt(m[2], 10);
+    for (let n = start; n <= end; n++) numbers.add(n);
+  }
+  const listPattern = /Modules?\s+((?:\d+\s*,?\s*(?:and\s*)?)+)/gi;
+  for (const m of formatBody.matchAll(listPattern)) {
+    for (const n of m[1].matchAll(/\d+/g)) numbers.add(parseInt(n[0], 10));
+  }
+  const singlePattern = /Module\s+(\d+)(?!\s*(?:through|to|-)\s*\d)/gi;
+  for (const m of formatBody.matchAll(singlePattern)) numbers.add(parseInt(m[1], 10));
+  return numbers;
+}
