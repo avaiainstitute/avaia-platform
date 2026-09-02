@@ -51,7 +51,11 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     label: "Individual Awareness Profile",
     description: "Creates Awareness. The same canonical IAP engine used by the public Journey.",
     status: "installed",
-    href: "/toolkit/iap",
+    // No /toolkit/iap index route exists -- a Guide starts one from the
+    // Dashboard's own "Begin Individual Awareness Profile" form, or
+    // continues an existing one from a Participant's own page, matching
+    // cat/innercompass's identical null href below.
+    href: null,
   },
   {
     key: "cat",
@@ -126,7 +130,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "youth-group",
     label: "Youth & Group Adaptations",
-    description: "Age-appropriate and group-facilitated versions of the core conversations. A draft youth IAP adaptation exists but isn't yet integrated into the engine.",
+    description: "Guide-facilitated and group delivery of Youth conversations. The Youth Journey, Defying Grief, and Unsung Heroes are already fully built and live for self-guided individual Youth Hosts at /youth -- this entry is specifically about bringing a Guide into that facilitation, which doesn't exist yet.",
     status: "not-yet-specified",
     href: null,
   },
