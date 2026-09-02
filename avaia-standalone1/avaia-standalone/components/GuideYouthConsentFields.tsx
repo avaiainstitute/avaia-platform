@@ -2,12 +2,19 @@
 
 import { useState } from "react";
 import { YOUTH_ASSENT_TEXT } from "@/lib/youth-assent-text";
+import type { GuardianConsentScope } from "@/lib/guardian-consent";
 import type { DevelopmentalBand } from "@/lib/engine/prompts";
 
 const BAND_LABEL: Record<DevelopmentalBand, string> = {
   "8-11": "8–11",
   "12-14": "12–14",
   "15-17": "15–17",
+};
+
+const SCOPE_LABEL: Record<GuardianConsentScope, string> = {
+  individual: "Individual session",
+  group_workshop: "Group / workshop",
+  school_organization: "School / organization-sponsored",
 };
 
 /** The shared block of form fields any Guide-facilitated Youth start form
@@ -23,12 +30,19 @@ const BAND_LABEL: Record<DevelopmentalBand, string> = {
  *  each page keeps its own participant name/email fields and submit
  *  button around this. */
 export default function GuideYouthConsentFields({
-  sponsoringOrganizationField = false,
+  showScopeSelector = false,
   bandOptional = false,
 }: {
-  /** Show the optional sponsoring-organization field -- only the
-   *  school/organization-sponsored context needs it. */
-  sponsoringOrganizationField?: boolean;
+  /** Show the Individual / Group-workshop / School-organization scope
+   *  selector -- only Youth Defying Grief's entry point needs it (this is
+   *  the "complete the group/workshop delivery format" and "school/
+   *  organization delivery readiness" surface: there is no separate batch-
+   *  registration UI, and none is claimed here -- a Guide running a group
+   *  session registers each attendee through this same form once per
+   *  person, each with their own guardian consent scoped to that context.
+   *  The sponsoring-organization field appears only once a non-individual
+   *  scope is picked. */
+  showScopeSelector?: boolean;
   /** When true, band starts unselected and isn't required -- for a tool
    *  most participants use as adults (Unsung Heroes), where a Guide only
    *  sets a band when this specific participant is actually a Youth Host.
@@ -40,10 +54,37 @@ export default function GuideYouthConsentFields({
   bandOptional?: boolean;
 }) {
   const [band, setBand] = useState<DevelopmentalBand | "">("");
+  const [scope, setScope] = useState<GuardianConsentScope>("individual");
   const showGuardianFields = !bandOptional || band !== "";
+  const showSponsoringOrganization = showScopeSelector && scope !== "individual";
 
   return (
     <>
+      {showScopeSelector && (
+        <fieldset className="mt-2">
+          <legend className="label mb-3">Context</legend>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(Object.keys(SCOPE_LABEL) as GuardianConsentScope[]).map((s) => (
+              <label
+                key={s}
+                className="flex cursor-pointer items-center gap-2 rounded-md border border-rule bg-white/[0.03] px-4 py-3"
+              >
+                <input type="radio" name="scope" value={s} checked={scope === s} onChange={() => setScope(s)} />
+                <span className="text-sm text-ink">{SCOPE_LABEL[s]}</span>
+              </label>
+            ))}
+          </div>
+          {scope === "group_workshop" && (
+            <p className="mt-2 text-sm text-muted">
+              Registers one attendee at a time -- run this once per participant in the room. The
+              shared curriculum itself is delivered live, using the Master Curriculum and its
+              print materials; this registers each attendee&rsquo;s own private AVAIA conversation
+              access within that session.
+            </p>
+          )}
+        </fieldset>
+      )}
+
       <fieldset className="mt-6">
         <legend className="label mb-3">
           Developmental band{bandOptional ? " (only if this participant is a young person)" : ""}
@@ -120,7 +161,7 @@ export default function GuideYouthConsentFields({
             </div>
           </div>
 
-          {sponsoringOrganizationField && (
+          {showSponsoringOrganization && (
             <div className="mt-4">
               <label className="label mb-2 block" htmlFor="sponsoringOrganization">
                 Sponsoring school or organization (optional)

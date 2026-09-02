@@ -2,9 +2,13 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { recordGuardianConsentForParticipant } from "@/lib/guardian-consent";
+import { recordGuardianConsentForParticipant, type GuardianConsentScope } from "@/lib/guardian-consent";
 import GuideYouthConsentFields from "@/components/GuideYouthConsentFields";
 import type { DevelopmentalBand } from "@/lib/engine/prompts";
+
+function isScope(value: FormDataEntryValue | null): value is GuardianConsentScope {
+  return value === "individual" || value === "group_workshop" || value === "school_organization";
+}
 
 export const metadata = { title: "Youth Defying Grief — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -59,6 +63,9 @@ async function startYouthDefyingGriefSession(formData: FormData) {
   // components/GuideYouthConsentFields.tsx, whose checkboxes these read.
   // Both required, checked server-side (not just via disabled-button UX),
   // before any participant or session row is created.
+  const scopeField = formData.get("scope");
+  const scope: GuardianConsentScope = isScope(scopeField) ? scopeField : "individual";
+  const sponsoringOrganization = String(formData.get("sponsoringOrganization") ?? "").trim() || null;
   const guardianName = String(formData.get("guardianName") ?? "").trim();
   const guardianEmail = String(formData.get("guardianEmail") ?? "").trim();
   if (
@@ -98,10 +105,10 @@ async function startYouthDefyingGriefSession(formData: FormData) {
     supabase,
     user.id,
     participant.id,
-    "individual",
+    scope,
     guardianName,
     guardianEmail,
-    null
+    sponsoringOrganization
   );
   if (consentError) {
     console.error("AVAIA youth-defying-grief error: guardian consent insert failed", consentError);
@@ -156,6 +163,11 @@ export default async function ToolkitYouthDefyingGriefPage({
         at Understanding and Agency. Nothing about the underlying engine is different; only who is
         present in the room and how it begins.
       </p>
+      <p className="mt-3 text-sm text-muted">
+        For a group or workshop, run this form once per attendee — the shared curriculum itself is
+        delivered live, using the Master Curriculum content and its print materials; this
+        registers each participant&rsquo;s own guardian consent and private conversation access.
+      </p>
 
       {searchParams.error && (
         <div className="mt-6 rounded-lg border border-red-500/40 bg-red-500/[0.08] p-4 text-sm text-red-300">
@@ -193,7 +205,7 @@ export default async function ToolkitYouthDefyingGriefPage({
           </div>
         </div>
 
-        <GuideYouthConsentFields />
+        <GuideYouthConsentFields showScopeSelector />
 
         <button
           type="submit"
