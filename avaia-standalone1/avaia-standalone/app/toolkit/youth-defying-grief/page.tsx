@@ -2,16 +2,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { recordGuardianConsentForParticipant } from "@/lib/guardian-consent";
+import GuideYouthConsentFields from "@/components/GuideYouthConsentFields";
 import type { DevelopmentalBand } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Youth Defying Grief — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
-
-const BAND_LABEL: Record<DevelopmentalBand, string> = {
-  "8-11": "8–11",
-  "12-14": "12–14",
-  "15-17": "15–17",
-};
 
 function isBand(value: FormDataEntryValue | null): value is DevelopmentalBand {
   return value === "8-11" || value === "12-14" || value === "15-17";
@@ -57,6 +53,27 @@ async function startYouthDefyingGriefSession(formData: FormData) {
   const band = formData.get("band");
   if (!name || !isBand(band)) redirect("/toolkit/youth-defying-grief");
 
+  // Guardian consent authorizes participation; the Guide's own confirmation
+  // that they delivered the age-appropriate assent information to the
+  // Youth Host is a separate requirement -- see
+  // components/GuideYouthConsentFields.tsx, whose checkboxes these read.
+  // Both required, checked server-side (not just via disabled-button UX),
+  // before any participant or session row is created.
+  const guardianName = String(formData.get("guardianName") ?? "").trim();
+  const guardianEmail = String(formData.get("guardianEmail") ?? "").trim();
+  if (
+    !guardianName ||
+    !guardianEmail ||
+    formData.get("guardianConsentConfirmed") !== "1" ||
+    formData.get("assentDelivered") !== "1"
+  ) {
+    redirect(
+      `/toolkit/youth-defying-grief?error=${encodeURIComponent(
+        "Guardian consent and Youth participation information are both required."
+      )}`
+    );
+  }
+
   const linkedHostId = email ? await findHostIdByEmail(email) : null;
 
   const { data: participant, error: participantError } = await supabase
@@ -75,6 +92,20 @@ async function startYouthDefyingGriefSession(formData: FormData) {
     redirect(
       `/toolkit/youth-defying-grief?error=${encodeURIComponent(participantError?.message ?? "no participant returned")}`
     );
+  }
+
+  const { error: consentError } = await recordGuardianConsentForParticipant(
+    supabase,
+    user.id,
+    participant.id,
+    "individual",
+    guardianName,
+    guardianEmail,
+    null
+  );
+  if (consentError) {
+    console.error("AVAIA youth-defying-grief error: guardian consent insert failed", consentError);
+    redirect(`/toolkit/youth-defying-grief?error=${encodeURIComponent(consentError)}`);
   }
 
   const { data: session, error: sessionError } = await supabase
@@ -162,23 +193,7 @@ export default async function ToolkitYouthDefyingGriefPage({
           </div>
         </div>
 
-        <fieldset className="mt-6">
-          <legend className="label mb-3">Developmental band</legend>
-          <p className="mb-3 text-sm text-muted">
-            Governs how this conversation is developmentally adapted throughout -- shorter,
-            concrete language for a younger participant; fuller complexity for an older one. What
-            Defying Grief means never changes; only how it&rsquo;s spoken does.
-          </p>
-          {(Object.keys(BAND_LABEL) as DevelopmentalBand[]).map((band) => (
-            <label
-              key={band}
-              className="mt-2 flex cursor-pointer items-start gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3 first:mt-0"
-            >
-              <input type="radio" name="band" value={band} className="mt-1" required />
-              <span className="text-ink">{BAND_LABEL[band]}</span>
-            </label>
-          ))}
-        </fieldset>
+        <GuideYouthConsentFields />
 
         <button
           type="submit"

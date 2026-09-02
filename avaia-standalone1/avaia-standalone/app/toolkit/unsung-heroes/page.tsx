@@ -3,18 +3,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createUnsungHeroesConversation } from "@/lib/engine/unsung-heroes";
+import { recordGuardianConsentForParticipant } from "@/lib/guardian-consent";
+import GuideYouthConsentFields from "@/components/GuideYouthConsentFields";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath, type DevelopmentalBand } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Unsung Heroes — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
 
 const PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
-
-const BAND_LABEL: Record<DevelopmentalBand, string> = {
-  "8-11": "8–11",
-  "12-14": "12–14",
-  "15-17": "15–17",
-};
 
 function isBand(value: FormDataEntryValue | null): value is DevelopmentalBand {
   return value === "8-11" || value === "12-14" || value === "15-17";
@@ -73,6 +69,24 @@ async function startUnsungHeroesSession(formData: FormData) {
   const bandField = formData.get("band");
   const band = isBand(bandField) ? bandField : null;
 
+  // A band means this participant is a Youth Host -- guardian consent and
+  // the Guide's assent-delivery confirmation are then required, the same
+  // as Youth Defying Grief. An adult session (no band) needs neither, so
+  // it stays exactly as simple as before this requirement existed. See
+  // components/GuideYouthConsentFields.tsx (bandOptional mode) for the UI
+  // these fields come from.
+  const guardianName = String(formData.get("guardianName") ?? "").trim();
+  const guardianEmail = String(formData.get("guardianEmail") ?? "").trim();
+  if (
+    band &&
+    (!guardianName ||
+      !guardianEmail ||
+      formData.get("guardianConsentConfirmed") !== "1" ||
+      formData.get("assentDelivered") !== "1")
+  ) {
+    redirect(failPath("Guardian consent and Youth participation information are both required."));
+  }
+
   const linkedHostId = email ? await findHostIdByEmail(email) : null;
 
   const { data: participant, error: participantError } = await supabase
@@ -88,6 +102,19 @@ async function startUnsungHeroesSession(formData: FormData) {
     .single();
   if (participantError || !participant)
     redirect(failPath(participantError?.message ?? "Could not create the participant."));
+
+  if (band) {
+    const { error: consentError } = await recordGuardianConsentForParticipant(
+      supabase,
+      user.id,
+      participant.id,
+      "individual",
+      guardianName,
+      guardianEmail,
+      null
+    );
+    if (consentError) redirect(failPath(consentError));
+  }
 
   let convo;
   try {
@@ -172,24 +199,7 @@ export default async function ToolkitUnsungHeroesPage({
           </div>
         </div>
 
-        <fieldset className="mt-5">
-          <legend className="label mb-2">Developmental band (only if this participant is a young person)</legend>
-          <p className="mb-2 text-sm text-muted">
-            Leave unselected for an adult participant. Setting a band adapts this conversation the
-            same way Youth Defying Grief already does.
-          </p>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {(Object.keys(BAND_LABEL) as DevelopmentalBand[]).map((band) => (
-              <label
-                key={band}
-                className="flex cursor-pointer items-center gap-2 rounded-md border border-rule bg-white/[0.03] px-4 py-3"
-              >
-                <input type="radio" name="band" value={band} />
-                <span className="text-sm text-ink">{BAND_LABEL[band]}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <GuideYouthConsentFields bandOptional />
 
         <fieldset className="mt-5">
           <legend className="label mb-2">Path</legend>
