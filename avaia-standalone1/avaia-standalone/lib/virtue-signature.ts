@@ -1,66 +1,30 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
+import {
+  type SignatureLayer,
+  SIGNATURE_LAYER_LABEL,
+  SIGNATURE_LAYER_ORDER,
+  type SignatureSourceType,
+  type VirtueSignatureEntry,
+  IDENTITY_FIRST_RING,
+} from "@/lib/virtue-signature-constants";
 
 // AVAIA Virtue Signature -- source-based implementation. See migration
 // 0044's own header for the full provenance trail (original AVAIA source
 // material, recovered and read directly, not invented). This module owns
 // the record/query helpers; the six layers, "other people can provide
 // evidence, not identity," and "living record, not frozen" are the
-// governing facts everything here protects.
+// governing facts everything here protects. Plain types/constants live in
+// lib/virtue-signature-constants.ts (not server-only) and are re-exported
+// here for server code's convenience -- see that file's own header for why.
 
-export type SignatureLayer =
-  | "recognize_in_myself"
-  | "others_noticed"
-  | "qualities_together"
-  | "different_expressions"
-  | "want_to_practice"
-  | "want_to_contribute";
-
-export const SIGNATURE_LAYER_LABEL: Record<SignatureLayer, string> = {
-  recognize_in_myself: "What I Recognize in Myself",
-  others_noticed: "What Other People Have Noticed",
-  qualities_together: "How My Qualities Work Together",
-  different_expressions: "Different Ways the Same Quality Can Show Up",
-  want_to_practice: "What I Want to Practice",
-  want_to_contribute: "How I Want to Contribute",
+export {
+  SIGNATURE_LAYER_LABEL,
+  SIGNATURE_LAYER_ORDER,
+  IDENTITY_FIRST_RING,
 };
-
-export const SIGNATURE_LAYER_ORDER: SignatureLayer[] = [
-  "recognize_in_myself",
-  "others_noticed",
-  "qualities_together",
-  "different_expressions",
-  "want_to_practice",
-  "want_to_contribute",
-];
-
-export type SignatureSourceType = "self" | "conversation_referral" | "unsung_heroes" | "observation_offered";
-
-export type VirtueSignatureEntry = {
-  id: string;
-  host_id: string | null;
-  guide_participant_id: string | null;
-  layer: SignatureLayer;
-  family: string;
-  element: string | null;
-  note: string | null;
-  source_type: SignatureSourceType;
-  source_reference: string | null;
-  status: "active" | "removed";
-  created_at: string;
-  updated_at: string;
-};
-
-/** The two elements the recovered source material names as Identity's
- *  fixed first ring -- both already-canonical Integrity elements
- *  (confirmed against lib/virtues.ts before this was written), never
- *  something a Host adds or removes themselves. Every other ring is the
- *  Host's own living, editable record. */
-export const IDENTITY_FIRST_RING: { family: string; element: string }[] = [
-  { family: "Integrity", element: "Vulnerability" },
-  { family: "Integrity", element: "Authenticity" },
-];
+export type { SignatureLayer, SignatureSourceType, VirtueSignatureEntry };
 
 /** Adds one entry to a self-serve Host's own Signature. `supabase` must be
  *  the caller's own RLS-scoped client -- RLS enforces host_id = auth.uid()

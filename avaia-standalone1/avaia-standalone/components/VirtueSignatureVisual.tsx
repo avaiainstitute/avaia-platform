@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { familyByName } from "@/lib/virtues";
-import { IDENTITY_FIRST_RING, type VirtueSignatureEntry } from "@/lib/virtue-signature";
+import { IDENTITY_FIRST_RING, type VirtueSignatureEntry } from "@/lib/virtue-signature-constants";
 
 type Node = { family: string; element: string | null; entryId?: string };
 
