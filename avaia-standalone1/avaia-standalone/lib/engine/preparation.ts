@@ -99,7 +99,6 @@ function buildEvidenceText(history: ParticipantHistory): string {
       lines.push(`- Unsung Heroes${pathLabel ? ` (${pathLabel})` : ""}: "${r.recognition.title}"`);
       lines.push(`  Who became visible: ${r.recognition.who_became_visible}`);
       if (r.recognition.primary_virtue) lines.push(`  Virtue recognized: ${r.recognition.primary_virtue}`);
-      if (r.recognition.reflection) lines.push(`  Reflection: ${r.recognition.reflection}`);
     }
 
     return lines.join("\n");
