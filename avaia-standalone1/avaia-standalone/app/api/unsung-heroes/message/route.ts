@@ -13,7 +13,7 @@ import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { extractFocus } from "@/lib/virtue-focus";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
 import { isMember } from "@/lib/membership";
-import { isAuthorizedGuideConversation } from "@/lib/guide";
+import { isAuthorizedGuideConversation, resolveDevelopmentalBand } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,33 +49,39 @@ export async function POST(request: Request) {
   // core Journey engine. Never granted on role='guide' alone --
   // isAuthorizedGuideConversation requires a real guide_sessions row
   // tying this exact conversationId to this exact Guide.
-  if (
-    !(await isMember(supabase, user.id)) &&
-    !(await isAuthorizedGuideConversation(supabase, user.id, conversationId))
-  ) {
+  const guideFacilitated = await isAuthorizedGuideConversation(supabase, user.id, conversationId);
+  if (!(await isMember(supabase, user.id)) && !guideFacilitated) {
     return NextResponse.json(
       { error: "Unsung Heroes requires AVAIA Membership." },
       { status: 403 }
     );
   }
 
-  // Server-derived, never client-supplied: the same signal /api/conversation
-  // already uses for the Journey engine (profiles.minor_with_guardian, set
-  // at /welcome; profiles.developmental_band, set at /youth). Keyed to the
-  // signed-in caller, not the conversation's own host_id -- for the public
-  // route those are the same person; for a Guide-Toolkit-facilitated session
-  // (isAuthorizedGuideConversation above) the caller is the Guide, whose own
-  // profile is never minor_with_guardian, so a Guide session can never
-  // accidentally receive the Youth composition through this mechanism --
-  // Guide-facilitated Youth stays exactly as deferred as before this pass.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("minor_with_guardian, developmental_band")
-    .eq("id", user.id)
-    .maybeSingle();
-  const program: Program = profile?.minor_with_guardian ? "youth" : "general";
-  const developmentalBand: DevelopmentalBand | null =
-    program === "youth" ? ((profile?.developmental_band as DevelopmentalBand | null) ?? null) : null;
+  // Server-derived, never client-supplied. For a self-serve Host this is
+  // the same signal /api/conversation already uses (profiles.
+  // minor_with_guardian, set at /welcome; profiles.developmental_band, set
+  // at /youth). For a Guide-Toolkit-facilitated session, the caller is the
+  // Guide -- an adult whose own profile is never minor_with_guardian -- so
+  // the band instead comes from the guide_participants row the Guide set
+  // when starting the session (resolveDevelopmentalBand, the same
+  // resolution the core Journey engine now uses; see lib/guide.ts). A band
+  // present there means the Guide is running this for a Youth participant;
+  // its absence means an ordinary adult Guide-facilitated session.
+  let program: Program = "general";
+  let developmentalBand: DevelopmentalBand | null = null;
+  if (guideFacilitated) {
+    developmentalBand = await resolveDevelopmentalBand(supabase, user.id, conversationId);
+    program = developmentalBand ? "youth" : "general";
+  } else {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("minor_with_guardian, developmental_band")
+      .eq("id", user.id)
+      .maybeSingle();
+    program = profile?.minor_with_guardian ? "youth" : "general";
+    developmentalBand =
+      program === "youth" ? ((profile?.developmental_band as DevelopmentalBand | null) ?? null) : null;
+  }
 
   const path = convo.path as UnsungHeroesPath;
   let system = unsungHeroesSystemPrompt(path, program, developmentalBand);

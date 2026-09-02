@@ -3,12 +3,22 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createUnsungHeroesConversation } from "@/lib/engine/unsung-heroes";
-import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
+import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath, type DevelopmentalBand } from "@/lib/engine/prompts";
 
 export const metadata = { title: "Unsung Heroes — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
 
 const PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
+
+const BAND_LABEL: Record<DevelopmentalBand, string> = {
+  "8-11": "8–11",
+  "12-14": "12–14",
+  "15-17": "15–17",
+};
+
+function isBand(value: FormDataEntryValue | null): value is DevelopmentalBand {
+  return value === "8-11" || value === "12-14" || value === "15-17";
+}
 
 async function findHostIdByEmail(email: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -52,11 +62,28 @@ async function startUnsungHeroesSession(formData: FormData) {
   const path = String(formData.get("path") ?? "") as UnsungHeroesPath;
   if (!name || !PATHS.includes(path)) redirect(failPath("Enter a name and choose a path."));
 
+  // Optional -- most Unsung Heroes participants are adults. Set only when
+  // this session is for a Youth participant, exactly the same signal
+  // app/toolkit/youth-defying-grief/page.tsx sets: its presence is what
+  // /api/unsung-heroes/message and /recognition use to compose the Youth
+  // instructions instead of the adult ones (see resolveDevelopmentalBand,
+  // lib/guide.ts). Unsung Heroes stays its own single entry point rather
+  // than a parallel "Youth Unsung Heroes" page -- it's a supporting tool
+  // inside the Youth Defying Grief ecosystem, not a second Youth program.
+  const bandField = formData.get("band");
+  const band = isBand(bandField) ? bandField : null;
+
   const linkedHostId = email ? await findHostIdByEmail(email) : null;
 
   const { data: participant, error: participantError } = await supabase
     .from("guide_participants")
-    .insert({ guide_id: user.id, name, email: email || null, linked_host_id: linkedHostId })
+    .insert({
+      guide_id: user.id,
+      name,
+      email: email || null,
+      linked_host_id: linkedHostId,
+      developmental_band: band,
+    })
     .select("id")
     .single();
   if (participantError || !participant)
@@ -76,6 +103,8 @@ async function startUnsungHeroesSession(formData: FormData) {
       participant_id: participant.id,
       tool: "unsung-heroes",
       conversation_id: convo.id,
+      program: band ? "youth" : "general",
+      session_context: band ? "youth_individual" : "adult_individual",
     })
     .select("id")
     .single();
@@ -142,6 +171,25 @@ export default async function ToolkitUnsungHeroesPage({
             />
           </div>
         </div>
+
+        <fieldset className="mt-5">
+          <legend className="label mb-2">Developmental band (only if this participant is a young person)</legend>
+          <p className="mb-2 text-sm text-muted">
+            Leave unselected for an adult participant. Setting a band adapts this conversation the
+            same way Youth Defying Grief already does.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(Object.keys(BAND_LABEL) as DevelopmentalBand[]).map((band) => (
+              <label
+                key={band}
+                className="flex cursor-pointer items-center gap-2 rounded-md border border-rule bg-white/[0.03] px-4 py-3"
+              >
+                <input type="radio" name="band" value={band} />
+                <span className="text-sm text-ink">{BAND_LABEL[band]}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <fieldset className="mt-5">
           <legend className="label mb-2">Path</legend>

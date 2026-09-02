@@ -13,7 +13,7 @@ import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { VIRTUES, VIRTUE_FAMILIES, type VirtueFamilyKey } from "@/lib/virtues";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
 import { isMember } from "@/lib/membership";
-import { isAuthorizedGuideConversation } from "@/lib/guide";
+import { isAuthorizedGuideConversation, resolveDevelopmentalBand } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -88,10 +88,8 @@ export async function POST(request: Request) {
   // authorized Guide Toolkit session for this exact conversation. Enforced
   // here too so a non-member can't save a recognition for a conversation
   // they were never authorized to run in the first place.
-  if (
-    !(await isMember(supabase, user.id)) &&
-    !(await isAuthorizedGuideConversation(supabase, user.id, conversationId))
-  ) {
+  const guideFacilitated = await isAuthorizedGuideConversation(supabase, user.id, conversationId);
+  if (!(await isMember(supabase, user.id)) && !guideFacilitated) {
     return NextResponse.json(
       { error: "Unsung Heroes requires AVAIA Membership." },
       { status: 403 }
@@ -99,16 +97,24 @@ export async function POST(request: Request) {
   }
 
   // Same server-derived signal as /api/unsung-heroes/message -- see that
-  // route's comment for why keying off the caller's own profile is correct
-  // for both the public route and a Guide-Toolkit-facilitated session.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("minor_with_guardian, developmental_band")
-    .eq("id", user.id)
-    .maybeSingle();
-  const program: Program = profile?.minor_with_guardian ? "youth" : "general";
-  const developmentalBand: DevelopmentalBand | null =
-    program === "youth" ? ((profile?.developmental_band as DevelopmentalBand | null) ?? null) : null;
+  // route's comment for the full reasoning (self-serve reads profiles;
+  // Guide-facilitated resolves the band from the guide_participants row
+  // the Guide set at session start).
+  let program: Program = "general";
+  let developmentalBand: DevelopmentalBand | null = null;
+  if (guideFacilitated) {
+    developmentalBand = await resolveDevelopmentalBand(supabase, user.id, conversationId);
+    program = developmentalBand ? "youth" : "general";
+  } else {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("minor_with_guardian, developmental_band")
+      .eq("id", user.id)
+      .maybeSingle();
+    program = profile?.minor_with_guardian ? "youth" : "general";
+    developmentalBand =
+      program === "youth" ? ((profile?.developmental_band as DevelopmentalBand | null) ?? null) : null;
+  }
 
   const path = convo.path as UnsungHeroesPath;
 
