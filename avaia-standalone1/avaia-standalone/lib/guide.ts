@@ -185,24 +185,51 @@ export async function hasReferralForConversation(
 }
 
 /** Whether a Guide is authorized to run this specific conversation --
- *  requires a live 'guide' role, a live Toolkit platform authorization
- *  (re-checked fresh here, not just at the /toolkit layout gate -- a Guide
- *  whose Toolkit authorization is revoked must also lose the ability to
- *  continue an already-started conversation by calling this API directly,
- *  not just lose the UI route to it), and an actual guide_sessions row
- *  tying this exact conversation to this exact Guide. This is the narrow
- *  exception /api/conversation, /api/referral, and the Unsung Heroes API
- *  routes check before falling back to their ordinary isMember() gate: it
- *  only ever unlocks a conversation the Guide's own Toolkit already
- *  created and owns, never an arbitrary Host's conversation, and never
- *  grants a Guide unrestricted access on the strength of role alone. */
+ *  requires active Guide certification (guide_certifications.standing =
+ *  'active' -- the actual institutional fact establishing Guide standing),
+ *  a live Toolkit platform authorization (re-checked fresh here, not just
+ *  at the /toolkit layout gate -- a Guide whose Toolkit authorization is
+ *  revoked must also lose the ability to continue an already-started
+ *  conversation by calling this API directly, not just lose the UI route
+ *  to it), and an actual guide_sessions row tying this exact conversation
+ *  to this exact Guide. This is the narrow exception /api/conversation,
+ *  /api/referral, and the Unsung Heroes API routes check before falling
+ *  back to their ordinary isMember() gate: it only ever unlocks a
+ *  conversation the Guide's own Toolkit already created and owns, never an
+ *  arbitrary Host's conversation.
+ *
+ *  Previously required profiles.role = 'guide' (via isGuide()) instead of
+ *  isActivelyCertified() -- a stale holdover from before the Phase D
+ *  platform-authorization architecture existed. profiles.role was never
+ *  set by the certification grant itself (grantGuideCertification()'s own
+ *  comment: "nothing here touches profiles.role") and isn't touched by
+ *  Toolkit or Guided Journey Facilitation authorization either, so the two
+ *  facts were never actually linked -- an account could hold role='guide'
+ *  without ever being certified, or be genuinely certified and explicitly
+ *  Toolkit-authorized while holding a different role (e.g. 'admin', for a
+ *  Founder/operator account that also needs admin capability). Certifying
+ *  and authorizing a person was already supposed to be sufficient per the
+ *  Phase D principle (app/toolkit/layout.tsx's own comment: "profiles.role
+ *  = 'guide' is no longer sufficient on its own to reach the Toolkit");
+ *  this function just hadn't been brought in line with that yet. Not an
+ *  admin bypass -- role plays no part in the check at all now, in either
+ *  direction; an uncertified or unauthorized admin still can't facilitate.
+ *
+ *  guided_journey_facilitation (Phase E.1) is deliberately NOT checked
+ *  here -- it's a separate capability gating a different feature entirely
+ *  (app/guided-journeys/, a Host-invited path into the Host's own existing
+ *  Journey, enforced by guide_journey_access RLS per
+ *  0029_guide_journey_read_access.sql). This function's own conversations
+ *  were always created and owned by the Guide's own Toolkit session, never
+ *  a Host-invited one, so that capability's absence here is correct, not
+ *  an oversight. */
 export async function isAuthorizedGuideConversation(
   supabase: SupabaseClient,
   userId: string,
   conversationId: string
 ): Promise<boolean> {
-  const [guide, toolkitAuthorized, session] = await Promise.all([
-    isGuide(supabase, userId),
+  const [certified, toolkitAuthorized, session] = await Promise.all([
+    isActivelyCertified(supabase, userId),
     isToolkitAuthorized(supabase, userId),
     supabase
       .from("guide_sessions")
@@ -212,7 +239,7 @@ export async function isAuthorizedGuideConversation(
       .limit(1)
       .maybeSingle(),
   ]);
-  return guide && toolkitAuthorized && !!session.data;
+  return certified && toolkitAuthorized && !!session.data;
 }
 
 /** Finds the conversation for a given stage within a Journey -- used after
