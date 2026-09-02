@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, unsungHeroesSystemPrompt, type UnsungHeroesPath } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  unsungHeroesSystemPrompt,
+  type UnsungHeroesPath,
+  type Program,
+  type DevelopmentalBand,
+} from "@/lib/engine/prompts";
 import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { extractFocus } from "@/lib/virtue-focus";
@@ -53,8 +59,26 @@ export async function POST(request: Request) {
     );
   }
 
+  // Server-derived, never client-supplied: the same signal /api/conversation
+  // already uses for the Journey engine (profiles.minor_with_guardian, set
+  // at /welcome; profiles.developmental_band, set at /youth). Keyed to the
+  // signed-in caller, not the conversation's own host_id -- for the public
+  // route those are the same person; for a Guide-Toolkit-facilitated session
+  // (isAuthorizedGuideConversation above) the caller is the Guide, whose own
+  // profile is never minor_with_guardian, so a Guide session can never
+  // accidentally receive the Youth composition through this mechanism --
+  // Guide-facilitated Youth stays exactly as deferred as before this pass.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian, developmental_band")
+    .eq("id", user.id)
+    .maybeSingle();
+  const program: Program = profile?.minor_with_guardian ? "youth" : "general";
+  const developmentalBand: DevelopmentalBand | null =
+    program === "youth" ? ((profile?.developmental_band as DevelopmentalBand | null) ?? null) : null;
+
   const path = convo.path as UnsungHeroesPath;
-  let system = unsungHeroesSystemPrompt(path);
+  let system = unsungHeroesSystemPrompt(path, program, developmentalBand);
 
   const crisis = detectCrisis(message);
   if (crisis) {

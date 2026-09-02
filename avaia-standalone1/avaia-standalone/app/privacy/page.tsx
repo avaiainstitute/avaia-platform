@@ -21,7 +21,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             If you use Unsung Heroes, the names and context you choose to include (e.g. a school,
-            teacher, or guardian) so the right people can see what you&rsquo;ve recorded.
+            teacher, or guardian) as part of your own recognition record.
           </li>
           <li>Your membership status, handled through our payment processor, Stripe — AVAIA never sees or stores your card details.</li>
           <li>
@@ -50,11 +50,10 @@ export default function PrivacyPage() {
       <section className="mt-10">
         <p className="font-serif text-xl text-seal">Who can see it</p>
         <p className="mt-3 leading-relaxed text-ink">
-          Your Workbook, conversations, and referrals are private to your own account by default,
-          enforced at the database level — not just hidden in the interface. The only way anyone
-          else ever sees any of it is if you explicitly share a specific entry using AVAIA&rsquo;s
-          own Share feature, or, for Unsung Heroes, if the context you provide (like a school or
-          guardian relationship) grants visibility to a specific person on file for that purpose.
+          Your Workbook, conversations, referrals, and Unsung Heroes recognitions are private to
+          your own account by default, enforced at the database level — not just hidden in the
+          interface. The only way anyone else ever sees any of it is if you explicitly share a
+          specific entry using AVAIA&rsquo;s own Share feature.
         </p>
       </section>
 

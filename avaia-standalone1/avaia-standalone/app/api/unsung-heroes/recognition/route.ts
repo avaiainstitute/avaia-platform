@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, unsungHeroesSystemPrompt, type UnsungHeroesPath } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  unsungHeroesSystemPrompt,
+  type UnsungHeroesPath,
+  type Program,
+  type DevelopmentalBand,
+} from "@/lib/engine/prompts";
 import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsungHeroesMessages } from "@/lib/engine/unsung-heroes";
 import { VIRTUES, VIRTUE_FAMILIES, type VirtueFamilyKey } from "@/lib/virtues";
@@ -92,6 +98,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // Same server-derived signal as /api/unsung-heroes/message -- see that
+  // route's comment for why keying off the caller's own profile is correct
+  // for both the public route and a Guide-Toolkit-facilitated session.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian, developmental_band")
+    .eq("id", user.id)
+    .maybeSingle();
+  const program: Program = profile?.minor_with_guardian ? "youth" : "general";
+  const developmentalBand: DevelopmentalBand | null =
+    program === "youth" ? ((profile?.developmental_band as DevelopmentalBand | null) ?? null) : null;
+
   const path = convo.path as UnsungHeroesPath;
 
   const history = toAnthropicMessages(await loadUnsungHeroesMessages(supabase, conversationId));
@@ -127,7 +145,7 @@ export async function POST(request: Request) {
     const params: any = {
       model: AVAIA_MODEL,
       max_tokens: 2048,
-      system: unsungHeroesSystemPrompt(path),
+      system: unsungHeroesSystemPrompt(path, program, developmentalBand),
       messages: history,
       output_config: { format: { type: "json_schema", schema: RECOGNITION_SCHEMA } },
     };
