@@ -119,6 +119,19 @@ export default async function UnsungHeroesPage({
           guided conversation to help you name what you saw, and say so.
         </p>
 
+        {/* Chemistry connection fix (4/5) -- the same explanatory copy
+            components/UnsungHeroesIntro.tsx already shows a signed-out
+            visitor, previously absent once a Host actually signs in. */}
+        <p className="label mb-2 mt-8 text-muted">How this connects to Chemistry of Virtue</p>
+        <p className="text-ink">
+          <Link href="/chemistry" className="underline decoration-rule underline-offset-2 hover:text-seal">
+            Chemistry of Virtue
+          </Link>{" "}
+          helps you understand virtue — the families, the elements, how they combine. Unsung
+          Heroes is the other half: where you learn to recognize those same elements alive in
+          someone else, not just on a chart.
+        </p>
+
         <div className="mt-8 grid gap-3">
           {PATHS.map((p) => (
             <Link

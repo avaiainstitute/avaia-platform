@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   VIRTUES,
   VIRTUE_FAMILIES,
@@ -9,6 +10,7 @@ import {
   type Virtue,
   type VirtueFamilyKey,
 } from "@/lib/virtues";
+import { resolveFocus } from "@/lib/virtue-focus";
 import { VIRTUE_POS, GRID_COLS, GRID_ROWS } from "@/lib/virtue-layout";
 import VirtueFormulaGenerator from "@/components/VirtueFormulaGenerator";
 import VirtueNameAcronym from "@/components/VirtueNameAcronym";
@@ -18,10 +20,32 @@ export default function ChemistryPage() {
   const [selected, setSelected] = useState<Virtue | null>(null);
   const detailRef = useRef<HTMLDivElement | null>(null);
   const [scrollToken, setScrollToken] = useState(0);
+  const searchParams = useSearchParams();
 
-  // If the Host was just referred to a virtue in the journey, arrive with that
-  // family lit and that virtue selected — continuity across the two tabs.
+  // Chemistry connection fix (1/5): an explicit deep link (?family=...&
+  // virtue=...) from a recognized virtue anywhere else in the app --
+  // Workbook, Guide's Record, Preparation, Unsung Heroes -- takes priority
+  // over the ambient sessionStorage continuity below. Resolved through the
+  // exact same resolveFocus() the live <<focus: Family | Virtue>> marker
+  // already uses, so a family given as either its display name or its key
+  // resolves the same way whichever surface linked here. See
+  // components/VirtueLink.tsx for the link-building side.
   useEffect(() => {
+    const familyParam = searchParams.get("family");
+    if (familyParam) {
+      const resolved = resolveFocus({ family: familyParam, virtue: searchParams.get("virtue") });
+      if (resolved) {
+        setActive(resolved.familyKey as VirtueFamilyKey);
+        if (resolved.virtueName) {
+          const v = VIRTUES.find((x) => x.name === resolved.virtueName);
+          if (v) setSelected(v);
+        }
+        return;
+      }
+    }
+
+    // If the Host was just referred to a virtue in the journey, arrive with that
+    // family lit and that virtue selected — continuity across the two tabs.
     try {
       const raw = sessionStorage.getItem("avaia:focus");
       if (!raw) return;
@@ -34,6 +58,7 @@ export default function ChemistryPage() {
     } catch {
       /* no stored focus — open the table normally */
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Scrolls the existing detail panel into view -- only when selection was

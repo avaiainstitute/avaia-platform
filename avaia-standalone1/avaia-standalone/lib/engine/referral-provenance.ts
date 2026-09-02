@@ -193,7 +193,13 @@ const FIELD_PROVENANCE_FOR: Record<Stage, Record<string, FieldMeta>> = {
   innercompass: INNERCOMPASS_FIELD_PROVENANCE,
 };
 
-const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
+// Exported so a renderer (Workbook) can identify which formatReferralFields
+// items are virtue fields and re-derive their structured {family, element}
+// classifications via normalizeVirtueClassifications(rawContent[key]) --
+// formatReferralFields itself only returns already-stringified display
+// text, which isn't enough to build a link back to the specific Chemistry
+// of Virtue entry.
+export const VIRTUE_FIELD_KEYS = new Set(["relevantVirtues", "virtuesInvolved"]);
 const SECONDARY_LOSS_FIELD_KEYS = new Set(["secondaryLossesIdentified", "significantSecondaryLosses"]);
 
 const OUTCOME_TYPE_LABEL: Record<string, string> = {
@@ -305,6 +311,15 @@ export type CompletionSummary = {
    *  screen (JourneyIntro), not the completion card. Sourced per stage
    *  below; absent for stages nothing follows. */
   description?: string;
+  /** Virtue Signature connection fix: the same structured classifications
+   *  already stored in this referral (CAT's relevantVirtues, InnerCompass's
+   *  virtuesInvolved -- IAP produces neither, VIRTUE_TABLE_INTEGRATION
+   *  isn't composed into IAP), surfaced on the completion card so "What
+   *  Became Visible" (components/WhatBecameVisible.tsx) can offer each one
+   *  for exploring in Chemistry or considering for the Host's own Virtue
+   *  Signature. Not a new generation -- the exact data Workbook already
+   *  renders, just reaching the Host at the moment it's freshest. */
+  virtues?: VirtueClassification[];
 };
 
 // A short established-direction field exists for some stages, not others --
@@ -367,6 +382,12 @@ export function getCompletionSummary(
   if (descriptionKey) {
     const v = content[descriptionKey];
     if (typeof v === "string" && v.trim()) summary.description = v.trim();
+  }
+
+  const virtueKey = map && Object.keys(map).find((k) => VIRTUE_FIELD_KEYS.has(k));
+  if (virtueKey) {
+    const classifications = normalizeVirtueClassifications(content[virtueKey]);
+    if (classifications.length > 0) summary.virtues = classifications;
   }
 
   return summary;

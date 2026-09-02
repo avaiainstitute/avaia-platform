@@ -1131,26 +1131,13 @@ sharpens their own sense, not a conclusion. Light the virtue you are anchoring o
 now; if the Host lands on a better-fitting one next turn, name it and light THAT
 one instead.
 
-Map the Host's word to ONE of these 10 families (use the family name EXACTLY):
-- Wisdom — logic, reason, knowledge, understanding, discernment, judgment,
-  insight, wisdom, vision, creativity, intuition, perspective, objectivity.
-- Justice — honesty, fairness, respect, tolerance, truth, dignity, equality,
-  courtesy, acceptance, honor.
-- Fortitude — courage, bravery, resilience, confidence, steadfastness, valor,
-  independence, inner strength.
-- Self-Control — patience, temperance, moderation, self-discipline, mercy,
-  mindfulness, restraint, self-governance.
-- Love — kindness, compassion, forgiveness, generosity, sacrifice, loyalty,
-  nurturing, hospitality, devotion, benevolence.
-- Positive Attitude — hope, optimism, humor, serenity, joy, adaptability,
-  flexibility, enthusiasm, zeal.
-- Hard Work — diligence, perseverance, determination, discipline, dedication,
-  persistence, ambition, endurance.
-- Integrity — authenticity, character, sincerity, morality, principles,
-  reliability, being true to oneself.
-- Gratitude — thankfulness, appreciation, gratefulness.
-- Humility — modesty, meekness, teachability, being unpretentious, openness to
-  change.
+Map the Host's word to ONE of these 10 families and, where a specific element
+genuinely fits, name that element too (use the family and element names
+EXACTLY as given -- this is the complete, authoritative Chemistry of Virtue
+hierarchy, the only source; never invent, substitute, or approximate a name
+that isn't listed here):
+
+${formatVirtueHierarchy()}
 
 Worked example (GOOD — words and marker match) —
   Host: "I've been trying to use logic to figure this out."
@@ -4101,6 +4088,15 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
       VIRTUE_TABLE_INTEGRATION,
       COMMUNICATION_ADAPTATION,
       GUARDRAILS,
+      // Chemistry connection fix (2/5): the canonical-hierarchy discipline
+      // that already governs adult CAT referral classification (same
+      // constant, not a youth-rewritten copy -- this instructs the model
+      // about internal data integrity, not Host-facing language, so it
+      // needs no developmental adaptation of its own). Previously composed
+      // into adult CAT only; Youth referrals were sanitized against the
+      // same canonical list after the fact (generateReferral's own
+      // backstop, unchanged) but never saw the list live in the prompt.
+      CAT_REFERRAL_VIRTUE_DISCIPLINE,
     ].join(`\n\n${bar}\n\n`);
   }
 
@@ -4113,6 +4109,8 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
     VIRTUE_TABLE_INTEGRATION,
     COMMUNICATION_ADAPTATION,
     GUARDRAILS,
+    // Chemistry connection fix (2/5) -- see CAT's identical addition above.
+    INNERCOMPASS_VIRTUE_DISCIPLINE,
   ].join(`\n\n${bar}\n\n`);
 }
 

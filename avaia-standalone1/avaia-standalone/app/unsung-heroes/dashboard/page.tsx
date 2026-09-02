@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
+import { VirtueLink } from "@/components/VirtueLink";
 
 export const metadata = { title: "Unsung Heroes — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -87,12 +88,14 @@ export default async function UnsungHeroesDashboardPage() {
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-serif text-lg text-ink">{r.title}</p>
                   {r.primary_virtue && (
-                    <span
-                      className="shrink-0 rounded-full px-3 py-0.5 text-xs text-white"
+                    <VirtueLink
+                      family={r.virtue_family}
+                      virtue={r.primary_virtue}
+                      className="shrink-0 rounded-full px-3 py-0.5 text-xs text-white transition-opacity hover:opacity-80"
                       style={{ backgroundColor: familyOf(r.virtue_family as VirtueFamilyKey).color }}
                     >
                       {r.primary_virtue}
-                    </span>
+                    </VirtueLink>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted">
