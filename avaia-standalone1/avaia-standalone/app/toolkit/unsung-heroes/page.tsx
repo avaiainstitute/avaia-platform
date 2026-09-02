@@ -111,7 +111,9 @@ async function startUnsungHeroesSession(formData: FormData) {
       "individual",
       guardianName,
       guardianEmail,
-      null
+      null,
+      "guide_or_self_attested",
+      true
     );
     if (consentError) redirect(failPath(consentError));
   }

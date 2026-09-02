@@ -66,11 +66,17 @@ export async function POST(request: Request) {
   // silently dropped, even though profiles.consent_at has technically
   // already been set; retrying re-runs both writes harmlessly.
   if (age === "minor") {
+    // assentConfirmed is false here -- Youth assent is band-specific and
+    // is only actually shown and acknowledged later, at /youth (see
+    // beginYouthJourney, which updates this same row's assent_confirmed_at
+    // once the Host completes that band-specific screen).
     const { error: guardianError } = await recordGuardianConsentForYouthHost(
       supabase,
       user.id,
       guardianName,
-      guardianEmail
+      guardianEmail,
+      "guide_or_self_attested",
+      false
     );
     if (guardianError) {
       return NextResponse.json(

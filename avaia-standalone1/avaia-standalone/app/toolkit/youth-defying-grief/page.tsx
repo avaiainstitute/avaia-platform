@@ -108,7 +108,9 @@ async function startYouthDefyingGriefSession(formData: FormData) {
     scope,
     guardianName,
     guardianEmail,
-    sponsoringOrganization
+    sponsoringOrganization,
+    "guide_or_self_attested",
+    true
   );
   if (consentError) {
     console.error("AVAIA youth-defying-grief error: guardian consent insert failed", consentError);

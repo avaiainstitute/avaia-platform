@@ -63,6 +63,16 @@ async function beginYouthJourney(formData: FormData) {
   // this checkbox follows.
   if (formData.get("assentAcknowledged") !== "1") redirect("/youth");
 
+  // Stamps assent_confirmed_at on this Host's own guardian_consents row
+  // (created at /welcome, still pending this fact until now) -- the most
+  // recent row is always the live one; a Host only ever has one active
+  // guardian_consents record for their own account.
+  await supabase
+    .from("guardian_consents")
+    .update({ assent_confirmed_at: new Date().toISOString() })
+    .eq("youth_host_id", user.id)
+    .is("assent_confirmed_at", null);
+
   await startYouthJourney(supabase, user.id, band);
   redirect("/journey");
 }
