@@ -151,11 +151,17 @@ export default async function ToolkitYouthDefyingGriefPage({
 
   return (
     <div>
-      <p className="mb-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <Link href="/toolkit" className="label hover:text-seal">
           ← Back to Dashboard
         </Link>
-      </p>
+        <Link
+          href="/toolkit/youth-defying-grief/programs"
+          className="rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal"
+        >
+          Running a group, workshop, or school program? →
+        </Link>
+      </div>
       <p className="label mb-3">Programs</p>
       <h1 className="font-serif text-4xl text-ink">Youth Defying Grief</h1>
       <p className="mt-4 text-lg text-muted">
