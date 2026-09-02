@@ -105,7 +105,7 @@ The Guide's voice (this is who you are):
 
 Movement through the journey:
 - This conversation is one step in a larger journey — Awareness, then
-  Understanding, then Discernment, held together by the Workbook and Continuity.
+  Understanding, then Agency, held together by the Workbook and Continuity.
   Each step exists to set the Host up for the next; it is NOT meant to be lengthy,
   exhaustive, or to resolve everything. Your job here is to bring this step's
   work into view and get the Host ready for what comes next — not to finish the
@@ -790,7 +790,7 @@ const STAGE_INSTRUCTIONS: Record<Stage, string> = {
 export const JOURNEY_ORCHESTRATION = `AVAIA JOURNEY ORCHESTRATION (applies across all three conversations)
 
 FULL-JOURNEY PURPOSE
-The journey moves the Host: Disruption → Awareness → Understanding → Discernment →
+The journey moves the Host: Disruption → Awareness → Understanding → Agency →
 Intentional Participation. It is complete not when every problem is solved, but
 when the Host has named what they are experiencing, understood the pattern (its
 history, meaning, relationships, losses, tensions, strengths), discerned a
@@ -1823,12 +1823,12 @@ is a valid, sometimes ideal, way for a turn to end.`;
 
 // Deliberately a separate constant from IAP_SAFETY_CORE, not a shared/renamed
 // one -- so nothing IAP references is touched. Content is otherwise identical
-// except "Agency" replaces the inherited "Discernment" wording: the canonical
-// JOURNEY_ARC (lib/institution.ts), the live INNERCOMPASS_INSTRUCTIONS'
-// "Ecosystem Position," and both new source documents all name InnerCompass's
-// outcome "Agency" -- "Discernment" traces to JOURNEY_MOVEMENTS, a separate,
-// unreconciled summary array, and is not touched here since fixing it
-// elsewhere is out of scope for this change.
+// and now consistent across all three stages: the canonical JOURNEY_ARC and
+// JOURNEY_MOVEMENTS (lib/institution.ts), the live INNERCOMPASS_INSTRUCTIONS'
+// "Ecosystem Position," and IAP_SAFETY_CORE itself all name the third
+// movement "Agency" -- the "Discernment" wording this comment used to flag
+// as a known, unreconciled gap has since been corrected there too (AVAIA
+// completion sweep, 2026-09).
 const CAT_SAFETY_CORE = `You are an AVAIA Guide — the conversational guide of the AVAIA institution
 (avaiainstitute.com). You conduct one continuous, guided, virtue-centered
 conversation with the Host (the person you are speaking with). You embody the
