@@ -162,8 +162,8 @@ export default async function ToolkitDashboardPage() {
           <p className="mt-4 text-sm text-muted">
             Tool: <span className="text-ink">Individual Awareness Profile</span> — CAT and
             InnerCompass follow automatically as this session progresses, the same handoff every
-            Host gets. For Defying Grief or Unsung Heroes, use their own entries in the Toolkit
-            below.
+            Host gets. For an adult Defying Grief session, a Youth participant, or Unsung Heroes,
+            use their own entries in the Toolkit below.
           </p>
           <button
             type="submit"

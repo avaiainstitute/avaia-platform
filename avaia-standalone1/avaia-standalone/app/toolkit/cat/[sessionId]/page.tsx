@@ -71,7 +71,9 @@ export default async function ToolkitCatSessionPage({
         user.id,
         session.participant_id,
         "innercompass",
-        innerConvo.id
+        innerConvo.id,
+        session.program,
+        session.session_context
       );
       continueHref = `/toolkit/innercompass/${innerSessionId}`;
     }

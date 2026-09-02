@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ToolKey } from "./toolkit";
 import type { DbConversation } from "./engine/conversation";
-import type { Stage, Program } from "./engine/prompts";
+import type { Stage, Program, DevelopmentalBand } from "./engine/prompts";
 import type { UnsungHeroesConversation } from "./engine/unsung-heroes";
 
 /** Which authorized context a Guide-facilitated session ran under --
@@ -97,6 +97,12 @@ export type GuideParticipant = {
   email: string | null;
   linked_host_id: string | null;
   notes: string | null;
+  // Set by the Guide when starting a Youth session for this participant
+  // (0038_youth_guide_facilitation.sql) -- null for every adult participant,
+  // and for any Youth participant not yet started. See
+  // resolveDevelopmentalBand() below for how a Guide-facilitated
+  // conversation actually reads this.
+  developmental_band: DevelopmentalBand | null;
   created_at: string;
 };
 
@@ -271,13 +277,27 @@ export async function findConversationByJourneyStage(
  *  off" from one Toolkit stage page to the next while sharing the same
  *  participant -- e.g. the IAP page calls this with the CAT conversation
  *  the engine just created, tool: "cat", to get (or reuse) the session id
- *  to send the Guide to. */
+ *  to send the Guide to.
+ *
+ *  program/sessionContext should be the CURRENT session's own values,
+ *  carried forward -- e.g. a Youth Defying Grief IAP session (program:
+ *  'youth', session_context: 'youth_individual') hands off a CAT session
+ *  tagged the same way, not the table's bare defaults ('general' /
+ *  'adult_individual'). Both default to those bare values for any caller
+ *  that doesn't pass them, so this stays backward-compatible. Note this
+ *  also fixes the same gap for adult Defying Grief continuity -- previously
+ *  neither call site passed program through, so a Defying Grief chain's CAT
+ *  and InnerCompass legs silently reverted to 'general' on this table (the
+ *  underlying conversation's own program, which actually governs the
+ *  model, was always correct; only this display/grouping field drifted). */
 export async function findOrCreateGuideSessionForConversation(
   supabase: SupabaseClient,
   guideId: string,
   participantId: string | null,
   tool: ToolKey,
-  conversationId: string
+  conversationId: string,
+  program: Program = "general",
+  sessionContext: SessionContext = "adult_individual"
 ): Promise<string> {
   const { data: existing } = await supabase
     .from("guide_sessions")
@@ -290,11 +310,59 @@ export async function findOrCreateGuideSessionForConversation(
 
   const { data: created, error } = await supabase
     .from("guide_sessions")
-    .insert({ guide_id: guideId, participant_id: participantId, tool, conversation_id: conversationId })
+    .insert({
+      guide_id: guideId,
+      participant_id: participantId,
+      tool,
+      conversation_id: conversationId,
+      program,
+      session_context: sessionContext,
+    })
     .select("id")
     .single();
   if (error || !created) throw new Error(error?.message ?? "Could not create the next session.");
   return created.id;
+}
+
+/** Resolves the developmental band governing a Youth conversation. A
+ *  self-serve Youth Host's band lives on their own profile, set at /youth
+ *  -- that's what /api/conversation and /api/referral read for an ordinary
+ *  Youth Journey. But when the caller is a Guide running this conversation
+ *  through their own Toolkit session (isAuthorizedGuideConversation's exact
+ *  narrow case), the caller's profile is the GUIDE's, an adult with no
+ *  band of their own -- the real answer lives on the guide_participants row
+ *  the Guide set when starting the session. Checked in that order: a
+ *  guide_sessions row tying this exact conversation to this caller means
+ *  it's Guide-facilitated, and the participant's band governs; absent that,
+ *  it's the Host's own Journey and their profile governs. Shared by both
+ *  API routes so neither can drift from the other. */
+export async function resolveDevelopmentalBand(
+  supabase: SupabaseClient,
+  callerId: string,
+  conversationId: string
+): Promise<DevelopmentalBand | null> {
+  const { data: session } = await supabase
+    .from("guide_sessions")
+    .select("participant_id")
+    .eq("guide_id", callerId)
+    .eq("conversation_id", conversationId)
+    .maybeSingle();
+
+  if (session?.participant_id) {
+    const { data: participant } = await supabase
+      .from("guide_participants")
+      .select("developmental_band")
+      .eq("id", session.participant_id)
+      .maybeSingle();
+    return (participant?.developmental_band as DevelopmentalBand | null) ?? null;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("developmental_band")
+    .eq("id", callerId)
+    .maybeSingle();
+  return (profile?.developmental_band as DevelopmentalBand | null) ?? null;
 }
 
 export type ReferralRow = {

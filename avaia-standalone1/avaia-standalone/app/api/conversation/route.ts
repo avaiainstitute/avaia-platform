@@ -16,7 +16,7 @@ import {
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { isMember } from "@/lib/membership";
-import { isAuthorizedGuideConversation } from "@/lib/guide";
+import { isAuthorizedGuideConversation, resolveDevelopmentalBand } from "@/lib/guide";
 import { isFinishIntent } from "@/lib/engine/finish-intent";
 import { generateReferral } from "@/lib/engine/referral-generation";
 import { recordAiUsage, type AiUsageFeature } from "@/lib/engine/ai-usage";
@@ -52,18 +52,15 @@ export async function POST(request: Request) {
   const program = convo.program as Program;
   const journeyId = convo.journey_id as string | null;
 
-  // Youth Journey, Phase 1: the developmental band lives on the Host's
-  // profile, not the conversation -- only fetched for Youth, so every
-  // adult/general/defying-grief message (the overwhelming majority of
-  // traffic) is unaffected by an extra query.
+  // Youth Journey: the developmental band lives on the Host's own profile
+  // for a self-serve Youth Journey, or on the guide_participants row for a
+  // Guide-facilitated one (the caller is the Guide, who has no band of
+  // their own) -- see resolveDevelopmentalBand's own comment. Only resolved
+  // for Youth, so every adult/general/defying-grief message (the
+  // overwhelming majority of traffic) is unaffected by the extra query.
   let developmentalBand: DevelopmentalBand | null = null;
   if (program === "youth") {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("developmental_band")
-      .eq("id", user.id)
-      .maybeSingle();
-    developmentalBand = (profile?.developmental_band as DevelopmentalBand | null) ?? null;
+    developmentalBand = await resolveDevelopmentalBand(supabase, user.id, conversationId);
   }
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and

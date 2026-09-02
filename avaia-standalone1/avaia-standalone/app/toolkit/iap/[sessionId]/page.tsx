@@ -77,7 +77,9 @@ export default async function ToolkitIapSessionPage({
         user.id,
         session.participant_id,
         "cat",
-        catConvo.id
+        catConvo.id,
+        session.program,
+        session.session_context
       );
       continueHref = `/toolkit/cat/${catSessionId}`;
     }

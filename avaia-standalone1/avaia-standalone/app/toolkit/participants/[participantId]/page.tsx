@@ -13,14 +13,16 @@ export const dynamic = "force-dynamic";
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
-/** One session card's title -- the tool it ran, with the Defying Grief
- *  framing folded in when that's the program (Defying Grief isn't its own
- *  `tool`; it's iap/cat/innercompass with session.program ===
- *  'defying-grief', so this is the only place that distinction needs to be
- *  surfaced for display). */
+/** One session card's title -- the tool it ran, with the Defying Grief or
+ *  Youth framing folded in when that's the program (neither is its own
+ *  `tool`; they're iap/cat/innercompass with session.program ===
+ *  'defying-grief' or 'youth', so this is the only place that distinction
+ *  needs to be surfaced for display). */
 function sessionTitle(record: ParticipantSessionRecord): string {
   const base = toolLabel(record.session.tool);
-  return record.session.program === "defying-grief" ? `${base} — Defying Grief` : base;
+  if (record.session.program === "defying-grief") return `${base} — Defying Grief`;
+  if (record.session.program === "youth") return `${base} — Youth`;
+  return base;
 }
 
 function SessionCard({ record }: { record: ParticipantSessionRecord }) {

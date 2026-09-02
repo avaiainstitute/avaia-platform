@@ -16,7 +16,9 @@ const fmtDate = (iso: string) =>
 
 function sessionTitle(record: ParticipantSessionRecord): string {
   const base = toolLabel(record.session.tool);
-  return record.session.program === "defying-grief" ? `${base} — Defying Grief` : base;
+  if (record.session.program === "defying-grief") return `${base} — Defying Grief`;
+  if (record.session.program === "youth") return `${base} — Youth`;
+  return base;
 }
 
 /** guide_sessions.status only ever flips to 'complete' on the final stage of

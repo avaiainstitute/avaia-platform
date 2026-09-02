@@ -24,6 +24,7 @@ export type ToolKey =
   | "defying-grief"
   | "unsung-heroes"
   | "library"
+  | "youth-defying-grief"
   | "youth-group";
 
 export type ToolStatus = "installed" | "specified-not-installed" | "not-yet-specified";
@@ -128,9 +129,16 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     href: "/toolkit/library",
   },
   {
+    key: "youth-defying-grief",
+    label: "Youth Defying Grief",
+    description: "Guide-facilitated Youth Individual Awareness Profile, Conversations Across Time, and InnerCompass -- Defying Grief is the Youth program, not a separate add-on, so Stone-and-Ripples and Audacity framing are already layered in. Same canonical Youth engine the public /youth Journey uses, adapted by developmental band (8-11 / 12-14 / 15-17), which the Guide sets when starting a session.",
+    status: "installed",
+    href: "/toolkit/youth-defying-grief",
+  },
+  {
     key: "youth-group",
-    label: "Youth & Group Adaptations",
-    description: "Guide-facilitated and group delivery of Youth conversations. The Youth Journey, Defying Grief, and Unsung Heroes are already fully built and live for self-guided individual Youth Hosts at /youth -- this entry is specifically about bringing a Guide into that facilitation, which doesn't exist yet.",
+    label: "Youth Group Adaptations",
+    description: "Group-format delivery of Youth conversations -- multiple participants in one session. Guide-facilitated Youth INDIVIDUAL sessions are installed separately, above; this entry is specifically about group delivery, which doesn't exist yet.",
     status: "not-yet-specified",
     href: null,
   },

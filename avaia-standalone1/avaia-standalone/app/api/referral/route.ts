@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { type Program, type Stage, type DevelopmentalBand } from "@/lib/engine/prompts";
 import { isMember } from "@/lib/membership";
-import { isAuthorizedGuideConversation } from "@/lib/guide";
+import { isAuthorizedGuideConversation, resolveDevelopmentalBand } from "@/lib/guide";
 import { generateReferral } from "@/lib/engine/referral-generation";
 
 export const runtime = "nodejs";
@@ -44,15 +44,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
   }
 
-  // Youth Journey, Phase 1 -- see /api/conversation's identical comment.
+  // Youth Journey -- see /api/conversation's identical comment.
   let developmentalBand: DevelopmentalBand | null = null;
   if (program === "youth") {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("developmental_band")
-      .eq("id", user.id)
-      .maybeSingle();
-    developmentalBand = (profile?.developmental_band as DevelopmentalBand | null) ?? null;
+    developmentalBand = await resolveDevelopmentalBand(supabase, user.id, conversationId);
   }
 
   const result = await generateReferral(supabase, user.id, {
