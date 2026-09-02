@@ -2,17 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "@/components/SignOutButton";
+import YouthAssentForm from "@/components/YouthAssentForm";
 import { createConversation, createJourney } from "@/lib/engine/conversation";
 import type { DevelopmentalBand } from "@/lib/engine/prompts";
 
 export const metadata = { title: "AVAIA for Youth" };
 export const dynamic = "force-dynamic";
-
-const BAND_LABEL: Record<DevelopmentalBand, string> = {
-  "8-11": "8–11",
-  "12-14": "12–14",
-  "15-17": "15–17",
-};
 
 function isBand(value: FormDataEntryValue | null): value is DevelopmentalBand {
   return value === "8-11" || value === "12-14" || value === "15-17";
@@ -61,32 +56,15 @@ async function beginYouthJourney(formData: FormData) {
   const band = formData.get("band");
   if (!isBand(band)) redirect("/youth");
 
+  // The Youth Host's own understanding of what participation involves --
+  // separate from guardian consent (already recorded at /welcome). Checked
+  // server-side, not just via the client component's disabled button --
+  // see components/YouthAssentForm.tsx for the actual band-specific text
+  // this checkbox follows.
+  if (formData.get("assentAcknowledged") !== "1") redirect("/youth");
+
   await startYouthJourney(supabase, user.id, band);
   redirect("/journey");
-}
-
-function BandSelector({ defaultBand }: { defaultBand: DevelopmentalBand | null }) {
-  return (
-    <fieldset className="mt-8">
-      <legend className="label mb-3">Developmental band</legend>
-      {(Object.keys(BAND_LABEL) as DevelopmentalBand[]).map((band) => (
-        <label
-          key={band}
-          className="mt-2 flex cursor-pointer items-start gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3 first:mt-0"
-        >
-          <input
-            type="radio"
-            name="band"
-            value={band}
-            defaultChecked={defaultBand === band}
-            className="mt-1"
-            required
-          />
-          <span className="text-ink">{BAND_LABEL[band]}</span>
-        </label>
-      ))}
-    </fieldset>
-  );
 }
 
 export default async function YouthPage() {
@@ -176,15 +154,11 @@ export default async function YouthPage() {
         Conversations Across Time, and InnerCompass — adapted for you.
       </p>
 
-      <form action={beginYouthJourney}>
-        <BandSelector defaultBand={(profile.developmental_band as DevelopmentalBand) ?? null} />
-        <button
-          type="submit"
-          className="mt-8 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-        >
-          {alreadyStarted ? "Begin Another Youth Journey" : "Begin"}
-        </button>
-      </form>
+      <YouthAssentForm
+        action={beginYouthJourney}
+        defaultBand={(profile.developmental_band as DevelopmentalBand) ?? null}
+        submitLabel={alreadyStarted ? "Begin Another Youth Journey" : "Begin"}
+      />
     </div>
   );
 }

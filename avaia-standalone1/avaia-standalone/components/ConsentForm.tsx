@@ -16,6 +16,13 @@ import { consumePostSignInRedirect } from "@/lib/post-signin-redirect";
 export default function ConsentForm() {
   const [age, setAge] = useState<"" | "adult" | "minor">("");
   const [understood, setUnderstood] = useState(false);
+  // Only required, and only meaningful, when age === "minor" -- see the
+  // governing guardian-consent decision: a real, named, contactable
+  // guardian record replaces the old bare self-attestation checkbox.
+  // lib/guardian-consent.ts's disclosure text (shown below) is what this
+  // name/email actually consents to.
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
   // Fully separate from `understood` above -- optional, off by default,
   // never required for canSubmit. See app/api/consent/route.ts for how the
   // two are kept apart in storage too.
@@ -23,7 +30,8 @@ export default function ConsentForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const canSubmit = understood && age !== "";
+  const canSubmit =
+    understood && age !== "" && (age !== "minor" || (guardianName.trim() !== "" && guardianEmail.trim() !== ""));
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,7 +42,11 @@ export default function ConsentForm() {
       const res = await fetch("/api/consent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ age, marketingConsent }),
+        body: JSON.stringify({
+          age,
+          marketingConsent,
+          ...(age === "minor" ? { guardianName: guardianName.trim(), guardianEmail: guardianEmail.trim() } : {}),
+        }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
       const dest = consumePostSignInRedirect();
@@ -91,6 +103,45 @@ export default function ConsentForm() {
           </span>
         </label>
       </fieldset>
+
+      {age === "minor" && (
+        <div className="mt-5 rounded-lg border border-rule bg-white/[0.03] p-5">
+          <p className="label mb-3">Parent or guardian</p>
+          <p className="mb-4 text-sm text-muted">
+            AVAIA keeps a record of who gave permission for your participation. This authorizes
+            your participation only -- it does not give your parent or guardian access to what you
+            say privately in your own AVAIA conversations.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label mb-2 block" htmlFor="guardianName">
+                Parent/guardian name
+              </label>
+              <input
+                id="guardianName"
+                type="text"
+                required
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+                className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+              />
+            </div>
+            <div>
+              <label className="label mb-2 block" htmlFor="guardianEmail">
+                Parent/guardian email
+              </label>
+              <input
+                id="guardianEmail"
+                type="email"
+                required
+                value={guardianEmail}
+                onChange={(e) => setGuardianEmail(e.target.value)}
+                className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <label className="mt-6 flex cursor-pointer items-start gap-3">
         <input
