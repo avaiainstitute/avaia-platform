@@ -27,6 +27,17 @@ async function setLibraryState(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/library");
 
+  // A Server Action is its own reachable endpoint, not something only
+  // reachable through this page's own render -- re-checked here the same
+  // way the page component itself is, matching the admin-action precedent
+  // elsewhere in this codebase.
+  const { data: youthCheck } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (youthCheck?.minor_with_guardian) redirect("/youth");
+
   const entryId = String(formData.get("entryId") ?? "");
   const requested = String(formData.get("state") ?? "");
   if (!entryId || (requested !== "save" && requested !== "not_for_me")) redirect("/library");
@@ -56,6 +67,13 @@ async function saveLibraryNote(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/library");
 
+  const { data: youthCheck } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (youthCheck?.minor_with_guardian) redirect("/youth");
+
   const entryId = String(formData.get("entryId") ?? "");
   if (!entryId) redirect("/library");
   const note = String(formData.get("note") ?? "").trim();
@@ -73,6 +91,18 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?from=/library/${params.entryId}`);
+
+  // The Library has no Youth-aware presentation architecture yet (Living
+  // Library audit, Section Q) -- server-derived, never trusting a client
+  // flag, the same signal /journey already redirects on. Sent to their own
+  // Journey home rather than shown adult-register content, including via a
+  // direct entry URL.
+  const { data: youthCheck } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (youthCheck?.minor_with_guardian) redirect("/youth");
 
   const { data: entryData } = await supabase
     .from("library_entries")

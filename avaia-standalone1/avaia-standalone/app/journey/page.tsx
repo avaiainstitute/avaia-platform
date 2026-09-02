@@ -245,12 +245,20 @@ export default async function JourneyPage({
           >
             Begin a new journey
           </Link>
-          <Link
-            href="/library"
-            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
-          >
-            Continue exploring the Living Library
-          </Link>
+          {/* The Library has no Youth-aware presentation yet (Living Library
+              audit, Section Q) -- a self-identified minor never sees this
+              continuation link, the same discipline already applied to
+              profile.minor_with_guardian everywhere else on this page. No
+              Youth-appropriate destination exists to substitute in its
+              place, so it's simply omitted rather than replaced. */}
+          {!profile?.minor_with_guardian && (
+            <Link
+              href="/library"
+              className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+            >
+              Continue exploring the Living Library
+            </Link>
+          )}
         </div>
       </div>
     );

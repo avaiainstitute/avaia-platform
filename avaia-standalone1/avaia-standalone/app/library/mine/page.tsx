@@ -18,6 +18,16 @@ export default async function MyLibraryPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/library/mine");
 
+  // The Library has no Youth-aware presentation architecture yet (Living
+  // Library audit, Section Q) -- same server-derived check as every other
+  // Library route.
+  const { data: youthCheck } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (youthCheck?.minor_with_guardian) redirect("/youth");
+
   const { data: hostRows } = await supabase
     .from("library_host_entries")
     .select("library_entry_id, state, note, explored_at, updated_at")

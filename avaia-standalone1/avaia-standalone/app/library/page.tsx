@@ -79,6 +79,17 @@ export default async function LibraryPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?from=/library`);
 
+  // The Library has no Youth-aware presentation architecture yet (Living
+  // Library audit, Section Q) -- server-derived, never trusting a client
+  // flag, the same signal /journey already redirects on. Sent to their own
+  // Journey home rather than shown adult-register content.
+  const { data: youthCheck } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (youthCheck?.minor_with_guardian) redirect("/youth");
+
   const viewerIsMember = await isMember(supabase, user.id);
 
   const query = searchParams?.q?.trim() ?? "";

@@ -113,6 +113,16 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?from=/library/concepts/${params.conceptId}`);
 
+  // The Library has no Youth-aware presentation architecture yet (Living
+  // Library audit, Section Q) -- same server-derived check as every other
+  // Library route, including this reached-via-Secondary-Loss-redirect path.
+  const { data: youthCheck } = await supabase
+    .from("profiles")
+    .select("minor_with_guardian")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (youthCheck?.minor_with_guardian) redirect("/youth");
+
   const concept = await getConcept(supabase, params.conceptId);
   if (!concept) notFound();
 
