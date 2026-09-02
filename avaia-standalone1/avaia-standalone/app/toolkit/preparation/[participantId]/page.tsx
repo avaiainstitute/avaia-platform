@@ -6,6 +6,7 @@ import { toolLabel } from "@/lib/toolkit";
 import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
+import PreparationSnapshot from "@/components/PreparationSnapshot";
 
 export const metadata = { title: "Preparation — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -214,6 +215,8 @@ export default async function PreparationPage({
           ))}
         </div>
       )}
+
+      <PreparationSnapshot participantId={participant.id} />
 
       {active.length > 0 && (
         <section className="mt-10">
