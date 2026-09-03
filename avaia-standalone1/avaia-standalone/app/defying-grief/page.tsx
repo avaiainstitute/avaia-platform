@@ -267,9 +267,20 @@ function ThresholdContent({
         </p>
         <p className="mt-4 text-sm text-muted">
           You can move through this on your own, at your own pace. Human Guide support will also
-          be available through AVAIA&rsquo;s Guided Journey pathway as that becomes available, and
-          Defying Grief can also be experienced together — through presentations, workshops, and
-          other AVAIA Experiences — where those are available.
+          be available through AVAIA&rsquo;s Guided Journey pathway as that becomes available.
+          Defying Grief can also be facilitated by a Certified AVAIA Guide, or experienced
+          together — through a live workshop or a school or organization program, with the
+          shared curriculum delivered to the room and each person&rsquo;s own private conversation
+          kept theirs alone.
+        </p>
+        <p className="mt-4 text-sm text-muted">
+          A version of Defying Grief exists for young people, too — adapted by age and always
+          beginning with a parent or guardian&rsquo;s permission, and the Youth Host&rsquo;s own
+          agreement, before anything starts.{" "}
+          <Link href="/youth" className="text-ink underline decoration-rule underline-offset-2 hover:text-seal">
+            Learn about Youth Defying Grief
+          </Link>
+          .
         </p>
       </div>
 
