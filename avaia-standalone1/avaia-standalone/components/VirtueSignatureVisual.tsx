@@ -60,7 +60,17 @@ export default function VirtueSignatureVisual({
     });
   }
 
-  const firstRingPositions = positionsFor(firstRing, baseRadius);
+  // Vulnerability (index 0 of IDENTITY_FIRST_RING) at 9 o'clock, Authenticity
+  // (index 1) at 3 o'clock -- a deliberate visual correction from the
+  // default top/bottom placement positionsFor would give a 2-node ring
+  // (angle -90deg then +90deg). Purely a layout choice for these two fixed
+  // nodes; outer rings still use positionsFor's own top-start distribution,
+  // untouched, and the underlying first-ring data/meaning is unchanged.
+  const FIRST_RING_ANGLES = [Math.PI, 0];
+  const firstRingPositions = firstRing.map((_, i) => {
+    const angle = FIRST_RING_ANGLES[i] ?? 0;
+    return { x: center + baseRadius * Math.cos(angle), y: center + baseRadius * Math.sin(angle) };
+  });
 
   return (
     <div className="flex flex-col items-center">
