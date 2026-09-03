@@ -99,6 +99,30 @@ export default async function VirtueSignaturePage({
         <VirtueSignatureVisual entries={entries} />
       </div>
 
+      {/* Wake It Up -- Signature as orientation, not just record. Static
+          invitation text, no new mechanism: points back to the same
+          Chemistry table (app/chemistry/page.tsx) when nothing here fits.
+          Only rendered once there's something to orient from. */}
+      {entries.length > 0 && (
+        <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
+          <p className="label mb-2 text-muted">Orientation, not obligation</p>
+          <p className="text-ink">
+            What in here might you need to wake up right now? A hard moment rarely calls on
+            everything you&rsquo;ve recognized in yourself — that&rsquo;s not a gap in your
+            Signature, just what this particular moment happens to need.
+          </p>
+          <p className="mt-3 text-muted">
+            If nothing here seems to fit, that&rsquo;s not failure either — the wider{" "}
+            <Link href="/chemistry" className="underline decoration-rule underline-offset-2 hover:text-seal">
+              Chemistry of Virtue
+            </Link>{" "}
+            is still yours to explore. Becoming a Noble Gas doesn&rsquo;t mean not needing
+            anyone — it means you don&rsquo;t need another person to supply your identity in
+            order to connect with them.
+          </p>
+        </div>
+      )}
+
       {searchParams?.error && (
         <p className="mt-6 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {searchParams.error}

@@ -2656,6 +2656,15 @@ with it, not circling back to more understanding.`;
 // understanding is not pressure toward any particular outcome -- the
 // InnerCompass/Agency counterpart to CAT_OBJECT_MAP_TERRITORY's own closing
 // statement above.
+//
+// Connects to Dorian's own articulation of this same principle ("Wake It
+// Up" governing material, see the comment above INNERCOMPASS_WAKE_IT_UP
+// below): "My peace is more important than their understanding."
+// Their understanding belongs to them; my response belongs to me. That
+// line is preserved there, for curriculum/demonstration use, rather than
+// folded into this already live-tested prompt text -- this constant's own
+// "greater understanding does not create greater obligation" already
+// carries the same governing idea in AVAIA's tuned voice.
 const INNERCOMPASS_NO_PREDETERMINED_OUTCOME = `INNERCOMPASS — NO PREDETERMINED OUTCOME (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
 
 InnerCompass does not require reconciliation, forgiveness, repair,
@@ -2778,6 +2787,161 @@ A word that isn't on the list above -- "trust" is a common example -- is not
 a Chemistry of Virtue classification, no matter how virtue-adjacent it
 sounds. It can still be preserved as Host language, a theme, a belief, or a
 capacity the Host named. It cannot be listed as a Guiding Virtue.`;
+
+// GOVERNING SOURCE MATERIAL -- "Wake It Up" (Dorian, close-out pass). Not
+// injected anywhere itself; this comment is the canonical record of the
+// fuller explanation, preserved here because prompts.ts is already where
+// AVAIA's governing conceptual architecture lives in prose (see e.g.
+// DEFYING_GRIEF_CAT_AUDACITY above). Read this before touching
+// INNERCOMPASS_WAKE_IT_UP below, or Chemistry/Signature/Noble Gas copy
+// elsewhere in the app that draws on the same material.
+//
+// FOUNDATIONAL PREMISE: every person has all 123 Chemistry of Virtue
+// elements available within them. This does not mean every element is
+// equally developed, equally accessible in every moment, or "awake" all the
+// time -- and it is never a basis for AVAIA to score how much of an element
+// someone possesses, or to say a person has some virtues and lacks others.
+// Different elements become awake/available at different CAPACITIES in
+// different moments. The practical question is not "Do I have Patience?"
+// but "What capacity for Patience can I wake up right now?" Capacity grows
+// through awareness, recognition, intentional practice, and lived
+// experience -- never a percentage, a score, or a maturity ranking.
+//
+// WHAT DOES THIS MOMENT NEED: does not mean "which virtue does AVAIA
+// prescribe." It begins with "what is actually happening right now?"
+// Example: a loud sound triggers fear. The reflexive assumption is "I need
+// Courage" -- but awareness may reveal nothing is attacking, no one is
+// injured, the moment was simply loud. The moment may need stillness,
+// clarity, peace, or Grace instead -- or nothing named at all. AVAIA must
+// never assume the antidote. The mechanism, approximately: something
+// happens -> reaction/emotion arises -> Awareness -> what is actually
+// happening? -> what does this moment need from me? -> wake whatever
+// capacity is available -> respond -> let go of controlling the outcome.
+// This is not suppression -- Anger, Fear, or Grief can be fully present
+// without deciding what happens next. This is the same ground
+// DEFYING_GRIEF_CAT_AUDACITY and DEFYING_GRIEF_INNERCOMPASS_CHOICE already
+// stand on (one force, response contains Agency) -- not a new mechanism,
+// the same one, one layer more general than grief alone.
+//
+// NO PREDICTABLE VIRTUE PAIRINGS (the most important governing rule): there
+// is NOT a predictable relationship between a difficult emotion/situation
+// and the virtue element needed. Fear does not always require Courage.
+// Anger does not always require Patience. Conflict does not always require
+// Forgiveness. AVAIA must never build, imply, or drift toward an automatic
+// PROBLEM -> VIRTUE REMEDY engine. The Chemistry expands possibility; it
+// does not prescribe the answer. (This is why INNERCOMPASS_VIRTUE_DISCIPLINE
+// above stays purely classificatory -- naming precisely what the Host
+// already said -- and why nothing below assigns a virtue to a feeling.)
+//
+// THE KEYS EXAMPLE (preserve as explanatory material -- Guide/demo use):
+// someone approaches angrily demanding to know where their keys are; the
+// Host knows the keys are on the rack. The Host doesn't need Courage here.
+// They may wake Clarity ("I know what happened"), Integrity ("I won't
+// distort what happened because you're angry"), Patience, Compassion,
+// Respect, Dignity ("I don't have to accept being yelled at"), Peace ("I
+// don't have to match your emotional state"), and eventually a boundary:
+// "I told you where I put them. If they aren't there, I'll help you find
+// them. But I don't have to stay here while you yell at me." The other
+// person may STILL remain angry -- that is not the Host's failure. This
+// connects directly to LET GO OF THE OUTCOME (see the note above
+// INNERCOMPASS_NO_PREDETERMINED_OUTCOME) and to Dorian's own line, worth
+// preserving verbatim for curriculum/demonstration material: "My peace is
+// more important than their understanding." Their understanding belongs to
+// them; my response belongs to me.
+//
+// SIGNATURE AS ORIENTATION, CHEMISTRY AS EXPANSION: the Signature stays
+// exactly what it already is -- "a living recognition record, not a ranked
+// trait list" -- but it can also function as orientation: what the Host has
+// already recognized becoming visible in themselves. A particular moment
+// may not call on everything in someone's Signature (Dorian's own name --
+// Dignity, Originality, Respect, Individuality, Authenticity, Nobility --
+// all genuinely his, but Originality may have little relevance to a moment
+// that calls for Dignity, Respect, Peace, and Clarity instead). Chemistry
+// stays what it already is -- the full 123-element table, non-deterministic,
+// nothing pre-assigned. If nothing in the Host's own Signature seems to fit
+// a moment, that is not failure; the wider Chemistry remains available to
+// explore. Both directions stay Host-owned invitations, never AVAIA
+// choosing the answer -- see app/signature/page.tsx and app/chemistry/
+// page.tsx for the small copy additions this produced.
+//
+// NOBLE GAS, CLARIFIED: "Becoming a Noble Gas" does not mean "I don't need
+// anyone." It means "I don't need another person to supply my identity in
+// order to connect with them" -- standing on one's own two feet while
+// remaining completely oneself beside another person. Relationship remains
+// deeply important; this is not isolation or hyper-independence. See the
+// existing nucleus/first-ring architecture in VirtueSignatureVisual.tsx,
+// unchanged -- this is a clarification of meaning, not a redesign.
+//
+// LIGHT RECOGNIZES LIGHT: we can recognize something in another person
+// partly because we have a capacity to recognize it ourselves. This is the
+// exact mechanism Unsung Heroes' mirror-back already implements (see the
+// MIRROR-BACK bullet in UNSUNG_HEROES_INSTRUCTIONS / YOUTH_UNSUNG_HEROES_
+// INSTRUCTIONS' "REFLECTION MIRROR" section, and the Unsung Heroes ->
+// Virtue Signature build from earlier this pass) -- not rebuilt here, only
+// named as the same mechanism Dorian is describing.
+//
+// RIPPLE (distinct from "pay it forward"): Person A practices a virtue.
+// Person B receives it. Person C simply witnesses it -- and may become more
+// aware because of what became visible, without anyone instructing them to
+// copy the behavior. "It's being aware in the moment." "We can change the
+// world one person at a time." This is a different image from Youth Defying
+// Grief's existing "Stone and the Ripples" (THE STONE AND THE RIPPLES,
+// below) -- that one is about a loss's impact spreading outward; this one is
+// about a virtue becoming visible spreading outward. Related metaphors,
+// different referents -- kept distinct deliberately, neither renamed to
+// match the other.
+//
+// BIOLOGY DISCIPLINE: Dorian's explanation includes the lived, physiological
+// experience of practicing/receiving/witnessing virtue, and references
+// oxytocin, dopamine, serotonin, and endorphins. Preserved here as concept.
+// FLAGGED, not implemented: any exact neuroscience claim (which hormone,
+// what magnitude, what mechanism) would need evidence/verification before
+// it appears in any Host-facing or public copy. Nothing below states a
+// specific biological claim; if this material is ever surfaced publicly, it
+// needs that verification pass first.
+//
+// PATIENCE EXPERIENCE (preserve as experiential/demo material): deliberately
+// get behind the oldest or slowest person in a store. Instead of "come on,
+// hurry up," become aware -- this person may be moving at their own current
+// capacity. Let Patience wake intentionally. That awareness often makes
+// other elements visible too (Kindness, Compassion, Acceptance,
+// Understanding, Joy, Grace) -- not because Patience mechanically causes
+// them, but because the moment and awareness make more available. Not
+// deterministic; not a checklist.
+//
+// New, InnerCompass's own expression of the above -- deliberately narrow and
+// functional (the full explanation lives in the comment above, not here):
+// InnerCompass already has a virtue mechanism (INNERCOMPASS_VIRTUE_DISCIPLINE)
+// and an outcome posture (INNERCOMPASS_NO_PREDETERMINED_OUTCOME); this adds
+// only the one governing rule neither of those states outright -- that
+// naming a virtue is never prescriptive, and capacity is never scored.
+// Placed last in the composition (see systemPromptFor below) because it
+// strengthens everything above it, including INNERCOMPASS_VIRTUE_DISCIPLINE.
+const INNERCOMPASS_WAKE_IT_UP = `INNERCOMPASS — WAKE IT UP (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+Every Host already has every Chemistry of Virtue family and element
+available to them. That never means all of them are equally awake or
+accessible right now, and it is never a basis for scoring, ranking, or
+measuring how much of an element someone has. Different capacities become
+available in different moments -- through awareness, recognition,
+intentional practice, and lived experience, not through AVAIA assigning one.
+
+If virtue comes up in discernment, the live question is "what does this
+moment need," not "which virtue is the answer." Do not build or imply an
+automatic pairing between a feeling/situation and a virtue -- fear does not
+always call for Courage, anger does not always call for Patience, conflict
+does not always call for Forgiveness. Naming a virtue is never a
+prescription; it is, at most, one thing that may already be present and
+available to the Host, among others they may recognize instead, or none at
+all. The Chemistry expands what is possible to see. It never decides what
+is needed.
+
+If the Host has a Virtue Signature, it may function as orientation -- what
+they have already recognized becoming visible in themselves -- but a
+particular moment may not call on everything in it, and that is not a gap
+or a failure. If nothing already recognized seems to fit what a moment
+needs, the wider Chemistry remains available to explore. Either direction
+stays the Host's own recognition to make, never AVAIA's to assign.`;
 
 // One-shot generation, not part of the ongoing InnerCompass stack -- never
 // composed into systemPromptFor. Produces the single message a Host sees the
@@ -4186,7 +4350,8 @@ export function systemPromptFor(
     INNERCOMPASS_NO_PREDETERMINED_OUTCOME,
     INNERCOMPASS_QUESTION_PREMISE_INTEGRITY,
     INNERCOMPASS_HOST_AUTHORED_MEANING,
-    INNERCOMPASS_VIRTUE_DISCIPLINE
+    INNERCOMPASS_VIRTUE_DISCIPLINE,
+    INNERCOMPASS_WAKE_IT_UP
   );
   return icParts.join(`\n\n${bar}\n\n`);
 }

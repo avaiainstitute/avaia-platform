@@ -291,6 +291,35 @@ export default function ChemistryPage() {
           required virtue for you, and the Guide doesn&rsquo;t decide your direction. Virtue
           informs discernment; it doesn&rsquo;t replace it.
         </p>
+        <p className="mt-3 text-muted">
+          There isn&rsquo;t a fixed pairing between a hard moment and the virtue it needs. Fear
+          doesn&rsquo;t always call for Courage. Anger doesn&rsquo;t always call for Patience.
+          Conflict doesn&rsquo;t always call for Forgiveness. Sometimes fear needs stillness, or
+          clarity, or grace, or something else you haven&rsquo;t named yet. The real question
+          usually isn&rsquo;t &ldquo;which virtue is the answer&rdquo; — it&rsquo;s what the
+          moment actually needs, which only becomes visible with a closer look. AVAIA won&rsquo;t
+          guess for you.
+        </p>
+      </div>
+
+      {/* Wake It Up -- connects Chemistry's non-deterministic posture above
+          to the practical invitation Signature (a Host's own recognition
+          record) can't always answer alone. Text only, no new mechanism --
+          the "explore the wider Chemistry" it points to is just this same
+          page. */}
+      <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">What this moment might need</p>
+        <p className="text-ink">
+          If you already keep a{" "}
+          <Link href="/signature" className="underline decoration-rule underline-offset-2 hover:text-seal">
+            Virtue Signature
+          </Link>
+          , it can work as orientation — what you&rsquo;ve already recognized becoming visible in
+          yourself. A given moment may not call on everything in it, and that&rsquo;s not a gap.
+          If nothing already there seems to fit, the wider table above is still yours to explore:
+          is there something here you need right now that you haven&rsquo;t recognized in
+          yourself yet?
+        </p>
       </div>
 
       {/* What you can do here */}
