@@ -148,28 +148,46 @@ export async function recordGuardianConsentForParticipant(
 /** The one place "cleared to participate" is decided for a Guide-
  *  facilitated participant -- active guardian consent (whichever
  *  verification method reached it) AND the Guide's confirmation that
- *  Youth assent was delivered AND a developmental band on record. Used
- *  both to render status in a roster and, critically, to actually block
- *  session creation -- see app/toolkit/iap/[sessionId]/page.tsx and the
- *  Youth Defying Grief / Unsung Heroes start actions, which now check
- *  this before creating a guide_sessions row rather than only checking
- *  "does a consent row exist." */
+ *  Youth assent was delivered, for a Youth participant (a developmental
+ *  band on record). Used both to render status in a roster and,
+ *  critically, to actually block session creation -- see
+ *  app/toolkit/iap/[sessionId]/page.tsx and the Youth Defying Grief /
+ *  Unsung Heroes start actions, which now check this before creating a
+ *  guide_sessions row rather than only checking "does a consent row
+ *  exist."
+ *
+ *  An ADULT participant (no developmental_band on record) has no
+ *  guardian-consent concept at all and is simply always cleared -- found
+ *  as a real defect during the Organization Administrator build: this
+ *  function previously required a band unconditionally, which meant an
+ *  adult registered through the youth_programs roster system (reused
+ *  generically for Adult organizational programs too, e.g. an Adult
+ *  Defying Grief cohort -- see that build's own reasoning) could never
+ *  actually be launched. "Start session" never appeared for them, and
+ *  the server action would have redirected away even if it had. Fixed
+ *  here, at the one shared source, so every caller -- the Guide's own
+ *  roster page and the Organization Administrator dashboard alike --
+ *  is correct and consistent, rather than diverging per caller. */
 export async function isParticipantClearedToParticipate(
   supabase: SupabaseClient,
   participantId: string
 ): Promise<boolean> {
-  const [{ data: participant }, { data: consent }] = await Promise.all([
-    supabase.from("guide_participants").select("developmental_band").eq("id", participantId).maybeSingle(),
-    supabase
-      .from("guardian_consents")
-      .select("status, assent_confirmed_at")
-      .eq("guide_participant_id", participantId)
-      .eq("status", "active")
-      .not("assent_confirmed_at", "is", null)
-      .limit(1)
-      .maybeSingle(),
-  ]);
-  return !!participant?.developmental_band && !!consent;
+  const { data: participant } = await supabase
+    .from("guide_participants")
+    .select("developmental_band")
+    .eq("id", participantId)
+    .maybeSingle();
+  if (!participant?.developmental_band) return true;
+
+  const { data: consent } = await supabase
+    .from("guardian_consents")
+    .select("status, assent_confirmed_at")
+    .eq("guide_participant_id", participantId)
+    .eq("status", "active")
+    .not("assent_confirmed_at", "is", null)
+    .limit(1)
+    .maybeSingle();
+  return !!consent;
 }
 
 /** Whether an active (non-revoked, non-pending) guardian consent already
