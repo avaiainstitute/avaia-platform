@@ -239,7 +239,27 @@ export default function AboutContent() {
             <Link href="/defying-grief" className="text-ink hover:text-seal">
               Defying Grief
             </Link>
-            <span className="text-muted"> is AVAIA&rsquo;s flagship.</span>
+            <span className="text-muted"> is AVAIA&rsquo;s flagship — for adults, and, separately, for young people.</span>
+          </li>
+          <li>
+            <Link href="/chemistry" className="text-ink hover:text-seal">
+              The Chemistry of Virtue
+            </Link>
+            <span className="text-muted">
+              {" "}
+              — 123 elements of virtue a conversation may recognize in what you&rsquo;ve already
+              said or done, never assigned to you as a guess.
+            </span>
+          </li>
+          <li>
+            <Link href="/signature" className="text-ink hover:text-seal">
+              Your Virtue Signature
+            </Link>
+            <span className="text-muted">
+              {" "}
+              — a living record of what you choose to keep, built from what became visible along
+              the way. Others can offer evidence; only you decide what belongs in it.
+            </span>
           </li>
           <li>
             <span className="text-ink">The Institution</span>
