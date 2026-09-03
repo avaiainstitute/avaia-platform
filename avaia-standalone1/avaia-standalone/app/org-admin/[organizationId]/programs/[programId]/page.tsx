@@ -172,8 +172,19 @@ export default async function OrgAdminProgramPage({
     : { data: [] };
 
   const guideIds = await listGuidesConnectedToOrganization(admin, params.organizationId);
+  // Also resolve each roster participant's actual current guide_id, even
+  // if that Guide has since been disconnected from the organization (or
+  // was never "connected" by either definition -- e.g. reassigned here
+  // from outside this org by a Platform Admin). Continuity display, not
+  // an access grant: a disconnected Guide keeps facilitating whoever
+  // they were already assigned to, and this roster should still show
+  // that Guide's email rather than falling back to a raw id.
+  const currentFacilitatingGuideIds = new Set(
+    (participantsRaw ?? []).map((p) => p.guide_id as string).filter(Boolean)
+  );
+  const allGuideIdsToResolve = new Set([...guideIds, ...currentFacilitatingGuideIds]);
   const guideEmailById = new Map<string, string>();
-  for (const gid of guideIds) {
+  for (const gid of allGuideIdsToResolve) {
     const { data: u } = await admin.auth.admin.getUserById(gid);
     guideEmailById.set(gid, u?.user?.email ?? gid);
   }
