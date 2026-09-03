@@ -195,9 +195,25 @@ export default function JourneyChat({
     }
   }
 
+  // Real defect found live (Org Admin / Wake It Up close-out pass): a
+  // Guide-facilitated, account-less participant's conversations.host_id is
+  // necessarily the Guide's own user id (RLS needs a real auth.users row to
+  // scope by, and this kind of participant has no account of their own --
+  // guide_sessions.participant_id is the actual ownership record, see
+  // isAuthorizedGuideConversation in lib/guide.ts). /workbook's own query
+  // only ever filtered by host_id, so finishing a facilitated session and
+  // landing there put the participant's entire private Journey inside the
+  // signed-in Guide's OWN personal Workbook -- visible, printable,
+  // shareable, exportable as if it were the Guide's own story. Fixed at
+  // both ends: app/workbook/page.tsx now excludes any conversation that has
+  // a guide_sessions row (never the Guide's own personal Journey to begin
+  // with), and this component now sends a Guide-facilitated session
+  // (participantId set) to that participant's own record instead.
+  const guideRecordHref = participantId ? `/toolkit/participants/${participantId}` : "/workbook";
+
   function continueForward() {
     if (!finished) return;
-    if (finished.done) router.push(program === "defying-grief" ? "/defying-grief" : "/workbook");
+    if (finished.done) router.push(participantId ? guideRecordHref : program === "defying-grief" ? "/defying-grief" : "/workbook");
     else router.refresh(); // the next stage's conversation loads
   }
 
@@ -318,7 +334,7 @@ export default function JourneyChat({
             <div className="mt-5 flex flex-wrap items-center gap-3">
               {!finished.done && (
                 <Link
-                  href="/workbook"
+                  href={guideRecordHref}
                   className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
                 >
                   View Guide&rsquo;s Record

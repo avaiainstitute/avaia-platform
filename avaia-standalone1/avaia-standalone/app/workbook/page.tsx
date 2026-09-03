@@ -198,19 +198,44 @@ export default async function WorkbookPage({
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
 
+  // Real defect found live (Org Admin / Wake It Up close-out pass): an
+  // account-less Guide-facilitated participant's conversations.host_id is
+  // necessarily set to the facilitating Guide's own user id -- RLS needs a
+  // real auth.users row to scope by, and that kind of participant has no
+  // account of their own. The actual ownership record is guide_sessions
+  // (participant_id), which isAuthorizedGuideConversation in lib/guide.ts
+  // already treats as authoritative -- conversations.host_id matching a
+  // Guide is a technical necessity, never a claim that the conversation is
+  // that Guide's own personal story. This query used to trust host_id
+  // alone, so a Guide who has ever facilitated an account-less participant
+  // found that participant's entire private Journey inside their own
+  // personal Workbook -- readable, printable, shareable, exportable as if
+  // it were their own. Excluded here at the source, not just at the
+  // post-completion link (see JourneyChat.tsx's guideRecordHref), so this
+  // holds regardless of how a Guide reaches /workbook.
+  const { data: facilitatedRows } = await supabase
+    .from("guide_sessions")
+    .select("conversation_id")
+    .eq("guide_id", user.id);
+  const facilitatedConversationIds = new Set((facilitatedRows ?? []).map((r) => r.conversation_id as string));
+
   const { data: convosData } = await supabase
     .from("conversations")
     .select("*")
     .eq("host_id", user.id)
     .order("created_at", { ascending: true });
-  const conversations = (convosData as DbConversation[]) ?? [];
+  const conversations = ((convosData as DbConversation[]) ?? []).filter(
+    (c) => !facilitatedConversationIds.has(c.id)
+  );
 
   const { data: referralsData } = await supabase
     .from("referrals")
     .select("*")
     .eq("host_id", user.id)
     .order("created_at", { ascending: true });
-  const referrals = referralsData ?? [];
+  const referrals = (referralsData ?? []).filter(
+    (r) => !facilitatedConversationIds.has(r.conversation_id as string)
+  );
 
   // Who currently has access to what — the shared_with_id -> email lookup
   // needs the admin client since auth.users isn't otherwise queryable; the
