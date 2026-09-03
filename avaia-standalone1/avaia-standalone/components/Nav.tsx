@@ -69,6 +69,7 @@ export default async function Nav() {
   // is still redirected there exactly as before.
   let toolkitAuthorized = false;
   let isAdmin = false;
+  let isOrgAdmin = false;
   if (user) {
     toolkitAuthorized = await isToolkitAuthorized(supabase, user.id);
     // Same purely-for-discoverability posture as toolkitAuthorized above --
@@ -78,6 +79,17 @@ export default async function Nav() {
     // into it from anywhere in the app at all.
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
     isAdmin = profile?.role === "admin";
+    // Same discoverability-only posture -- /org-admin/* re-checks
+    // organization_admins itself. A cheap existence check (not which/how
+    // many organizations) is enough to decide whether to show the link.
+    const { data: orgAdminRow } = await supabase
+      .from("organization_admins")
+      .select("id")
+      .eq("host_id", user.id)
+      .eq("status", "authorized")
+      .limit(1)
+      .maybeSingle();
+    isOrgAdmin = !!orgAdminRow;
   }
 
   return (
@@ -125,6 +137,17 @@ export default async function Nav() {
                     className="label text-seal hover:opacity-80 transition-opacity"
                   >
                     Guide
+                  </Link>
+                </li>
+              )}
+              {isOrgAdmin && (
+                <li>
+                  <Link
+                    href="/org-admin"
+                    prefetch={false}
+                    className="label text-seal hover:opacity-80 transition-opacity"
+                  >
+                    Org Admin
                   </Link>
                 </li>
               )}

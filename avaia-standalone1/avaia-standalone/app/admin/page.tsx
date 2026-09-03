@@ -30,6 +30,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Move a Guide-facilitated participant to a different toolkit-authorized Guide, preserving their full record.",
   },
   {
+    href: "/admin/organization-admins",
+    label: "Organization Administrators",
+    description: "Grant or revoke Organization Administrator authorization for a specific organization.",
+  },
+  {
     href: "/admin/youth-data",
     label: "Youth Data Retention / Deletion",
     description: "Find a Youth-linked record and see or delete every record linked to it.",
