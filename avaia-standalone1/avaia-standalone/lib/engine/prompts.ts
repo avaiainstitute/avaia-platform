@@ -4986,7 +4986,19 @@ Write directly to the Guide, in plain language, not addressed to the Host.`;
  *  program each individual referral it's given already belongs to. */
 export function preparationSnapshotSystemPrompt(): string {
   const bar = "=".repeat(60);
-  return [PREPARATION_INSTRUCTIONS, PREPARATION_SNAPSHOT_GENERATION, GUARDRAILS].join(
-    `\n\n${bar}\n\n`
-  );
+  // VIRTUE_TABLE_INTEGRATION added here (Chemistry connection fix 5/5,
+  // closed during live testing): strengthsVisible/whatHasChanged/etc. are
+  // free-text fields where the model could plausibly name a virtue in
+  // prose with no prior discipline requiring it be a real Chemistry of
+  // Virtue element -- unlike CAT/InnerCompass referral generation, this
+  // output has no structured {family, element} field a code-level
+  // sanitizer could validate, so the backstop here is the same live
+  // formatVirtueHierarchy()-driven prompt discipline already used
+  // everywhere else a virtue might be named.
+  return [
+    PREPARATION_INSTRUCTIONS,
+    PREPARATION_SNAPSHOT_GENERATION,
+    VIRTUE_TABLE_INTEGRATION,
+    GUARDRAILS,
+  ].join(`\n\n${bar}\n\n`);
 }
