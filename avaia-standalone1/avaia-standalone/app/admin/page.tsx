@@ -25,6 +25,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Manage AVAIA Living Library entries.",
   },
   {
+    href: "/admin/reassign-participant",
+    label: "Reassign Participant",
+    description: "Move a Guide-facilitated participant to a different toolkit-authorized Guide, preserving their full record.",
+  },
+  {
     href: "/admin/youth-data",
     label: "Youth Data Retention / Deletion",
     description: "Find a Youth-linked record and see or delete every record linked to it.",
