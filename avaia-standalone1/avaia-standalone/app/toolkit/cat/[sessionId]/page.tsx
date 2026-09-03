@@ -132,6 +132,7 @@ export default async function ToolkitCatSessionPage({
         isLast={false}
         initialMessages={messages}
         program={convo.program}
+        participantId={session.participant_id}
       />
     </div>
   );

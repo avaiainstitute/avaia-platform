@@ -16,10 +16,16 @@ export default function UnsungHeroesChat({
   conversationId,
   pathLabel,
   initialMessages,
+  participantId,
 }: {
   conversationId: string;
   pathLabel: string;
   initialMessages: Msg[];
+  /** Set only by app/toolkit/unsung-heroes/[sessionId]/page.tsx (Guide-
+   *  facilitated) -- passed through to WhatBecameVisible so "Consider for
+   *  My Virtue Signature" lands on this participant's own Signature, not
+   *  the signed-in Guide's. Omitted by the self-serve /unsung-heroes page. */
+  participantId?: string | null;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
@@ -218,6 +224,7 @@ export default function UnsungHeroesChat({
             virtues={[{ family: familyOf(saved.virtueFamily as VirtueFamilyKey)?.name ?? saved.virtueFamily, element: saved.primaryVirtue }]}
             sourceType="unsung_heroes"
             sourceReference={conversationId}
+            participantId={participantId}
           />
         )}
 

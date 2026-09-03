@@ -56,6 +56,7 @@ export default async function ToolkitUnsungHeroesSessionPage({
         conversationId={convo.id}
         pathLabel={UNSUNG_HEROES_PATH_LABEL[convo.path]}
         initialMessages={messages}
+        participantId={session.participant_id}
       />
     </div>
   );

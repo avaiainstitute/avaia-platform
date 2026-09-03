@@ -103,6 +103,7 @@ export default async function ToolkitInnerCompassSessionPage({
         isLast={true}
         initialMessages={messages}
         program={convo.program}
+        participantId={session.participant_id}
       />
     </div>
   );

@@ -26,6 +26,7 @@ export default function JourneyChat({
   isLast,
   initialMessages,
   program = "general",
+  participantId,
 }: {
   conversationId: string;
   stageLabel: string;
@@ -42,6 +43,12 @@ export default function JourneyChat({
    *  same as general, since there's no Youth dashboard yet). Defaults to
    *  "general" for every existing caller. */
   program?: Program;
+  /** Set only by the Guide toolkit pages (app/toolkit/{iap,cat,innercompass}/
+   *  [sessionId]/page.tsx) -- passed straight through to WhatBecameVisible
+   *  so "Consider for My Virtue Signature" lands on this participant's own
+   *  Signature, not the signed-in Guide's. Omitted by the self-serve
+   *  /journey page. */
+  participantId?: string | null;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>(initialMessages);
@@ -299,6 +306,7 @@ export default function JourneyChat({
                 virtues={finished.summary.virtues}
                 sourceType="conversation_referral"
                 sourceReference={conversationId}
+                participantId={participantId}
               />
             )}
 

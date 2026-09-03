@@ -138,6 +138,7 @@ export default async function ToolkitIapSessionPage({
         isLast={false}
         initialMessages={messages}
         program={convo.program}
+        participantId={session.participant_id}
       />
     </div>
   );

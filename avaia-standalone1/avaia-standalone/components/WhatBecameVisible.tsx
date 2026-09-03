@@ -18,10 +18,15 @@ export default function WhatBecameVisible({
   virtues,
   sourceType,
   sourceReference,
+  participantId,
 }: {
   virtues: VirtueClassification[];
   sourceType: "conversation_referral" | "unsung_heroes";
   sourceReference?: string | null;
+  /** Set only inside a Guide-facilitated session -- routes the entry to
+   *  this participant's own Signature instead of the signed-in Guide's.
+   *  Omitted (self-serve), it lands on the Host's own Signature as before. */
+  participantId?: string | null;
 }) {
   const [added, setAdded] = useState<Set<number>>(new Set());
   const [pending, setPending] = useState<number | null>(null);
@@ -40,6 +45,7 @@ export default function WhatBecameVisible({
           element: v.element,
           sourceType,
           sourceReference: sourceReference ?? null,
+          participantId: participantId ?? null,
         }),
       });
       if (res.ok) setAdded((prev) => new Set(prev).add(index));
