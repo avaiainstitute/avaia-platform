@@ -4,8 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getParticipantHistory, type ParticipantSessionRecord } from "@/lib/guide";
 import { toolLabel } from "@/lib/toolkit";
 import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
-import { formatReferralFields } from "@/lib/engine/referral-provenance";
+import {
+  formatReferralFields,
+  normalizeVirtueClassifications,
+  VIRTUE_FIELD_KEYS,
+} from "@/lib/engine/referral-provenance";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
+import { VirtueLink } from "@/components/VirtueLink";
 
 export const metadata = { title: "Participant Record — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -49,22 +54,50 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
 
       {referral && (
         <dl className="mt-4 space-y-3">
-          {formatReferralFields(referral.from_stage, referral.content).map((item) => (
-            <div key={item.key}>
-              <dt className="label text-muted">{item.label}</dt>
-              <dd className="mt-1 text-sm text-ink">
-                {Array.isArray(item.value) ? (
-                  <ul className="list-disc space-y-0.5 pl-5">
-                    {item.value.map((v, i) => (
-                      <li key={i}>{v}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  item.value
-                )}
-              </dd>
-            </div>
-          ))}
+          {formatReferralFields(referral.from_stage, referral.content).map((item) => {
+            // Same Chemistry connection fix Workbook already has (app/
+            // workbook/page.tsx): re-derive the structured classification
+            // from the raw referral content so this, the Guide-facing
+            // counterpart of Workbook for a Guide-facilitated participant,
+            // links to real Chemistry of Virtue entries too, instead of
+            // showing the formatted "Family — Element" text as plain,
+            // unlinked strings.
+            const virtueClassifications = VIRTUE_FIELD_KEYS.has(item.key)
+              ? normalizeVirtueClassifications(
+                  (referral.content as Record<string, unknown> | null)?.[item.key]
+                )
+              : null;
+            return (
+              <div key={item.key}>
+                <dt className="label text-muted">{item.label}</dt>
+                <dd className="mt-1 text-sm text-ink">
+                  {virtueClassifications ? (
+                    <ul className="list-disc space-y-0.5 pl-5">
+                      {virtueClassifications.map((v, i) => (
+                        <li key={i}>
+                          <VirtueLink
+                            family={v.family}
+                            virtue={v.element}
+                            className="underline decoration-rule underline-offset-2 hover:text-seal"
+                          >
+                            {v.element ? `${v.family} — ${v.element}` : v.family}
+                          </VirtueLink>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : Array.isArray(item.value) ? (
+                    <ul className="list-disc space-y-0.5 pl-5">
+                      {item.value.map((v, i) => (
+                        <li key={i}>{v}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    item.value
+                  )}
+                </dd>
+              </div>
+            );
+          })}
         </dl>
       )}
 
