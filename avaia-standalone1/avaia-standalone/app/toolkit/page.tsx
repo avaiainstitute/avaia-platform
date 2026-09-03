@@ -12,7 +12,7 @@ import {
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
-import { startUnsungHeroesSession } from "@/app/toolkit/unsung-heroes/page";
+import { startUnsungHeroesSession } from "@/lib/engine/unsung-heroes";
 
 const UNSUNG_HEROES_PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
 

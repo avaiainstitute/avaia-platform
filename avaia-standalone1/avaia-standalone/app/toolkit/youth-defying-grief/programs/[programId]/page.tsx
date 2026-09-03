@@ -9,7 +9,7 @@ import {
 } from "@/lib/guardian-consent";
 import type { DevelopmentalBand, UnsungHeroesPath } from "@/lib/engine/prompts";
 import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
-import { startUnsungHeroesSession } from "@/app/toolkit/unsung-heroes/page";
+import { startUnsungHeroesSession } from "@/lib/engine/unsung-heroes";
 
 const UNSUNG_HEROES_PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
 
