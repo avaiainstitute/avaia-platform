@@ -2,7 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getConsentStatusForParticipant, isParticipantClearedToParticipate } from "@/lib/guardian-consent";
+import {
+  getConsentStatusForParticipant,
+  isParticipantClearedToParticipate,
+  revokeGuardianConsent,
+} from "@/lib/guardian-consent";
 import type { DevelopmentalBand } from "@/lib/engine/prompts";
 
 export const dynamic = "force-dynamic";
@@ -152,6 +156,55 @@ async function removeRegistration(formData: FormData) {
     .update({ registration_status: "removed" })
     .eq("program_id", programId)
     .eq("participant_id", participantId);
+
+  redirect(`/toolkit/youth-defying-grief/programs/${programId}`);
+}
+
+/** Withdraws guardian consent -- e.g. the guardian contacted the Guide
+ *  directly to withdraw permission (the consent page itself tells them
+ *  they can do this; before this action existed, there was no way for a
+ *  Guide to actually act on that -- revokeGuardianConsent() existed in
+ *  lib/guardian-consent.ts but nothing in the app ever called it). Flips
+ *  the participant's current pending-or-active consent to 'revoked',
+ *  which immediately drops them out of isParticipantClearedToParticipate
+ *  -- does not touch registration or delete any data; see the separate
+ *  Youth data deletion tooling for that. */
+async function revokeConsent(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/toolkit");
+
+  const programId = String(formData.get("programId") ?? "");
+  const participantId = String(formData.get("participantId") ?? "");
+  const { data: program } = await supabase
+    .from("youth_programs")
+    .select("id, guide_id")
+    .eq("id", programId)
+    .maybeSingle();
+  if (!program || program.guide_id !== user.id) notFound();
+
+  const { data: participant } = await supabase
+    .from("guide_participants")
+    .select("id, guide_id")
+    .eq("id", participantId)
+    .maybeSingle();
+  if (!participant || participant.guide_id !== user.id) notFound();
+
+  const { data: consent } = await supabase
+    .from("guardian_consents")
+    .select("id")
+    .eq("guide_participant_id", participantId)
+    .in("status", ["pending", "active"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (consent) {
+    await revokeGuardianConsent(supabase, consent.id);
+  }
 
   redirect(`/toolkit/youth-defying-grief/programs/${programId}`);
 }
@@ -422,6 +475,18 @@ export default async function YouthProgramRosterPage({
                           >
                             Add consent
                           </Link>
+                        )}
+                        {(consent.status === "pending" || consent.status === "active") && (
+                          <form action={revokeConsent}>
+                            <input type="hidden" name="programId" value={program.id} />
+                            <input type="hidden" name="participantId" value={participant.id} />
+                            <button
+                              type="submit"
+                              className="rounded-md border border-rule px-3 py-1.5 text-xs text-muted transition-colors hover:border-red-500/60 hover:text-red-300"
+                            >
+                              Revoke consent
+                            </button>
+                          </form>
                         )}
                         {cleared && (
                           <form action={launchParticipantSession}>
