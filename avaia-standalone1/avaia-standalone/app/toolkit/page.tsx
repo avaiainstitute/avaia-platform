@@ -11,6 +11,10 @@ import {
 } from "@/lib/guide";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
+import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
+import { startUnsungHeroesSession } from "@/app/toolkit/unsung-heroes/page";
+
+const UNSUNG_HEROES_PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
 
 export const metadata = { title: "Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -257,6 +261,30 @@ export default async function ToolkitDashboardPage() {
                       className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
                     >
                       New IAP session
+                    </button>
+                  </form>
+                  <form action={startUnsungHeroesSession} className="flex items-center gap-1">
+                    <input type="hidden" name="participantId" value={p.id} />
+                    <select
+                      name="path"
+                      required
+                      defaultValue=""
+                      className="rounded-md border border-rule bg-white/[0.04] px-2 py-2 font-sans text-sm text-ink outline-none focus:border-seal"
+                    >
+                      <option value="" disabled className="bg-[#05060b]">
+                        Unsung Heroes path —
+                      </option>
+                      {UNSUNG_HEROES_PATHS.map((path) => (
+                        <option key={path} value={path} className="bg-[#05060b]">
+                          {UNSUNG_HEROES_PATH_LABEL[path]}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="submit"
+                      className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+                    >
+                      Begin Unsung Heroes
                     </button>
                   </form>
                   <form action={removeParticipant}>

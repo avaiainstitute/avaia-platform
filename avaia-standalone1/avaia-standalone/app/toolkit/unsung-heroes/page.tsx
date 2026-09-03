@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createUnsungHeroesConversation } from "@/lib/engine/unsung-heroes";
-import { recordGuardianConsentForParticipant } from "@/lib/guardian-consent";
+import { recordGuardianConsentForParticipant, isParticipantClearedToParticipate } from "@/lib/guardian-consent";
 import GuideYouthConsentFields from "@/components/GuideYouthConsentFields";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath, type DevelopmentalBand } from "@/lib/engine/prompts";
 
@@ -43,8 +43,23 @@ function failPath(message: string): string {
  *  guide_sessions, same posture as the Journey tools. Unlike IAP, the path
  *  has to be chosen before the conversation can be created at all, so
  *  participant + session + conversation are all created in one action here
- *  rather than lazily on first load. */
-async function startUnsungHeroesSession(formData: FormData) {
+ *  rather than lazily on first load.
+ *
+ *  Group-delivery gap closed (found in a live facilitator-readiness audit):
+ *  this action previously always created a brand-new guide_participants
+ *  row, with no way to launch Unsung Heroes for someone already registered
+ *  on a roster (Youth Group/Program, or the Guide's own existing-
+ *  participants list) -- a facilitator running a real group had no way to
+ *  reach it at all for people already on record. Exported and now accepts
+ *  an optional `participantId`: when present, this reuses that existing,
+ *  already-owned participant instead of creating a new one, skips
+ *  re-collecting a name/email/consent that's already on file, and gates on
+ *  the SAME isParticipantClearedToParticipate check IAP's own roster launch
+ *  already uses -- a Youth participant must already be guardian-consented
+ *  and assented, exactly as before, just not re-collected here. When
+ *  `participantId` is absent, every existing behavior (new participant,
+ *  guardian consent collected inline) is completely unchanged. */
+export async function startUnsungHeroesSession(formData: FormData) {
   "use server";
 
   const supabase = createClient();
@@ -53,69 +68,91 @@ async function startUnsungHeroesSession(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/toolkit");
 
-  const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const path = String(formData.get("path") ?? "") as UnsungHeroesPath;
-  if (!name || !PATHS.includes(path)) redirect(failPath("Enter a name and choose a path."));
+  if (!PATHS.includes(path)) redirect(failPath("Choose a path."));
 
-  // Optional -- most Unsung Heroes participants are adults. Set only when
-  // this session is for a Youth participant, exactly the same signal
-  // app/toolkit/youth-defying-grief/page.tsx sets: its presence is what
-  // /api/unsung-heroes/message and /recognition use to compose the Youth
-  // instructions instead of the adult ones (see resolveDevelopmentalBand,
-  // lib/guide.ts). Unsung Heroes stays its own single entry point rather
-  // than a parallel "Youth Unsung Heroes" page -- it's a supporting tool
-  // inside the Youth Defying Grief ecosystem, not a second Youth program.
-  const bandField = formData.get("band");
-  const band = isBand(bandField) ? bandField : null;
+  const existingParticipantId = String(formData.get("participantId") ?? "").trim();
+  let participantId: string;
+  let band: DevelopmentalBand | null;
 
-  // A band means this participant is a Youth Host -- guardian consent and
-  // the Guide's assent-delivery confirmation are then required, the same
-  // as Youth Defying Grief. An adult session (no band) needs neither, so
-  // it stays exactly as simple as before this requirement existed. See
-  // components/GuideYouthConsentFields.tsx (bandOptional mode) for the UI
-  // these fields come from.
-  const guardianName = String(formData.get("guardianName") ?? "").trim();
-  const guardianEmail = String(formData.get("guardianEmail") ?? "").trim();
-  if (
-    band &&
-    (!guardianName ||
-      !guardianEmail ||
-      formData.get("guardianConsentConfirmed") !== "1" ||
-      formData.get("assentDelivered") !== "1")
-  ) {
-    redirect(failPath("Guardian consent and Youth participation information are both required."));
-  }
+  if (existingParticipantId) {
+    const { data: existing } = await supabase
+      .from("guide_participants")
+      .select("id, guide_id, developmental_band")
+      .eq("id", existingParticipantId)
+      .maybeSingle();
+    if (!existing || existing.guide_id !== user.id) redirect(failPath("Participant not found."));
 
-  const linkedHostId = email ? await findHostIdByEmail(email) : null;
+    band = (existing.developmental_band as DevelopmentalBand | null) ?? null;
+    if (band && !(await isParticipantClearedToParticipate(supabase, existing.id))) {
+      redirect(failPath("This participant isn't cleared yet -- guardian consent and Youth assent are required first."));
+    }
+    participantId = existing.id;
+  } else {
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    if (!name) redirect(failPath("Enter a name and choose a path."));
 
-  const { data: participant, error: participantError } = await supabase
-    .from("guide_participants")
-    .insert({
-      guide_id: user.id,
-      name,
-      email: email || null,
-      linked_host_id: linkedHostId,
-      developmental_band: band,
-    })
-    .select("id")
-    .single();
-  if (participantError || !participant)
-    redirect(failPath(participantError?.message ?? "Could not create the participant."));
+    // Optional -- most Unsung Heroes participants are adults. Set only when
+    // this session is for a Youth participant, exactly the same signal
+    // app/toolkit/youth-defying-grief/page.tsx sets: its presence is what
+    // /api/unsung-heroes/message and /recognition use to compose the Youth
+    // instructions instead of the adult ones (see resolveDevelopmentalBand,
+    // lib/guide.ts). Unsung Heroes stays its own single entry point rather
+    // than a parallel "Youth Unsung Heroes" page -- it's a supporting tool
+    // inside the Youth Defying Grief ecosystem, not a second Youth program.
+    const bandField = formData.get("band");
+    band = isBand(bandField) ? bandField : null;
 
-  if (band) {
-    const { error: consentError } = await recordGuardianConsentForParticipant(
-      supabase,
-      user.id,
-      participant.id,
-      "individual",
-      guardianName,
-      guardianEmail,
-      null,
-      "guide_or_self_attested",
-      true
-    );
-    if (consentError) redirect(failPath(consentError));
+    // A band means this participant is a Youth Host -- guardian consent and
+    // the Guide's assent-delivery confirmation are then required, the same
+    // as Youth Defying Grief. An adult session (no band) needs neither, so
+    // it stays exactly as simple as before this requirement existed. See
+    // components/GuideYouthConsentFields.tsx (bandOptional mode) for the UI
+    // these fields come from.
+    const guardianName = String(formData.get("guardianName") ?? "").trim();
+    const guardianEmail = String(formData.get("guardianEmail") ?? "").trim();
+    if (
+      band &&
+      (!guardianName ||
+        !guardianEmail ||
+        formData.get("guardianConsentConfirmed") !== "1" ||
+        formData.get("assentDelivered") !== "1")
+    ) {
+      redirect(failPath("Guardian consent and Youth participation information are both required."));
+    }
+
+    const linkedHostId = email ? await findHostIdByEmail(email) : null;
+
+    const { data: participant, error: participantError } = await supabase
+      .from("guide_participants")
+      .insert({
+        guide_id: user.id,
+        name,
+        email: email || null,
+        linked_host_id: linkedHostId,
+        developmental_band: band,
+      })
+      .select("id")
+      .single();
+    if (participantError || !participant)
+      redirect(failPath(participantError?.message ?? "Could not create the participant."));
+
+    if (band) {
+      const { error: consentError } = await recordGuardianConsentForParticipant(
+        supabase,
+        user.id,
+        participant.id,
+        "individual",
+        guardianName,
+        guardianEmail,
+        null,
+        "guide_or_self_attested",
+        true
+      );
+      if (consentError) redirect(failPath(consentError));
+    }
+    participantId = participant.id;
   }
 
   let convo;
@@ -129,7 +166,7 @@ async function startUnsungHeroesSession(formData: FormData) {
     .from("guide_sessions")
     .insert({
       guide_id: user.id,
-      participant_id: participant.id,
+      participant_id: participantId,
       tool: "unsung-heroes",
       conversation_id: convo.id,
       program: band ? "youth" : "general",

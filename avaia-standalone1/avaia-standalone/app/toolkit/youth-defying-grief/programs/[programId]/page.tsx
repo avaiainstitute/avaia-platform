@@ -7,7 +7,11 @@ import {
   isParticipantClearedToParticipate,
   revokeGuardianConsent,
 } from "@/lib/guardian-consent";
-import type { DevelopmentalBand } from "@/lib/engine/prompts";
+import type { DevelopmentalBand, UnsungHeroesPath } from "@/lib/engine/prompts";
+import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
+import { startUnsungHeroesSession } from "@/app/toolkit/unsung-heroes/page";
+
+const UNSUNG_HEROES_PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
 
 export const dynamic = "force-dynamic";
 
@@ -513,6 +517,32 @@ export default async function YouthProgramRosterPage({
                               className="rounded-md bg-seal px-3 py-1.5 text-xs font-semibold text-[#05060b] transition-opacity hover:opacity-90"
                             >
                               Start session
+                            </button>
+                          </form>
+                        )}
+                        {cleared && (
+                          <form action={startUnsungHeroesSession} className="flex items-center gap-1">
+                            <input type="hidden" name="participantId" value={participant.id} />
+                            <select
+                              name="path"
+                              required
+                              defaultValue=""
+                              className="rounded-md border border-rule bg-white/[0.04] px-2 py-1.5 text-xs text-ink outline-none focus:border-seal"
+                            >
+                              <option value="" disabled className="bg-[#05060b]">
+                                Unsung Heroes path —
+                              </option>
+                              {UNSUNG_HEROES_PATHS.map((p) => (
+                                <option key={p} value={p} className="bg-[#05060b]">
+                                  {UNSUNG_HEROES_PATH_LABEL[p]}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="submit"
+                              className="rounded-md border border-rule px-3 py-1.5 text-xs text-ink transition-colors hover:border-seal"
+                            >
+                              Begin Unsung Heroes
                             </button>
                           </form>
                         )}
