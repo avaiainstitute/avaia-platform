@@ -10,6 +10,7 @@ import {
   type GuideParticipant,
 } from "@/lib/guide";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
+import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
 
 export const metadata = { title: "Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -94,6 +95,44 @@ async function startIapSessionForExisting(formData: FormData) {
   if (error || !session) redirect("/toolkit");
 
   redirect(`/toolkit/iap/${session.id}`);
+}
+
+/** Permanently removes a Guide's own participant and every record linked
+ *  to them -- found missing during the demonstration-path audit: a Guide
+ *  had no way at all to clean up a throwaway participant created here
+ *  (e.g. a live demo run with someone), and the admin Youth-data tool's
+ *  own search only ever finds participants with a developmental_band set
+ *  (see app/admin/youth-data/page.tsx), so an adult demo participant was
+ *  unreachable from there too. Reuses deleteYouthParticipantData as-is --
+ *  despite the name, its cascade was never actually Youth-specific (no
+ *  band filter anywhere in it), so this is genuine reuse, not a new
+ *  deletion mechanism. Ownership is verified here, with the caller's own
+ *  RLS-scoped client, before the admin (service-role) client is ever
+ *  used for the actual cascading delete -- same two-step posture the
+ *  admin route itself uses. */
+async function removeParticipant(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/toolkit");
+
+  const participantId = String(formData.get("participantId") ?? "");
+  if (!participantId) redirect("/toolkit");
+
+  const { data: participant } = await supabase
+    .from("guide_participants")
+    .select("id, guide_id")
+    .eq("id", participantId)
+    .maybeSingle();
+  if (!participant || participant.guide_id !== user.id) redirect("/toolkit");
+
+  const admin = createAdminClient();
+  await deleteYouthParticipantData(admin, participantId);
+
+  redirect("/toolkit");
 }
 
 export default async function ToolkitDashboardPage() {
@@ -218,6 +257,15 @@ export default async function ToolkitDashboardPage() {
                       className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
                     >
                       New IAP session
+                    </button>
+                  </form>
+                  <form action={removeParticipant}>
+                    <input type="hidden" name="participantId" value={p.id} />
+                    <button
+                      type="submit"
+                      className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-muted transition-colors hover:border-red-500/60 hover:text-red-300"
+                    >
+                      Remove
                     </button>
                   </form>
                 </div>
