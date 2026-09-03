@@ -309,6 +309,23 @@ export default async function YouthProgramRosterPage({
     })
   );
 
+  // The actual Facilitator Guide / Participant Materials a shared-room
+  // delivery needs live on the Master Curriculum Experience detail page
+  // (/toolkit/experiences/[id], "Print Facilitator Guide"/"Print
+  // Participant Materials"), not on /toolkit/youth-defying-grief (the
+  // individual registration form) -- found during the admin/Guide
+  // usability pass, where the link below pointed at the wrong page and
+  // left a Guide running an actual program with no path to the materials
+  // this section's own copy tells them to go print. Looked up by title
+  // rather than hardcoded, matching how app/toolkit/youth-defying-grief/
+  // programs/page.tsx already resolves this same Experience's content.
+  const { data: curriculumExperience } = await supabase
+    .from("experiences")
+    .select("id")
+    .eq("status", "published")
+    .eq("title", "The Things We Lose After the Loss")
+    .maybeSingle();
+
   return (
     <div>
       <p className="mb-6">
@@ -347,10 +364,10 @@ export default async function YouthProgramRosterPage({
           sessions launch per-participant below, only once cleared.
         </p>
         <Link
-          href="/toolkit/youth-defying-grief"
+          href={curriculumExperience ? `/toolkit/experiences/${curriculumExperience.id}` : "/toolkit/experiences"}
           className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
         >
-          Open Youth Defying Grief curriculum →
+          Open Facilitator Guide &amp; Participant Materials →
         </Link>
       </section>
 

@@ -194,6 +194,24 @@ export async function deleteYouthHostData(supabase: SupabaseClient, hostId: stri
     .eq("youth_host_id", hostId);
   counts.guardian_consents = gcCount ?? 0;
 
+  // Unlike deleteYouthParticipantData above, this path never deletes the
+  // account/profile row itself, so virtue_signature_entries' ON DELETE
+  // CASCADE on host_id never fires here -- found during the admin/Guide
+  // usability pass: entries from a deleted Youth conversation were being
+  // silently left behind. Scoped to entries whose source_reference is one
+  // of the Youth conversations just deleted above, since a Signature entry
+  // carries no program tag of its own and a manually self-added entry
+  // (source_type 'self', no conversation_id) can't be attributed to Youth
+  // vs. adult use of the same account.
+  if (conversationIds.length) {
+    const { count: sigCount } = await supabase
+      .from("virtue_signature_entries")
+      .delete({ count: "exact" })
+      .eq("host_id", hostId)
+      .in("source_reference", conversationIds);
+    counts.virtue_signature_entries = sigCount ?? 0;
+  }
+
   await supabase.from("profiles").update({ developmental_band: null }).eq("id", hostId);
 
   return counts;

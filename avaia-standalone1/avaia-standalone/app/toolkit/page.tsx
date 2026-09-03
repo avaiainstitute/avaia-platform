@@ -185,7 +185,14 @@ export default async function ToolkitDashboardPage() {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule bg-white/[0.04] px-4 py-3"
               >
                 <div>
-                  <p className="text-ink">{p.name}</p>
+                  <p className="text-ink">
+                    {p.name}
+                    {p.developmental_band && (
+                      <span className="ml-2 rounded-full border border-seal/40 bg-seal/[0.08] px-2 py-0.5 align-middle text-xs text-ink">
+                        Youth · {p.developmental_band}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-muted">
                     {p.email ?? "No email on file"}
                     {p.linked_host_id ? " · Linked to an AVAIA account" : ""}
@@ -347,32 +354,49 @@ export default async function ToolkitDashboardPage() {
         </div>
       </section>
 
-      {/* Tool registry */}
-      <section className="rule-t mt-14 border-t border-rule pt-8">
-        <p className="label mb-3 text-muted">The Toolkit</p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {TOOL_REGISTRY.map((tool) => (
-            <div key={tool.key} className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4">
-              <div className="flex items-baseline justify-between gap-2">
-                <p className="font-serif text-lg text-ink">{tool.label}</p>
-                <span className="label shrink-0 text-muted">
-                  {tool.status === "installed"
-                    ? "Installed"
-                    : tool.status === "specified-not-installed"
-                      ? "Not yet installed"
-                      : "Specification pending"}
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-muted">{tool.description}</p>
-              {tool.href && (
-                <Link href={tool.href} className="mt-2 inline-block text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal">
-                  Open →
-                </Link>
-              )}
+      {/* Tool registry -- split into Adult/General vs. Youth so a Guide
+          working across both populations doesn't have to scan one flat
+          list to tell them apart (found during the admin/Guide usability
+          pass: nothing on this dashboard previously distinguished them at
+          all). Same TOOL_REGISTRY data, same cards, just grouped by key --
+          not a redesign of the Toolkit itself. */}
+      {(() => {
+        const YOUTH_KEYS = new Set(["youth-defying-grief", "youth-group"]);
+        const youthTools = TOOL_REGISTRY.filter((t) => YOUTH_KEYS.has(t.key));
+        const adultTools = TOOL_REGISTRY.filter((t) => !YOUTH_KEYS.has(t.key));
+        const renderCard = (tool: (typeof TOOL_REGISTRY)[number]) => (
+          <div key={tool.key} className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-serif text-lg text-ink">{tool.label}</p>
+              <span className="label shrink-0 text-muted">
+                {tool.status === "installed"
+                  ? "Installed"
+                  : tool.status === "specified-not-installed"
+                    ? "Not yet installed"
+                    : "Specification pending"}
+              </span>
             </div>
-          ))}
-        </div>
-      </section>
+            <p className="mt-1 text-sm text-muted">{tool.description}</p>
+            {tool.href && (
+              <Link href={tool.href} className="mt-2 inline-block text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal">
+                Open →
+              </Link>
+            )}
+          </div>
+        );
+        return (
+          <>
+            <section className="rule-t mt-14 border-t border-rule pt-8">
+              <p className="label mb-3 text-muted">The Toolkit — Adult / General</p>
+              <div className="grid gap-3 sm:grid-cols-2">{adultTools.map(renderCard)}</div>
+            </section>
+            <section className="rule-t mt-10 border-t border-rule pt-8">
+              <p className="label mb-3 text-muted">The Toolkit — Youth</p>
+              <div className="grid gap-3 sm:grid-cols-2">{youthTools.map(renderCard)}</div>
+            </section>
+          </>
+        );
+      })()}
     </div>
   );
 }

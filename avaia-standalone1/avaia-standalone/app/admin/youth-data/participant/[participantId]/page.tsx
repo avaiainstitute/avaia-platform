@@ -52,17 +52,26 @@ export default async function AdminYouthDataParticipantPage({
     .maybeSingle();
   if (!participant) notFound();
 
-  const [{ count: sessionCount }, { count: consentCount }, { count: programCount }] = await Promise.all([
-    supabase.from("guide_sessions").select("id", { count: "exact", head: true }).eq("participant_id", participant.id),
-    supabase
-      .from("guardian_consents")
-      .select("id", { count: "exact", head: true })
-      .eq("guide_participant_id", participant.id),
-    supabase
-      .from("youth_program_participants")
-      .select("id", { count: "exact", head: true })
-      .eq("participant_id", participant.id),
-  ]);
+  const [{ count: sessionCount }, { count: consentCount }, { count: programCount }, { count: signatureCount }] =
+    await Promise.all([
+      supabase.from("guide_sessions").select("id", { count: "exact", head: true }).eq("participant_id", participant.id),
+      supabase
+        .from("guardian_consents")
+        .select("id", { count: "exact", head: true })
+        .eq("guide_participant_id", participant.id),
+      supabase
+        .from("youth_program_participants")
+        .select("id", { count: "exact", head: true })
+        .eq("participant_id", participant.id),
+      // Not separately deleted by deleteYouthParticipantData -- the foreign
+      // key is ON DELETE CASCADE (confirmed live during the admin/Guide
+      // usability pass), so the deletion itself is already complete without
+      // app code touching this table. Only the preview list was missing it.
+      supabase
+        .from("virtue_signature_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("guide_participant_id", participant.id),
+    ]);
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-16">
@@ -84,6 +93,7 @@ export default async function AdminYouthDataParticipantPage({
           <li>{sessionCount ?? 0} Guide session(s) — and every conversation, message, and referral they reached</li>
           <li>{consentCount ?? 0} Guardian consent record(s)</li>
           <li>{programCount ?? 0} Program registration(s)</li>
+          <li>{signatureCount ?? 0} Virtue Signature entr{signatureCount === 1 ? "y" : "ies"}</li>
           <li>The participant record itself</li>
         </ul>
       </div>

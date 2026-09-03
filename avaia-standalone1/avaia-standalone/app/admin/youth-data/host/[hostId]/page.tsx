@@ -58,6 +58,19 @@ export default async function AdminYouthDataHostPage({
     .from("guardian_consents")
     .select("id", { count: "exact", head: true })
     .eq("youth_host_id", params.hostId);
+  const { data: youthConvos } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("host_id", params.hostId)
+    .eq("program", "youth");
+  const youthConvoIds = (youthConvos ?? []).map((c) => c.id);
+  const { count: signatureCount } = youthConvoIds.length
+    ? await supabase
+        .from("virtue_signature_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("host_id", params.hostId)
+        .in("source_reference", youthConvoIds)
+    : { count: 0 };
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-16">
@@ -75,6 +88,7 @@ export default async function AdminYouthDataHostPage({
         <ul className="space-y-1 text-sm text-ink">
           <li>{convoCount ?? 0} Youth (program=&lsquo;youth&rsquo;) conversation(s) — and their messages, referrals, journeys</li>
           <li>{consentCount ?? 0} Guardian consent record(s)</li>
+          <li>{signatureCount ?? 0} Virtue Signature entr{signatureCount === 1 ? "y" : "ies"} from those conversations</li>
           <li>The developmental band on this account&rsquo;s profile</li>
         </ul>
         <p className="mt-3 text-xs text-muted">

@@ -50,6 +50,7 @@ const HOST_PRIMARY_LINKS: NavLink[] = [
 const HOST_SECONDARY_LINKS: NavLink[] = [
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
   { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
+  { href: "/signature", label: "Virtue Signature", prefetch: false },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/membership", label: "Membership", prefetch: true },
   { href: "/contact", label: "Contact", prefetch: true },
@@ -67,8 +68,16 @@ export default async function Nav() {
   // who can actually reach /toolkit; someone not authorized typing the URL
   // is still redirected there exactly as before.
   let toolkitAuthorized = false;
+  let isAdmin = false;
   if (user) {
     toolkitAuthorized = await isToolkitAuthorized(supabase, user.id);
+    // Same purely-for-discoverability posture as toolkitAuthorized above --
+    // /admin and its sub-pages already re-check profiles.role themselves
+    // (this changes nothing about who can actually reach them). Found
+    // during the admin/Guide usability pass: /admin/* existed with no link
+    // into it from anywhere in the app at all.
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    isAdmin = profile?.role === "admin";
   }
 
   return (
@@ -116,6 +125,17 @@ export default async function Nav() {
                     className="label text-seal hover:opacity-80 transition-opacity"
                   >
                     Guide
+                  </Link>
+                </li>
+              )}
+              {isAdmin && (
+                <li>
+                  <Link
+                    href="/admin"
+                    prefetch={false}
+                    className="label text-seal hover:opacity-80 transition-opacity"
+                  >
+                    Admin
                   </Link>
                 </li>
               )}

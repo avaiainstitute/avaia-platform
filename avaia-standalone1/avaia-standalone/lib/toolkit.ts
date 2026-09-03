@@ -137,10 +137,10 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   },
   {
     key: "youth-group",
-    label: "Youth Group Adaptations",
-    description: "Group-format delivery of Youth conversations -- multiple participants in one session. Guide-facilitated Youth INDIVIDUAL sessions are installed separately, above; this entry is specifically about group delivery, which doesn't exist yet.",
-    status: "not-yet-specified",
-    href: null,
+    label: "Youth Group / Program / School-Organization",
+    description: "Group-format delivery of Youth conversations -- register a roster of participants for a group, workshop, or school/organization program; track per-person guardian consent and Youth assent; launch each participant's own private session once cleared.",
+    status: "installed",
+    href: "/toolkit/youth-defying-grief/programs",
   },
 ];
 
