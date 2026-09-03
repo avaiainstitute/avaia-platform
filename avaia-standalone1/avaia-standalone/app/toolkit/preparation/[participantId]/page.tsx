@@ -7,6 +7,7 @@ import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import PreparationSnapshot from "@/components/PreparationSnapshot";
+import PreparationChat from "@/components/PreparationChat";
 import { listSignatureEntriesForParticipant } from "@/lib/virtue-signature";
 import { VirtueLink } from "@/components/VirtueLink";
 
@@ -243,6 +244,7 @@ export default async function PreparationPage({
       )}
 
       <PreparationSnapshot participantId={participant.id} />
+      <PreparationChat participantId={participant.id} />
 
       {active.length > 0 && (
         <section className="mt-10">

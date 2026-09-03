@@ -1,6 +1,11 @@
 import "server-only";
 import { anthropic } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, preparationSnapshotSystemPrompt, UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  preparationSnapshotSystemPrompt,
+  preparationWorkspaceSystemPrompt,
+  UNSUNG_HEROES_PATH_LABEL,
+} from "@/lib/engine/prompts";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
 import {
   formatReferralFields,
@@ -59,7 +64,7 @@ export type ParticipantSnapshot = {
  *  boundary_stewardship fields are withheld -- those are the next Guide's
  *  own working material, not preparation evidence), and never anything
  *  from an active/unfinished session. */
-function buildEvidenceText(history: ParticipantHistory): string {
+export function buildEvidenceText(history: ParticipantHistory): string {
   const complete = history.sessions.filter(
     (r) =>
       (r.conversation?.status ?? r.unsungHeroesConversation?.status ?? r.session.status) === "complete"
@@ -144,5 +149,75 @@ export async function generateParticipantSnapshot(
     return { ok: true, snapshot };
   } catch {
     return { ok: false, error: "Could not generate the Participant Snapshot. Please try again." };
+  }
+}
+
+export type PreparationChatTurn = { role: "guide" | "preparation"; content: string };
+
+/** The interactive Preparation workspace -- built to close the gap found
+ *  during the admin/Guide usability pass between the static seven-field
+ *  Snapshot above (still the right tool for "give me the state of things
+ *  at a glance") and everything else the original Preparation capability
+ *  was meant to support: the Guide asking for questions worth revisiting,
+ *  existing activities that might fit, Chemistry elements, Secondary
+ *  Losses worth ASKING about (never asserted), several possible
+ *  approaches, a self-check on what not to take over, and continuity
+ *  threads. Same discipline as generateParticipantSnapshot: a bounded
+ *  call per turn (not a streamed live conversation), fed only the same
+ *  narrow evidence bundle plus canonical reference material the caller
+ *  already loaded under the Guide's own ownership check -- this function
+ *  still never queries the database itself. canonicalActivitiesText is
+ *  the published Classes/Experiences the caller found, formatted as
+ *  plain text, so an activity suggestion can never be invented -- only
+ *  named from what's actually in that list. */
+export async function generatePreparationChatReply(
+  history: ParticipantHistory,
+  guideId: string,
+  canonicalActivitiesText: string,
+  priorTurns: PreparationChatTurn[],
+  guideMessage: string
+): Promise<{ ok: true; reply: string } | { ok: false; error: string }> {
+  const evidence = buildEvidenceText(history);
+  try {
+    const client = anthropic();
+    const transcript = priorTurns
+      .map((t) => `${t.role === "guide" ? "GUIDE" : "PREPARATION"}: ${t.content}`)
+      .join("\n\n");
+    const userContent = [
+      `Here is everything currently on record for ${history.participant.name}:`,
+      "",
+      evidence,
+      "",
+      "Existing published AVAIA activities/Experiences you may reference by name (never invent one not listed here):",
+      "",
+      canonicalActivitiesText || "Nothing published yet.",
+      ...(transcript
+        ? ["", "This Preparation conversation so far, with this same Guide, about this same participant:", "", transcript]
+        : []),
+      "",
+      `The Guide now asks: ${guideMessage}`,
+    ].join("\n");
+
+    const resp: any = await client.messages.create({
+      model: AVAIA_MODEL,
+      max_tokens: 1024,
+      system: preparationWorkspaceSystemPrompt(),
+      messages: [{ role: "user", content: userContent }],
+    });
+    await recordAiUsage({
+      hostId: guideId,
+      conversationId: null,
+      feature: "preparation_chat",
+      stage: null,
+      model: resp.model,
+      usage: resp.usage,
+    });
+    const text = (resp.content as Array<{ type: string; text?: string }>).find(
+      (b) => b.type === "text"
+    )?.text;
+    if (!text) throw new Error("No content returned.");
+    return { ok: true, reply: text };
+  } catch {
+    return { ok: false, error: "Could not reach Preparation. Please try again." };
   }
 }
