@@ -57,12 +57,18 @@ export async function listAdministeredOrganizationIds(
   return (data ?? []).map((r) => r.organization_id as string);
 }
 
-/** Every Guide "connected" to an organization -- defined, for V1, as any
- *  Guide who has created at least one youth_programs row under this
- *  organization_id. There is no separate Guide-to-organization membership
- *  table (a deliberate V1 scope choice, not an oversight -- see the final
- *  report): a Guide becomes visible to an organization's admin by having
- *  actually run a program there, not through a separate invitation step.
+/** Every Guide "connected" to an organization -- the union of two
+ *  independent paths (V1.1): (a) has created at least one youth_programs
+ *  row under this organization_id (the original V1 definition -- a Guide
+ *  who has actually run a program here), or (b) holds an explicit,
+ *  currently-'connected' row in organization_guides (added in migration
+ *  0048 so an Organization Administrator can bring an already-Toolkit-
+ *  authorized Guide into an organization before that Guide has ever run
+ *  a program there -- see connectGuide() in
+ *  app/org-admin/[organizationId]/page.tsx). Both paths only ever affect
+ *  this list -- who may be OFFERED as an assignment target in the roster
+ *  UI. Neither path grants any Host/participant/conversation access on
+ *  its own; that still arises only from guide_participants.guide_id.
  *  `supabase` must be the service-role admin client -- this crosses
  *  Guide-ownership boundaries by design, the same as
  *  deleteYouthParticipantData and the Platform Admin reassignment tool. */
@@ -70,11 +76,40 @@ export async function listGuidesConnectedToOrganization(
   supabase: SupabaseClient,
   organizationId: string
 ): Promise<string[]> {
+  const [{ data: byProgram }, { data: byConnection }] = await Promise.all([
+    supabase.from("youth_programs").select("guide_id").eq("organization_id", organizationId),
+    supabase
+      .from("organization_guides")
+      .select("guide_id")
+      .eq("organization_id", organizationId)
+      .eq("status", "connected"),
+  ]);
+  const ids = new Set<string>();
+  for (const r of byProgram ?? []) ids.add(r.guide_id as string);
+  for (const r of byConnection ?? []) ids.add(r.guide_id as string);
+  return Array.from(ids);
+}
+
+/** Guide ids explicitly connected (status='connected') to this
+ *  organization via organization_guides -- i.e. the subset of
+ *  listGuidesConnectedToOrganization()'s result that came from path (b),
+ *  not from program history. Used only to decide whether to render a
+ *  "Disconnect" control for a given Guide row: a Guide who is only
+ *  present because they've actually run a program here has no
+ *  organization_guides row to disconnect, and V1.1 deliberately does not
+ *  add a "remove from organization" action for that path (a different,
+ *  larger piece of scope than the one asked for here). `supabase` must
+ *  be the service-role admin client. */
+export async function listExplicitlyConnectedGuideIds(
+  supabase: SupabaseClient,
+  organizationId: string
+): Promise<Set<string>> {
   const { data } = await supabase
-    .from("youth_programs")
+    .from("organization_guides")
     .select("guide_id")
-    .eq("organization_id", organizationId);
-  return Array.from(new Set((data ?? []).map((r) => r.guide_id as string)));
+    .eq("organization_id", organizationId)
+    .eq("status", "connected");
+  return new Set((data ?? []).map((r) => r.guide_id as string));
 }
 
 export type OrgActionType =
@@ -82,7 +117,9 @@ export type OrgActionType =
   | "guide_assigned"
   | "participant_removed"
   | "org_admin_granted"
-  | "org_admin_revoked";
+  | "org_admin_revoked"
+  | "guide_connected"
+  | "guide_disconnected";
 
 /** Records one Organization Administrator action for the audit trail --
  *  action/detail are short operational labels only (see migration 0047's

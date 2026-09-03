@@ -5,8 +5,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   isOrganizationAdmin,
   listGuidesConnectedToOrganization,
+  listExplicitlyConnectedGuideIds,
   logOrganizationAdminAction,
 } from "@/lib/organization-admin";
+import { isToolkitAuthorized } from "@/lib/guide";
 import { isParticipantClearedToParticipate, getConsentStatusForParticipant } from "@/lib/guardian-consent";
 
 export const metadata = { title: "Organization Dashboard — AVAIA" };
@@ -56,10 +58,127 @@ async function changeProgramStatus(formData: FormData) {
   redirect(`/org-admin/${organizationId}`);
 }
 
+/** Connects an already-Toolkit-authorized Guide to this organization,
+ *  independent of program history (V1.1 -- see migration 0048's own
+ *  header for why this exists). Re-verifies Organization Administrator
+ *  authorization for THIS organization, finds the target account by
+ *  email (same page-through-listUsers pattern used in
+ *  app/admin/organization-admins/page.tsx), and re-verifies server-side
+ *  that the target actually holds active Toolkit platform authorization
+ *  -- an Organization Administrator can only connect a Guide who is
+ *  already, independently, an authorized AVAIA Guide; this action never
+ *  grants Toolkit authorization itself. Writing to organization_guides
+ *  grants nothing beyond making this Guide id appear in
+ *  listGuidesConnectedToOrganization()'s result -- no
+ *  conversation/message/referral/recognition/Signature/Preparation table
+ *  is touched here or anywhere in this action. */
+async function connectGuide(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/org-admin");
+
+  const organizationId = String(formData.get("organizationId") ?? "");
+  if (!(await isOrganizationAdmin(supabase, user.id, organizationId))) notFound();
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email) {
+    redirect(`/org-admin/${organizationId}?error=${encodeURIComponent("Enter the Guide's account email.")}`);
+  }
+
+  const admin = createAdminClient();
+  let targetId: string | null = null;
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error || !data) break;
+    const match = data.users.find((u) => u.email?.toLowerCase() === email);
+    if (match) {
+      targetId = match.id;
+      break;
+    }
+    if (data.users.length < 1000) break;
+  }
+  if (!targetId) {
+    redirect(`/org-admin/${organizationId}?error=${encodeURIComponent("No AVAIA account found for that email.")}`);
+  }
+
+  if (!(await isToolkitAuthorized(admin, targetId as string))) {
+    redirect(
+      `/org-admin/${organizationId}?error=${encodeURIComponent(
+        "That account is not a currently toolkit-authorized AVAIA Guide."
+      )}`
+    );
+  }
+
+  await admin.from("organization_guides").upsert(
+    {
+      organization_id: organizationId,
+      guide_id: targetId,
+      status: "connected",
+      connected_by: user.id,
+      connected_at: new Date().toISOString(),
+      status_changed_by: user.id,
+      status_changed_at: new Date().toISOString(),
+    },
+    { onConflict: "organization_id,guide_id" }
+  );
+  await logOrganizationAdminAction(admin, {
+    organizationId,
+    actorId: user.id,
+    action: "guide_connected",
+    guideId: targetId,
+  });
+
+  redirect(`/org-admin/${organizationId}?connected=1`);
+}
+
+/** Removes a Guide from the "available for new assignment" list for this
+ *  organization -- never touches any assignment already made
+ *  (guide_participants.guide_id is untouched), so any participant this
+ *  Guide is already facilitating here keeps that Guide with full
+ *  continuity, exactly as if nothing happened. Only meaningful for a
+ *  Guide connected via the explicit organization_guides path; a Guide
+ *  who is listed here purely because they've run a program in this
+ *  organization has no row here to disconnect (the roster UI only offers
+ *  this control for the former -- see listExplicitlyConnectedGuideIds). */
+async function disconnectGuide(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/org-admin");
+
+  const organizationId = String(formData.get("organizationId") ?? "");
+  const guideId = String(formData.get("guideId") ?? "");
+  if (!(await isOrganizationAdmin(supabase, user.id, organizationId))) notFound();
+
+  const admin = createAdminClient();
+  await admin
+    .from("organization_guides")
+    .update({ status: "disconnected", status_changed_by: user.id, status_changed_at: new Date().toISOString() })
+    .eq("organization_id", organizationId)
+    .eq("guide_id", guideId);
+  await logOrganizationAdminAction(admin, {
+    organizationId,
+    actorId: user.id,
+    action: "guide_disconnected",
+    guideId,
+  });
+
+  redirect(`/org-admin/${organizationId}?disconnected=1`);
+}
+
 export default async function OrgAdminOrganizationPage({
   params,
+  searchParams,
 }: {
   params: { organizationId: string };
+  searchParams?: { error?: string; connected?: string; disconnected?: string };
 }) {
   const supabase = createClient();
   const {
@@ -84,6 +203,7 @@ export default async function OrgAdminOrganizationPage({
     .order("created_at", { ascending: false });
 
   const guideIds = await listGuidesConnectedToOrganization(admin, params.organizationId);
+  const explicitlyConnectedGuideIds = await listExplicitlyConnectedGuideIds(admin, params.organizationId);
   const guideEmailById = new Map<string, string>();
   for (const gid of guideIds) {
     const { data: u } = await admin.auth.admin.getUserById(gid);
@@ -162,6 +282,22 @@ export default async function OrgAdminOrganizationPage({
         You can administer participation here &mdash; private AVAIA conversations remain with the
         Host and their authorized AVAIA Guide.
       </p>
+
+      {searchParams?.connected && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Guide connected. They are now available for program/participant assignment here.
+        </p>
+      )}
+      {searchParams?.disconnected && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Guide disconnected. Any participant they already facilitate here is unaffected.
+        </p>
+      )}
+      {searchParams?.error && (
+        <p className="mt-6 rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {searchParams.error}
+        </p>
+      )}
 
       <div className="mt-8 grid gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
@@ -242,14 +378,47 @@ export default async function OrgAdminOrganizationPage({
         {guideIds.length === 0 ? (
           <p className="text-muted">None yet.</p>
         ) : (
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {guideIds.map((gid) => (
-              <li key={gid} className="text-sm text-ink">
-                {guideEmailById.get(gid) ?? gid}
+              <li key={gid} className="flex flex-wrap items-center justify-between gap-2 text-sm text-ink">
+                <span>{guideEmailById.get(gid) ?? gid}</span>
+                {explicitlyConnectedGuideIds.has(gid) && (
+                  <form action={disconnectGuide}>
+                    <input type="hidden" name="organizationId" value={org.id} />
+                    <input type="hidden" name="guideId" value={gid} />
+                    <button
+                      type="submit"
+                      className="rounded-md border border-rule px-2 py-1 text-xs text-muted transition-colors hover:border-red-500/60 hover:text-red-300"
+                    >
+                      Disconnect
+                    </button>
+                  </form>
+                )}
               </li>
             ))}
           </ul>
         )}
+
+        <form action={connectGuide} className="mt-4 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="organizationId" value={org.id} />
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="Guide's account email"
+            className="rounded-md border border-rule bg-white/[0.04] px-3 py-1.5 text-sm text-ink outline-none focus:border-seal"
+          />
+          <button
+            type="submit"
+            className="rounded-md border border-rule px-3 py-1.5 text-xs text-ink transition-colors hover:border-seal"
+          >
+            Connect a Guide
+          </button>
+        </form>
+        <p className="mt-2 text-xs text-muted">
+          Connecting only makes an already-authorized AVAIA Guide available for assignment here. It never grants
+          access to any Host, participant, or conversation on its own.
+        </p>
       </section>
 
       <section className="mt-10">
