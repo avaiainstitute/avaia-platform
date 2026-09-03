@@ -58,6 +58,8 @@ export default function UnsungHeroesChat({
     whoBecameVisible: string;
     virtueFamily: string;
     primaryVirtue: string | null;
+    virtueElements: string[];
+    personalInsight: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -172,6 +174,8 @@ export default function UnsungHeroesChat({
         whoBecameVisible: data.recognition.who_became_visible,
         virtueFamily: data.recognition.virtue_family,
         primaryVirtue: data.recognition.primary_virtue,
+        virtueElements: Array.isArray(data.recognition.virtue_elements) ? data.recognition.virtue_elements : [],
+        personalInsight: data.recognition.personal_insight || null,
       });
       setShowCardForm(false);
       // Same avaia:focus sessionStorage key JourneyChat already uses so the
@@ -204,6 +208,15 @@ export default function UnsungHeroesChat({
   }
 
   if (saved) {
+    // Every element in virtue_elements is already validated against the
+    // same single virtue_family (see app/api/unsung-heroes/recognition's
+    // own validation), so they share one family display name -- and
+    // primaryVirtue, when valid, is already included among them (it's the
+    // first candidate name filtered the same way). Deduped since the model
+    // isn't guaranteed to keep primaryVirtue out of supportingVirtues too.
+    const familyDisplayName = familyOf(saved.virtueFamily as VirtueFamilyKey)?.name ?? saved.virtueFamily;
+    const elementNames = Array.from(new Set(saved.virtueElements.length > 0 ? saved.virtueElements : saved.primaryVirtue ? [saved.primaryVirtue] : []));
+
     return (
       <div className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-6">
         <p className="label text-seal">Recognized</p>
@@ -213,15 +226,26 @@ export default function UnsungHeroesChat({
           {saved.primaryVirtue ? ` What you noticed: ${saved.primaryVirtue}.` : ""}
         </p>
 
-        {saved.primaryVirtue && (
+        {/* The mirror-back bridge, in the Host's own words -- whatever they
+            actually said (yes, no, maybe, not yet, or nothing at all) when
+            asked whether the recognized element felt familiar in them too.
+            Shown as-is; AVAIA never adds its own conclusion on top of it. */}
+        {saved.personalInsight && (
+          <p className="mt-3 text-sm italic text-ink/90">&ldquo;{saved.personalInsight}&rdquo;</p>
+        )}
+
+        {elementNames.length > 0 && (
           <WhatBecameVisible
             // recognitions.virtue_family stores the family KEY
             // ("positive-attitude"), not the display name CAT/InnerCompass
             // referrals use -- resolved here so addSignatureEntryForHost's
             // isValidVirtueFamily check (which validates against the
             // canonical display name) sees the same shape either source
-            // produces.
-            virtues={[{ family: familyOf(saved.virtueFamily as VirtueFamilyKey)?.name ?? saved.virtueFamily, element: saved.primaryVirtue }]}
+            // produces. Every canonically-validated element this recognition
+            // surfaced is offered, not only the primary one -- matching how
+            // a Journey completion card offers every virtue a referral
+            // recognized, not just one.
+            virtues={elementNames.map((element) => ({ family: familyDisplayName, element }))}
             sourceType="unsung_heroes"
             sourceReference={conversationId}
             participantId={participantId}
