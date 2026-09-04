@@ -79,6 +79,16 @@ export default function AuthCallbackPage() {
         window.location.replace("/journey?saved=1");
         return;
       }
+      // Password recovery links land here like every other Supabase auth
+      // link -- verifying one (the token_hash path below, or the automatic
+      // detectSessionInUrl exchange) establishes a real session for the
+      // account, the same as signing in. That session is exactly what
+      // /reset-password needs to call updateUser({ password }); nothing
+      // about the recovery mechanism itself lives outside Supabase.
+      if (type === "recovery") {
+        window.location.replace("/reset-password");
+        return;
+      }
       window.location.replace(peekPostSignInRedirect());
     };
     const fail = (msg: string) => {

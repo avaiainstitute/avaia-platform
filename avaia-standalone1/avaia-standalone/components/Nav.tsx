@@ -54,6 +54,7 @@ const HOST_SECONDARY_LINKS: NavLink[] = [
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/membership", label: "Membership", prefetch: true },
   { href: "/contact", label: "Contact", prefetch: true },
+  { href: "/account", label: "Account", prefetch: false },
 ];
 
 export default async function Nav() {
