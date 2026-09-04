@@ -4322,10 +4322,64 @@ content back to them, and do not treat "View From Above" as a grief
 program -- its ten lessons are broader than grief, the same as every
 other AVAIA conversation.`;
 
+// Origin context -- a Host arrived at this brand-new IAP conversation
+// having just clicked a specific Chemistry element or a specific View
+// From Above class, rather than starting from nothing. Composed into
+// IAP's system prompt (below) whenever a conversation carries one
+// (conversations.origin_context, migration 0059), and used once by
+// generateIapOriginOpening (lib/engine/openings.ts) to produce that
+// conversation's actual opening line. Deliberately a single generic
+// clause parameterized by whatever origin was resolved server-side
+// (lib/engine/origin-context.ts) -- never a per-element or per-class
+// hardcoded prompt, and never an assumption about WHY the Host picked
+// it. This is an entry point into the ordinary IAP, not a different
+// conversation type -- everything else about IAP (safety core,
+// conversational freedom, GUARDRAILS) is completely unaffected.
+export type OriginContextInput = { source: string; label: string; family: string; definition: string };
+
+export function originContextClause(origin: OriginContextInput): string {
+  const sourceLabel = origin.source === "chemistry" ? "the Chemistry of Virtue table" : "a View From Above class";
+  return `ORIGIN CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+This Host arrived at this conversation having just selected "${origin.label}" (${origin.family}) from
+${sourceLabel}. Canonical reference, for your own context only, never to be recited back
+as a definition unless the Host asks: "${origin.definition}"
+
+Do not assume why the Host selected this. They may recognize it in themselves, recognize
+it in someone else, feel curious about it, be thinking of something that just happened,
+disagree with something about it, want to understand it better, or have a reason not
+listed here. Ask what caught their attention, or an equivalent open question in your own
+words, and then follow wherever they actually take it -- exactly as you would in any other
+IAP conversation. Do not teach, define, or explain "${origin.label}" back to them, do not
+turn this into a lesson about that element or class, and do not treat their arrival from
+this source as itself a topic to analyze.`;
+}
+
+// One-shot generation, not part of the ongoing IAP stack -- never composed
+// into systemPromptFor's iap branch. Produces the single opening message a
+// Host sees the moment a brand-new IAP conversation opens WITH origin
+// context -- mirrors CAT_OPENING_GENERATION's exact mechanism (a live,
+// one-shot generation instead of the static STAGE_OPENING.iap line),
+// applied at the very first stage instead of a stage handoff.
+export const IAP_ORIGIN_OPENING_GENERATION = `IAP ORIGIN OPENING GENERATION — a single message, generated once, before the Host has said anything
+
+This is not a turn in the ongoing IAP conversation and is not governed by IAP's own
+conversational-freedom instructions -- it produces exactly one opening message, using the
+supplied origin context (which element or class the Host just came from, and its Virtue
+Family) as your only input.
+
+Write one warm, natural opening line or two that acknowledges where the Host just came
+from, in your own words -- for example, in spirit (not verbatim): "You came here from
+Courage in the Chemistry of Virtue. What caught your attention about it?" Do not assume
+why they selected it. Do not define, teach, or explain the element or class back to them.
+Do not turn this into a scripted exercise. End with an open, inviting question that hands
+the conversation to them.`;
+
 export function systemPromptFor(
   stage: Stage,
   program: Program = "general",
-  band: DevelopmentalBand | null = null
+  band: DevelopmentalBand | null = null,
+  origin: OriginContextInput | null = null
 ): string {
   if (program === "youth") {
     return youthSystemPromptFor(stage, band);
@@ -4342,6 +4396,9 @@ export function systemPromptFor(
     }
     if (program === "view-from-above") {
       iapParts.push(VIEW_FROM_ABOVE_CONTEXT);
+    }
+    if (origin) {
+      iapParts.push(originContextClause(origin));
     }
     iapParts.push(
       IAP_CONVERSATIONAL_FREEDOM,

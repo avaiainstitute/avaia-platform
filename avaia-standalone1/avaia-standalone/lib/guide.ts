@@ -114,6 +114,7 @@ export type GuideSession = {
   conversation_id: string | null;
   program: Program;
   session_context: SessionContext;
+  class_context: string | null;
   status: "active" | "complete";
   created_at: string;
 };

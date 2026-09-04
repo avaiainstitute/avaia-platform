@@ -167,13 +167,24 @@ export default function ChemistryPage() {
                 <li key={i}>{v}</li>
               ))}
             </ul>
-            <Link
-              href="/journey"
-              prefetch={false}
-              className="mt-4 inline-block rounded-md bg-seal px-4 py-2 font-sans text-xs font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-            >
-              Begin a Private AVAIA Conversation →
-            </Link>
+            <div className="mt-5 rounded-md border border-rule bg-white/[0.03] px-4 py-4">
+              <p className="font-serif text-base text-ink">
+                Want to explore {selected.name} further?
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                Something about {selected.name} caught your attention. Take it into a private
+                AVAIA conversation — explore what it brought to mind, where you&rsquo;ve seen it,
+                where it may already be present, why it matters to you, or whatever else becomes
+                visible as you talk.
+              </p>
+              <Link
+                href={`/journey?origin=chemistry&key=${encodeURIComponent(selected.name)}`}
+                prefetch={false}
+                className="mt-3 inline-block rounded-md bg-seal px-4 py-2 font-sans text-xs font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+              >
+                Have a private conversation about {selected.name} →
+              </Link>
+            </div>
           </div>
           <button
             onClick={() => setSelected(null)}

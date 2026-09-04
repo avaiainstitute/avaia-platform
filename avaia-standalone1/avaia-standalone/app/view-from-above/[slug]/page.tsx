@@ -114,15 +114,16 @@ export default function ViewFromAboveClassPage({ params }: { params: { slug: str
 
       <section className="rule-t mt-12 border-t border-rule pt-10">
         <p className="text-muted">
-          Anything here can carry into a private AVAIA conversation — your own words, at your own
-          pace, kept entirely yours.
+          Whatever this class brought up for you — a recognition, a question, something you
+          disagree with, something you're still turning over — take it into a private AVAIA
+          conversation, in your own words, at your own pace, kept entirely yours.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
-            href="/journey"
+            href={`/journey?origin=view-from-above&key=${encodeURIComponent(cls.slug)}`}
             className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
-            Continue in a Private AVAIA Conversation
+            Have a Private Conversation About This Class
           </Link>
           <Link
             href="/certified-guide"

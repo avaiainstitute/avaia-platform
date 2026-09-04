@@ -3,12 +3,55 @@ import { anthropic } from "@/lib/engine/anthropic";
 import {
   AVAIA_MODEL,
   CAT_OPENING_GENERATION,
+  IAP_ORIGIN_OPENING_GENERATION,
   YOUTH_OPENING_ADAPTATION,
   youthOpeningBandNote,
   type Program,
   type DevelopmentalBand,
+  type OriginContextInput,
 } from "@/lib/engine/prompts";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
+
+// Generates the opening line for a brand-new IAP conversation that carries
+// origin context (a Chemistry element or View From Above class the Host
+// just clicked through from) -- mirrors generateCatOpening's exact
+// mechanism (a live, one-shot generation, falling back to undefined --
+// which leaves createConversation's own STAGE_OPENING.iap default in
+// place -- on any failure, never blocking conversation creation).
+export async function generateIapOriginOpening(
+  origin: OriginContextInput,
+  hostId?: string | null,
+  conversationId?: string | null
+): Promise<string | undefined> {
+  try {
+    const client = anthropic();
+    const resp: any = await client.messages.create({
+      model: AVAIA_MODEL,
+      max_tokens: 300,
+      system: IAP_ORIGIN_OPENING_GENERATION,
+      messages: [
+        {
+          role: "user",
+          content: `Origin context:\n\n${JSON.stringify(origin, null, 2)}`,
+        },
+      ],
+    });
+    await recordAiUsage({
+      hostId: hostId ?? null,
+      conversationId: conversationId ?? null,
+      feature: "iap_origin_opening",
+      stage: "iap",
+      model: resp.model,
+      usage: resp.usage,
+    });
+    const text = (resp.content as Array<{ type: string; text?: string }>).find(
+      (b) => b.type === "text"
+    )?.text;
+    return text?.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 // Generates CAT's referral-aware opening once, at the IAP -> CAT handoff.
 // Falls back to the static STAGE_OPENING.cat line (createConversation's

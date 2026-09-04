@@ -11,6 +11,7 @@ export type AiUsageFeature =
   | "innercompass_referral"
   | "cat_opening"
   | "innercompass_opening"
+  | "iap_origin_opening"
   | "unsung_heroes_recognition"
   | "unsung_heroes_conversation"
   | "chemistry_virtue_formula"

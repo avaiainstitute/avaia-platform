@@ -37,6 +37,7 @@ export type DbConversation = {
   // historical rows only; every conversation created from this point
   // forward is assigned one. Never guessed.
   journey_id: string | null;
+  origin_context: { source: string; label: string; family: string; definition: string } | null;
   created_at: string;
   completed_at: string | null;
 };
@@ -89,11 +90,18 @@ export async function createConversation(
   stage: Stage,
   opening?: string,
   program: Program = "general",
-  journeyId?: string | null
+  journeyId?: string | null,
+  originContext?: { source: string; label: string; family: string; definition: string } | null
 ): Promise<DbConversation> {
   const { data, error } = await supabase
     .from("conversations")
-    .insert({ host_id: hostId, stage, program, journey_id: journeyId ?? null })
+    .insert({
+      host_id: hostId,
+      stage,
+      program,
+      journey_id: journeyId ?? null,
+      origin_context: originContext ?? null,
+    })
     .select("*")
     .single();
   if (error) throw new Error(error.message);

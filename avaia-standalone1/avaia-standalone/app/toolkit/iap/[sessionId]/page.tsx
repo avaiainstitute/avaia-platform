@@ -17,6 +17,8 @@ import {
   findOrCreateGuideSessionForConversation,
 } from "@/lib/guide";
 import { ensureNextStageConversation } from "@/lib/engine/referral-generation";
+import { resolveOriginContext } from "@/lib/engine/origin-context";
+import { generateIapOriginOpening } from "@/lib/engine/openings";
 
 export const metadata = { title: "Individual Awareness Profile — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -51,8 +53,24 @@ export default async function ToolkitIapSessionPage({
 
   let conversationId = session.conversation_id;
   if (!conversationId) {
+    // A View From Above session carries which of the ten classes it's
+    // anchored to (session.class_context, migration 0058) -- resolved
+    // here into the same structured origin context a self-directed Host
+    // gets from the public page, so the Guide-facilitated private
+    // conversation opens the same way regardless of entry path.
+    const origin =
+      session.program === "view-from-above" ? resolveOriginContext("view-from-above", session.class_context ?? undefined) : null;
     const journeyId = await createJourney(supabase, user.id, session.program);
-    const convo = await createConversation(supabase, user.id, "iap", undefined, session.program, journeyId);
+    const originOpening = origin ? await generateIapOriginOpening(origin, user.id, null) : undefined;
+    const convo = await createConversation(
+      supabase,
+      user.id,
+      "iap",
+      originOpening,
+      session.program,
+      journeyId,
+      origin
+    );
     conversationId = convo.id;
     await setGuideSessionConversation(supabase, session.id, conversationId);
   }

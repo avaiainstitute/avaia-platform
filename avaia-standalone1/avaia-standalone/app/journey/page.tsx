@@ -20,6 +20,8 @@ import { getIncomingSummary } from "@/lib/engine/referral-provenance";
 import type { Program, Stage, DevelopmentalBand } from "@/lib/engine/prompts";
 import { isMember as checkIsMember } from "@/lib/membership";
 import { generateGuidesRecord } from "@/lib/engine/referral-generation";
+import { resolveOriginContext } from "@/lib/engine/origin-context";
+import { generateIapOriginOpening } from "@/lib/engine/openings";
 
 export const metadata = { title: "Your Journey — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -27,7 +29,15 @@ export const dynamic = "force-dynamic";
 export default async function JourneyPage({
   searchParams,
 }: {
-  searchParams?: { new?: string; checkout?: string; program?: string; enter?: string; saved?: string };
+  searchParams?: {
+    new?: string;
+    checkout?: string;
+    program?: string;
+    enter?: string;
+    saved?: string;
+    origin?: string;
+    key?: string;
+  };
 }) {
   const supabase = createClient();
   const {
@@ -198,14 +208,28 @@ export default async function JourneyPage({
       // through /defying-grief's own front door. See the matching adjustment
       // to the JourneyIntro condition below, which keeps this population's
       // IAP orientation screen intact.
+      // A Host who clicked through from a specific Chemistry element or
+      // View From Above class carries that origin into this very first
+      // IAP conversation -- resolved server-side against the canonical
+      // data (never trusting the query string's label/family/definition
+      // directly), so IAP can open naturally instead of with the generic
+      // static line. This never changes program (still unconditionally
+      // 'defying-grief' below, same as every other brand-new adult Host)
+      // and never touches the membership gate -- origin context only
+      // affects what IAP says, not what a Host is entitled to do.
+      const origin = resolveOriginContext(searchParams?.origin, searchParams?.key);
       const firstJourneyId = await createJourney(supabase, user.id, "defying-grief");
+      const originOpening = origin
+        ? await generateIapOriginOpening(origin, user.id, null)
+        : undefined;
       convo = await createConversation(
         supabase,
         user.id,
         "iap",
-        undefined,
+        originOpening,
         "defying-grief",
-        firstJourneyId
+        firstJourneyId,
+        origin
       );
     } else {
       journeyComplete = true;
