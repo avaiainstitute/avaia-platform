@@ -21,6 +21,11 @@ import { createClient } from "@/lib/supabase/client";
  * access, so it needs no guardian-consent gate the way Journey content
  * does.
  */
+type FamilyStatus =
+  | { kind: "none" }
+  | { kind: "owner"; memberCount: number }
+  | { kind: "member"; ownerEmail: string | null };
+
 export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
@@ -29,15 +34,43 @@ export default function AccountPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [family, setFamily] = useState<FamilyStatus>({ kind: "none" });
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         window.location.replace("/sign-in?from=/account");
         return;
       }
       setEmail(data.user.email ?? null);
+
+      // Family status -- self-read RLS only, see migration 0054. An owner
+      // sees their own plan's member count; a member sees only that
+      // they're on a plan (never who else is on it).
+      const { data: ownedPlan } = await supabase
+        .from("family_memberships")
+        .select("id")
+        .eq("owner_host_id", data.user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (ownedPlan) {
+        const { count } = await supabase
+          .from("family_members")
+          .select("id", { count: "exact", head: true })
+          .eq("family_membership_id", ownedPlan.id)
+          .neq("status", "removed");
+        setFamily({ kind: "owner", memberCount: count ?? 0 });
+      } else {
+        const { data: myMembership } = await supabase
+          .from("family_members")
+          .select("id")
+          .eq("host_id", data.user.id)
+          .eq("status", "active")
+          .maybeSingle();
+        if (myMembership) setFamily({ kind: "member", ownerEmail: null });
+      }
+
       setLoading(false);
     });
   }, []);
@@ -87,6 +120,28 @@ export default function AccountPage() {
       <p className="mt-4 text-lg text-muted">
         Signed in as <span className="text-ink">{email}</span>.
       </p>
+
+      {family.kind === "owner" && (
+        <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label mb-2 text-muted">Family Membership</p>
+          <p className="text-sm text-muted">
+            You manage a Family Membership — {family.memberCount} member{family.memberCount === 1 ? "" : "s"} on
+            the plan. Each person keeps their own private AVAIA account, Journey, and Workbook.
+          </p>
+          <Link href="/family" className="mt-3 inline-block label text-seal hover:opacity-80">
+            Manage Family Plan →
+          </Link>
+        </section>
+      )}
+      {family.kind === "member" && (
+        <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label mb-2 text-muted">Family Membership</p>
+          <p className="text-sm text-muted">
+            You&rsquo;re a member of a Family AVAIA Membership. Your account, Journey, and Workbook
+            stay private — the plan owner never sees your conversations.
+          </p>
+        </section>
+      )}
 
       <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
         <p className="label mb-2 text-muted">Password</p>

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isMember as checkIsMember } from "@/lib/membership";
+import { getFamilyMembershipForOwner, getMyFamilyMembership } from "@/lib/family-membership";
 import MembershipCheckoutButton from "@/components/MembershipCheckoutButton";
+import FamilyCheckoutButton from "@/components/FamilyCheckoutButton";
 
 export const metadata = { title: "AVAIA Membership" };
 export const dynamic = "force-dynamic";
@@ -44,6 +46,8 @@ export default async function MembershipPage({
     data: { user },
   } = await supabase.auth.getUser();
   const isMember = user ? await checkIsMember(supabase, user.id) : false;
+  const ownedFamilyPlan = user ? await getFamilyMembershipForOwner(supabase, user.id) : null;
+  const myFamilyMembership = user ? await getMyFamilyMembership(supabase, user.id) : null;
 
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -171,6 +175,65 @@ export default async function MembershipPage({
           </div>
         </section>
       )}
+
+      <section className="rule-t mt-16 border-t border-rule pt-12">
+        <p className="label mb-2">Family Membership</p>
+        <h2 className="font-serif text-3xl text-ink">One plan, up to five people.</h2>
+        <p className="mt-3 text-lg text-muted">
+          Family Membership shares payment for up to 5 people — it never shares anyone&rsquo;s
+          story.
+        </p>
+
+        <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-5">
+          <p className="font-serif text-lg text-ink">
+            Each person keeps their own private AVAIA account, Journey, and Workbook.
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            No one on a Family plan — including whoever pays for it — can read another
+            member&rsquo;s conversations, Journey, or Workbook. Family Membership pays for access.
+            It does not grant anyone authority over anyone else&rsquo;s story.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          <div className="rounded-lg border border-rule p-5">
+            <p className="label mb-1 text-muted">Individual</p>
+            <p className="font-serif text-2xl text-ink">$19/mo or $190/yr</p>
+            <p className="mt-2 text-sm text-muted">One person, one account.</p>
+          </div>
+          <div className="rounded-lg border border-rule p-5">
+            <p className="label mb-1 text-muted">Family</p>
+            <p className="font-serif text-2xl text-ink">$49/mo or $490/yr</p>
+            <p className="mt-2 text-sm text-muted">
+              Up to 5 people. Additional members: $7/mo or $70/yr each.
+            </p>
+          </div>
+        </div>
+
+        {ownedFamilyPlan ? (
+          <div className="mt-8">
+            <p className="text-muted">You manage this Family plan.</p>
+            <Link
+              href="/family"
+              className="mt-3 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Manage Family Plan
+            </Link>
+          </div>
+        ) : myFamilyMembership ? (
+          <p className="mt-8 text-muted">
+            You&rsquo;re already a member of a Family AVAIA Membership.
+          </p>
+        ) : (
+          <div className="mt-8 flex flex-wrap items-start gap-6">
+            <FamilyCheckoutButton plan="monthly" label="Start Family — $49/month" />
+            <div>
+              <FamilyCheckoutButton plan="annual" label="Start Family — $490/year" />
+              <p className="mt-2 text-sm text-muted">Save $98 with annual billing.</p>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

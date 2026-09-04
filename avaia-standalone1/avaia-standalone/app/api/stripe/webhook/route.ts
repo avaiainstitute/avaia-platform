@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, memberWelcomeEmailHtml } from "@/lib/resend";
+import { createFamilyMembership, cancelFamilyMembership } from "@/lib/family-membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,6 +86,57 @@ async function revokeEntitlement(hostId: string | null | undefined) {
   if (error) console.error("AVAIA Stripe webhook: failed to revoke entitlement:", error);
 }
 
+/** Creates the Family plan itself the moment the Family base-price
+ *  Checkout Session completes -- mirrors grantEntitlement()'s idempotency
+ *  posture (createFamilyMembership is itself idempotent against
+ *  redelivery, see its own doc comment). Retrieves the just-created
+ *  subscription to capture its one line item's id (base_subscription_item_id)
+ *  -- needed later so an additional-member invite can add a SECOND item to
+ *  this same subscription rather than creating a new one. */
+async function grantFamilyMembership(
+  hostId: string | null | undefined,
+  session: Stripe.Checkout.Session,
+  origin: string
+) {
+  if (!hostId) {
+    console.error("AVAIA Family webhook: no supabase_user_id on the event, skipping.");
+    return;
+  }
+  const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+  const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
+  if (!subscriptionId || !customerId) {
+    console.error("AVAIA Family webhook: checkout session missing subscription/customer id.");
+    return;
+  }
+  const plan = session.metadata?.plan === "annual" ? "annual" : "monthly";
+  const admin = createAdminClient();
+
+  let baseItemId: string | undefined;
+  try {
+    const subscription = await stripe().subscriptions.retrieve(subscriptionId);
+    baseItemId = subscription.items.data[0]?.id;
+  } catch (e) {
+    console.error("AVAIA Family webhook: failed to retrieve subscription:", e);
+  }
+  if (!baseItemId) return;
+
+  const { data: authUser } = await admin.auth.admin.getUserById(hostId);
+  const ownerEmail = authUser?.user?.email ?? null;
+
+  const created = await createFamilyMembership(admin, hostId, ownerEmail, customerId, subscriptionId, baseItemId, plan);
+  if (created && ownerEmail) {
+    try {
+      await sendEmail({
+        to: ownerEmail,
+        subject: "Welcome to AVAIA Family Membership",
+        html: memberWelcomeEmailHtml({ journeyUrl: `${origin}/family` }),
+      });
+    } catch (e) {
+      console.error("AVAIA Family webhook: failed to send welcome email:", e);
+    }
+  }
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -108,17 +160,29 @@ export async function POST(request: Request) {
     // AVAIA's own live domain -- the same value the checkout route itself
     // would compute -- used only for the welcome email's Journey link.
     const origin = new URL(request.url).origin;
-    await grantEntitlement(hostId, origin);
+    if (session.metadata?.tier === "family") {
+      await grantFamilyMembership(hostId, session, origin);
+    } else {
+      await grantEntitlement(hostId, origin);
+    }
   } else if (event.type === "customer.subscription.deleted") {
     // subscription_data.metadata (set at checkout) carries supabase_user_id
     // onto the Subscription object itself -- no stored Stripe-customer
     // lookup table is needed to resolve which Host this is.
     const subscription = event.data.object as Stripe.Subscription;
-    await revokeEntitlement(subscription.metadata?.supabase_user_id);
+    if (subscription.metadata?.tier === "family") {
+      await cancelFamilyMembership(createAdminClient(), subscription.id);
+    } else {
+      await revokeEntitlement(subscription.metadata?.supabase_user_id);
+    }
   } else if (event.type === "customer.subscription.updated") {
     const subscription = event.data.object as Stripe.Subscription;
     if (REVOKING_STATUSES.has(subscription.status)) {
-      await revokeEntitlement(subscription.metadata?.supabase_user_id);
+      if (subscription.metadata?.tier === "family") {
+        await cancelFamilyMembership(createAdminClient(), subscription.id);
+      } else {
+        await revokeEntitlement(subscription.metadata?.supabase_user_id);
+      }
     }
   }
 
