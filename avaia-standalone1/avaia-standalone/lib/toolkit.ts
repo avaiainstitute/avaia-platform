@@ -25,7 +25,8 @@ export type ToolKey =
   | "unsung-heroes"
   | "library"
   | "youth-defying-grief"
-  | "youth-group";
+  | "youth-group"
+  | "view-from-above";
 
 export type ToolStatus = "installed" | "specified-not-installed" | "not-yet-specified";
 
@@ -141,6 +142,13 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     description: "Group-format delivery of Youth conversations -- register a roster of participants for a group, workshop, or school/organization program; track per-person guardian consent and Youth assent; launch each participant's own private session once cleared.",
     status: "installed",
     href: "/toolkit/youth-defying-grief/programs",
+  },
+  {
+    key: "view-from-above",
+    label: "View From Above",
+    description: "Ten classes built from the lessons that became visible on Bailand's Hike -- Meaning, Reality, Dreams/Opportunities, Self-Trust, Decision-Making/Boundaries, Life's Vision, Connection, Control, Identity, and Attachment/Support, each paired with a Virtue Family. Self-directed at /view-from-above, or Guide-facilitated through its Experience pages here in the Toolkit.",
+    status: "installed",
+    href: "/view-from-above",
   },
 ];
 

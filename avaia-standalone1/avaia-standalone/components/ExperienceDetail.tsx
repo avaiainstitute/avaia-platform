@@ -43,6 +43,7 @@ type ExperienceDetailProps = {
  *  rows, not a separate content system. */
 const LAYOUT_GROUPS: { heading: string; types: SectionType[] }[] = [
   { heading: "Orientation", types: ["orientation"] },
+  { heading: "The Hike Lesson", types: ["hike_lesson"] },
   { heading: "Anchor & Signature Question", types: ["anchor", "question"] },
   { heading: "Before You Facilitate", types: ["governing_distinction", "boundary", "guide_preparation"] },
   { heading: "Reference", types: ["reference"] },

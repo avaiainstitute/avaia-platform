@@ -17,7 +17,8 @@ export type SectionType =
   | "take_home"
   | "format_variant"
   | "success_definition"
-  | "participant_guide";
+  | "participant_guide"
+  | "hike_lesson";
 
 export const SECTION_TYPES: SectionType[] = [
   "orientation",
@@ -34,6 +35,7 @@ export const SECTION_TYPES: SectionType[] = [
   "format_variant",
   "success_definition",
   "participant_guide",
+  "hike_lesson",
 ];
 
 export const SECTION_TYPE_LABEL: Record<SectionType, string> = {
@@ -51,6 +53,7 @@ export const SECTION_TYPE_LABEL: Record<SectionType, string> = {
   format_variant: "Format Variants",
   success_definition: "Definition of Success",
   participant_guide: "Participant Guide",
+  hike_lesson: "The Hike Lesson",
 };
 
 export type ExperienceSectionStatus = "draft" | "published" | "archived";

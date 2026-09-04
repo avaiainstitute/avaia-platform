@@ -6,6 +6,7 @@ import ExperienceDetail, {
   type RelatedClass,
 } from "@/components/ExperienceDetail";
 import DefyingGriefCurriculum from "@/components/DefyingGriefCurriculum";
+import ViewFromAboveClass from "@/components/ViewFromAboveClass";
 import type { Experience } from "@/lib/experiences";
 import type { ExperienceSection } from "@/lib/experience-sections";
 import { TOOL_REGISTRY, type ToolKey, type ToolStatus } from "@/lib/toolkit";
@@ -84,6 +85,13 @@ export default async function ToolkitExperienceDetailPage({
       </p>
       {experience.components.includes("defying-grief") ? (
         <DefyingGriefCurriculum
+          experience={experience}
+          sections={sections}
+          componentAvailability={componentAvailability}
+          relatedClasses={relatedClasses}
+        />
+      ) : experience.components.includes("view-from-above") ? (
+        <ViewFromAboveClass
           experience={experience}
           sections={sections}
           componentAvailability={componentAvailability}
