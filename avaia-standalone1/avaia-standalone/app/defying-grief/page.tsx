@@ -266,8 +266,9 @@ function ThresholdContent({
           capacities that remain, even now.
         </p>
         <p className="mt-4 text-sm text-muted">
-          You can move through this on your own, at your own pace. Human Guide support will also
-          be available through AVAIA&rsquo;s Guided Journey pathway as that becomes available.
+          You can move through this on your own, at your own pace. Human Guide support is also
+          available through AVAIA&rsquo;s Guided Journey pathway, where a Certified Guide can
+          accompany a Journey you&rsquo;ve already begun on your own.
           Defying Grief can also be facilitated by a Certified AVAIA Guide, or experienced
           together — through a live workshop or a school or organization program, with the
           shared curriculum delivered to the room and each person&rsquo;s own private conversation

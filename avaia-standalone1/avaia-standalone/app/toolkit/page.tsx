@@ -490,6 +490,16 @@ export default async function ToolkitDashboardPage() {
             </section>
             <section className="rule-t mt-10 border-t border-rule pt-8">
               <p className="label mb-3 text-muted">The Toolkit — Youth</p>
+              <Link
+                href="/toolkit/youth-safety"
+                className="mb-4 block rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 transition-colors hover:border-seal"
+              >
+                <p className="font-serif text-lg text-ink">Youth Safety — What To Actually Do</p>
+                <p className="mt-1 text-sm text-muted">
+                  The one thing to read before facilitating a Youth session — what to notice, what
+                  to do, and what the narrow safety exception actually means in practice.
+                </p>
+              </Link>
               <div className="grid gap-3 sm:grid-cols-2">{youthTools.map(renderCard)}</div>
             </section>
           </>
