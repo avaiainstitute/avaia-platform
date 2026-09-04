@@ -90,7 +90,13 @@ export default function SignInPage() {
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        // ?flow=recovery is AVAIA's own signal, not Supabase's -- see the
+        // matching comment in app/auth/callback/page.tsx on why: the
+        // actual recovery email link is a PKCE ?code= link with no type=
+        // param at all (confirmed live against a real production email),
+        // so relying on GoTrue's own `type` alone silently sent a Host to
+        // their ordinary Journey instead of /reset-password.
+        redirectTo: `${window.location.origin}/auth/callback?flow=recovery`,
       });
       if (error) throw error;
       setForgotSent(true);

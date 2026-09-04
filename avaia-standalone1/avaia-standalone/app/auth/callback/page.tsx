@@ -61,10 +61,26 @@ export default function AuthCallbackPage() {
     const supabase = createClient();
 
     // GoTrue includes `type` alongside the tokens (e.g. "email_change",
-    // "magiclink", "signup"). Read it once, up front, since the hash is
-    // otherwise only inspected for an error below.
+    // "magiclink", "signup") for HASH-based links. Read it once, up front,
+    // since the hash is otherwise only inspected for an error below.
     const type =
       new URLSearchParams(rawHash).get("type") || new URLSearchParams(rawSearch).get("type");
+
+    // Real defect found live (production auth reconciliation pass): the
+    // recovery email's actual link is a PKCE `?code=` link with NO `type=`
+    // param at all (confirmed live against a real production recovery
+    // email -- `type` above was reliably undefined for it, so the
+    // `type === "recovery"` branch this used to rely on alone never fired,
+    // and the flow silently landed a Host in their ordinary Journey
+    // instead of /reset-password). GoTrue's own `type` is evidently not
+    // reliable across every link shape it can emit for the same recovery
+    // action. Fixed by having AVAIA supply its own explicit signal instead
+    // of depending on Supabase's: /sign-in's sendReset() now requests
+    // `redirectTo` with `?flow=recovery` already on it, which Supabase
+    // preserves and simply appends `code=`/hash tokens to -- read directly
+    // from the URL here, synchronously, with no dependency on which link
+    // shape was actually emailed or on any auth-event timing.
+    const flow = new URLSearchParams(rawSearch).get("flow");
 
     let done = false;
     const finish = () => {
@@ -84,8 +100,12 @@ export default function AuthCallbackPage() {
       // detectSessionInUrl exchange) establishes a real session for the
       // account, the same as signing in. That session is exactly what
       // /reset-password needs to call updateUser({ password }); nothing
-      // about the recovery mechanism itself lives outside Supabase.
-      if (type === "recovery") {
+      // about the recovery mechanism itself lives outside Supabase. Checks
+      // AVAIA's own `flow` marker first (reliable for every link shape --
+      // see the comment above `flow`'s declaration); `type === "recovery"`
+      // stays as a harmless fallback for any hash-based recovery link that
+      // does carry it.
+      if (flow === "recovery" || type === "recovery") {
         window.location.replace("/reset-password");
         return;
       }
