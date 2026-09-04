@@ -51,6 +51,9 @@ export const PROGRAM_LABEL: Record<Program, string> = {
   // completeness -- Youth is deliberately absent from PROGRAM_KEYS below, so
   // this never actually surfaces in the Library's program filter UI yet.
   youth: "Youth Journey",
+  // Same posture as Youth above -- View From Above sessions don't need a
+  // Library program-filter entry yet either.
+  "view-from-above": "View From Above",
 };
 export const PROGRAM_KEYS: Program[] = ["general", "defying-grief"];
 

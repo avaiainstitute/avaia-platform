@@ -9,6 +9,7 @@ import {
   type ExperienceSection,
 } from "@/lib/experience-sections";
 import type { ComponentAvailabilityItem, RelatedClass } from "@/components/ExperienceDetail";
+import { VIEW_FROM_ABOVE_CLASSES } from "@/lib/view-from-above";
 
 /** Delivery interface for a View From Above class -- rendered by both the
  *  Guide-facing (app/toolkit/experiences/[experienceId]) and admin
@@ -65,6 +66,7 @@ export default function ViewFromAboveClass({
 
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const movementFields = movement ? parseModuleFields(movement.body) : [];
+  const matchingSlug = VIEW_FROM_ABOVE_CLASSES.find((c) => c.title === experience.title)?.slug ?? "";
 
   return (
     <div>
@@ -88,6 +90,15 @@ export default function ViewFromAboveClass({
           </Link>
           .
         </p>
+      </div>
+
+      <div className="mt-4">
+        <Link
+          href={`/toolkit/view-from-above?class=${encodeURIComponent(matchingSlug)}`}
+          className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Begin a Private Conversation for This Class →
+        </Link>
       </div>
 
       {relatedClasses.length > 0 && (

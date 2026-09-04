@@ -39,7 +39,7 @@ export type Stage = "iap" | "cat" | "innercompass";
 // replaces the base instruction set entirely for all three stages instead
 // of layering onto the adult one; the adult 'general'/'defying-grief' path
 // is completely untouched by its existence.
-export type Program = "general" | "defying-grief" | "youth";
+export type Program = "general" | "defying-grief" | "youth" | "view-from-above";
 
 // The Youth Journey's developmental band -- each of the three Youth
 // instruction documents (YOUTH_IAP_INSTRUCTIONS etc. below) already
@@ -4297,6 +4297,31 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
   ].join(`\n\n${bar}\n\n`);
 }
 
+// View From Above -- a Host arriving here has just taken one of the ten
+// View From Above classes (a Guide-facilitated shared teaching, or the
+// self-directed public page), each built around one canonical Secondary
+// Loss and one canonical Virtue Family. Deliberately a single generic
+// clause, not ten class-specific variants -- the class's own shared
+// teaching, Human Question, and Virtue Family framing were already
+// covered live (by the Guide) or on the page itself (self-directed)
+// before this conversation opens; this only orients the model to that
+// fact so it doesn't need re-explaining, without duplicating any
+// class's specific content into the engine. Composed alongside (not
+// instead of) SECONDARY_LOSS_RECOGNITION and VIRTUE_TABLE_INTEGRATION,
+// which already do the actual recognition work generically.
+const VIEW_FROM_ABOVE_CONTEXT = `VIEW FROM ABOVE — CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+This Host has just taken a View From Above class -- one of ten built from
+the lessons that became visible on Bailand's Hike, each paired with one
+Secondary Loss and one Virtue Family. They may bring forward a specific
+question, a recognition from the class's shared teaching, a Chemistry
+element they noticed, or something else entirely -- follow what they
+actually bring, exactly as you would in any other conversation. Do not
+assume which of the ten classes they took, do not re-teach the class's
+content back to them, and do not treat "View From Above" as a grief
+program -- its ten lessons are broader than grief, the same as every
+other AVAIA conversation.`;
+
 export function systemPromptFor(
   stage: Stage,
   program: Program = "general",
@@ -4314,6 +4339,9 @@ export function systemPromptFor(
     ];
     if (program === "defying-grief") {
       iapParts.push(SECONDARY_LOSS_RECOGNITION);
+    }
+    if (program === "view-from-above") {
+      iapParts.push(VIEW_FROM_ABOVE_CONTEXT);
     }
     iapParts.push(
       IAP_CONVERSATIONAL_FREEDOM,
@@ -4338,6 +4366,9 @@ export function systemPromptFor(
     if (program === "defying-grief") {
       catParts.push(SECONDARY_LOSS_RECOGNITION, DEFYING_GRIEF_CAT_AUDACITY);
     }
+    if (program === "view-from-above") {
+      catParts.push(VIEW_FROM_ABOVE_CONTEXT);
+    }
     catParts.push(
       VIRTUE_TABLE_INTEGRATION,
       COMMUNICATION_ADAPTATION,
@@ -4358,6 +4389,9 @@ export function systemPromptFor(
   ];
   if (program === "defying-grief") {
     icParts.push(DEFYING_GRIEF_INNERCOMPASS_CHOICE);
+  }
+  if (program === "view-from-above") {
+    icParts.push(VIEW_FROM_ABOVE_CONTEXT);
   }
   icParts.push(
     VIRTUE_TABLE_INTEGRATION,
