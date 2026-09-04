@@ -13,7 +13,17 @@ import { consumePostSignInRedirect } from "@/lib/post-signin-redirect";
  * auth-state-changing write is exactly the pattern that's caused stale-page
  * problems elsewhere in this app.
  */
-export default function ConsentForm() {
+export default function ConsentForm({
+  origin,
+  originKey,
+}: {
+  /** Chemistry/View From Above origin context carried from /journey through
+   *  this consent step (see app/journey/page.tsx's own comment on why the
+   *  hop needs this explicitly) -- only ever present for a genuinely
+   *  first-time Host, since a returning Host never reaches /welcome. */
+  origin?: string;
+  originKey?: string;
+} = {}) {
   const [age, setAge] = useState<"" | "adult" | "minor">("");
   const [understood, setUnderstood] = useState(false);
   // Only required, and only meaningful, when age === "minor" -- see the
@@ -58,12 +68,12 @@ export default function ConsentForm() {
       // JourneyIntro gate (app/journey/page.tsx) and lands directly in the
       // conversation. Every other destination (library, workbook, toolkit,
       // youth, etc.) is untouched.
+      const journeyDest =
+        dest === "/journey" && origin && originKey
+          ? `/journey?enter=1&origin=${encodeURIComponent(origin)}&key=${encodeURIComponent(originKey)}`
+          : "/journey?enter=1";
       window.location.replace(
-        dest === "/defying-grief"
-          ? "/defying-grief?autostart=1"
-          : dest === "/journey"
-          ? "/journey?enter=1"
-          : dest
+        dest === "/defying-grief" ? "/defying-grief?autostart=1" : dest === "/journey" ? journeyDest : dest
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");

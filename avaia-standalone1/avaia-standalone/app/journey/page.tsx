@@ -91,7 +91,20 @@ export default async function JourneyPage({
     );
   }
 
-  if (!profile?.consent_at) redirect("/welcome");
+  // A brand-new anonymous Host who arrived carrying Chemistry/View From
+  // Above origin context still has to pass through /welcome's consent
+  // form first -- that context must survive the hop, or it's silently
+  // lost for every genuinely first-time visitor (the exact population
+  // this feature is for). router.refresh() after signInAnonymously()
+  // preserves this page's own query string, but this redirect() to a
+  // different path does not -- carried forward explicitly instead.
+  if (!profile?.consent_at) {
+    const originParams =
+      searchParams?.origin && searchParams?.key
+        ? `?origin=${encodeURIComponent(searchParams.origin)}&key=${encodeURIComponent(searchParams.key)}`
+        : "";
+    redirect(`/welcome${originParams}`);
+  }
   const isMember = await checkIsMember(supabase, user.id);
 
   // Resolve the conversation to show: the active one, or open IAP on first entry.

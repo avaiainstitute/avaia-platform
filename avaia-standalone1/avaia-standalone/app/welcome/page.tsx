@@ -5,7 +5,11 @@ import ConsentForm from "@/components/ConsentForm";
 export const metadata = { title: "Welcome — AVAIA" };
 export const dynamic = "force-dynamic";
 
-export default async function WelcomePage() {
+export default async function WelcomePage({
+  searchParams,
+}: {
+  searchParams?: { origin?: string; key?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -119,7 +123,7 @@ export default async function WelcomePage() {
             </p>
           </div>
 
-          <ConsentForm />
+          <ConsentForm origin={searchParams?.origin} originKey={searchParams?.key} />
         </>
       )}
     </div>
