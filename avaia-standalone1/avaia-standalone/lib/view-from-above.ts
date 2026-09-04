@@ -9,6 +9,12 @@
 // 'admin' role only), so a Host taking a class alone was never going to
 // reach that data through those tables regardless of publish status.
 //
+// virtueLooksLike below is not a second copy of illustrative content --
+// every entry points directly at VIRTUE_FAMILY_LOOKS_LIKE
+// (lib/virtue-looks-like.ts), the one shared source also used by the
+// Digital Chemistry Kit at /chemistry. Written once here originally;
+// factored out so both surfaces read the same array, not two.
+//
 // SOURCE DISCIPLINE: only the Prologue and the opening of Chapter 1 of
 // Dorian's memoir "The View From Above" were recovered as verbatim text
 // from the source archive -- told in full on the collection page
@@ -19,6 +25,8 @@
 // field below carries Dorian's own directly-supplied recognition and
 // lesson language, not further invented narrative -- see the
 // `hikeLessonSourceNote` on every entry.
+
+import { VIRTUE_FAMILY_LOOKS_LIKE } from "@/lib/virtue-looks-like";
 
 export type ViewFromAboveClass = {
   slug: string;
@@ -58,11 +66,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that meaning isn't something you either have or don't have -- it's something you can actively look for, name, and practice gratitude toward, even inside circumstances that don't make sense yet.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Noticing one true, good thing and letting it stand on its own, without adding “but” to the end of the sentence.",
-      "Being able to say “I don't know what the point is yet” without treating that as a failure.",
-      "Finding meaning that's being built now, even though it wasn't there before.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.gratitude,
     personalRecognition: [
       { prompt: "What is the point, for me, right now?", helper: "Not the point of everything -- just the point of showing up today." },
       { prompt: "What still feels meaningful?", helper: "Name one thing, however small." },
@@ -89,11 +93,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that not knowing what's real anymore isn't a failure of understanding -- it's a real, survivable stage that Humility can move through, without forcing false certainty back into place too soon.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Saying “I don't know” out loud, sincerely, instead of defending a position out of habit.",
-      "Being willing to actually look at a belief again, without being obligated to abandon it.",
-      "Staying honest in the harder, uncertain middle, instead of rushing to either extreme.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.humility,
     personalRecognition: [
       { prompt: "What was I sure of, before?", helper: "About the world, about people, about yourself." },
       { prompt: "What feels uncertain now?", helper: "What's changed about how sure you feel?" },
@@ -120,11 +120,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that losing a specific dream isn't the same as losing the capacity for direction itself -- Positive Attitude is a practice of hope that can be rebuilt even when the original plan is gone.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Naming what you actually wanted underneath a lost plan, not just the plan itself.",
-      "Taking one small, real step toward a new possibility, without needing the whole path mapped first.",
-      "Letting hope and honest grief for what didn't happen sit in the same sentence.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE["positive-attitude"],
     personalRecognition: [
       { prompt: "The dream or opportunity that changed", helper: "Name it plainly, in your own words." },
       { prompt: "What I actually wanted from it", helper: "Underneath the specific plan, what was the deeper hope?" },
@@ -152,11 +148,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that self-trust, once shaken, gets rebuilt the same way it's usually built -- through small, real, followed-through actions, which is exactly what Hard Work is made of.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Completing one small task on purpose, as evidence you can trust your own follow-through.",
-      "Separating a role that was lost from your underlying capacity to act, which the loss didn't take.",
-      "Choosing a next action sized to what feels safely doable, not to what feels impressive.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE["hard-work"],
     personalRecognition: [
       { prompt: "Where I feel unsure of my role", helper: "Name where “what is my role now?” feels loudest." },
       { prompt: "One thing I followed through on recently", helper: "However small -- name it plainly." },
@@ -183,11 +175,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that fear, guilt, shame, and doubt don't have to be the ones deciding. Fortitude is choosing anyway, from inside boundaries that keep you safe.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Naming which of the four -- fear, guilt, shame, doubt -- is actually loudest, instead of one undifferentiated bad feeling.",
-      "Building a boundary that makes a hard decision safer to make, without waiting for the feeling to disappear first.",
-      "Deciding with the feeling present, not despite pretending it isn't there.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.fortitude,
     personalRecognition: [
       { prompt: "Which of the four is loudest for me", helper: "Fear, guilt, shame, or doubt?" },
       { prompt: "A decision it's been interfering with", helper: "Name it, even loosely." },
@@ -214,11 +202,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that belonging and life's vision can be rebuilt through discernment, even when the picture you were building is no longer the one in front of you.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Separating belonging to a place from belonging in a broader sense -- to people, to a role, to your own story.",
-      "Letting discernment about where you belong take real time, rather than forcing a quick answer.",
-      "Noticing small, unexpected grounding, even before a full new vision is clear.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.wisdom,
     personalRecognition: [
       { prompt: "Where belonging feels uncertain", helper: "A place, a relationship, a role." },
       { prompt: "What used to ground me", helper: "What gave you a sense of home or place before?" },
@@ -245,11 +229,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn to name, without accusation, what fair and reciprocal connection actually requires -- and to tell the difference between a relationship that's simply different from what they expected and one that's genuinely unjust.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Naming your own experience of a relationship honestly, without needing to prove the other person wrong.",
-      "Respecting another person's perspective even while naming that a connection feels unbalanced.",
-      "Asking for something specific and small, rather than staying silently resentful.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.justice,
     personalRecognition: [
       { prompt: "The connection that feels uneven", helper: "Name it, without needing to justify the feeling." },
       { prompt: "Which of the five feels missing", helper: "Fairness, honesty, reciprocity, dignity, or respect for your perspective." },
@@ -277,11 +257,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn to separate what they can govern in themselves from what they cannot control in life, other people, or the future -- and to practice Self-Control specifically on the first.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Writing two honest lists side by side -- what I can't control, what I can -- and acting only from the second.",
-      "Participating fully in something you can't control the outcome of, rather than withdrawing entirely.",
-      "Governing your own response and attention, without pretending the feeling isn't there.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE["self-control"],
     personalRecognition: [
       { prompt: "What's overwhelming me right now", helper: "Name it plainly." },
       { prompt: "What I cannot control in this", helper: "Be specific and honest." },
@@ -308,11 +284,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn to separate identity borrowed from a role from identity that's genuinely their own -- values and character that remain, even when a role is gone.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Naming a value a role let you express (patience, love, responsibility) and recognizing it's still yours, without the role.",
-      "Acting from a value that has nothing to do with any title, and noticing that it's still fully you.",
-      "Giving yourself real time to answer “who am I?”, rather than forcing a quick reinvention.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.integrity,
     personalRecognition: [
       { prompt: "The role or identity that changed", helper: "Name it plainly." },
       { prompt: "The values underneath the role", helper: "What did that role let you express -- love, responsibility, care?" },
@@ -339,11 +311,7 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
       "This class helps someone learn that connection and attachment are genuine needs, not weaknesses -- and that even after real loss, you can recognize the attachments that remain real and can be trusted.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
-    virtueLooksLike: [
-      "Holding continuing connection to someone no longer present alongside real, new connection to people who are.",
-      "Reaching out and naming, plainly, that a connection matters to you.",
-      "Recognizing that an attachment that's changed or ended doesn't retroactively become unreal.",
-    ],
+    virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.love,
     personalRecognition: [
       { prompt: "Who I've lost", helper: "Named plainly, however that loss looks for you." },
       { prompt: "Who I'm still connected to", helper: "People present in your life now, even if the connection has changed." },

@@ -12,6 +12,7 @@ import {
 } from "@/lib/virtues";
 import { resolveFocus } from "@/lib/virtue-focus";
 import { VIRTUE_POS, GRID_COLS, GRID_ROWS } from "@/lib/virtue-layout";
+import { VIRTUE_FAMILY_LOOKS_LIKE } from "@/lib/virtue-looks-like";
 import VirtueFormulaGenerator from "@/components/VirtueFormulaGenerator";
 import VirtueNameAcronym from "@/components/VirtueNameAcronym";
 
@@ -160,6 +161,19 @@ export default function ChemistryPage() {
             {selected.definition && (
               <p className="mt-2 text-ink">{selected.definition}</p>
             )}
+            <p className="label mt-4 mb-1 text-muted">What This Can Look Like in Ordinary Life</p>
+            <ul className="space-y-1 text-sm text-ink">
+              {VIRTUE_FAMILY_LOOKS_LIKE[selected.family].map((v, i) => (
+                <li key={i}>{v}</li>
+              ))}
+            </ul>
+            <Link
+              href="/journey"
+              prefetch={false}
+              className="mt-4 inline-block rounded-md bg-seal px-4 py-2 font-sans text-xs font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Begin a Private AVAIA Conversation →
+            </Link>
           </div>
           <button
             onClick={() => setSelected(null)}
@@ -329,7 +343,27 @@ export default function ChemistryPage() {
           <li>Browse the table above and tap any element to read its definition.</li>
           <li>Generate a Virtue Formula for a role, feeling, or situation you name.</li>
           <li>Spell your name and see which elements it maps to.</li>
+          <li>Explore it together, one element at a time, as a family.</li>
         </ul>
+      </div>
+
+      {/* Chemistry for Families & Kids -- points to the new family/kids
+          learning experience without duplicating any content here; the
+          table above stays the one authoritative source either surface
+          reads from. */}
+      <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-6 backdrop-blur-sm">
+        <p className="label mb-2 text-muted">With Your Family</p>
+        <p className="text-ink">
+          Chemistry of Virtue also works as a shared language for a family to learn together —
+          choosing one element, reading a short story built around it, and noticing where you've
+          seen it this week.
+        </p>
+        <Link
+          href="/chemistry/family"
+          className="mt-4 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Chemistry for Families & Kids →
+        </Link>
       </div>
 
       {/* Three ways in */}
