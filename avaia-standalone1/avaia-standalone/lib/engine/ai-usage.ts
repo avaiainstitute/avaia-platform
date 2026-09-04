@@ -16,7 +16,9 @@ export type AiUsageFeature =
   | "chemistry_virtue_formula"
   | "transcript_cleanup"
   | "preparation_snapshot"
-  | "preparation_chat";
+  | "preparation_chat"
+  | "room_conversation"
+  | "room_referral";
 
 /** The subset of an Anthropic Message's `usage` field this records -- same
  *  shape whether it came from `messages.create()` directly or from

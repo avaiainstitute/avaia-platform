@@ -385,6 +385,28 @@ export default async function ToolkitDashboardPage() {
           as a prerequisite). Shown only when this Guide actually holds
           that authorization, so a Guide without it doesn't see a
           dead-end link. */}
+      {/* Shared Room -- more than one person in the same AVAIA experience at
+          once. Its own route (app/toolkit/rooms/) since it isn't a single
+          IAP/CAT/InnerCompass session -- gated by the same Toolkit
+          authorization already required to reach this page at all, no
+          separate capability. */}
+      <section className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Shared Room</p>
+        <p className="text-muted">
+          Facilitate more than one person in the same AVAIA experience -- each person keeps
+          ownership of their own story; nothing moves from private into shared without their
+          own choice.
+        </p>
+        <div className="mt-3">
+          <Link
+            href="/toolkit/rooms"
+            className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+          >
+            Open Shared Rooms
+          </Link>
+        </div>
+      </section>
+
       {guidedJourneyFacilitationAuthorized && (
         <section className="rule-t mt-14 border-t border-rule pt-8">
           <p className="label mb-3 text-muted">Guided Journeys</p>
