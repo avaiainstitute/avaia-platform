@@ -12,13 +12,20 @@
  * Guide's own signed-in state -- the opposite of the privacy boundary this
  * flow exists to create.
  *
- * This client instead stores its session under its own storageKey in
- * localStorage, isolated from the SSR cookie session and from any other
- * Supabase client instance. Same origin, same physical browser if needed --
- * still two independent auth states that never interact. Session is
- * established once, client-side, via verifyOtp() using the token_hash
- * handed over by /api/room-access/consume (see that route) -- never a
- * cookie exchange, never anything the Guide's own session touches.
+ * Deliberately sessionStorage, not localStorage: localStorage is scoped to
+ * the ORIGIN, not the tab -- shared by every tab of avaiainstitute.com,
+ * including the Guide's own /toolkit tab open in the same browser. A
+ * distinct storageKey there would still isolate it from the SSR cookie
+ * session, but it would sit somewhere the Guide's own tab could read via
+ * plain devtools (localStorage.getItem(...)), same origin, no exploit
+ * required -- exactly the "adversarial/direct access" case this boundary
+ * has to hold against. sessionStorage is scoped to the individual browsing
+ * context (this tab/window only) -- even on the exact same device, in the
+ * exact same browser, a different tab has its own independent
+ * sessionStorage that this one's writes never reach. That's what actually
+ * makes "open this on the participant's own device, or in a private/
+ * incognito window" a belt-and-suspenders instruction rather than the only
+ * thing standing between the Guide and this session.
  */
 import { createClient } from "@supabase/supabase-js";
 
@@ -31,6 +38,7 @@ export function createParticipantClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
+        storage: typeof window !== "undefined" ? window.sessionStorage : undefined,
         storageKey: "avaia-room-participant-auth",
         persistSession: true,
         autoRefreshToken: true,
