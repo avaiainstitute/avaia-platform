@@ -16,6 +16,7 @@ import {
   findConversationByJourneyStage,
   findOrCreateGuideSessionForConversation,
 } from "@/lib/guide";
+import { ensureNextStageConversation } from "@/lib/engine/referral-generation";
 
 export const metadata = { title: "Individual Awareness Profile — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -66,9 +67,24 @@ export default async function ToolkitIapSessionPage({
 
   if (convo.status === "complete") {
     const referralSaved = await hasReferralForConversation(supabase, conversationId);
-    const catConvo = convo.journey_id
+    let catConvo = convo.journey_id
       ? await findConversationByJourneyStage(supabase, convo.journey_id, "cat")
       : null;
+    // Self-heal a stranded handoff (referral saved, next stage never
+    // created -- see ensureNextStageConversation's own comment for why
+    // this can happen). No-op on the ordinary path where catConvo already
+    // exists.
+    if (!catConvo && referralSaved) {
+      const healed = await ensureNextStageConversation(supabase, user.id, {
+        id: convo.id,
+        stage: "iap",
+        program: convo.program,
+        journeyId: convo.journey_id,
+      });
+      if (healed) {
+        catConvo = await findConversationByJourneyStage(supabase, convo.journey_id!, "cat");
+      }
+    }
 
     let continueHref: string | null = null;
     if (catConvo) {

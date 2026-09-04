@@ -574,6 +574,64 @@ export async function advanceToNextStage(
   return { nextStage };
 }
 
+/** Self-heals a stranded Journey handoff. generateGuidesRecord (marks the
+ *  source conversation complete, saves the referral) and
+ *  advanceToNextStage (generates the next stage's opening via an LLM
+ *  call, creates its conversation row) are two separate steps within one
+ *  request, not one database transaction. If that request is interrupted
+ *  between them -- the likeliest real cause being the second LLM call
+ *  (a full stage-opening generation, not a quick lookup) pushing the
+ *  request past a serverless function's execution time limit -- the
+ *  source conversation is left permanently marked complete with a saved
+ *  referral, but the next-stage conversation was never created. That
+ *  strands whoever is in the conversation (Guide or Host) on a completion
+ *  screen with no way to continue -- found live during the 25-scenario
+ *  human-life audit (a genuinely long, emotionally dense CAT exchange
+ *  reproduced it).
+ *
+ *  Called from each stage's own *-complete branch, which has already
+ *  confirmed conversation.status === 'complete' and a saved referral
+ *  exist -- this only ever needs to (re)run the missing second half, and
+ *  is a no-op (one cheap lookup) on the ordinary, non-stranded path where
+ *  the next-stage conversation already exists. */
+export async function ensureNextStageConversation(
+  supabase: SupabaseClient,
+  hostId: string,
+  convo: { id: string; stage: Stage; program: Program; journeyId: string | null }
+): Promise<{ id: string; stage: Stage } | null> {
+  if (!convo.journeyId) return null;
+  const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(convo.stage) + 1] ?? null;
+  if (!nextStage) return null;
+
+  const findNext = async () => {
+    const { data } = await supabase
+      .from("conversations")
+      .select("id, stage")
+      .eq("journey_id", convo.journeyId)
+      .eq("stage", nextStage)
+      .maybeSingle();
+    return (data as { id: string; stage: Stage } | null) ?? null;
+  };
+
+  const existing = await findNext();
+  if (existing) return existing;
+
+  const { data: referralRow } = await supabase
+    .from("referrals")
+    .select("content")
+    .eq("conversation_id", convo.id)
+    .maybeSingle();
+  if (!referralRow?.content) return null;
+
+  await advanceToNextStage(
+    supabase,
+    hostId,
+    { id: convo.id, stage: convo.stage, program: convo.program, journeyId: convo.journeyId },
+    referralRow.content as Record<string, unknown>
+  );
+  return findNext();
+}
+
 /** Normal stage completion: generates and stores the Guide's Record, then
  *  immediately advances to the next stage (if any) -- the combined
  *  behavior /api/referral and /api/conversation's finish-intent detection
