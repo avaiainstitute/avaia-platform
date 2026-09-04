@@ -369,7 +369,17 @@ export async function startPrivateProcessing(
   participantId: string,
   program: Program = "general",
   origin: string
-): Promise<{ accessUrl: string; roomPrivateSessionId: string }> {
+): Promise<{ accessUrl: string; roomPrivateSessionId: string } | { error: string }> {
+  // Defense-in-depth: addParticipantToRoom already enforces this gate before
+  // a Youth can be seated at all, but this endpoint must not assume its
+  // caller always seats first -- found live, exactly this way, before
+  // shipping (a direct call with an unconsented participantId, skipping
+  // room seating entirely, succeeded until this check was added).
+  const cleared = await isParticipantClearedToParticipate(supabase, participantId);
+  if (!cleared) {
+    return { error: "This participant needs an active guardian consent on file before private processing." };
+  }
+
   const admin = createAdminClient();
   const participantUserId = await ensureParticipantAuthUser(admin, supabase, participantId);
 

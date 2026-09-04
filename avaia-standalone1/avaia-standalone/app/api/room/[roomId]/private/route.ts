@@ -32,6 +32,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
 
   try {
     const result = await startPrivateProcessing(supabase, params.roomId, participantId, room.program, origin);
+    if ("error" in result) return NextResponse.json(result, { status: 409 });
     return NextResponse.json(result);
   } catch (e) {
     console.error("AVAIA room private-processing error:", e);
