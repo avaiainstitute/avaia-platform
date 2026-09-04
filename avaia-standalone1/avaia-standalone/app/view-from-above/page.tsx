@@ -67,12 +67,46 @@ export default function ViewFromAbovePage() {
           instead are the ten real recognitions and lessons Dorian has directly named as coming out
           of that mountain — in his own words, not further invented narrative.
         </p>
-        <Link
-          href="/books/the-view-from-above"
-          className="mt-4 inline-block text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
-        >
-          Read more about the book →
-        </Link>
+
+        <div className="mt-10 grid gap-6 rounded-lg border border-rule bg-white/[0.04] p-6 sm:grid-cols-[180px_1fr] sm:items-center">
+          <img
+            src="/books/the-view-from-above-front.jpg"
+            alt="The View From Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
+            className="mx-auto w-full max-w-[180px] rounded-md shadow-lg sm:mx-0"
+          />
+          <div>
+            <p className="label mb-2 text-muted">The Book This Grew From</p>
+            <h3 className="font-serif text-2xl text-ink">The View From Above</h3>
+            <p className="mt-1 text-sm text-muted">By Dorian Johnson, with Danielle Palmer</p>
+            <p className="mt-4 text-muted">
+              The Prologue above is the opening of this book — Dorian's own written account of
+              Bailand's hike, and of returning a year later to climb the same trail himself. The
+              ten classes on this page grew directly out of the recognitions Dorian names in it:
+              what became visible to him about meaning, reality, direction, and connection, once he
+              was standing where his son had stood.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <a
+                href="https://a.co/d/0fZ57Zi5"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+              >
+                Buy on Amazon
+              </a>
+              <Link
+                href="/books/the-view-from-above"
+                className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+              >
+                More About the Book
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-6 text-sm text-muted">
+          Read the book for Dorian's full account. Continue below for the ten classes it led to.
+        </p>
       </section>
 
       <section className="rule-t mt-16 border-t border-rule pt-12">
