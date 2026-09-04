@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getRoom, startPrivateProcessing, returnToRoom } from "@/lib/engine/room";
+import { getRoom, startPrivateProcessing } from "@/lib/engine/room";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Starts protected private processing for one participant. */
+/** Starts protected private processing for one participant. Returns a
+ *  one-time access URL only -- never the conversation itself. The Guide's
+ *  own session has no way to read what happens at that URL; it's meant to
+ *  be handed to the participant and opened in their own browser context
+ *  (their own device, or a private/incognito window -- never the Guide's
+ *  own signed-in tab, which would only ever see "link generated," nothing
+ *  more). See lib/engine/room.ts's startPrivateProcessing for why. */
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
   const supabase = createClient();
   const {
@@ -22,40 +28,16 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   const participantId: string | undefined = body?.participantId;
   if (!participantId) return NextResponse.json({ error: "Missing participantId." }, { status: 400 });
 
-  const result = await startPrivateProcessing(supabase, user.id, params.roomId, participantId, room.program);
-  return NextResponse.json(result);
-}
-
-/** Returns from private processing -- keep private, or bring specific
- *  wording forward into the shared Room. */
-export async function PATCH(request: Request, { params }: { params: { roomId: string } }) {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-
-  const room = await getRoom(supabase, params.roomId);
-  if (!room || room.guide_id !== user.id) {
-    return NextResponse.json({ error: "Room not found." }, { status: 404 });
-  }
-
-  const body = await request.json().catch(() => ({}));
-  const roomPrivateSessionId: string | undefined = body?.roomPrivateSessionId;
-  const choice: "keep_private" | "brought_forward" | undefined = body?.choice;
-  const content: string | undefined = body?.content;
-  if (!roomPrivateSessionId || !choice) {
-    return NextResponse.json({ error: "Missing roomPrivateSessionId or choice." }, { status: 400 });
-  }
-  if (choice === "brought_forward" && !content?.trim()) {
-    return NextResponse.json({ error: "Choose the exact wording to bring into the Room." }, { status: 400 });
-  }
+  const origin = new URL(request.url).origin;
 
   try {
-    const result = await returnToRoom(supabase, user.id, roomPrivateSessionId, choice, content);
+    const result = await startPrivateProcessing(supabase, params.roomId, participantId, room.program, origin);
     return NextResponse.json(result);
   } catch (e) {
-    console.error("AVAIA room return-to-room error:", e);
-    return NextResponse.json({ error: "Could not return to the Room. Please try again." }, { status: 502 });
+    console.error("AVAIA room private-processing error:", e);
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Could not start private processing." },
+      { status: 502 }
+    );
   }
 }

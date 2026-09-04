@@ -1,11 +1,13 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Anthropic from "@anthropic-ai/sdk";
+import { randomBytes } from "crypto";
 import { anthropic, detectCrisis } from "./anthropic";
 import { AVAIA_MODEL, roomSystemPromptFor, ROOM_REFERRAL_FORMAT, type Program } from "./prompts";
-import { createConversation, createJourney, type DbConversation } from "./conversation";
+import { createConversation, createJourney } from "./conversation";
 import { recordAiUsage } from "./ai-usage";
 import { isParticipantClearedToParticipate } from "../guardian-consent";
+import { createAdminClient } from "../supabase/admin";
 
 export type DbRoom = {
   id: string;
@@ -299,37 +301,80 @@ export async function postRoomMessage(
   return { reply, crisis };
 }
 
+/** Finds or creates a real auth.users identity for a guide_participant, so
+ *  their private processing can belong to THEM rather than to the Guide's
+ *  own account -- the actual mechanism that makes it inaccessible to the
+ *  Guide by default (every existing conversations/messages/referrals RLS
+ *  policy already excludes anyone but auth.uid() = host_id; this is what
+ *  makes that auth.uid() the participant's, not the Guide's).
+ *
+ *  Reuses guide_participants.linked_host_id exactly as it already works
+ *  for a self-serve Host account found by email (see app/toolkit/page.tsx's
+ *  findHostIdByEmail) -- if already set, that identity is reused as-is
+ *  the same way every day. If not set and the participant has a real email
+ *  on file, a new Supabase account is created for that address (no
+ *  password; access only ever happens through the one-time link this flow
+ *  generates). If no email is on file, a private, unreachable placeholder
+ *  address is used instead -- this account is never used for anything
+ *  except this identity boundary; nothing is ever sent to it. Either way
+ *  this is the SAME auth.users table and the SAME RLS every other Host
+ *  already runs on -- not a parallel identity system. */
+async function ensureParticipantAuthUser(
+  admin: ReturnType<typeof createAdminClient>,
+  supabase: SupabaseClient,
+  participantId: string
+): Promise<string> {
+  const { data: participant } = await supabase
+    .from("guide_participants")
+    .select("id, name, email, linked_host_id")
+    .eq("id", participantId)
+    .maybeSingle();
+  if (!participant) throw new Error("Participant not found.");
+  if (participant.linked_host_id) return participant.linked_host_id as string;
+
+  const email =
+    (participant.email as string | null)?.trim() ||
+    `participant-${participant.id}@private.avaiainstitute.com`;
+
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    user_metadata: { avaia_room_participant: true, guide_participant_id: participant.id },
+  });
+  if (createError || !created?.user) {
+    throw new Error(createError?.message ?? "Could not provision a private identity.");
+  }
+
+  await supabase.from("guide_participants").update({ linked_host_id: created.user.id }).eq("id", participantId);
+  return created.user.id;
+}
+
 /** Opens protected private processing for one participant, from inside a
- *  Room. This is NOT a new engine -- it is an ordinary IAP-shaped
- *  conversation (same createConversation/createJourney every individual
- *  Host gets), only remembered here as Room-linked via
- *  room_private_sessions. Also creates a normal guide_sessions row for
- *  this participant so the existing Guide's Record / participant-history
- *  views pick it up for free, exactly like any other Guide-facilitated
- *  session -- no new continuity surface invented. */
+ *  Room. This is still not a new engine -- it's the exact same IAP-shaped
+ *  conversation (createConversation/createJourney) every individual Host
+ *  gets -- but it is now provisioned under the PARTICIPANT's own identity
+ *  (via the admin client, the one narrow, deliberate use of service-role
+ *  privilege in this flow) rather than the Guide's. No guide_sessions row
+ *  is created for it -- unlike before, this conversation must NOT surface
+ *  in the Guide's own Record/participant-history views, and creating that
+ *  row was the one thing that would have made it do so.
+ *
+ *  Returns a one-time access URL for the participant, not the conversation
+ *  itself -- the Guide's own UI never receives anything that could be used
+ *  to read the private conversation, only a link meant to be handed to the
+ *  participant and opened in their own, separate browser context. */
 export async function startPrivateProcessing(
   supabase: SupabaseClient,
-  guideId: string,
   roomId: string,
   participantId: string,
-  program: Program = "general"
-): Promise<{ conversation: DbConversation; roomPrivateSessionId: string; guideSessionId: string }> {
-  const journeyId = await createJourney(supabase, guideId, program);
-  const conversation = await createConversation(supabase, guideId, "iap", undefined, program, journeyId);
+  program: Program = "general",
+  origin: string
+): Promise<{ accessUrl: string; roomPrivateSessionId: string }> {
+  const admin = createAdminClient();
+  const participantUserId = await ensureParticipantAuthUser(admin, supabase, participantId);
 
-  const { data: session, error: sessionError } = await supabase
-    .from("guide_sessions")
-    .insert({
-      guide_id: guideId,
-      participant_id: participantId,
-      tool: "iap",
-      conversation_id: conversation.id,
-      program: program === "youth" ? "general" : program,
-      session_context: "adult_individual",
-    })
-    .select("id")
-    .single();
-  if (sessionError) throw new Error(sessionError.message);
+  const journeyId = await createJourney(admin, participantUserId, program);
+  const conversation = await createConversation(admin, participantUserId, "iap", undefined, program, journeyId);
 
   const { data: rps, error: rpsError } = await supabase
     .from("room_private_sessions")
@@ -337,40 +382,131 @@ export async function startPrivateProcessing(
     .select("id")
     .single();
   if (rpsError) throw new Error(rpsError.message);
+  const roomPrivateSessionId = (rps as { id: string }).id;
+
+  // The real Supabase magic-link token is deliberately generated later, at
+  // consume time (see consumePrivateAccessToken), not here -- generateLink's
+  // own token has a shorter validity window than this access link's 30
+  // minutes, and there's no reason to risk it going stale between the Guide
+  // creating the link and the participant actually opening it. Our own
+  // opaque `token` below is the only credential that needs to survive that
+  // gap; supabase_token_hash is filled in with a real, freshly-generated
+  // value at the moment it's actually used.
+  const token = randomBytes(24).toString("base64url");
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes, single-use
+  const { error: tokenError } = await admin.from("room_private_access_tokens").insert({
+    room_private_session_id: roomPrivateSessionId,
+    token,
+    participant_user_id: participantUserId,
+    supabase_token_hash: "",
+    expires_at: expiresAt,
+  });
+  if (tokenError) throw new Error(tokenError.message);
+
+  return { accessUrl: `${origin}/room-access/${token}`, roomPrivateSessionId };
+}
+
+/** Consumes a private-access token (single-use) and returns exactly what
+ *  the participant's own isolated client (lib/supabase/participant-client.ts)
+ *  needs to call verifyOtp() itself, establishing their session client-side.
+ *  This function runs with the admin client (the token IS the credential
+ *  here -- there is no signed-in user yet to check RLS against), but never
+ *  returns anything the Guide's own session could use: the token_hash is
+ *  handed straight back to the SAME browser context that presented the
+ *  one-time token, not persisted anywhere the Guide's account can read. */
+export async function consumePrivateAccessToken(token: string): Promise<
+  | { tokenHash: string; email: string; roomTitle: string | null; conversationId: string; roomPrivateSessionId: string }
+  | { error: string }
+> {
+  const admin = createAdminClient();
+  const { data: row } = await admin
+    .from("room_private_access_tokens")
+    .select("id, expires_at, used_at, participant_user_id, room_private_session_id")
+    .eq("token", token)
+    .maybeSingle();
+  if (!row) return { error: "This link isn't valid." };
+  if (row.used_at) return { error: "This link has already been used." };
+  if (new Date(row.expires_at as string) < new Date()) return { error: "This link has expired." };
+
+  await admin.from("room_private_access_tokens").update({ used_at: new Date().toISOString() }).eq("id", row.id);
+
+  const { data: authUser } = await admin.auth.admin.getUserById(row.participant_user_id as string);
+  const email = authUser?.user?.email;
+  if (!email) return { error: "This link isn't valid." };
+
+  // Re-derive a fresh hashed_token bound to this exact consumption, rather
+  // than reusing the one generated at creation time -- generateLink's
+  // hashed_token is itself only valid for a limited window server-side,
+  // and regenerating here (still admin-side, still never touching the
+  // Guide's session) keeps this robust even if some minutes passed between
+  // the Guide creating the link and the participant opening it.
+  const { data: link, error: linkError } = await admin.auth.admin.generateLink({ type: "magiclink", email });
+  if (linkError || !link) return { error: "Could not open this link. Please ask your Guide for a new one." };
+  const tokenHash = (link.properties as { hashed_token?: string } | undefined)?.hashed_token;
+  if (!tokenHash) return { error: "Could not open this link. Please ask your Guide for a new one." };
+
+  const { data: rps } = await admin
+    .from("room_private_sessions")
+    .select("room_id, conversation_id")
+    .eq("id", row.room_private_session_id as string)
+    .maybeSingle();
+  if (!rps) return { error: "This link isn't valid." };
+  const { data: room } = await admin.from("rooms").select("title").eq("id", rps.room_id as string).maybeSingle();
 
   return {
-    conversation,
-    roomPrivateSessionId: (rps as { id: string }).id,
-    guideSessionId: (session as { id: string }).id,
+    tokenHash,
+    email,
+    roomTitle: (room?.title as string | null) ?? null,
+    conversationId: rps.conversation_id as string,
+    roomPrivateSessionId: row.room_private_session_id as string,
   };
 }
 
-/** Closes out a private-processing session. `choice: "keep_private"` ends
- *  it with nothing crossing back into the Room -- the Room only ever
- *  learns that this participant stepped away and returned, never why or
- *  what was said. `choice: "brought_forward"` requires `content`: the
- *  participant's OWN chosen wording (accepted as suggested, or edited /
- *  retyped -- "say it myself instead" is just this field, hand-authored).
- *  That wording becomes a room_shared_items row AND is posted into the
- *  shared thread as this participant's own turn, followed by AVAIA's own
- *  Witness-function reply acknowledging it -- the same path any ordinary
- *  Room turn takes, so nothing about how it re-enters the Room is special
- *  or hidden. */
-export async function returnToRoom(
-  supabase: SupabaseClient,
-  guideId: string,
+/** Returns from private processing, called by the PARTICIPANT's own
+ *  authenticated request (see app/api/room-access/return/route.ts) -- never
+ *  by the Guide. `bearerUserId` is that participant's own auth.uid(),
+ *  already verified by the caller via their bearer token before this runs.
+ *  This function independently re-confirms that roomPrivateSessionId
+ *  actually belongs to a private conversation THIS user owns before doing
+ *  anything -- a participant cannot act on another participant's private
+ *  session by guessing its id.
+ *
+ *  `choice: "keep_private"` ends it with nothing crossing back into the
+ *  Room -- the Room only ever learns that this participant stepped away
+ *  and returned, never why or what was said. `choice: "brought_forward"`
+ *  requires `content`: the participant's OWN chosen wording. That wording
+ *  becomes a room_shared_items row AND is posted into the shared thread as
+ *  this participant's own turn, through the same postRoomMessage every
+ *  ordinary Room turn uses -- nothing about how it re-enters the Room is a
+ *  separate, hidden mechanism. The actual writes use the admin client
+ *  (room_shared_items/room_messages are Guide-owned tables by RLS) --
+ *  reachable only after the ownership check above, not exposed to any
+ *  unauthenticated or cross-participant caller. */
+export async function returnToRoomAsParticipant(
+  bearerUserId: string,
   roomPrivateSessionId: string,
   choice: "keep_private" | "brought_forward",
   content?: string
-): Promise<{ reply: string | null }> {
-  const { data: rps } = await supabase
+): Promise<{ reply: string | null } | { error: string }> {
+  const admin = createAdminClient();
+  const { data: rps } = await admin
     .from("room_private_sessions")
-    .select("id, room_id, participant_id")
+    .select("id, room_id, participant_id, conversation_id, returned_at")
     .eq("id", roomPrivateSessionId)
     .maybeSingle();
-  if (!rps) throw new Error("Private session not found.");
+  if (!rps) return { error: "Private session not found." };
+  if (rps.returned_at) return { error: "This private session has already been closed." };
 
-  await supabase
+  const { data: convo } = await admin
+    .from("conversations")
+    .select("host_id")
+    .eq("id", rps.conversation_id as string)
+    .maybeSingle();
+  if (!convo || convo.host_id !== bearerUserId) {
+    return { error: "This isn't your private session." };
+  }
+
+  await admin
     .from("room_private_sessions")
     .update({ returned_at: new Date().toISOString(), return_choice: choice })
     .eq("id", roomPrivateSessionId);
@@ -379,14 +515,23 @@ export async function returnToRoom(
     return { reply: null };
   }
 
-  await supabase.from("room_shared_items").insert({
+  const { data: room } = await admin.from("rooms").select("guide_id").eq("id", rps.room_id as string).maybeSingle();
+  if (!room) return { error: "Room not found." };
+
+  await admin.from("room_shared_items").insert({
     room_id: rps.room_id,
     participant_id: rps.participant_id,
     source_private_session_id: roomPrivateSessionId,
     content: content.trim(),
   });
 
-  const { reply } = await postRoomMessage(supabase, guideId, rps.room_id, rps.participant_id, content.trim());
+  const { reply } = await postRoomMessage(
+    admin,
+    room.guide_id as string,
+    rps.room_id as string,
+    rps.participant_id as string,
+    content.trim()
+  );
   return { reply };
 }
 

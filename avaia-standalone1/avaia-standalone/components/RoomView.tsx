@@ -38,144 +38,7 @@ type RoomReferral = {
   questionsStillAtTheTable: string[];
 };
 
-/** A minimal, self-contained chat panel for private processing -- talks
- *  directly to /api/conversation, the exact same endpoint every ordinary
- *  individual conversation already uses. Deliberately not JourneyChat:
- *  that component assumes a Journey's own stage-completion flow, which
- *  doesn't apply to a private detour opened from inside a Room -- this one
- *  just sends/receives until the participant chooses to return. */
-function PrivatePanel({
-  conversationId,
-  participantName,
-  onReturn,
-}: {
-  conversationId: string;
-  participantName: string;
-  onReturn: (choice: "keep_private" | "brought_forward", content?: string) => Promise<void>;
-}) {
-  const [messages, setMessages] = useState<{ role: "host" | "guide"; content: string }[]>([
-    { role: "guide", content: "Tell me something about yourself that you would want me to know." },
-  ]);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
-  const [bringForward, setBringForward] = useState("");
-  const [showReturn, setShowReturn] = useState(false);
-  const [returning, setReturning] = useState(false);
-
-  async function send() {
-    const text = input.trim();
-    if (!text || sending) return;
-    setInput("");
-    setSending(true);
-    setMessages((m) => [...m, { role: "host", content: text }]);
-    try {
-      const res = await fetch("/api/conversation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId, message: text }),
-      });
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("no stream");
-      const dec = new TextDecoder();
-      let acc = "";
-      setMessages((m) => [...m, { role: "guide", content: "" }]);
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        acc += dec.decode(value, { stream: true });
-        setMessages((m) => {
-          const copy = m.slice();
-          copy[copy.length - 1] = { role: "guide", content: acc };
-          return copy;
-        });
-      }
-    } catch {
-      setMessages((m) => [...m, { role: "guide", content: "(Something interrupted the response.)" }]);
-    } finally {
-      setSending(false);
-    }
-  }
-
-  return (
-    <div className="mt-4 rounded-lg border border-seal/40 bg-seal/[0.06] p-4">
-      <p className="label mb-2 text-muted">Private processing — {participantName}</p>
-      <p className="mb-3 text-xs text-muted">
-        This is protected. Nothing here enters the shared Room unless {participantName} chooses to
-        bring it forward.
-      </p>
-      <div className="max-h-72 space-y-3 overflow-y-auto rounded-md border border-rule bg-white/[0.03] p-3">
-        {messages.map((m, i) => (
-          <p key={i} className={m.role === "host" ? "text-ink" : "text-muted"}>
-            <span className="label mr-2">{m.role === "host" ? participantName : "AVAIA"}</span>
-            {m.content}
-          </p>
-        ))}
-      </div>
-      {!showReturn ? (
-        <>
-          <div className="mt-3 flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              disabled={sending}
-              placeholder="Type here..."
-              className="flex-1 rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink outline-none focus:border-seal"
-            />
-            <button
-              onClick={send}
-              disabled={sending}
-              className="rounded-md bg-seal px-4 py-2 font-sans text-sm font-semibold text-[#05060b] disabled:opacity-50"
-            >
-              Send
-            </button>
-          </div>
-          <button
-            onClick={() => setShowReturn(true)}
-            className="mt-3 text-sm text-muted underline hover:text-seal"
-          >
-            Return to Room
-          </button>
-        </>
-      ) : (
-        <div className="mt-3 rounded-md border border-rule bg-white/[0.03] p-3">
-          <p className="label mb-2">What comes back to the Room?</p>
-          <textarea
-            value={bringForward}
-            onChange={(e) => setBringForward(e.target.value)}
-            placeholder="Optional — write exactly what you want the Room to hear, in your own words. Leave blank to keep this private."
-            rows={3}
-            className="w-full rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink outline-none focus:border-seal"
-          />
-          <div className="mt-2 flex gap-2">
-            <button
-              disabled={returning}
-              onClick={async () => {
-                setReturning(true);
-                await onReturn("keep_private");
-                setReturning(false);
-              }}
-              className="rounded-md border border-rule px-4 py-2 text-sm font-medium text-ink hover:border-seal disabled:opacity-50"
-            >
-              Keep this private
-            </button>
-            <button
-              disabled={returning || !bringForward.trim()}
-              onClick={async () => {
-                setReturning(true);
-                await onReturn("brought_forward", bringForward.trim());
-                setReturning(false);
-              }}
-              className="rounded-md bg-seal px-4 py-2 text-sm font-semibold text-[#05060b] disabled:opacity-50"
-            >
-              Bring this into the Room
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+type PendingPrivate = { participantId: string; participantName: string; accessUrl: string };
 
 export default function RoomView({
   room,
@@ -197,7 +60,9 @@ export default function RoomView({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [addPick, setAddPick] = useState("");
-  const [openPrivateFor, setOpenPrivateFor] = useState<{ participantId: string; conversationId: string; roomPrivateSessionId: string } | null>(null);
+  const [pendingPrivate, setPendingPrivate] = useState<PendingPrivate[]>([]);
+  const [copiedFor, setCopiedFor] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [closing, setClosing] = useState(false);
   const [referral, setReferral] = useState(initialReferral);
   const [error, setError] = useState("");
@@ -266,7 +131,12 @@ export default function RoomView({
     }
   }
 
+  /** Starts private processing and receives back only a one-time access
+   *  URL -- never the conversation itself. This Room view has no way to
+   *  read what happens at that link; it exists only to be copied and
+   *  handed to the participant. */
   async function startPrivate(participantId: string) {
+    setError("");
     const res = await fetch(`/api/room/${room.id}/private`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -277,35 +147,38 @@ export default function RoomView({
       setError(data.error || "Could not start private processing.");
       return;
     }
-    setOpenPrivateFor({
-      participantId,
-      conversationId: data.conversation.id,
-      roomPrivateSessionId: data.roomPrivateSessionId,
-    });
+    const name = participants.find((p) => p.participant_id === participantId)?.name ?? "Participant";
+    setPendingPrivate((p) => [...p, { participantId, participantName: name, accessUrl: data.accessUrl }]);
   }
 
-  async function handleReturn(choice: "keep_private" | "brought_forward", content?: string) {
-    if (!openPrivateFor) return;
-    const res = await fetch(`/api/room/${room.id}/private`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomPrivateSessionId: openPrivateFor.roomPrivateSessionId, choice, content }),
-    });
-    const data = await res.json().catch(() => ({}));
-    const name = participants.find((p) => p.participant_id === openPrivateFor.participantId)?.name ?? "Participant";
-    if (choice === "brought_forward" && content) {
-      setMessages((m) => [
-        ...m,
-        { id: crypto.randomUUID(), role: "participant", speaker_participant_id: openPrivateFor.participantId, speaker_name: name, content, created_at: new Date().toISOString() },
-      ]);
-      if (data.reply) {
-        setMessages((m) => [
-          ...m,
-          { id: crypto.randomUUID(), role: "guide", speaker_participant_id: null, speaker_name: null, content: data.reply, created_at: new Date().toISOString() },
-        ]);
-      }
+  async function copyLink(url: string, participantId: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedFor(participantId);
+      setTimeout(() => setCopiedFor(null), 2000);
+    } catch {
+      /* clipboard unavailable — link is still shown on screen to copy manually */
     }
-    setOpenPrivateFor(null);
+  }
+
+  /** Re-fetches the Room's shared thread from the server -- the only way
+   *  this view learns that a participant brought something back, since
+   *  that write happens through the participant's own session, not this
+   *  browser. No polling; the Guide checks when it's time to check. */
+  async function refresh() {
+    setRefreshing(true);
+    try {
+      const res = await fetch(`/api/room/${room.id}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setMessages(data.messages ?? messages);
+        setParticipants(data.participants ?? participants);
+        const stillPending = new Set((data.activePrivateSessions ?? []).map((s: { participant_id: string }) => s.participant_id));
+        setPendingPrivate((p) => p.filter((x) => stillPending.has(x.participantId)));
+      }
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   async function closeRoom() {
@@ -378,8 +251,13 @@ export default function RoomView({
 
       {/* Shared thread */}
       <section className="mt-8">
-        <p className="label mb-3 text-muted">The Room</p>
-        <div className="space-y-4 rounded-lg border border-rule bg-white/[0.03] p-5">
+        <div className="flex items-baseline justify-between">
+          <p className="label text-muted">The Room</p>
+          <button onClick={refresh} disabled={refreshing} className="text-xs text-muted underline hover:text-seal disabled:opacity-50">
+            {refreshing ? "Checking…" : "Check for updates"}
+          </button>
+        </div>
+        <div className="mt-3 space-y-4 rounded-lg border border-rule bg-white/[0.03] p-5">
           {messages.length === 0 && <p className="text-muted">Nothing has been said in this Room yet.</p>}
           {messages.map((m) => (
             <div key={m.id}>
@@ -433,13 +311,31 @@ export default function RoomView({
           </div>
         )}
 
-        {openPrivateFor && (
-          <PrivatePanel
-            conversationId={openPrivateFor.conversationId}
-            participantName={participants.find((p) => p.participant_id === openPrivateFor.participantId)?.name ?? "Participant"}
-            onReturn={handleReturn}
-          />
-        )}
+        {/* Pending private-processing links -- shown only to be handed over.
+            This view has no way to see what happens once one is opened;
+            "Check for updates" above is the only way anything from it can
+            appear back in the Room, and only if the participant chooses
+            to bring something forward themselves. */}
+        {pendingPrivate.map((pp) => (
+          <div key={pp.participantId} className="mt-4 rounded-lg border border-seal/40 bg-seal/[0.06] p-4">
+            <p className="label mb-1 text-muted">Private processing — {pp.participantName}</p>
+            <p className="mb-3 text-sm text-muted">
+              Hand this link to {pp.participantName} to open on their own device, or in a private/
+              incognito window — not in this tab. This view cannot see what happens there.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="flex-1 truncate rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-xs text-ink">
+                {pp.accessUrl}
+              </code>
+              <button
+                onClick={() => copyLink(pp.accessUrl, pp.participantId)}
+                className="rounded-md border border-rule px-3 py-2 text-xs font-medium text-ink hover:border-seal"
+              >
+                {copiedFor === pp.participantId ? "Copied" : "Copy link"}
+              </button>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Close / continuity */}
