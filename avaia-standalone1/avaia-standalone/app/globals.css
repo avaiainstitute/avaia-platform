@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Cinzel+Decorative:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -32,6 +32,48 @@ body {
 
 .rule-t {
   border-top: 1px solid theme("colors.rule");
+}
+
+/* Chemistry for Kids -- printable activity sheets. Fixed white/black paper
+   look regardless of site theme, sized to letter for a clean on-screen
+   preview and an exact print. */
+.activity-sheet {
+  width: 8.5in;
+  max-width: 100%;
+  min-height: 10.5in;
+  background: #fdfaf3;
+  color: #1c1a16;
+  border: 3px solid;
+  border-radius: 18px;
+  padding: 0.55in 0.5in;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  nav,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  .activity-sheet {
+    box-shadow: none;
+    border-radius: 0;
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    page-break-after: always;
+  }
+}
+
+@page {
+  size: letter;
+  margin: 0.35in;
 }
 
 /* Floating glow blobs for the Chemistry Background (violet + amber). */

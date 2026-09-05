@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { STORY_LIBRARY, type ReadingLevel } from "@/lib/chemistry-stories";
 import { VIRTUE_FAMILIES, VIRTUES, type VirtueFamilyKey } from "@/lib/virtues";
+import { getActivitySet } from "@/lib/chemistry-activities";
 import SpeakButton from "@/components/SpeakButton";
 
 /** Chemistry for Families & Kids -- the first real architecture for
@@ -215,6 +216,23 @@ export default function ChemistryFamilyPage() {
               <p className="label mb-1 text-muted">Notice This Week</p>
               <p className="text-sm text-ink">{story.noticeThisWeek}</p>
             </div>
+
+            {getActivitySet(story.slug) && (
+              <div className="mt-4 flex items-center justify-between rounded-md border border-rule bg-white/[0.03] px-4 py-4">
+                <div>
+                  <p className="label mb-1 text-muted">Color / Create</p>
+                  <p className="text-sm text-ink">
+                    Printable coloring, tracing, and activity pages for {story.elementName}.
+                  </p>
+                </div>
+                <Link
+                  href={`/chemistry/activities/${story.slug}`}
+                  className="shrink-0 rounded-md bg-seal px-4 py-2 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+                >
+                  Print Activities
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -227,6 +245,21 @@ export default function ChemistryFamilyPage() {
           same element's story is meant to be found here — pick up the card, then read (or
           listen to) its story together.
         </p>
+      </section>
+
+      <section className="rule-t mt-10 border-t border-rule pt-10">
+        <p className="label mb-2 text-muted">Color, Draw, and Notice</p>
+        <p className="text-muted">
+          Reading and listening are only part of it. A story can also be colored, traced, and
+          drawn on — something to print and use with your hands: Read → Listen → Color/Create →
+          Notice. It's an early pilot for a few elements so far, growing toward all {totalElements}.
+        </p>
+        <Link
+          href="/chemistry/activities"
+          className="mt-4 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          Explore Printable Activities
+        </Link>
       </section>
 
       <section className="rule-t mt-10 border-t border-rule pt-10">
