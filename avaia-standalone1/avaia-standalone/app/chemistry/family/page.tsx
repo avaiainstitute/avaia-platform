@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { STORY_LIBRARY, type ReadingLevel } from "@/lib/chemistry-stories";
-import { VIRTUE_FAMILIES } from "@/lib/virtues";
+import { VIRTUE_FAMILIES, VIRTUES, type VirtueFamilyKey } from "@/lib/virtues";
+import SpeakButton from "@/components/SpeakButton";
 
 /** Chemistry for Families & Kids -- the first real architecture for
  *  parents and children to learn the language of virtue together.
@@ -20,12 +21,40 @@ import { VIRTUE_FAMILIES } from "@/lib/virtues";
  *  Governing rule stated plainly for parents, not just engineers: a
  *  child is never told they lack a virtue, and no story implies a
  *  specific problem requires a specific element. Every element is
- *  already available to every child; a story just makes one visible. */
+ *  already available to every child; a story just makes one visible.
+ *
+ *  "Listen to the Story" reuses SpeakButton (components/SpeakButton.tsx)
+ *  as-is -- the same on-device browser speech synthesis already used for
+ *  Journey chat, not a new or fake audio feature. A future animated
+ *  series (see lib/chemistry-stories.ts's own `storyboard` field, built
+ *  per story) would use real recorded/voice-acted narration instead;
+ *  this is the real, currently-available "listen" capability in the
+ *  meantime, not a placeholder standing in for one. */
 export default function ChemistryFamilyPage() {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [level, setLevel] = useState<ReadingLevel>("beginning");
+  const [activeFamily, setActiveFamily] = useState<VirtueFamilyKey | null>(null);
+  const [search, setSearch] = useState("");
 
   const story = STORY_LIBRARY.find((s) => s.slug === selectedSlug) ?? null;
+
+  const familyCoverage = useMemo(() => {
+    const map = new Map<VirtueFamilyKey, number>();
+    for (const s of STORY_LIBRARY) map.set(s.familyKey, (map.get(s.familyKey) ?? 0) + 1);
+    return map;
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return STORY_LIBRARY.filter((s) => {
+      if (activeFamily && s.familyKey !== activeFamily) return false;
+      if (q && !s.elementName.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [activeFamily, search]);
+
+  const totalElements = VIRTUES.length;
+  const storyText = story ? (level === "beginning" ? story.beginning : story.growing).join(" ") : "";
 
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -42,10 +71,10 @@ export default function ChemistryFamilyPage() {
       <section className="rule-t mt-14 border-t border-rule pt-10">
         <p className="label mb-2 text-muted">What It Is</p>
         <p className="text-muted">
-          Chemistry of Virtue is AVAIA's language for virtue — 123 words like Kindness, Courage,
-          Honesty, and Patience, organized into 10 families. Chemistry for Kids is the same
-          language, told through short original stories a child can read (or have read to them),
-          with a few simple questions afterward.
+          Chemistry of Virtue is AVAIA's language for virtue — {totalElements} words like Kindness,
+          Courage, Honesty, and Patience, organized into 10 families. Chemistry for Kids is the
+          same language, told through short original stories a child can read, or listen to, with
+          a few simple questions afterward.
         </p>
       </section>
 
@@ -69,13 +98,56 @@ export default function ChemistryFamilyPage() {
       </section>
 
       <section className="rule-t mt-14 border-t border-rule pt-10">
-        <p className="label mb-4 text-muted">Try It Together</p>
+        <p className="label mb-2 text-muted">Try It Together</p>
         <p className="text-sm text-muted">
-          Choose an element below, pick a reading level, and read the story together.
+          Search or browse by family, choose an element, pick a reading level, and read (or
+          listen to) the story together.
         </p>
 
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search an element (e.g. Courage, Patience)…"
+          className="mt-4 w-full rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
+        />
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => setActiveFamily(null)}
+            className={`rounded-full border px-3 py-1 font-sans text-xs font-medium transition-colors ${
+              activeFamily === null ? "border-seal bg-seal text-[#05060b]" : "border-rule text-muted hover:border-seal"
+            }`}
+          >
+            All Families
+          </button>
+          {VIRTUE_FAMILIES.map((f) => {
+            const count = familyCoverage.get(f.key) ?? 0;
+            if (count === 0) return null;
+            return (
+              <button
+                key={f.key}
+                onClick={() => setActiveFamily(activeFamily === f.key ? null : f.key)}
+                className="rounded-full border px-3 py-1 font-sans text-xs font-medium transition-all"
+                style={{
+                  borderColor: f.color,
+                  backgroundColor: activeFamily === f.key ? f.color : "transparent",
+                  color: activeFamily === f.key ? "#fff" : f.color,
+                }}
+              >
+                {f.name} ({count})
+              </button>
+            );
+          })}
+        </div>
+
         <div className="mt-5 flex flex-wrap gap-2">
-          {STORY_LIBRARY.map((s) => {
+          {filtered.length === 0 && (
+            <p className="text-sm text-muted">
+              No story yet for that search — try another element, or browse by family above.
+            </p>
+          )}
+          {filtered.map((s) => {
             const fam = VIRTUE_FAMILIES.find((f) => f.key === s.familyKey)!;
             return (
               <button
@@ -96,28 +168,31 @@ export default function ChemistryFamilyPage() {
 
         {story && (
           <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-6">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="label text-muted">{story.elementName}</p>
                 <h3 className="font-serif text-2xl text-ink">{story.title}</h3>
               </div>
-              <div className="flex gap-1 rounded-md border border-rule p-1">
-                <button
-                  onClick={() => setLevel("beginning")}
-                  className={`rounded px-3 py-1 text-xs font-sans font-medium ${
-                    level === "beginning" ? "bg-seal text-[#05060b]" : "text-muted"
-                  }`}
-                >
-                  Beginning Reader
-                </button>
-                <button
-                  onClick={() => setLevel("growing")}
-                  className={`rounded px-3 py-1 text-xs font-sans font-medium ${
-                    level === "growing" ? "bg-seal text-[#05060b]" : "text-muted"
-                  }`}
-                >
-                  Growing Reader
-                </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex gap-1 rounded-md border border-rule p-1">
+                  <button
+                    onClick={() => setLevel("beginning")}
+                    className={`rounded px-3 py-1 text-xs font-sans font-medium ${
+                      level === "beginning" ? "bg-seal text-[#05060b]" : "text-muted"
+                    }`}
+                  >
+                    Beginning Reader
+                  </button>
+                  <button
+                    onClick={() => setLevel("growing")}
+                    className={`rounded px-3 py-1 text-xs font-sans font-medium ${
+                      level === "growing" ? "bg-seal text-[#05060b]" : "text-muted"
+                    }`}
+                  >
+                    Growing Reader
+                  </button>
+                </div>
+                <SpeakButton text={storyText} />
               </div>
             </div>
 
@@ -145,6 +220,16 @@ export default function ChemistryFamilyPage() {
       </section>
 
       <section className="rule-t mt-14 border-t border-rule pt-10">
+        <p className="label mb-2 text-muted">With the Physical Cards</p>
+        <p className="text-muted">
+          Every story here is built on the same {totalElements}-element table as the Chemistry of
+          Virtue card deck being developed. Once a physical card for an element is in hand, the
+          same element's story is meant to be found here — pick up the card, then read (or
+          listen to) its story together.
+        </p>
+      </section>
+
+      <section className="rule-t mt-10 border-t border-rule pt-10">
         <p className="label mb-2 text-muted">Going Further</p>
         <p className="text-muted">
           If your family wants to go further — recognizing a real moment where your child saw or
