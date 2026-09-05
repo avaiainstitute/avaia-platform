@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { VIEW_FROM_ABOVE_CLASSES } from "@/lib/view-from-above";
 
-export const metadata = { title: "View From Above — AVAIA" };
+export const metadata = { title: "The View from Above — AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Public front door for the View From Above collection -- ten classes
+/** Public front door for The View from Above collection -- ten classes
  *  built from the lessons that became visible on Bailand's Hike. Front-
  *  door language only, matching /defying-grief and /shared-room's own
  *  register. The hike origin story told here (Prologue + the opening of
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default function ViewFromAbovePage() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
-      <p className="label mb-3">View From Above</p>
+      <p className="label mb-3">The View from Above</p>
       <h1 className="font-serif text-4xl text-ink leading-tight">
         Ten classes built from a mountain.
       </h1>
@@ -60,7 +60,7 @@ export default function ViewFromAbovePage() {
           </p>
         </div>
         <p className="mt-6 text-sm text-muted">
-          This is the only part of Dorian's memoir, <em>The View From Above</em>, told here
+          This is the only part of Dorian's memoir, <em>The View from Above</em>, told here
           verbatim — his own written words, recovered directly from his manuscript. Chapters 2
           through 10 exist as a full audiobook and video series, not as text here, so the specific
           scene-by-scene story of the rest of the hike isn't retold on this page. What follows
@@ -71,12 +71,12 @@ export default function ViewFromAbovePage() {
         <div className="mt-10 grid gap-6 rounded-lg border border-rule bg-white/[0.04] p-6 sm:grid-cols-[180px_1fr] sm:items-center">
           <img
             src="/books/the-view-from-above-front.jpg"
-            alt="The View From Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
+            alt="The View from Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
             className="mx-auto w-full max-w-[180px] rounded-md shadow-lg sm:mx-0"
           />
           <div>
             <p className="label mb-2 text-muted">The Book This Grew From</p>
-            <h3 className="font-serif text-2xl text-ink">The View From Above</h3>
+            <h3 className="font-serif text-2xl text-ink">The View from Above</h3>
             <p className="mt-1 text-sm text-muted">By Dorian Johnson, with Danielle Palmer</p>
             <p className="mt-4 text-muted">
               The Prologue above is the opening of this book — Dorian's own written account of

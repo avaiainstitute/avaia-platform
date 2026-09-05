@@ -71,7 +71,7 @@ export default function ViewFromAboveClass({
   return (
     <div>
       <p className="label mb-3">
-        View From Above — A Class Built on Bailand's Hike
+        The View from Above — A Class Built on Bailand's Hike
         {experience.status !== "published" ? " — DRAFT PREVIEW" : ""}
       </p>
       <h1 className="font-serif text-4xl text-ink">{experience.title}</h1>

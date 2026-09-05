@@ -1,4 +1,4 @@
-export const metadata = { title: "The View From Above — AVAIA" };
+export const metadata = { title: "The View from Above — AVAIA" };
 
 const AMAZON_URL = "https://a.co/d/0fZ57Zi5";
 
@@ -14,16 +14,16 @@ export default function TheViewFromAbovePage() {
       <div className="grid gap-8 sm:grid-cols-[240px_1fr] sm:items-center">
         <img
           src="/books/the-view-from-above-front.jpg"
-          alt="The View From Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
+          alt="The View from Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
           className="w-full max-w-[240px] rounded-lg shadow-lg mx-auto sm:mx-0"
         />
         <div>
-          <p className="label mb-3">The View From Above</p>
+          <p className="label mb-3">The View from Above</p>
           <h1 className="font-serif text-4xl text-ink leading-tight">
             Before there was AVAIA, there was a story.
           </h1>
           <p className="mt-4 text-muted">
-            <em>The View From Above: One Father&rsquo;s Memoir of Grief Guided to Grace</em> —
+            <em>The View from Above: One Father&rsquo;s Memoir of Grief Guided to Grace</em> —
             by Dorian Johnson and Danielle Palmer
           </p>
           <div className="mt-6">
@@ -40,7 +40,7 @@ export default function TheViewFromAbovePage() {
         <p className="text-lg leading-relaxed text-ink">
           Before AVAIA had a name, before its conversations and systems existed in their present
           form, there was a father, a son named Bailand, and a mountain trail that would never
-          mean the same thing again. <em>The View From Above</em> is part of that beginning: an
+          mean the same thing again. <em>The View from Above</em> is part of that beginning: an
           early telling of the same search for understanding, healing, and perspective that
           would, years later, become AVAIA.
         </p>
@@ -52,7 +52,7 @@ export default function TheViewFromAbovePage() {
         <p className="label mb-2 text-muted">About the Book</p>
         <p className="text-lg leading-relaxed text-ink">
           On May 25, 2017, Dorian Johnson&rsquo;s son Bailand hiked up Molly&rsquo;s Peak in Cub
-          River Canyon, near Preston, Idaho. He did not return. <em>The View From Above</em> is
+          River Canyon, near Preston, Idaho. He did not return. <em>The View from Above</em> is
           Dorian&rsquo;s account of that loss, and of returning a year later to hike the same
           trail as a memorial. Co-written with Danielle Palmer, it follows his restorative
           process through grief — not toward resolution, but toward grace — and the role virtue
@@ -62,11 +62,11 @@ export default function TheViewFromAbovePage() {
         <figure className="mt-8 max-w-xs">
           <img
             src="/books/the-view-from-above-back.jpg"
-            alt="Back cover of The View From Above, featuring the book's synopsis"
+            alt="Back cover of The View from Above, featuring the book's synopsis"
             className="w-full rounded-lg shadow-md"
           />
           <figcaption className="mt-2 text-sm text-muted">
-            The back cover of <em>The View From Above</em>.
+            The back cover of <em>The View from Above</em>.
           </figcaption>
         </figure>
       </section>
@@ -76,7 +76,7 @@ export default function TheViewFromAbovePage() {
         <p className="label mb-2 text-muted">Why It Is Here</p>
         <p className="text-lg leading-relaxed text-ink">
           AVAIA did not begin as an idea for a website or an artificial-intelligence system. Its
-          roots are personal. <em>The View From Above</em> represents an earlier part of that
+          roots are personal. <em>The View from Above</em> represents an earlier part of that
           journey — part of the experience, questioning, reflection, and search for perspective
           that preceded what AVAIA would eventually become.
         </p>

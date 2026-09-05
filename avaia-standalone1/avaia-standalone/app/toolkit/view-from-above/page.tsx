@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIEW_FROM_ABOVE_CLASSES, getViewFromAboveClass } from "@/lib/view-from-above";
 
-export const metadata = { title: "View From Above — Guide Toolkit — AVAIA" };
+export const metadata = { title: "The View from Above — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Same email-lookup pattern as /toolkit/defying-grief's own start action. */
@@ -99,7 +99,7 @@ export default async function ToolkitViewFromAbovePage({
         </Link>
       </p>
       <p className="label mb-3">Programs</p>
-      <h1 className="font-serif text-4xl text-ink">View From Above</h1>
+      <h1 className="font-serif text-4xl text-ink">The View from Above</h1>
       <p className="mt-4 text-lg text-muted">
         Select a class, teach its shared teaching, questions, and Chemistry activity live (see
         each class's full curriculum at{" "}

@@ -4311,16 +4311,16 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
 // which already do the actual recognition work generically.
 const VIEW_FROM_ABOVE_CONTEXT = `VIEW FROM ABOVE — CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
 
-This Host has just taken a View From Above class -- one of ten built from
-the lessons that became visible on Bailand's Hike, each paired with one
-Secondary Loss and one Virtue Family. They may bring forward a specific
-question, a recognition from the class's shared teaching, a Chemistry
-element they noticed, or something else entirely -- follow what they
-actually bring, exactly as you would in any other conversation. Do not
-assume which of the ten classes they took, do not re-teach the class's
-content back to them, and do not treat "View From Above" as a grief
-program -- its ten lessons are broader than grief, the same as every
-other AVAIA conversation.`;
+This Host has just taken a class from The View from Above -- one of ten
+built from the lessons that became visible on Bailand's Hike, each paired
+with one Secondary Loss and one Virtue Family. They may bring forward a
+specific question, a recognition from the class's shared teaching, a
+Chemistry element they noticed, or something else entirely -- follow
+what they actually bring, exactly as you would in any other conversation.
+Do not assume which of the ten classes they took, do not re-teach the
+class's content back to them, and do not treat The View from Above as a
+grief program -- its ten lessons are broader than grief, the same as
+every other AVAIA conversation.`;
 
 // Origin context -- a Host arrived at this brand-new IAP conversation
 // having just clicked a specific Chemistry element or a specific View
@@ -4338,7 +4338,7 @@ other AVAIA conversation.`;
 export type OriginContextInput = { source: string; label: string; family: string; definition: string };
 
 export function originContextClause(origin: OriginContextInput): string {
-  const sourceLabel = origin.source === "chemistry" ? "the Chemistry of Virtue table" : "a View From Above class";
+  const sourceLabel = origin.source === "chemistry" ? "the Chemistry of Virtue table" : "a class from The View from Above";
   return `ORIGIN CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
 
 This Host arrived at this conversation having just selected "${origin.label}" (${origin.family}) from

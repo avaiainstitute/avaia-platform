@@ -10,7 +10,7 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const cls = getViewFromAboveClass(params.slug);
-  return { title: cls ? `${cls.title} — View From Above — AVAIA` : "View From Above — AVAIA" };
+  return { title: cls ? `${cls.title} — The View from Above — AVAIA` : "The View from Above — AVAIA" };
 }
 
 /** Self-directed member page for one View From Above class. Public
@@ -36,12 +36,12 @@ export default function ViewFromAboveClassPage({ params }: { params: { slug: str
     <div className="mx-auto max-w-prose px-5 py-16">
       <p className="mb-6">
         <Link href="/view-from-above" className="label hover:text-seal">
-          ← View From Above
+          ← The View from Above
         </Link>
       </p>
 
       <p className="label mb-3">
-        View From Above — Class {index + 1} of {VIEW_FROM_ABOVE_CLASSES.length}
+        The View from Above — Class {index + 1} of {VIEW_FROM_ABOVE_CLASSES.length}
       </p>
       <h1 className="font-serif text-4xl text-ink leading-tight">{cls.title}</h1>
       <p className="mt-3 font-serif text-xl italic text-ink">{cls.humanQuestion}</p>
