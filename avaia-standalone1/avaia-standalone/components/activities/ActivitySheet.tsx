@@ -24,23 +24,23 @@ export default function ActivitySheet({
             {set.symbol}
           </div>
           <div>
-            <p className="font-serif text-xl leading-tight text-ink">{set.elementName}</p>
+            <p className="font-serif text-xl leading-tight text-[#1c1a16]">{set.elementName}</p>
             <p className="font-sans text-[0.65rem] uppercase tracking-[0.14em]" style={{ color: family.color }}>
               {family.name} Family
             </p>
           </div>
         </div>
-        <p className="font-cinzel text-[0.6rem] uppercase tracking-[0.2em] text-muted">
+        <p className="font-cinzel text-[0.6rem] uppercase tracking-[0.2em] text-[#5b5646]">
           Chemistry of Virtue
         </p>
       </div>
 
-      <h1 className="mt-5 text-center font-serif text-2xl text-ink">{pageTitle}</h1>
-      {instructions && <p className="mt-1 text-center font-sans text-sm text-muted">{instructions}</p>}
+      <h1 className="mt-5 text-center font-serif text-2xl text-[#1c1a16]">{pageTitle}</h1>
+      {instructions && <p className="mt-1 text-center font-sans text-sm text-[#5b5646]">{instructions}</p>}
 
       <div className="mt-6">{children}</div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-rule pt-3 text-[0.65rem] text-muted">
+      <div className="mt-auto flex items-center justify-between border-t border-[#ddd4bf] pt-3 text-[0.65rem] text-[#5b5646]">
         <span>From the story &ldquo;{set.storyTitle}&rdquo; -- Chemistry for Families &amp; Kids</span>
         <span>avaia.org</span>
       </div>
