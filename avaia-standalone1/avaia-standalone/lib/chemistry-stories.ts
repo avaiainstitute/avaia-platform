@@ -1806,6 +1806,599 @@ STORY_LIBRARY.push(
   }
 );
 
+// ===========================================================================
+// ADDITIONAL WISDOM ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "change-the-kid-who-hated-reading",
+    elementName: "Change",
+    familyKey: "wisdom",
+    title: "The Kid Who Hated Reading",
+    beginning: [
+      "Nora used to say she just wasn't a reading person.",
+      "She kept trying anyway, a little bit most nights.",
+      "By spring, she was the one asking the librarian for more.",
+      "Nora had decided, on her own, to become someone different.",
+    ],
+    growing: [
+      "For years Nora told anyone who asked that she just wasn't a reading person — books felt slow, and she'd rather be doing almost anything else.",
+      "Her teacher didn't argue with her about it. She just kept putting books in front of Nora that might actually interest her, a little at a time.",
+      "Nora kept trying, some nights only a page or two, without really expecting anything to change.",
+      "By spring, without really noticing when it happened, she'd become the kid asking the librarian what to read next — she had changed her own mind about herself, one ordinary evening at a time.",
+    ],
+    recognitionPrompts: standardPrompts("Change"),
+    noticeThisWeek: "This week, notice one thing you've decided to be different about, even a little, and notice the effort behind it.",
+    storyboard: [
+      { scene: 1, visual: "Nora pushing a book away, unimpressed.", narration: "Nora used to say she just wasn't a reading person." },
+      { scene: 2, visual: "Nora reading a little each night, page by page, over a montage of seasons.", narration: "She kept trying anyway, a little bit most nights." },
+      { scene: 3, visual: "Nora at the library asking for another book, genuinely excited.", narration: "She had decided, on her own, to become someone different.", onScreenText: "Where have you seen change this week?" },
+    ],
+  },
+  {
+    slug: "critical-thinking-the-rumor-at-recess",
+    elementName: "Critical thinking",
+    familyKey: "wisdom",
+    title: "The Rumor at Recess",
+    beginning: [
+      "By recess, everyone was repeating the same wild story about a teacher.",
+      "Ezra wondered if it was actually true.",
+      "He asked a few careful questions instead of just repeating it.",
+      "It turned out almost none of it had actually happened.",
+    ],
+    growing: [
+      "By the time the bell rang for recess, the story about a teacher had already traveled through half the grade, getting a little wilder with each retelling.",
+      "Ezra noticed that nobody repeating it had actually seen anything themselves — everyone had just heard it from someone else.",
+      "Instead of passing it along too, he asked a couple of quiet, careful questions: who actually saw this happen, and when?",
+      "By the end of recess it was clear almost none of it was true at all — and Ezra was glad he hadn't helped spread something false just because everyone else already believed it.",
+    ],
+    recognitionPrompts: standardPrompts("Critical thinking"),
+    noticeThisWeek: "This week, notice a story you almost repeated, and ask yourself how you actually know it's true.",
+    storyboard: [
+      { scene: 1, visual: "A cluster of kids at recess, a wild rumor spreading mouth to mouth.", narration: "By recess, everyone was repeating the same wild story." },
+      { scene: 2, visual: "Ezra pausing, thinking, then asking a classmate a careful question.", narration: "He asked a few careful questions instead of just repeating it." },
+      { scene: 3, visual: "The rumor deflating as the truth comes out.", narration: "Almost none of it had actually happened.", onScreenText: "Where have you seen critical thinking this week?" },
+    ],
+  },
+  {
+    slug: "intuition-the-feeling-before-she-said-anything",
+    elementName: "Intuition",
+    familyKey: "wisdom",
+    title: "The Feeling Before She Said Anything",
+    beginning: [
+      "Ana's friend seemed completely normal at lunch.",
+      "But something about it felt off to Ana anyway.",
+      "She asked her friend quietly if she was really okay.",
+      "Her friend's eyes filled up, and she finally said no.",
+    ],
+    growing: [
+      "At lunch, Ana's friend was laughing at all the right moments, eating normally, acting exactly like any other day.",
+      "Nothing anyone could point to was actually wrong — but something about it still didn't sit right with Ana, a feeling she couldn't quite explain.",
+      "Instead of ignoring it, she waited until they were alone and asked quietly, 'Are you actually okay today?'",
+      "Her friend's eyes filled up almost instantly, and she admitted that no, she really wasn't — she'd just been putting on a good show.",
+    ],
+    recognitionPrompts: standardPrompts("Intuition"),
+    noticeThisWeek: "This week, notice a feeling that something's off, even when everything looks fine, and see what happens if you check.",
+    storyboard: [
+      { scene: 1, visual: "Two friends at a lunch table, one laughing normally.", narration: "Ana's friend seemed completely normal at lunch." },
+      { scene: 2, visual: "Ana looking closely, sensing something isn't right.", narration: "Something about it felt off to Ana anyway." },
+      { scene: 3, visual: "Ana quietly asking, her friend's eyes filling with tears.", narration: "Her friend finally said no.", onScreenText: "Where has your intuition spoken up this week?" },
+    ],
+  },
+  {
+    slug: "light-the-flashlight-in-the-storm",
+    elementName: "Light",
+    familyKey: "wisdom",
+    title: "The Flashlight in the Storm",
+    beginning: [
+      "The whole street went dark when the storm knocked out the power.",
+      "Diego grabbed his flashlight and went to check on his elderly neighbor.",
+      "She was sitting in the dark, a little scared, glad to see him.",
+      "His one small light made her whole night feel less frightening.",
+    ],
+    growing: [
+      "The storm knocked the power out for the entire street, and within minutes every house on the block had gone completely dark.",
+      "Diego grabbed the flashlight from his kitchen drawer and, instead of just staying inside, walked next door to check on Mrs. Okafor, who lived alone.",
+      "He found her sitting very still in her dark living room, more nervous than she wanted to admit, relieved the moment she saw his light at the window.",
+      "It was one small flashlight in one big storm, but for the next hour, sitting together while the wind howled outside, it was enough light to make the whole night feel less frightening.",
+    ],
+    recognitionPrompts: standardPrompts("Light"),
+    noticeThisWeek: "This week, notice a moment you could be a small source of light for someone in a dark or uncertain moment.",
+    storyboard: [
+      { scene: 1, visual: "A whole street going dark during a storm.", narration: "The whole street went dark when the storm knocked out the power." },
+      { scene: 2, visual: "Diego walking next door with a flashlight, wind and rain around him.", narration: "Diego grabbed his flashlight and went to check on his elderly neighbor." },
+      { scene: 3, visual: "The two of them sitting together, one small light between them.", narration: "One small light made her whole night feel less frightening.", onScreenText: "Where have you been a light for someone this week?" },
+    ],
+  },
+  {
+    slug: "logic-the-puzzle-box",
+    elementName: "Logic",
+    familyKey: "wisdom",
+    title: "The Puzzle Box",
+    beginning: [
+      "The wooden puzzle box wouldn't open no matter how Malik pulled at it.",
+      "He stopped yanking and looked at it piece by piece instead.",
+      "Slide this, then that, then this — in exactly that order.",
+      "The box finally clicked open, exactly the way he'd worked it out.",
+    ],
+    growing: [
+      "The wooden puzzle box at his cousin's house looked simple enough, but no amount of pulling or shaking made it open.",
+      "After a few frustrating tries, Malik stopped forcing it and actually looked at how the pieces fit together instead.",
+      "He noticed that one panel only moved after another one slid first — so he worked out the order, step by step, testing each idea before moving to the next.",
+      "When the box finally clicked open, it wasn't luck — it was exactly the sequence he'd reasoned his way through, one careful step at a time.",
+    ],
+    recognitionPrompts: standardPrompts("Logic"),
+    noticeThisWeek: "This week, notice a problem you could work through step by step instead of just guessing.",
+    storyboard: [
+      { scene: 1, visual: "A wooden puzzle box, a kid pulling at it in frustration.", narration: "The wooden puzzle box wouldn't open no matter how Malik pulled at it." },
+      { scene: 2, visual: "Malik examining the pieces carefully, thinking.", narration: "He stopped yanking and looked at it piece by piece instead." },
+      { scene: 3, visual: "The box clicking open in his hands.", narration: "The box finally clicked open, exactly the way he'd worked it out.", onScreenText: "Where have you used logic this week?" },
+    ],
+  },
+  {
+    slug: "objectivity-both-sides-of-the-story",
+    elementName: "Objectivity",
+    familyKey: "wisdom",
+    title: "Both Sides of the Story",
+    beginning: [
+      "Yuki's two best friends had a big fight and both wanted her to pick a side.",
+      "She listened carefully to both of their stories instead.",
+      "Neither version was the whole truth, she realized.",
+      "She told them both, gently, what she'd actually noticed.",
+    ],
+    growing: [
+      "When Yuki's two best friends stopped speaking to each other, each one pulled her aside separately to explain exactly why the other one was wrong.",
+      "It would have been easy to just agree with whoever was talking to her at the time, but instead Yuki actually listened carefully to both full stories.",
+      "Once she'd heard both sides, she realized neither one was telling the whole truth — each of them had left out the part where they themselves hadn't been so fair either.",
+      "She told them both, as gently as she could, what she'd actually noticed from listening to both — not choosing a side, just describing what seemed true.",
+    ],
+    recognitionPrompts: standardPrompts("Objectivity"),
+    noticeThisWeek: "This week, notice a disagreement where you could look at both sides fairly before deciding what you think.",
+    storyboard: [
+      { scene: 1, visual: "Two friends separately telling Yuki their side of a fight.", narration: "Yuki's two best friends had a big fight and both wanted her to pick a side." },
+      { scene: 2, visual: "Yuki listening carefully to both, weighing what she hears.", narration: "She listened carefully to both of their stories instead." },
+      { scene: 3, visual: "Yuki gently telling them both what she noticed.", narration: "She told them both, gently, what she'd actually noticed.", onScreenText: "Where have you seen objectivity this week?" },
+    ],
+  },
+  {
+    slug: "originality-the-only-blue-dragon",
+    elementName: "Originality",
+    familyKey: "wisdom",
+    title: "The Only Blue Dragon",
+    beginning: [
+      "Every art project in the class looked almost exactly the same.",
+      "Amara decided to draw something nobody else had thought of.",
+      "Her dragon was bright blue, made of teacups and clouds.",
+      "It was the only one in the whole room that looked like it.",
+    ],
+    growing: [
+      "The assignment was to draw a mythical creature, and by the time Amara looked around the room, almost everyone had drawn the exact same kind of green fire-breathing dragon.",
+      "She could have drawn something similar and turned it in without much trouble.",
+      "Instead she thought about what she actually found interesting, and drew a bright blue dragon made of stacked teacups with cloud-shaped wings, something that had never existed anywhere before she made it up.",
+      "When the projects were pinned up on the wall, hers was the only one that looked like nothing else in the room — entirely her own idea, start to finish.",
+    ],
+    recognitionPrompts: standardPrompts("Originality"),
+    noticeThisWeek: "This week, notice a moment you could make something that's genuinely your own idea instead of copying what's easy.",
+    storyboard: [
+      { scene: 1, visual: "A wall of nearly identical dragon drawings.", narration: "Every art project in the class looked almost exactly the same." },
+      { scene: 2, visual: "Amara sketching something completely different, a blue teacup dragon.", narration: "Amara decided to draw something nobody else had thought of." },
+      { scene: 3, visual: "Her unique drawing standing out on the wall.", narration: "It was the only one in the whole room that looked like it.", onScreenText: "Where have you seen originality this week?" },
+    ],
+  },
+  {
+    slug: "percipience-the-old-shoes",
+    elementName: "Percipience",
+    familyKey: "wisdom",
+    title: "The Old Shoes",
+    beginning: [
+      "Leo noticed a classmate's shoes were falling apart at the sides.",
+      "Nobody else seemed to have noticed at all.",
+      "Leo quietly mentioned it to the school counselor.",
+      "By the next week, the classmate had a new pair, and never knew how.",
+    ],
+    growing: [
+      "Leo happened to notice, almost by accident, that a classmate's shoes had a hole worn clean through the side, and had for weeks.",
+      "Nobody else in class seemed to have noticed anything at all — the classmate never mentioned it, and always seemed to act like everything was fine.",
+      "Instead of saying anything directly, which might have felt embarrassing, Leo quietly mentioned what he'd noticed to the school counselor.",
+      "By the following week, the classmate showed up in a new pair of shoes, and never found out it was Leo who had noticed what almost no one else had.",
+    ],
+    recognitionPrompts: standardPrompts("Percipience"),
+    noticeThisWeek: "This week, notice something small about someone that others might be missing entirely.",
+    storyboard: [
+      { scene: 1, visual: "A close-up of worn-through shoes under a school desk.", narration: "Leo noticed a classmate's shoes were falling apart at the sides." },
+      { scene: 2, visual: "Leo quietly speaking with the school counselor.", narration: "Leo quietly mentioned it to the school counselor." },
+      { scene: 3, visual: "The classmate wearing new shoes the next week, unaware.", narration: "The classmate never knew how.", onScreenText: "Where has your percipience noticed something this week?" },
+    ],
+  },
+  {
+    slug: "priority-the-game-that-could-wait",
+    elementName: "Priority",
+    familyKey: "wisdom",
+    title: "The Game That Could Wait",
+    beginning: [
+      "Ravi was one level away from beating his favorite game.",
+      "His little brother needed help with homework due tomorrow.",
+      "Ravi paused the game right where it was.",
+      "The level was still there an hour later. His brother's stress wasn't.",
+    ],
+    growing: [
+      "Ravi had been chasing the final level of his favorite game for weeks, and tonight he was finally, finally one level away from beating it.",
+      "Right at that moment, his little brother came in, close to tears, stuck on homework that was due the next morning.",
+      "Ravi looked at the paused screen for a second, then set the controller down and went to help — the game had been waiting for weeks; his brother's homework couldn't wait until tomorrow.",
+      "An hour later, homework finished, Ravi picked the controller back up. The level was exactly where he'd left it. His brother wasn't stressed anymore, which mattered more.",
+    ],
+    recognitionPrompts: standardPrompts("Priority"),
+    noticeThisWeek: "This week, notice a moment you have to choose what actually matters more right now.",
+    storyboard: [
+      { scene: 1, visual: "Ravi close to finishing a video game level.", narration: "Ravi was one level away from beating his favorite game." },
+      { scene: 2, visual: "His little brother, upset, holding a homework sheet.", narration: "His little brother needed help with homework due tomorrow." },
+      { scene: 3, visual: "Ravi paused the game, helping his brother at the table instead.", narration: "Ravi paused the game right where it was.", onScreenText: "Where have you set the right priority this week?" },
+    ],
+  },
+  {
+    slug: "prudence-saving-for-something-better",
+    elementName: "Prudence",
+    familyKey: "wisdom",
+    title: "Saving for Something Better",
+    beginning: [
+      "Chen got a little allowance every week.",
+      "He could have spent all of it on snacks right away.",
+      "Instead he saved a little each week toward a real telescope.",
+      "By fall, he had exactly enough, and a much better night sky.",
+    ],
+    growing: [
+      "Every week, Chen got a small allowance, and every week he was tempted to spend all of it right away on snacks and small toys, the way most of his friends did.",
+      "Instead, he thought ahead to something he actually wanted more: a real telescope he'd seen at the science store, far too expensive to buy all at once.",
+      "So he saved a little each week, watching the jar slowly fill, resisting plenty of smaller purchases along the way.",
+      "By fall, he had exactly enough — and the first night he used it, the sky looked more detailed and amazing than he'd ever imagined it could.",
+    ],
+    recognitionPrompts: standardPrompts("Prudence"),
+    noticeThisWeek: "This week, notice a moment you could plan ahead instead of spending or using something all at once.",
+    storyboard: [
+      { scene: 1, visual: "A jar of coins slowly filling over weeks.", narration: "Chen got a little allowance every week." },
+      { scene: 2, visual: "Chen resisting a shelf of snacks, saving instead.", narration: "Instead he saved a little each week toward a real telescope." },
+      { scene: 3, visual: "Chen looking through his new telescope at the night sky.", narration: "By fall, he had exactly enough.", onScreenText: "Where have you shown prudence this week?" },
+    ],
+  },
+  {
+    slug: "reason-the-shadow-on-the-wall",
+    elementName: "Reason",
+    familyKey: "wisdom",
+    title: "The Shadow on the Wall",
+    beginning: [
+      "Sofia woke up scared of a strange shape on her wall.",
+      "Instead of hiding, she thought about what could actually cause it.",
+      "It was just her coat, hanging exactly where she'd left it.",
+      "The streetlight through the window had made it look like something else.",
+    ],
+    growing: [
+      "Sofia woke in the middle of the night and saw a strange, hunched shape on her wall that hadn't been there before, and her heart started pounding.",
+      "Instead of pulling the covers over her head, she made herself think it through: what was actually in that corner of the room during the day?",
+      "She realized it was exactly where she'd hung her coat that afternoon — nothing had moved or changed at all.",
+      "The streetlight outside her window, shining through the coat at just the wrong angle, was what had turned an ordinary coat into something that looked frightening in the dark.",
+    ],
+    recognitionPrompts: standardPrompts("Reason"),
+    noticeThisWeek: "This week, notice a moment you can think something through instead of just reacting to how it first looks.",
+    storyboard: [
+      { scene: 1, visual: "A dark bedroom, a strange shadow shape on the wall.", narration: "Sofia woke up scared of a strange shape on her wall." },
+      { scene: 2, visual: "Sofia thinking carefully, tracing the shadow back to its source.", narration: "She thought about what could actually cause it." },
+      { scene: 3, visual: "The shadow revealed to be an ordinary coat under streetlight.", narration: "It was just her coat, hanging exactly where she'd left it.", onScreenText: "Where have you used reason this week?" },
+    ],
+  },
+  {
+    slug: "simplicity-the-simple-party",
+    elementName: "Simplicity",
+    familyKey: "wisdom",
+    title: "The Simple Party",
+    beginning: [
+      "Kwame's birthday plans kept growing bigger and more complicated.",
+      "He stopped and asked for something much simpler instead.",
+      "Just a few close friends, cake, and a backyard.",
+      "It ended up being the best birthday he'd ever had.",
+    ],
+    growing: [
+      "Kwame's birthday plans had somehow grown from a small gathering into a huge list of decorations, activities, and a guest list twice as long as he'd wanted.",
+      "One evening, looking at the overwhelming plan, he told his parents he didn't actually want any of that — he just wanted something simple.",
+      "They scaled it back to exactly what he'd asked for: a few close friends, a cake, and an ordinary afternoon in the backyard.",
+      "It turned out to be the best birthday he could remember, precisely because there was nothing complicated getting in the way of just enjoying it.",
+    ],
+    recognitionPrompts: standardPrompts("Simplicity"),
+    noticeThisWeek: "This week, notice a moment where the simple version of something might actually be the better one.",
+    storyboard: [
+      { scene: 1, visual: "An overwhelming, cluttered party-planning list.", narration: "Kwame's birthday plans kept growing bigger and more complicated." },
+      { scene: 2, visual: "Kwame asking his parents for something simpler.", narration: "He stopped and asked for something much simpler instead." },
+      { scene: 3, visual: "A small, happy backyard gathering with a few close friends.", narration: "It ended up being the best birthday he'd ever had.", onScreenText: "Where have you noticed simplicity this week?" },
+    ],
+  },
+  {
+    slug: "spirituality-under-all-those-stars",
+    elementName: "Spirituality",
+    familyKey: "wisdom",
+    title: "Under All Those Stars",
+    beginning: [
+      "Ines lay in the grass looking up at a sky full of stars.",
+      "She felt small in a way that didn't feel bad at all.",
+      "Something about it made her feel connected to everything.",
+      "She didn't have words for it, but she felt it completely.",
+    ],
+    growing: [
+      "On a camping trip far from any city lights, Ines lay back in the grass and looked up at more stars than she'd ever seen at once.",
+      "For a while she didn't think about anything in particular — she just felt very small, in a way that was strangely comforting rather than scary.",
+      "Something about being under all of it made her feel quietly connected to something much bigger than her own ordinary day.",
+      "She didn't have the words to explain it to anyone, and didn't really try to — she just lay there and let herself feel it completely.",
+    ],
+    recognitionPrompts: standardPrompts("Spirituality"),
+    noticeThisWeek: "This week, notice a quiet moment that makes you feel connected to something bigger than yourself.",
+    storyboard: [
+      { scene: 1, visual: "A kid lying in grass under a sky full of stars.", narration: "Ines lay in the grass looking up at a sky full of stars." },
+      { scene: 2, visual: "A wide shot emphasizing how small and quiet the moment feels.", narration: "She felt small in a way that didn't feel bad at all." },
+      { scene: 3, visual: "Ines smiling quietly, still looking up.", narration: "She didn't have words for it, but she felt it completely.", onScreenText: "Where have you felt this kind of connection this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL JUSTICE ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "acceptance-the-new-kids-lunch-table",
+    elementName: "Acceptance",
+    familyKey: "justice",
+    title: "The New Kid's Lunch Table",
+    beginning: [
+      "Tomas was new, spoke differently, and didn't know anyone.",
+      "He stood holding his tray, not sure where to sit.",
+      "Aisha waved him over without a second thought.",
+      "Nobody at that table cared that he was different. He just belonged.",
+    ],
+    growing: [
+      "Tomas had transferred schools halfway through the year, and everything about him — his accent, his clothes, the way he said certain words — was a little different from everyone else.",
+      "At lunch, he stood holding his tray for a long moment, unsure where he'd even be allowed to sit.",
+      "Aisha noticed him standing there and waved him over to her table without a second thought, the same way she would have for anyone.",
+      "Nobody at that table treated him like he needed to prove anything to belong there. He just did, exactly as he was.",
+    ],
+    recognitionPrompts: standardPrompts("Acceptance"),
+    noticeThisWeek: "This week, notice someone who might feel like they don't quite belong, and include them without conditions.",
+    storyboard: [
+      { scene: 1, visual: "A new kid standing alone with a lunch tray, looking uncertain.", narration: "Tomas was new, spoke differently, and didn't know anyone." },
+      { scene: 2, visual: "Aisha waving him over to her table.", narration: "Aisha waved him over without a second thought." },
+      { scene: 3, visual: "Tomas laughing and relaxed at the table with new friends.", narration: "Nobody at that table cared that he was different.", onScreenText: "Where have you shown acceptance this week?" },
+    ],
+  },
+  {
+    slug: "benignity-easy-on-the-substitute",
+    elementName: "Benignity",
+    familyKey: "justice",
+    title: "Easy on the Substitute",
+    beginning: [
+      "The substitute teacher was clearly nervous and unsure of the material.",
+      "Some kids saw a chance to cause trouble.",
+      "Noah stayed calm, quiet, and patient instead.",
+      "By the end of class, the substitute looked noticeably more relaxed.",
+    ],
+    growing: [
+      "The substitute teacher clearly hadn't taught this subject before, and kept losing her place in the lesson, glancing nervously at her notes.",
+      "A few kids in the back started whispering and testing how much they could get away with, sensing an easy day.",
+      "Noah didn't join in. He kept his voice down, answered when she asked questions, and gave her a little extra patience instead of piling on.",
+      "By the end of the period, the substitute looked visibly less tense than when she'd walked in — a small kindness that cost Noah nothing but made her whole day easier.",
+    ],
+    recognitionPrompts: standardPrompts("Benignity"),
+    noticeThisWeek: "This week, notice someone who's having a hard time, and go a little easier on them than you might otherwise.",
+    storyboard: [
+      { scene: 1, visual: "A nervous substitute teacher glancing at notes.", narration: "The substitute teacher was clearly nervous and unsure of the material." },
+      { scene: 2, visual: "A few kids whispering, testing the limits.", narration: "Some kids saw a chance to cause trouble." },
+      { scene: 3, visual: "Noah being calm and patient, the teacher relaxing.", narration: "By the end of class, the substitute looked noticeably more relaxed.", onScreenText: "Where have you shown benignity this week?" },
+    ],
+  },
+  {
+    slug: "chivalry-carrying-the-box",
+    elementName: "Chivalry",
+    familyKey: "justice",
+    title: "Carrying the Box",
+    beginning: [
+      "Grace was struggling to carry a huge box of books to the library.",
+      "Owen noticed and offered to carry half of it.",
+      "She said thanks, and they carried it together.",
+      "It wasn't a big moment, just an easier walk for both of them.",
+    ],
+    growing: [
+      "Grace was hauling an enormous box of donated books across the parking lot toward the library, stopping every few steps to adjust her grip.",
+      "Owen was nearby and noticed her struggling, so he walked over and simply asked if she wanted help carrying it.",
+      "She said thanks, genuinely relieved, and they split the load between them for the rest of the walk.",
+      "It wasn't a dramatic moment — just one kid noticing another one struggling, and making an ordinary walk easier for both of them.",
+    ],
+    recognitionPrompts: standardPrompts("Chivalry"),
+    noticeThisWeek: "This week, notice a moment you could offer to help carry something heavy, literally or otherwise.",
+    storyboard: [
+      { scene: 1, visual: "Grace struggling with a heavy box across a parking lot.", narration: "Grace was struggling to carry a huge box of books to the library." },
+      { scene: 2, visual: "Owen walking over, offering to help.", narration: "Owen noticed and offered to carry half of it." },
+      { scene: 3, visual: "The two of them carrying the box together, walking side by side.", narration: "It wasn't a big moment, just an easier walk for both of them.", onScreenText: "Where have you seen this kind of chivalry this week?" },
+    ],
+  },
+  {
+    slug: "civility-disagreeing-nicely",
+    elementName: "Civility",
+    familyKey: "justice",
+    title: "Disagreeing Nicely",
+    beginning: [
+      "Mateo and Felix disagreed about the rules of their own game.",
+      "Both of them wanted to win the argument, not just the game.",
+      "They kept their voices calm and actually listened.",
+      "They agreed on a fair rule and kept playing, still friends.",
+    ],
+    growing: [
+      "Mateo and Felix were in the middle of a backyard game when they hit a real disagreement about whether a rule had actually been broken.",
+      "For a second it looked like it might turn into shouting, the way these things sometimes do.",
+      "Instead, both of them took a breath, kept their voices even, and actually listened to what the other one was saying instead of just repeating their own point louder.",
+      "They landed on a rule that felt fair to both of them, picked the game back up, and neither one walked away upset.",
+    ],
+    recognitionPrompts: standardPrompts("Civility"),
+    noticeThisWeek: "This week, notice a disagreement you could have politely instead of loudly.",
+    storyboard: [
+      { scene: 1, visual: "Two kids mid-argument over a backyard game rule.", narration: "Mateo and Felix disagreed about the rules of their own game." },
+      { scene: 2, visual: "Both calming down, speaking evenly instead of shouting.", narration: "They kept their voices calm and actually listened." },
+      { scene: 3, visual: "The two of them shaking on a fair rule, resuming play.", narration: "They agreed on a fair rule and kept playing, still friends.", onScreenText: "Where have you shown civility this week?" },
+    ],
+  },
+  {
+    slug: "honor-keeping-his-word-to-mr-alvarez",
+    elementName: "Honor",
+    familyKey: "justice",
+    title: "Keeping His Word to Mr. Alvarez",
+    beginning: [
+      "Nadia promised her elderly neighbor she'd water his plants every day.",
+      "Halfway through the week, a much more fun trip came up.",
+      "She still went and watered the plants before she left.",
+      "Mr. Alvarez never had to wonder if she'd keep her word.",
+    ],
+    growing: [
+      "Before Mr. Alvarez left for a week to visit his daughter, Nadia promised him she'd water his plants every single day while he was gone.",
+      "Halfway through the week, her family got invited on a spontaneous overnight trip that sounded like a lot more fun than watering someone else's plants.",
+      "Before she left, though, she still walked over, watered every single plant carefully, and made sure everything was fine.",
+      "Mr. Alvarez came home to a house full of healthy plants and never had to wonder, even once, whether Nadia would actually do what she'd said she would.",
+    ],
+    recognitionPrompts: standardPrompts("Honor"),
+    noticeThisWeek: "This week, notice a promise you kept even when it would have been easier not to.",
+    storyboard: [
+      { scene: 1, visual: "Nadia promising Mr. Alvarez she'll water his plants.", narration: "Nadia promised her elderly neighbor she'd water his plants every day." },
+      { scene: 2, visual: "A tempting trip invitation arriving, Nadia hesitating.", narration: "A much more fun trip came up halfway through the week." },
+      { scene: 3, visual: "Nadia watering the plants carefully before leaving anyway.", narration: "Mr. Alvarez never had to wonder if she'd keep her word.", onScreenText: "Where have you shown honor this week?" },
+    ],
+  },
+  {
+    slug: "impartial-the-fair-ref",
+    elementName: "Impartial",
+    familyKey: "justice",
+    title: "The Fair Ref",
+    beginning: [
+      "Zainab's best friend was playing in the game she was reffing.",
+      "A close call went right in front of her.",
+      "She called it exactly as she saw it, against her own friend.",
+      "Her friend was disappointed, but respected her for it.",
+    ],
+    growing: [
+      "Zainab had agreed to referee a school soccer match, and it just so happened her best friend was playing on one of the teams.",
+      "Late in the game, a close call happened right in front of her — a call that, if she leaned even slightly toward her friend, nobody would really question.",
+      "She called it exactly as she'd actually seen it, which happened to go against her own friend's team.",
+      "Her friend was disappointed in the moment, but afterward told Zainab she respected that she hadn't played favorites, even for someone she cared about.",
+    ],
+    recognitionPrompts: standardPrompts("Impartial"),
+    noticeThisWeek: "This week, notice a moment you could be fair even when it's harder because someone you care about is involved.",
+    storyboard: [
+      { scene: 1, visual: "Zainab reffing a soccer game, her friend on the field.", narration: "Zainab's best friend was playing in the game she was reffing." },
+      { scene: 2, visual: "A close call happening right in front of her.", narration: "A close call went right in front of her." },
+      { scene: 3, visual: "Zainab making the fair call, her friend nodding respectfully.", narration: "Her friend was disappointed, but respected her for it.", onScreenText: "Where have you been impartial this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL FORTITUDE ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "assertive-speaking-up-in-group-work",
+    elementName: "Assertive",
+    familyKey: "fortitude",
+    title: "Speaking Up in Group Work",
+    beginning: [
+      "Owen's group was about to turn in a plan he thought was unfair.",
+      "He almost stayed quiet, the way he usually did.",
+      "Instead he calmly said what he actually thought.",
+      "The group listened, and the plan got better because he spoke.",
+    ],
+    growing: [
+      "Owen's group project team had agreed on a plan that quietly gave two people almost all of the easy parts and left Owen with the hardest section, and no one seemed to notice but him.",
+      "His first instinct was to just go along with it, the way he usually did when something felt unfair but small.",
+      "This time, he took a breath and said clearly, without being harsh, that he thought the work should be split more evenly.",
+      "The rest of the group actually listened, rearranged the plan, and the project — and Owen's week — ended up fairer because he'd said something instead of staying quiet.",
+    ],
+    recognitionPrompts: standardPrompts("Assertive"),
+    noticeThisWeek: "This week, notice a moment you could speak up calmly instead of staying quiet about something unfair.",
+    storyboard: [
+      { scene: 1, visual: "A group project chart, Owen's section clearly overloaded.", narration: "Owen's group was about to turn in a plan he thought was unfair." },
+      { scene: 2, visual: "Owen hesitating, then speaking up calmly.", narration: "Instead he calmly said what he actually thought." },
+      { scene: 3, visual: "The group revising the plan together, more evenly split.", narration: "The plan got better because he spoke.", onScreenText: "Where have you been assertive this week?" },
+    ],
+  },
+  {
+    slug: "fearlessness-first-to-raise-a-hand",
+    elementName: "Fearlessness",
+    familyKey: "fortitude",
+    title: "First to Raise a Hand",
+    beginning: [
+      "Nobody wanted to ask the question everyone was thinking.",
+      "It felt embarrassing, like it might be a dumb question.",
+      "Layla raised her hand and asked it anyway.",
+      "Half the class was quietly grateful she had.",
+    ],
+    growing: [
+      "The teacher had just explained something confusing, and Layla could tell from the silence that almost nobody actually understood it, including her.",
+      "Nobody wanted to be the one to ask, worried it might sound like a dumb question in front of everyone.",
+      "Layla felt that same worry too, but raised her hand and asked the question plainly anyway.",
+      "The teacher explained it again more clearly, and afterward two classmates quietly told her they'd been wondering the exact same thing and were glad she'd asked.",
+    ],
+    recognitionPrompts: standardPrompts("Fearlessness"),
+    noticeThisWeek: "This week, notice a moment you could go first even though it feels a little scary.",
+    storyboard: [
+      { scene: 1, visual: "A confused classroom, silence after a hard explanation.", narration: "Nobody wanted to ask the question everyone was thinking." },
+      { scene: 2, visual: "Layla hesitating, then raising her hand.", narration: "Layla raised her hand and asked it anyway." },
+      { scene: 3, visual: "Classmates nodding gratefully afterward.", narration: "Half the class was quietly grateful she had.", onScreenText: "Where have you shown fearlessness this week?" },
+    ],
+  },
+  {
+    slug: "magnanimity-no-grudge",
+    elementName: "Magnanimity",
+    familyKey: "fortitude",
+    title: "No Grudge",
+    beginning: [
+      "Hiro's team won the championship after a tough season.",
+      "The losing team's captain had trash-talked him all year.",
+      "Hiro walked over and shook his hand anyway.",
+      "He meant it. There was nothing left to hold onto.",
+    ],
+    growing: [
+      "After a whole season of hard games, Hiro's team finally won the championship, and the celebration on the field was loud and immediate.",
+      "The captain of the losing team had spent most of the season trash-talking Hiro specifically, and part of him wanted to enjoy this moment without acknowledging that at all.",
+      "Instead, once things quieted down, Hiro walked over and shook his hand, telling him it had been a genuinely good season and a hard-fought game.",
+      "He meant every word of it — winning had settled whatever there was to settle, and he didn't need to carry anything else forward.",
+    ],
+    recognitionPrompts: standardPrompts("Magnanimity"),
+    noticeThisWeek: "This week, notice a moment you could let go of a grudge instead of holding onto it.",
+    storyboard: [
+      { scene: 1, visual: "A team celebrating a championship win.", narration: "Hiro's team won the championship after a tough season." },
+      { scene: 2, visual: "The rival captain standing apart, having trash-talked all year.", narration: "The losing team's captain had trash-talked him all year." },
+      { scene: 3, visual: "Hiro shaking his hand warmly and genuinely.", narration: "There was nothing left to hold onto.", onScreenText: "Where have you shown magnanimity this week?" },
+    ],
+  },
+  {
+    slug: "valor-getting-help",
+    elementName: "Valor",
+    familyKey: "fortitude",
+    title: "Getting Help",
+    beginning: [
+      "Mei's little cousin slipped near the deep end of the pool.",
+      "Mei was scared, but she didn't freeze.",
+      "She shouted for the lifeguard immediately and pointed exactly where.",
+      "Her cousin was pulled out safely within seconds.",
+    ],
+    growing: [
+      "At the crowded community pool, Mei's little cousin slipped near the deep end and went under for a moment longer than she should have.",
+      "Mei felt a jolt of real fear, the kind that makes it hard to think — but she didn't freeze, and she didn't just jump in blindly either.",
+      "She shouted for the lifeguard as loudly as she could and pointed exactly where her cousin had gone under, giving him everything he needed to move fast.",
+      "Within seconds, the lifeguard had her cousin safely out of the water — Mei's clear-headed courage in that moment had mattered as much as anything else.",
+    ],
+    recognitionPrompts: standardPrompts("Valor"),
+    noticeThisWeek: "This week, notice a moment that calls for real courage, and notice what it takes to act clearly instead of freezing.",
+    storyboard: [
+      { scene: 1, visual: "A crowded pool, a small child slipping near the deep end.", narration: "Mei's little cousin slipped near the deep end of the pool." },
+      { scene: 2, visual: "Mei shouting and pointing urgently toward the lifeguard.", narration: "She shouted for the lifeguard immediately and pointed exactly where." },
+      { scene: 3, visual: "The lifeguard pulling the cousin safely from the water.", narration: "Her cousin was pulled out safely within seconds.", onScreenText: "Where have you shown valor this week?" },
+    ],
+  }
+);
+
 export function getChemistryStory(slug: string): ChemistryStory | undefined {
   return STORY_LIBRARY.find((s) => s.slug === slug);
 }
