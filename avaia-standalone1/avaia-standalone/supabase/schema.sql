@@ -496,6 +496,47 @@ create policy "unsung heroes messages are self-only"
   on public.unsung_heroes_messages for all
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
 
+-- "What Still Needs to Be Said" -- a distinct AVAIA conversational
+-- capability, fully separate from the Journey engine and from Unsung
+-- Heroes. recipient is free text, never a constrained enum. grounding is
+-- optional context the Host may provide about the person; never required.
+create table if not exists public.unsaid_conversations (
+  id            uuid primary key default gen_random_uuid(),
+  host_id       uuid not null references auth.users (id) on delete cascade,
+  recipient     text not null,
+  grounding     text,
+  status        text not null default 'active' check (status in ('active', 'complete')),
+  created_at    timestamptz not null default now(),
+  completed_at  timestamptz
+);
+
+create index if not exists unsaid_conversations_host_id_idx on public.unsaid_conversations (host_id);
+
+alter table public.unsaid_conversations enable row level security;
+create policy "unsaid conversations are self-only"
+  on public.unsaid_conversations for all
+  using (auth.uid() = host_id) with check (auth.uid() = host_id);
+
+-- wants_response records what the Host chose for that turn (role='host'
+-- rows only) -- no 'guide' row is ever created for a turn where this is
+-- false, so a missing reply is a deliberate choice, not a failure.
+create table if not exists public.unsaid_messages (
+  id               uuid primary key default gen_random_uuid(),
+  conversation_id  uuid not null references public.unsaid_conversations (id) on delete cascade,
+  host_id          uuid not null references auth.users (id) on delete cascade,
+  role             text not null check (role in ('host', 'guide')),
+  content          text not null,
+  wants_response   boolean,
+  created_at       timestamptz not null default now()
+);
+
+create index if not exists unsaid_messages_conversation_id_idx on public.unsaid_messages (conversation_id);
+
+alter table public.unsaid_messages enable row level security;
+create policy "unsaid messages are self-only"
+  on public.unsaid_messages for all
+  using (auth.uid() = host_id) with check (auth.uid() = host_id);
+
 -- Which unsung_heroes_conversations row produced a given recognition --
 -- added in 0013_guide_toolkit_participant_record.sql, as an alter (rather
 -- than inline on public.recognitions above) since that table is declared
@@ -991,9 +1032,12 @@ create table if not exists public.ai_usage_events (
   feature                      text not null check (feature in (
                                   'iap_conversation', 'cat_conversation', 'innercompass_conversation',
                                   'iap_referral', 'cat_referral', 'innercompass_referral',
-                                  'cat_opening', 'innercompass_opening',
+                                  'cat_opening', 'innercompass_opening', 'iap_origin_opening',
                                   'unsung_heroes_recognition', 'unsung_heroes_conversation',
-                                  'chemistry_virtue_formula', 'transcript_cleanup'
+                                  'chemistry_virtue_formula', 'transcript_cleanup',
+                                  'preparation_snapshot', 'preparation_chat',
+                                  'room_conversation', 'room_referral',
+                                  'unsaid_conversation'
                                 )),
   stage                        text check (stage in ('iap', 'cat', 'innercompass')),
   model                        text not null,
