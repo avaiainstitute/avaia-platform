@@ -155,6 +155,50 @@ export function AppreciationScene() {
   );
 }
 
+/** The scalable fallback: a decorative page for any element that doesn't
+ *  (yet) have a hand-authored story scene above. Built entirely from the
+ *  element's own name and symbol, so it works for all 123 without any
+ *  per-element art -- honestly labeled "Color the Word" rather than
+ *  "Color the Story" wherever this renders, since there's no story scene
+ *  behind it. */
+export function GenericColoringPage({ elementName, symbol }: { elementName: string; symbol: string }) {
+  const dots = 16;
+  return (
+    <svg viewBox="0 0 600 460" className="w-full h-auto" aria-label={`Decorative coloring page for the word ${elementName}`}>
+      <rect x="8" y="8" width="584" height="444" rx="18" fill="none" stroke={STROKE} strokeWidth={W} />
+      <rect x="26" y="26" width="548" height="408" rx="10" fill="none" stroke={STROKE} strokeWidth={2} strokeDasharray="1 10" strokeLinecap="round" />
+      {Array.from({ length: dots }).map((_, i) => {
+        const t = i / dots;
+        const x = 60 + t * 480;
+        return (
+          <g key={`t${i}`}>
+            <circle cx={x} cy="55" r="6" fill="none" stroke={STROKE} strokeWidth={2} />
+            <circle cx={x} cy="405" r="6" fill="none" stroke={STROKE} strokeWidth={2} />
+          </g>
+        );
+      })}
+      <circle cx="300" cy="130" r="46" fill="none" stroke={STROKE} strokeWidth={W} />
+      <text x="300" y="143" textAnchor="middle" fontFamily="'Fraunces', serif" fontWeight={700} fontSize="34" fill={STROKE}>
+        {symbol}
+      </text>
+      <text
+        x="300"
+        y="270"
+        textAnchor="middle"
+        fontFamily="'Baloo 2', sans-serif"
+        fontWeight={800}
+        fontSize={elementName.length > 10 ? "48" : "64"}
+        fill="none"
+        stroke={STROKE}
+        strokeWidth={2.5}
+      >
+        {elementName}
+      </text>
+      <path d="M180 330 Q300 360 420 330" fill="none" stroke={STROKE} strokeWidth={2.5} strokeDasharray="3 9" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function sceneFor(slug: string) {
   switch (slug) {
     case "kindness-the-extra-seat":

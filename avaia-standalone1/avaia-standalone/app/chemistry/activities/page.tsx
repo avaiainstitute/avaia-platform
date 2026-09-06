@@ -1,12 +1,32 @@
-import Link from "next/link";
-import { ACTIVITY_PILOT } from "@/lib/chemistry-activities";
-import { VIRTUE_FAMILIES } from "@/lib/virtues";
+"use client";
 
-export const metadata = {
-  title: "Chemistry for Kids -- Printable Activities | AVAIA",
-};
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { getAllActivitySets } from "@/lib/chemistry-activities";
+import { VIRTUE_FAMILIES, VIRTUES, type VirtueFamilyKey } from "@/lib/virtues";
+
+const ALL_SETS = getAllActivitySets();
+const TOTAL_ELEMENTS = VIRTUES.length;
 
 export default function ChemistryActivitiesIndexPage() {
+  const [search, setSearch] = useState("");
+  const [activeFamily, setActiveFamily] = useState<VirtueFamilyKey | null>(null);
+
+  const familyCoverage = useMemo(() => {
+    const map = new Map<VirtueFamilyKey, number>();
+    for (const s of ALL_SETS) map.set(s.familyKey, (map.get(s.familyKey) ?? 0) + 1);
+    return map;
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return ALL_SETS.filter((s) => {
+      if (activeFamily && s.familyKey !== activeFamily) return false;
+      if (q && !s.elementName.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [search, activeFamily]);
+
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
       <p className="label mb-3">Chemistry of Virtue</p>
@@ -19,13 +39,54 @@ export default function ChemistryActivitiesIndexPage() {
         with their hands.
       </p>
       <p className="mt-3 text-sm text-muted">
-        This is an early pilot covering {ACTIVITY_PILOT.length} of 123 canonical elements -- the
-        ones with a finished story already. The same system is built to grow to cover every
-        element, and eventually to assemble into full virtue-family coloring books.
+        {ALL_SETS.length} of {TOTAL_ELEMENTS} canonical elements have a full activity set right
+        now -- growing as more elements get their own story. Four (Kindness, Courage, Patience,
+        Appreciation) have a hand-drawn scene from their story; the rest use a decorative
+        &ldquo;Color the Word&rdquo; page in place of a story scene until one is written for them.
       </p>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
-        {ACTIVITY_PILOT.map((set) => {
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search an element (e.g. Courage, Patience)…"
+        className="mt-6 w-full rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
+      />
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveFamily(null)}
+          className={`rounded-full border px-3 py-1 font-sans text-xs font-medium transition-colors ${
+            activeFamily === null ? "border-seal bg-seal text-[#05060b]" : "border-rule text-muted hover:border-seal"
+          }`}
+        >
+          All Families
+        </button>
+        {VIRTUE_FAMILIES.map((f) => {
+          const count = familyCoverage.get(f.key) ?? 0;
+          if (count === 0) return null;
+          return (
+            <button
+              key={f.key}
+              onClick={() => setActiveFamily(activeFamily === f.key ? null : f.key)}
+              className="rounded-full border px-3 py-1 font-sans text-xs font-medium transition-all"
+              style={{
+                borderColor: f.color,
+                backgroundColor: activeFamily === f.key ? f.color : "transparent",
+                color: activeFamily === f.key ? "#fff" : f.color,
+              }}
+            >
+              {f.name} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        {filtered.length === 0 && (
+          <p className="text-sm text-muted">No element matches that search.</p>
+        )}
+        {filtered.map((set) => {
           const family = VIRTUE_FAMILIES.find((f) => f.key === set.familyKey)!;
           return (
             <Link

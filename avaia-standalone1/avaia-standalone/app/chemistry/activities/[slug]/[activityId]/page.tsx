@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getActivitySet } from "@/lib/chemistry-activities";
 import ActivitySheet from "@/components/activities/ActivitySheet";
 import PrintToolbar from "@/components/activities/PrintToolbar";
-import { sceneFor } from "@/components/activities/ColoringScenes";
+import { sceneFor, GenericColoringPage } from "@/components/activities/ColoringScenes";
 import { TracePage, DrawYourselfPage, NoticePage } from "@/components/activities/OtherPages";
 import { puzzleFor } from "@/components/activities/Puzzles";
 
@@ -24,8 +24,12 @@ export default function ActivitySheetPage({ params }: { params: { slug: string; 
   switch (page.kind) {
     case "coloring": {
       const Scene = sceneFor(set.elementSlug);
-      instructions = set.sceneCaption;
-      content = Scene ? <Scene /> : <p className="text-center text-muted">Scene not available.</p>;
+      instructions = set.sceneCaption || undefined;
+      content = Scene ? (
+        <Scene />
+      ) : (
+        <GenericColoringPage elementName={set.elementName} symbol={set.symbol} />
+      );
       break;
     }
     case "trace":

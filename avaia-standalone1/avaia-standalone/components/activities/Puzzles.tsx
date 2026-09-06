@@ -79,6 +79,41 @@ export function MazePuzzle() {
   );
 }
 
+/** Generic fallback maze for any element without a bespoke puzzle -- same
+ *  winding-path artwork as MazePuzzle, relabeled for whichever element it's
+ *  serving instead of being hardcoded to Courage/"the high dive". */
+export function GenericMazePuzzle({ elementName, symbol }: { elementName: string; symbol: string }) {
+  return (
+    <div>
+      <p className="mb-4 text-center font-sans text-base text-[#5b5646]">
+        Find the path from START to {elementName}.
+      </p>
+      <svg viewBox="0 0 600 460" className="w-full h-auto">
+        <rect x="8" y="8" width="584" height="444" rx="18" fill="none" stroke={STROKE} strokeWidth={W} />
+        <path
+          d="M80 420 L80 340 L200 340 L200 260 L120 260 L120 180 L300 180 L300 260 L400 260 L400 100 L300 100"
+          fill="none"
+          stroke={STROKE}
+          strokeWidth={4}
+        />
+        <path
+          d="M140 420 L140 300 L260 300 L260 220 L180 220 L180 140 L340 140 L340 220 L440 220 L440 60 L300 60"
+          fill="none"
+          stroke={STROKE}
+          strokeWidth={4}
+        />
+        <path d="M200 300 L260 300" fill="none" stroke={STROKE} strokeWidth={4} />
+        <path d="M400 180 L470 180 L470 260" fill="none" stroke={STROKE} strokeWidth={4} />
+        <text x="105" y="452" fontFamily="'Baloo 2', sans-serif" fontWeight={700} fontSize="20" fill={STROKE}>START</text>
+        <circle cx="90" cy="435" r="10" fill="none" stroke={STROKE} strokeWidth={3} />
+        <path d="M320 60 L320 30 Q320 15 340 15 L370 15" fill="none" stroke={STROKE} strokeWidth={4} />
+        <rect x="295" y="6" width="100" height="30" rx="6" fill="none" stroke={STROKE} strokeWidth={W} />
+        <text x="345" y="26" textAnchor="middle" fontFamily="'Baloo 2', sans-serif" fontWeight={700} fontSize="15" fill={STROKE}>{symbol}</text>
+      </svg>
+    </div>
+  );
+}
+
 export function SequencePuzzle() {
   // Patience -- number the four growth panels in order, then color them.
   const panels = [
@@ -172,5 +207,7 @@ export function puzzleFor(set: ElementActivitySet) {
       return <SequencePuzzle />;
     case "card":
       return <CardPuzzle elementName={set.elementName} />;
+    case "maze-generic":
+      return <GenericMazePuzzle elementName={set.elementName} symbol={set.symbol} />;
   }
 }
