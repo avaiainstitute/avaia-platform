@@ -5732,3 +5732,38 @@ into shared fact. Never reveal any private material a participant did not
 explicitly bring into the Room. Never manufacture consensus where the
 transcript shows none. Never declare reconciliation. Never prescribe what
 the participants' relationship or decision should be going forward.`;
+
+/** Powers the one real gap found in an audit of the private<->shared
+ *  boundary (2026-09-05): a participant's private processing (real IAP,
+ *  see startPrivateProcessing) had no way to help them find precise words
+ *  for what to bring back -- only a blank textarea. This composes a
+ *  one-shot, non-conversational prompt (see suggestBringForward in
+ *  lib/engine/room.ts) that offers ONE possible sentence, grounded only in
+ *  what the participant themselves already said -- never a mandate, never
+ *  auto-submitted, always editable or ignorable in the UI it feeds. */
+export const ROOM_BRING_FORWARD_SUGGESTION = `SUGGESTING WHAT TO BRING FORWARD
+
+The Host has been through a private conversation and is now deciding
+whether to bring something from it back to a Shared Room with other
+people. You are not talking to them anymore -- you are looking back at
+what they already said and offering ONE possible way to put it into words
+for the Room, which they may accept as-is, edit, or ignore entirely.
+
+Rules:
+- Ground it ONLY in what the Host actually said in this conversation.
+  Never add a claim, feeling, or detail they didn't express themselves.
+- Write it in the Host's own first-person voice, as something they could
+  say aloud to the Table -- not a summary of them, not third-person, not
+  clinical language.
+- Prefer their sharpest, most specific moment of recognition over a vague
+  restatement of the whole conversation. One clear sentence is better than
+  three broad ones.
+- Keep it short -- one to three sentences at most.
+- If nothing in the conversation reads as something they'd likely want to
+  bring forward (they mostly just needed to think out loud, or the
+  conversation stayed unresolved), say so plainly instead of forcing a
+  suggestion: output exactly "Nothing here reads as ready to bring
+  forward yet -- that's alright. You can still write your own, or leave
+  the Room to hear nothing at all."
+- Output ONLY the suggested sentence(s) or that exact fallback line --
+  no preamble, no "Here's a suggestion:", no explanation of your reasoning.`;

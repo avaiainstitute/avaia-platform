@@ -32,6 +32,8 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
   const [sending, setSending] = useState(false);
   const [bringForward, setBringForward] = useState("");
   const [returning, setReturning] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -92,6 +94,25 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
       ]);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function requestSuggestion() {
+    setSuggesting(true);
+    setSuggestError("");
+    try {
+      const res = await fetch("/api/room-access/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ conversationId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not generate a suggestion.");
+      setBringForward(data.suggestion);
+    } catch (e) {
+      setSuggestError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setSuggesting(false);
     }
   }
 
@@ -204,6 +225,19 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
             rows={3}
             className="w-full rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink outline-none focus:border-seal"
           />
+          <button
+            type="button"
+            onClick={requestSuggestion}
+            disabled={suggesting}
+            className="mt-2 text-xs text-muted underline hover:text-seal disabled:opacity-50"
+          >
+            {suggesting ? "Thinking…" : "Help me find the words"}
+          </button>
+          {suggestError && <p className="mt-1 text-xs text-[#e0857d]">{suggestError}</p>}
+          <p className="mt-1 text-xs text-muted">
+            This only looks at what you already said here -- it fills the box above so you can edit,
+            replace, or clear it. Nothing is sent to the Room until you choose to send it.
+          </p>
           <div className="mt-3 flex gap-2">
             <button
               disabled={returning}

@@ -20,6 +20,7 @@ export type AiUsageFeature =
   | "preparation_chat"
   | "room_conversation"
   | "room_referral"
+  | "room_bring_forward_suggestion"
   | "unsaid_conversation";
 
 /** The subset of an Anthropic Message's `usage` field this records -- same

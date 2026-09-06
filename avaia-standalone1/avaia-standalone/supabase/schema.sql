@@ -1036,7 +1036,7 @@ create table if not exists public.ai_usage_events (
                                   'unsung_heroes_recognition', 'unsung_heroes_conversation',
                                   'chemistry_virtue_formula', 'transcript_cleanup',
                                   'preparation_snapshot', 'preparation_chat',
-                                  'room_conversation', 'room_referral',
+                                  'room_conversation', 'room_referral', 'room_bring_forward_suggestion',
                                   'unsaid_conversation'
                                 )),
   stage                        text check (stage in ('iap', 'cat', 'innercompass')),

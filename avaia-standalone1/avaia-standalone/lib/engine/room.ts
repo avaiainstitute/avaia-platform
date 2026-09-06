@@ -3,8 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type Anthropic from "@anthropic-ai/sdk";
 import { randomBytes } from "crypto";
 import { anthropic, detectCrisis } from "./anthropic";
-import { AVAIA_MODEL, roomSystemPromptFor, ROOM_REFERRAL_FORMAT, type Program } from "./prompts";
-import { createConversation, createJourney } from "./conversation";
+import { AVAIA_MODEL, roomSystemPromptFor, ROOM_REFERRAL_FORMAT, ROOM_BRING_FORWARD_SUGGESTION, type Program } from "./prompts";
+import { createConversation, createJourney, loadMessages, toAnthropicMessages } from "./conversation";
 import { recordAiUsage } from "./ai-usage";
 import { isParticipantClearedToParticipate } from "../guardian-consent";
 import { createAdminClient } from "../supabase/admin";
@@ -470,6 +470,55 @@ export async function consumePrivateAccessToken(token: string): Promise<
     conversationId: rps.conversation_id as string,
     roomPrivateSessionId: row.room_private_session_id as string,
   };
+}
+
+/** Offers ONE possible way to put what the participant already said into
+ *  words for the Room -- never generated automatically, never auto-filled
+ *  without the participant asking for it, never able to see anything they
+ *  didn't already say to AVAIA themselves. `supabase` must be the
+ *  participant's OWN bearer-scoped, RLS-respecting client (see
+ *  app/api/room-access/suggest/route.ts) -- the same self-only
+ *  conversations/messages RLS that keeps this conversation invisible to
+ *  the Guide also means this function structurally cannot run against a
+ *  conversation the caller doesn't themselves own. Non-streaming, one-shot,
+ *  matching /api/room-access/message's own scope choice. */
+export async function suggestBringForward(
+  supabase: SupabaseClient,
+  hostId: string,
+  conversationId: string
+): Promise<{ suggestion: string } | { error: string }> {
+  const messages = await loadMessages(supabase, conversationId);
+  if (messages.length <= 1) {
+    return { error: "There's nothing in this conversation yet to suggest from." };
+  }
+
+  const history = toAnthropicMessages(messages);
+  history.push({
+    role: "user",
+    content:
+      "Looking back at everything above, suggest what I might want to bring forward to the Room, following your instructions exactly.",
+  });
+
+  const client = anthropic();
+  const resp: any = await client.messages.create({
+    model: AVAIA_MODEL,
+    max_tokens: 300,
+    system: ROOM_BRING_FORWARD_SUGGESTION,
+    messages: history,
+  });
+  await recordAiUsage({
+    hostId,
+    conversationId,
+    feature: "room_bring_forward_suggestion",
+    stage: null,
+    model: resp.model,
+    usage: resp.usage,
+  });
+  const suggestion =
+    (resp.content as Array<{ type: string; text?: string }>).find((b) => b.type === "text")?.text?.trim() ??
+    "";
+  if (!suggestion) return { error: "Could not generate a suggestion right now. Please try again." };
+  return { suggestion };
 }
 
 /** Returns from private processing, called by the PARTICIPANT's own
