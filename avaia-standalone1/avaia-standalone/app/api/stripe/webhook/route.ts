@@ -14,6 +14,36 @@ export const dynamic = "force-dynamic";
  *  aren't a prior active paid state ending. */
 const REVOKING_STATUSES = new Set(["canceled", "unpaid", "incomplete_expired"]);
 
+/** Records a completed Certified AVAIA Guide Program payment. A payment
+ *  fact only -- deliberately does NOT create a guide_candidates row or any
+ *  other candidacy/certification fact; whether a completed payment should
+ *  automatically admit someone as a candidate is an explicit owner
+ *  decision (see the Certified Guide audit's Final Report), not assumed
+ *  here. Idempotent via stripe_checkout_session_id's unique constraint --
+ *  a redelivered event's duplicate insert is caught and ignored rather
+ *  than treated as an error. */
+async function recordGuideCertificationPayment(
+  hostId: string | null | undefined,
+  session: Stripe.Checkout.Session
+) {
+  if (!hostId) {
+    console.error("AVAIA Stripe webhook: no supabase_user_id on the guide certification event, skipping.");
+    return;
+  }
+  const admin = createAdminClient();
+  const { error } = await admin.from("guide_certification_payments").insert({
+    host_id: hostId,
+    stripe_checkout_session_id: session.id,
+    stripe_payment_intent_id:
+      typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
+    amount_cents: session.amount_total ?? 0,
+    currency: session.currency ?? "usd",
+  });
+  if (error && error.code !== "23505") {
+    console.error("AVAIA Stripe webhook: failed to record guide certification payment:", error);
+  }
+}
+
 /** Grants this Host an active Individual entitlement. Idempotent -- Stripe
  *  may redeliver the same event, and this must never create a second
  *  active entitlement for a Host who already has one. The `existing` check
@@ -160,7 +190,9 @@ export async function POST(request: Request) {
     // AVAIA's own live domain -- the same value the checkout route itself
     // would compute -- used only for the welcome email's Journey link.
     const origin = new URL(request.url).origin;
-    if (session.metadata?.tier === "family") {
+    if (session.metadata?.product === "guide_certification") {
+      await recordGuideCertificationPayment(hostId, session);
+    } else if (session.metadata?.tier === "family") {
       await grantFamilyMembership(hostId, session, origin);
     } else {
       await grantEntitlement(hostId, origin);

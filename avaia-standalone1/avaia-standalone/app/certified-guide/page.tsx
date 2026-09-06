@@ -182,6 +182,12 @@ export default function CertifiedGuidePage() {
             Payment may be made in full, or through an installment arrangement — reach out to ask
             about current options.
           </p>
+          <Link
+            href="/certified-guide/enroll"
+            className="mt-5 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+          >
+            Enroll &amp; Pay in Full
+          </Link>
         </div>
       </section>
 

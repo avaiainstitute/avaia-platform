@@ -47,3 +47,11 @@ export function familyExtraSeatPriceId(plan: MembershipPlan): string | undefined
 /** Included seats in the Family base price (the purchaser + 4 more).
  *  A 6th and further person each bill as an additional seat. */
 export const FAMILY_INCLUDED_SEATS = 5;
+
+/** Certified AVAIA Guide Program -- $4,500, pay-in-full, one-time (not a
+ *  subscription). Same env-var-swap posture as every other price above.
+ *  No installment price id exists -- an installment schedule has not been
+ *  approved; see the Certified Guide audit's Final Report. */
+export function guideCertificationPriceId(): string | undefined {
+  return process.env.STRIPE_GUIDE_CERTIFICATION_PRICE_ID;
+}

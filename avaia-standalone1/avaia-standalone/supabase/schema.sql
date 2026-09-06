@@ -1235,3 +1235,36 @@ create policy "experience sections admin all"
   on public.experience_sections for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- guide_certification_payments -- $4,500 Certified Guide Program payment
+-- record (added alongside migrations 0060-0062). NOTE: schema.sql was
+-- already missing the guide_candidates/guide_certifications/
+-- guide_platform_authorizations/guide_candidate_evidence/
+-- guide_certification_decisions tables (migrations 0022-0027) before this
+-- addition -- pre-existing drift, not introduced here, and not reconciled
+-- in this pass; migrations remain the source of truth for those tables.
+-- ---------------------------------------------------------------------------
+create table if not exists public.guide_certification_payments (
+  id                          uuid primary key default gen_random_uuid(),
+  host_id                     uuid not null references auth.users (id) on delete cascade,
+  stripe_checkout_session_id  text not null unique,
+  stripe_payment_intent_id    text,
+  amount_cents                integer not null,
+  currency                    text not null default 'usd',
+  paid_at                     timestamptz not null default now()
+);
+
+create index if not exists guide_certification_payments_host_idx
+  on public.guide_certification_payments (host_id);
+
+alter table public.guide_certification_payments enable row level security;
+
+create policy "guide certification payments self read"
+  on public.guide_certification_payments for select
+  using (auth.uid() = host_id);
+
+create policy "guide certification payments admin all"
+  on public.guide_certification_payments for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
