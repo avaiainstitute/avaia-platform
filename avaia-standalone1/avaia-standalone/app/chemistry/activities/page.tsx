@@ -39,10 +39,10 @@ export default function ChemistryActivitiesIndexPage() {
         with their hands.
       </p>
       <p className="mt-3 text-sm text-muted">
-        {ALL_SETS.length} of {TOTAL_ELEMENTS} canonical elements have a full activity set right
-        now -- growing as more elements get their own story. Four (Kindness, Courage, Patience,
-        Appreciation) have a hand-drawn scene from their story; the rest use a decorative
-        &ldquo;Color the Word&rdquo; page in place of a story scene until one is written for them.
+All {TOTAL_ELEMENTS} canonical elements have a full activity set. Four (Kindness, Courage,
+        Patience, Appreciation) have a hand-drawn scene from their story and a bespoke puzzle; the
+        rest use a decorative &ldquo;Color the Word&rdquo; page and a maze in their place until
+        more bespoke scenes are illustrated.
       </p>
 
       <input

@@ -252,7 +252,9 @@ export default function ChemistryFamilyPage() {
         <p className="text-muted">
           Reading and listening are only part of it. A story can also be colored, traced, and
           drawn on — something to print and use with your hands: Read → Listen → Color/Create →
-          Notice. It's an early pilot for a few elements so far, growing toward all {totalElements}.
+          Notice. Every one of the {totalElements} elements has a full printable set now; four
+          (Kindness, Courage, Patience, Appreciation) have a hand-drawn scene from their story, and
+          the rest use a decorative coloring page in its place until more scenes are illustrated.
         </p>
         <Link
           href="/chemistry/activities"

@@ -14,14 +14,14 @@ import type { VirtueFamilyKey } from "@/lib/virtues";
 // what a character does -- the closing prompts turn it back toward the
 // child's own recognition, not a lesson to memorize.
 //
-// Coverage status (kept current, checked against COUNT below -- see
-// getChemistryStory's own file for the exact live count): this is a
-// substantial expansion past the original six-story pilot, not yet all
-// 123 canonical elements. Two families (Gratitude, Humility) are fully
-// covered; every other family has multiple stories, not just one.
-// Adding a new element's story later means adding one more object to
-// STORY_LIBRARY below in the same shape; nothing about the page or the
-// reading levels needs to change.
+// Coverage status: all 123 canonical elements now have a complete story
+// (beginning + growing + storyboard + recognition prompts), reached across
+// several passes from the original six-story pilot. Verified: 123 unique
+// slugs, 123 unique elementNames, every elementName matches lib/virtues.ts
+// exactly, every canonical family fully represented. If a canonical
+// element is ever added to lib/virtues.ts in the future, adding its story
+// here means adding one more object to STORY_LIBRARY in the same shape;
+// nothing about the page or the reading levels needs to change.
 //
 // Two reading levels per story:
 // - "beginning" -- very young / beginning-reader: short sentences, one
@@ -2395,6 +2395,886 @@ STORY_LIBRARY.push(
       { scene: 1, visual: "A crowded pool, a small child slipping near the deep end.", narration: "Mei's little cousin slipped near the deep end of the pool." },
       { scene: 2, visual: "Mei shouting and pointing urgently toward the lifeguard.", narration: "She shouted for the lifeguard immediately and pointed exactly where." },
       { scene: 3, visual: "The lifeguard pulling the cousin safely from the water.", narration: "Her cousin was pulled out safely within seconds.", onScreenText: "Where have you shown valor this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL LOVE ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "admiration-watching-her-practice",
+    elementName: "Admiration",
+    familyKey: "love",
+    title: "Watching Her Practice",
+    beginning: [
+      "Sienna's older sister practiced piano every single day.",
+      "Even on days she didn't feel like it, she still sat down and played.",
+      "Sienna started to notice how much that mattered to her.",
+      "She decided she wanted to be that dedicated about something too.",
+    ],
+    growing: [
+      "Every afternoon, whether she felt inspired or not, Sienna's older sister sat down at the piano and worked through the same scales and pieces, sometimes for over an hour.",
+      "Sienna used to think it looked boring, the same songs over and over, day after day.",
+      "But watching her sister keep showing up, even on the days she clearly didn't feel like it, Sienna started to notice something she genuinely respected.",
+      "She found herself wanting that same kind of steady dedication in something of her own — not because anyone told her to, but because she'd watched what it looked like up close.",
+    ],
+    recognitionPrompts: standardPrompts("Admiration"),
+    noticeThisWeek: "This week, notice someone whose dedication you genuinely admire, and notice what about it makes you want to be more like that.",
+    storyboard: [
+      { scene: 1, visual: "An older sister practicing piano daily, a montage of ordinary afternoons.", narration: "Sienna's older sister practiced piano every single day." },
+      { scene: 2, visual: "Sienna watching quietly from the doorway.", narration: "Sienna started to notice how much that mattered to her." },
+      { scene: 3, visual: "Sienna starting her own practice of something new.", narration: "She decided she wanted to be that dedicated too.", onScreenText: "Where have you felt admiration this week?" },
+    ],
+  },
+  {
+    slug: "adoration-grandmas-kitchen",
+    elementName: "Adoration",
+    familyKey: "love",
+    title: "Grandma's Kitchen",
+    beginning: [
+      "Every Sunday, Marcus went to his grandmother's house.",
+      "He didn't care what they did — just being in her kitchen was enough.",
+      "She'd hum while she cooked, and he'd sit and just watch her.",
+      "He loved her so much it didn't need a reason.",
+    ],
+    growing: [
+      "Every Sunday afternoon, Marcus's parents dropped him off at his grandmother's house, and it was, without question, his favorite part of the week.",
+      "It didn't matter what they actually did together — most of the time it was just her cooking while he sat at the counter doing homework or nothing at all.",
+      "She hummed old songs under her breath while she worked, and he never got tired of just being near that sound, in that kitchen.",
+      "He couldn't have explained exactly why he loved her so much. It wasn't about anything she'd done for him that day — it just was, completely, without needing a reason.",
+    ],
+    recognitionPrompts: standardPrompts("Adoration"),
+    noticeThisWeek: "This week, notice someone you simply adore, without needing a specific reason why.",
+    storyboard: [
+      { scene: 1, visual: "A cozy kitchen, a grandmother cooking, a boy at the counter.", narration: "Every Sunday, Marcus went to his grandmother's house." },
+      { scene: 2, visual: "The grandmother humming while she cooks.", narration: "She'd hum while she cooked, and he'd sit and just watch her." },
+      { scene: 3, visual: "Marcus smiling, completely content.", narration: "He loved her so much it didn't need a reason.", onScreenText: "Where have you felt adoration this week?" },
+    ],
+  },
+  {
+    slug: "benevolence-the-anonymous-pencil-case",
+    elementName: "Benevolence",
+    familyKey: "love",
+    title: "The Anonymous Pencil Case",
+    beginning: [
+      "Ivy noticed a classmate never had the right school supplies.",
+      "She bought an extra pencil case and filled it herself.",
+      "She left it on his desk without saying it was from her.",
+      "She never told anyone, and never needed him to know either.",
+    ],
+    growing: [
+      "Ivy had noticed for weeks that a classmate always seemed to be borrowing pencils, missing a ruler, never quite having what everyone else had.",
+      "One weekend she used some of her own savings to buy a pencil case and fill it with exactly the supplies he seemed to need.",
+      "Before class on Monday, she quietly set it on his desk and walked away before he even got there.",
+      "She never told him it was her, and never told anyone else either — she hadn't done it to be thanked, just because he needed it and she was able to help.",
+    ],
+    recognitionPrompts: standardPrompts("Benevolence"),
+    noticeThisWeek: "This week, notice a chance to do something generous without needing anyone to know it was you.",
+    storyboard: [
+      { scene: 1, visual: "A classmate quietly borrowing supplies again.", narration: "Ivy noticed a classmate never had the right school supplies." },
+      { scene: 2, visual: "Ivy filling a pencil case at home.", narration: "She bought an extra pencil case and filled it herself." },
+      { scene: 3, visual: "Ivy setting it on his desk and walking away unnoticed.", narration: "She never told anyone, and never needed him to know either.", onScreenText: "Where have you shown benevolence this week?" },
+    ],
+  },
+  {
+    slug: "charity-the-coat-drive",
+    elementName: "Charity",
+    familyKey: "love",
+    title: "The Coat Drive",
+    beginning: [
+      "Wyatt's family sorted old coats to give to the shelter.",
+      "He found his favorite coat, one he'd outgrown but still loved.",
+      "He almost kept it just to have it in his closet.",
+      "Instead he added it to the pile, thinking of who might need it more.",
+    ],
+    growing: [
+      "Every year around this time, Wyatt's family went through the closets looking for coats they'd outgrown to donate to the winter coat drive at the shelter downtown.",
+      "This year, Wyatt found his favorite coat from two winters ago, too small for him now, but he still loved the color and the way it looked.",
+      "Part of him wanted to just keep it folded in his closet anyway, even though he'd never wear it again.",
+      "Instead he thought about a kid his size who might not have a warm coat at all this winter, and put it in the donation pile without any hesitation.",
+    ],
+    recognitionPrompts: standardPrompts("Charity"),
+    noticeThisWeek: "This week, notice something you could give away to someone who needs it more than you do.",
+    storyboard: [
+      { scene: 1, visual: "A family sorting old coats into a donation pile.", narration: "Wyatt's family sorted old coats to give to the shelter." },
+      { scene: 2, visual: "Wyatt holding his favorite old coat, hesitating.", narration: "He almost kept it just to have it in his closet." },
+      { scene: 3, visual: "Wyatt placing it into the donation box.", narration: "Instead he added it to the pile, thinking of who might need it more.", onScreenText: "Where have you shown charity this week?" },
+    ],
+  },
+  {
+    slug: "helpfulness-too-many-books",
+    elementName: "Helpfulness",
+    familyKey: "love",
+    title: "Too Many Books",
+    beginning: [
+      "Nadia saw a classmate drop half his books in the hallway.",
+      "He was trying to carry way too many at once.",
+      "She knelt down and helped him gather everything.",
+      "Then she carried half of them to his next class with him.",
+    ],
+    growing: [
+      "In the crowded hallway between classes, Nadia watched a classmate try to balance an enormous stack of books, folders, and a water bottle all at once — right before half of it slid to the floor.",
+      "Nobody around him stopped, everyone rushing to their own next class.",
+      "Nadia knelt down without a second thought and helped him gather everything back into a manageable pile.",
+      "Instead of just walking off once it was picked up, she carried half the stack all the way to his next classroom, since it was on her way anyway.",
+    ],
+    recognitionPrompts: standardPrompts("Helpfulness"),
+    noticeThisWeek: "This week, notice a small, unplanned moment you could just help without being asked.",
+    storyboard: [
+      { scene: 1, visual: "A hallway, books spilling out of a classmate's arms.", narration: "Nadia saw a classmate drop half his books in the hallway." },
+      { scene: 2, visual: "Nadia kneeling to help gather everything.", narration: "She knelt down and helped him gather everything." },
+      { scene: 3, visual: "The two of them walking together, books split between them.", narration: "She carried half of them to his next class with him.", onScreenText: "Where have you shown helpfulness this week?" },
+    ],
+  },
+  {
+    slug: "hospitality-dinner-for-the-new-neighbors",
+    elementName: "Hospitality",
+    familyKey: "love",
+    title: "Dinner for the New Neighbors",
+    beginning: [
+      "A new family moved in next door, knowing no one nearby.",
+      "Cole's family invited them over for dinner that first week.",
+      "They didn't have to. Nobody would have thought less of them.",
+      "By dessert, the new family didn't feel like strangers anymore.",
+    ],
+    growing: [
+      "When a new family moved in next door, unpacking boxes late into the evening, they didn't know a single person in the whole neighborhood yet.",
+      "Cole's family could have just waved hello from the driveway and left it at that, the way most neighbors do.",
+      "Instead, before the week was even over, they invited the new family over for dinner, even though the house was a little messy and they hadn't planned much of a menu.",
+      "By the time dessert came around, everyone was laughing at the table, and the new family didn't feel quite so much like strangers in an unfamiliar place anymore.",
+    ],
+    recognitionPrompts: standardPrompts("Hospitality"),
+    noticeThisWeek: "This week, notice someone new or unfamiliar you could welcome in, even in a small way.",
+    storyboard: [
+      { scene: 1, visual: "A moving truck outside a new house, boxes everywhere.", narration: "A new family moved in next door, knowing no one nearby." },
+      { scene: 2, visual: "Cole's family walking over to extend an invitation.", narration: "Cole's family invited them over for dinner that first week." },
+      { scene: 3, visual: "Both families laughing together around a dinner table.", narration: "The new family didn't feel like strangers anymore.", onScreenText: "Where have you shown hospitality this week?" },
+    ],
+  },
+  {
+    slug: "loyalty-still-sitting-with-her",
+    elementName: "Loyalty",
+    familyKey: "love",
+    title: "Still Sitting With Her",
+    beginning: [
+      "After a rumor spread, most kids stopped sitting with Priya.",
+      "Fatima knew the rumor wasn't even true.",
+      "She kept sitting with Priya at lunch anyway, every single day.",
+      "It cost her a little popularity. She didn't care.",
+    ],
+    growing: [
+      "After an unkind, mostly made-up rumor started going around about Priya, Fatima noticed most of the lunch table quietly stopped sitting near her within a matter of days.",
+      "Fatima happened to know for a fact that most of the rumor wasn't even true — she'd actually been there for the thing it was based on.",
+      "Instead of drifting away like everyone else, she kept sitting with Priya at lunch every day, the same as always.",
+      "It cost her a little bit of her own popularity for a while, since some kids assumed she must be involved somehow too. She didn't care — Priya was still her friend, and that hadn't changed.",
+    ],
+    recognitionPrompts: standardPrompts("Loyalty"),
+    noticeThisWeek: "This week, notice a friend it might be easier to quietly drift away from, and notice what it means to stay instead.",
+    storyboard: [
+      { scene: 1, visual: "A lunch table, most kids drifting away from one girl.", narration: "After a rumor spread, most kids stopped sitting with Priya." },
+      { scene: 2, visual: "Fatima sitting down next to her anyway.", narration: "Fatima kept sitting with Priya at lunch anyway, every single day." },
+      { scene: 3, visual: "The two of them talking and laughing, unbothered by the empty seats around them.", narration: "It cost her a little popularity. She didn't care.", onScreenText: "Where have you shown loyalty this week?" },
+    ],
+  },
+  {
+    slug: "thoughtfulness-the-snack-she-remembered",
+    elementName: "Thoughtfulness",
+    familyKey: "love",
+    title: "The Snack She Remembered",
+    beginning: [
+      "Weeks ago, Anya mentioned loving a specific kind of fruit snack.",
+      "Elena remembered, even though it was a tiny detail.",
+      "On a day Anya seemed down, Elena brought her exactly that snack.",
+      "Anya couldn't believe she'd actually remembered something so small.",
+    ],
+    growing: [
+      "Weeks earlier, in an entirely unrelated conversation, Anya had mentioned offhand that a specific brand of fruit snack was her favorite thing in the world.",
+      "Elena hadn't thought much of it at the time, but the detail had stuck somewhere in the back of her mind.",
+      "When Anya showed up to school clearly having a hard day, Elena reached into her bag and handed her exactly that snack, the one from weeks ago.",
+      "Anya just stared at it for a second, genuinely surprised that anyone had actually remembered something that small — and it ended up being exactly what she needed that day.",
+    ],
+    recognitionPrompts: standardPrompts("Thoughtfulness"),
+    noticeThisWeek: "This week, notice a small detail someone mentioned in passing, and see if you can remember it for them later.",
+    storyboard: [
+      { scene: 1, visual: "A casual conversation, one kid mentioning a favorite snack.", narration: "Weeks ago, Anya mentioned loving a specific kind of fruit snack." },
+      { scene: 2, visual: "Elena noticing Anya looks down, then reaching into her bag.", narration: "On a day Anya seemed down, Elena brought her exactly that snack." },
+      { scene: 3, visual: "Anya's surprised, grateful smile.", narration: "Anya couldn't believe she'd actually remembered something so small.", onScreenText: "Where have you shown thoughtfulness this week?" },
+    ],
+  },
+  {
+    slug: "yearning-the-letters-to-chicago",
+    elementName: "Yearning",
+    familyKey: "love",
+    title: "The Letters to Chicago",
+    beginning: [
+      "Tariq's best friend moved far away over the summer.",
+      "He missed him more than he expected to.",
+      "Instead of just feeling sad about it, he started writing letters.",
+      "Every letter was a way of holding onto something he missed.",
+    ],
+    growing: [
+      "When Tariq's best friend moved to Chicago over the summer, the first few weeks of school without him felt strange in a way Tariq hadn't expected.",
+      "He found himself missing ordinary things — the walk home, a specific joke, just having someone who already understood him without explaining.",
+      "Instead of letting that feeling just sit there, he started writing his friend actual letters, describing everything happening at school as if he were still around to hear it.",
+      "Each letter was its own small way of staying connected to someone he missed — the longing itself became something he could actually do something with.",
+    ],
+    recognitionPrompts: standardPrompts("Yearning"),
+    noticeThisWeek: "This week, notice someone or something you miss, and notice what it feels like to really let yourself feel that.",
+    storyboard: [
+      { scene: 1, visual: "A moving truck pulling away, two friends waving goodbye.", narration: "Tariq's best friend moved far away over the summer." },
+      { scene: 2, visual: "Tariq sitting alone at the old meeting spot, missing him.", narration: "He missed him more than he expected to." },
+      { scene: 3, visual: "Tariq writing a letter at his desk, mailing it.", narration: "Every letter was a way of holding onto something he missed.", onScreenText: "Where have you felt yearning this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL POSITIVE ATTITUDE ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "adaptability-plan-b",
+    elementName: "Adaptability",
+    familyKey: "positive-attitude",
+    title: "Plan B",
+    beginning: [
+      "Rain ruined Felix's plan for an outdoor birthday party.",
+      "For a second he felt like the whole day was wrecked.",
+      "Then he came up with an indoor scavenger hunt instead.",
+      "It turned out to be more fun than the original plan.",
+    ],
+    growing: [
+      "Felix had been planning an outdoor birthday party for weeks — games, a piñata, the whole backyard set up exactly how he wanted it.",
+      "The morning of the party, it started pouring rain and showed no sign of stopping, and for a minute Felix felt like the whole day was ruined.",
+      "Instead of staying upset about it, he grabbed his mom and quickly came up with an indoor scavenger hunt through the house instead, hiding clues in every room.",
+      "By the end of the party, everyone agreed the scavenger hunt had actually been more fun than the original outdoor plan would have been.",
+    ],
+    recognitionPrompts: standardPrompts("Adaptability"),
+    noticeThisWeek: "This week, notice a plan that doesn't go the way you expected, and notice what it's like to adjust instead of staying stuck.",
+    storyboard: [
+      { scene: 1, visual: "Rain pouring down on an outdoor party setup.", narration: "Rain ruined Felix's plan for an outdoor birthday party." },
+      { scene: 2, visual: "Felix's disappointed face turning thoughtful.", narration: "For a second he felt like the whole day was wrecked." },
+      { scene: 3, visual: "Kids running through the house on an indoor scavenger hunt, laughing.", narration: "It turned out to be more fun than the original plan.", onScreenText: "Where have you shown adaptability this week?" },
+    ],
+  },
+  {
+    slug: "beauty-the-frost-on-the-window",
+    elementName: "Beauty",
+    familyKey: "positive-attitude",
+    title: "The Frost on the Window",
+    beginning: [
+      "On a freezing morning, ice patterns covered the window.",
+      "Most people just complained about the cold.",
+      "Dara stopped and really looked at the delicate patterns.",
+      "She noticed something beautiful in a thing everyone else ignored.",
+    ],
+    growing: [
+      "On one of the coldest mornings of the winter, thick frost had spread across the inside of the kitchen window overnight, in delicate branching patterns.",
+      "Everyone else in the house just grumbled about how cold it was and hurried past to get breakfast started.",
+      "Dara stopped for a moment and actually looked closely at the patterns, tracing one with her finger before it melted under her touch.",
+      "She found herself noticing real beauty in something everyone else had walked straight past without a second glance.",
+    ],
+    recognitionPrompts: standardPrompts("Beauty"),
+    noticeThisWeek: "This week, notice something ordinary or overlooked that's actually beautiful if you really look at it.",
+    storyboard: [
+      { scene: 1, visual: "A window covered in intricate frost patterns.", narration: "On a freezing morning, ice patterns covered the window." },
+      { scene: 2, visual: "Family members hurrying past, complaining about the cold.", narration: "Most people just complained about the cold." },
+      { scene: 3, visual: "Dara pausing, tracing a frost pattern with her finger.", narration: "She noticed something beautiful in a thing everyone else ignored.", onScreenText: "Where have you noticed beauty this week?" },
+    ],
+  },
+  {
+    slug: "reverence-the-old-oak-tree",
+    elementName: "Reverence",
+    familyKey: "positive-attitude",
+    title: "The Old Oak Tree",
+    beginning: [
+      "Owen's grandfather showed him a tree over 300 years old.",
+      "Standing under it, Owen suddenly felt very quiet.",
+      "It had been there long before anyone in his family was born.",
+      "He felt a kind of respect he didn't quite have words for.",
+    ],
+    growing: [
+      "On a walk through the old part of the park, Owen's grandfather stopped in front of an enormous oak tree and told him it was over three hundred years old.",
+      "Standing underneath its huge, spreading branches, Owen suddenly found himself talking in a quieter voice, almost without deciding to.",
+      "He thought about everything that tree had already lived through, long before his grandfather, or his grandfather's grandfather, had even been born.",
+      "He didn't have the exact words for what he felt standing there, but it was a kind of deep respect — for the tree, and for how small his own small slice of time actually was next to it.",
+    ],
+    recognitionPrompts: standardPrompts("Reverence"),
+    noticeThisWeek: "This week, notice something that makes you feel a quiet sense of respect for how old, vast, or enduring it is.",
+    storyboard: [
+      { scene: 1, visual: "A grandfather and grandson standing beneath a massive old oak tree.", narration: "Owen's grandfather showed him a tree over 300 years old." },
+      { scene: 2, visual: "Owen looking up in quiet awe.", narration: "Standing under it, Owen suddenly felt very quiet." },
+      { scene: 3, visual: "The two of them sitting beneath it together, saying little.", narration: "He felt a kind of respect he didn't quite have words for.", onScreenText: "Where have you felt reverence this week?" },
+    ],
+  },
+  {
+    slug: "serenity-the-quiet-corner",
+    elementName: "Serenity",
+    familyKey: "positive-attitude",
+    title: "The Quiet Corner",
+    beginning: [
+      "The house was loud with siblings, TV, and noise all evening.",
+      "Kaia found a small corner by the fish tank instead.",
+      "Just watching the fish swim slowly calmed her right down.",
+      "She didn't need anything to change. She just needed that corner.",
+    ],
+    growing: [
+      "Most evenings at Kaia's house were loud — the TV blaring, her younger siblings arguing over something, everyone talking over each other at once.",
+      "Instead of getting swept up in the noise, Kaia had found a small spot by the fish tank in the hallway where she could sit and just be still for a few minutes.",
+      "Watching the fish drift slowly back and forth, with no particular hurry to be anywhere, had a way of calming her down almost immediately.",
+      "Nothing about the loud house actually changed while she sat there — she'd just found her own small, quiet corner inside of it.",
+    ],
+    recognitionPrompts: standardPrompts("Serenity"),
+    noticeThisWeek: "This week, notice a small quiet space or moment you could return to when things around you feel loud.",
+    storyboard: [
+      { scene: 1, visual: "A loud, chaotic living room full of noise and siblings.", narration: "The house was loud with siblings, TV, and noise all evening." },
+      { scene: 2, visual: "Kaia sitting quietly by a fish tank in the hallway.", narration: "Kaia found a small corner by the fish tank instead." },
+      { scene: 3, visual: "Kaia's calm, peaceful expression watching the fish.", narration: "She didn't need anything to change. She just needed that corner.", onScreenText: "Where have you found serenity this week?" },
+    ],
+  },
+  {
+    slug: "zeal-starting-before-the-bell-rang",
+    elementName: "Zeal",
+    familyKey: "positive-attitude",
+    title: "Starting Before the Bell Rang",
+    beginning: [
+      "Samuel got an idea for his science project during class.",
+      "He could barely wait for school to end.",
+      "The second he got home, he started building it immediately.",
+      "His excitement carried him through the whole afternoon.",
+    ],
+    growing: [
+      "Halfway through science class, an idea for his project suddenly clicked into place in Samuel's head, and he could hardly focus on anything else for the rest of the day.",
+      "He kept sketching bits of the design in the margin of his notebook, counting down the minutes until the final bell.",
+      "The moment he got home, he dropped his backpack and went straight to the garage to start building, not even stopping for a snack first.",
+      "His own excitement about the idea carried him through hours of work that afternoon, without needing anyone to push him to keep going.",
+    ],
+    recognitionPrompts: standardPrompts("Zeal"),
+    noticeThisWeek: "This week, notice an idea that genuinely excites you enough to want to start on it right away.",
+    storyboard: [
+      { scene: 1, visual: "A classroom, Samuel's eyes lighting up mid-lesson.", narration: "Samuel got an idea for his science project during class." },
+      { scene: 2, visual: "Samuel watching the clock, eager for the day to end.", narration: "He could barely wait for school to end." },
+      { scene: 3, visual: "Samuel building enthusiastically in the garage.", narration: "His excitement carried him through the whole afternoon.", onScreenText: "Where have you felt zeal this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL HARD WORK ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "community-the-saturday-cleanup",
+    elementName: "Community",
+    familyKey: "hard-work",
+    title: "The Saturday Cleanup",
+    beginning: [
+      "The neighborhood park had gotten covered in litter.",
+      "One neighbor put up a sign: Saturday cleanup, 9am.",
+      "Bailey almost skipped it to sleep in instead.",
+      "She showed up anyway, and so did a dozen other neighbors.",
+    ],
+    growing: [
+      "Over a few months, the little park at the end of the block had slowly filled up with litter that nobody in particular seemed responsible for.",
+      "One neighbor finally put up a handwritten sign at the entrance: Saturday morning cleanup, 9am, bring gloves if you have them.",
+      "Bailey almost talked herself out of going, since sleeping in on a Saturday sounded a lot more appealing.",
+      "She went anyway, and was surprised to find a dozen neighbors already there, working together to make the park usable again for everyone who shared it.",
+    ],
+    recognitionPrompts: standardPrompts("Community"),
+    noticeThisWeek: "This week, notice a chance to show up for something shared with your neighborhood or community, even a small one.",
+    storyboard: [
+      { scene: 1, visual: "A neighborhood park covered in scattered litter.", narration: "The neighborhood park had gotten covered in litter." },
+      { scene: 2, visual: "A handwritten sign announcing a Saturday cleanup.", narration: "One neighbor put up a sign: Saturday cleanup, 9am." },
+      { scene: 3, visual: "A dozen neighbors working together, the park looking clean again.", narration: "She showed up anyway, and so did a dozen other neighbors.", onScreenText: "Where have you shown up for community this week?" },
+    ],
+  },
+  {
+    slug: "endurance-the-last-mile",
+    elementName: "Endurance",
+    familyKey: "hard-work",
+    title: "The Last Mile",
+    beginning: [
+      "Miguel's legs felt done by the last mile of the race.",
+      "Everything in him wanted to stop and walk.",
+      "He kept his legs moving anyway, one step at a time.",
+      "He crossed the finish line, tired but still running.",
+    ],
+    growing: [
+      "By the last mile of the school fun run, Miguel's legs felt like they were made of lead, and his breathing had gone ragged a while ago.",
+      "Every part of him wanted to just slow to a walk — nobody would have blamed him, plenty of other runners already had.",
+      "Instead, he focused on just keeping his legs moving, one small step after another, without thinking about the whole mile still ahead.",
+      "When he finally crossed the finish line, he wasn't fast and he wasn't first, but he had run the entire way, all the way to the end.",
+    ],
+    recognitionPrompts: standardPrompts("Endurance"),
+    noticeThisWeek: "This week, notice something difficult you kept going through instead of stopping partway.",
+    storyboard: [
+      { scene: 1, visual: "A tired runner in the last mile of a race, legs heavy.", narration: "Miguel's legs felt done by the last mile of the race." },
+      { scene: 2, visual: "Other runners slowing to a walk around him.", narration: "Everything in him wanted to stop and walk." },
+      { scene: 3, visual: "Miguel crossing the finish line, exhausted but upright.", narration: "He crossed the finish line, tired but still running.", onScreenText: "Where have you shown endurance this week?" },
+    ],
+  },
+  {
+    slug: "passion-chess-at-recess",
+    elementName: "Passion",
+    familyKey: "hard-work",
+    title: "Chess at Recess",
+    beginning: [
+      "Most kids spent recess on the playground or with a ball.",
+      "Noor spent every recess playing chess instead.",
+      "She read chess books at home just for fun.",
+      "Nobody made her care this much about it. She just did.",
+    ],
+    growing: [
+      "While most of the school spent recess running around the playground or playing whatever ball game was popular that week, Noor headed straight for the chess table by the library every single day.",
+      "At home, instead of watching a show before bed, she'd often read through chess books, studying openings and endgames just because she found them genuinely fascinating.",
+      "Nobody had ever pushed her into caring this much about a board game — no parent signing her up for lessons, no team requiring practice.",
+      "It was entirely her own passion, the kind that made hours disappear without her noticing, simply because she loved it.",
+    ],
+    recognitionPrompts: standardPrompts("Passion"),
+    noticeThisWeek: "This week, notice something you genuinely love doing for its own sake, without anyone requiring it of you.",
+    storyboard: [
+      { scene: 1, visual: "A busy playground, most kids playing ball games.", narration: "Most kids spent recess on the playground or with a ball." },
+      { scene: 2, visual: "Noor deeply focused over a chessboard at a quiet table.", narration: "Noor spent every recess playing chess instead." },
+      { scene: 3, visual: "Noor reading a chess book at home, completely absorbed.", narration: "Nobody made her care this much about it. She just did.", onScreenText: "Where have you felt passion this week?" },
+    ],
+  },
+  {
+    slug: "persistence-learning-to-ride",
+    elementName: "Persistence",
+    familyKey: "hard-work",
+    title: "Learning to Ride",
+    beginning: [
+      "Ezekiel fell off his bike more times than he could count.",
+      "Every single time, he picked the bike back up.",
+      "Week after week, he kept practicing in the driveway.",
+      "One ordinary afternoon, he just didn't fall anymore.",
+    ],
+    growing: [
+      "Learning to ride his bike without training wheels, Ezekiel fell more times over the course of a month than he could bother counting anymore.",
+      "Every single time, scraped knee or not, he picked the bike back up off the ground and climbed on again.",
+      "Week after week, he kept practicing in the driveway after school, even on days he was frustrated enough to want to quit entirely.",
+      "Then, on an afternoon that started out no different from any other, he simply rode all the way down the driveway and back without falling once — the month of trying had finally added up to something.",
+    ],
+    recognitionPrompts: standardPrompts("Persistence"),
+    noticeThisWeek: "This week, notice something you're still working toward over weeks, not just one try.",
+    storyboard: [
+      { scene: 1, visual: "A kid falling off a bike in a driveway, over and over across a montage.", narration: "Ezekiel fell off his bike more times than he could count." },
+      { scene: 2, visual: "Ezekiel picking the bike back up each time, undeterred.", narration: "Every single time, he picked the bike back up." },
+      { scene: 3, visual: "Ezekiel riding smoothly down the driveway, delighted.", narration: "One ordinary afternoon, he just didn't fall anymore.", onScreenText: "Where have you shown persistence this week?" },
+    ],
+  },
+  {
+    slug: "tenacity-not-backing-down-about-the-group",
+    elementName: "Tenacity",
+    familyKey: "hard-work",
+    title: "Not Backing Down About the Group",
+    beginning: [
+      "Ruby's group wanted to leave out a quiet classmate.",
+      "She kept insisting they include him anyway.",
+      "The group pushed back on her more than once.",
+      "She held her ground until they finally agreed.",
+    ],
+    growing: [
+      "When Ruby's project group was picking teammates, a few kids made it clear they wanted to skip over a quiet classmate nobody really knew well.",
+      "Ruby insisted from the start that they include him, since he was just as capable as anyone else, only quieter about it.",
+      "The rest of the group pushed back more than once, suggesting other names, hoping she'd just drop it.",
+      "She didn't drop it, bringing it up again each time, until the group finally agreed to include him — and he ended up doing some of the best work in the whole project.",
+    ],
+    recognitionPrompts: standardPrompts("Tenacity"),
+    noticeThisWeek: "This week, notice something you believe in enough to keep holding onto, even when others push back.",
+    storyboard: [
+      { scene: 1, visual: "A group of kids picking teammates, one quiet classmate left out.", narration: "Ruby's group wanted to leave out a quiet classmate." },
+      { scene: 2, visual: "Ruby arguing her point firmly, the group pushing back.", narration: "The group pushed back on her more than once." },
+      { scene: 3, visual: "The quiet classmate now included, contributing confidently.", narration: "She held her ground until they finally agreed.", onScreenText: "Where have you shown tenacity this week?" },
+    ],
+  },
+  {
+    slug: "thrift-fixing-it-instead-of-replacing-it",
+    elementName: "Thrift",
+    familyKey: "hard-work",
+    title: "Fixing It Instead of Replacing It",
+    beginning: [
+      "Amir's backpack got a small tear near the zipper.",
+      "He could have just asked for a brand-new one.",
+      "Instead he asked his mom to help him sew it up.",
+      "The old backpack lasted him the whole rest of the year.",
+    ],
+    growing: [
+      "A few weeks into the school year, Amir noticed a small tear starting near the main zipper of his backpack, right where it always caught on the doorframe.",
+      "It would have been easy enough to ask for a brand-new one — plenty of his friends replaced their backpacks over far less.",
+      "Instead, he asked his mom to show him how to sew the tear up himself, sitting at the kitchen table with a needle and thread for the first time.",
+      "The repaired backpack ended up lasting him the whole rest of the year, and he felt a small, real pride every time he used it.",
+    ],
+    recognitionPrompts: standardPrompts("Thrift"),
+    noticeThisWeek: "This week, notice something you could fix or make last a little longer instead of replacing it right away.",
+    storyboard: [
+      { scene: 1, visual: "A backpack with a small tear near the zipper.", narration: "Amir's backpack got a small tear near the zipper." },
+      { scene: 2, visual: "Amir and his mom sewing the tear at the kitchen table.", narration: "He asked his mom to help him sew it up." },
+      { scene: 3, visual: "Amir wearing the repaired backpack to school, proud.", narration: "The old backpack lasted him the whole rest of the year.", onScreenText: "Where have you shown thrift this week?" },
+    ],
+  },
+  {
+    slug: "time-making-the-saturday-count",
+    elementName: "Time",
+    familyKey: "hard-work",
+    title: "Making the Saturday Count",
+    beginning: [
+      "Harper had chores, homework, and a whole free Saturday.",
+      "She could have wasted the morning and scrambled later.",
+      "Instead she planned out when each thing would happen.",
+      "By evening, everything was done, and she'd still had fun too.",
+    ],
+    growing: [
+      "Harper woke up on Saturday with a list of chores, a math worksheet due Monday, and an entire day otherwise free to do whatever she wanted.",
+      "In past weekends, she'd usually wasted the whole morning and ended up scrambling to finish everything right before bed, stressed and rushed.",
+      "This time, she sat down for a few minutes first and roughly planned out when she'd do chores, when she'd do homework, and when she'd actually have time to relax.",
+      "By that evening, everything on her list was actually finished, and she'd still had plenty of real time to enjoy the day — because she'd respected how much time each thing would actually take.",
+    ],
+    recognitionPrompts: standardPrompts("Time"),
+    noticeThisWeek: "This week, notice a day you could plan out ahead of time instead of letting it just happen to you.",
+    storyboard: [
+      { scene: 1, visual: "Harper looking at a to-do list and a whole free Saturday ahead.", narration: "Harper had chores, homework, and a whole free Saturday." },
+      { scene: 2, visual: "Harper writing out a simple plan for her day.", narration: "She planned out when each thing would happen." },
+      { scene: 3, visual: "Harper relaxing happily in the evening, everything finished.", narration: "Everything was done, and she'd still had fun too.", onScreenText: "Where have you made good use of your time this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL SELF-CONTROL ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "long-suffering-every-time-he-borrows-it",
+    elementName: "Long-suffering",
+    familyKey: "self-control",
+    title: "Every Time He Borrows It",
+    beginning: [
+      "Delilah's little brother kept borrowing her stuff and breaking it.",
+      "It had happened more times than she wanted to count.",
+      "She felt frustrated, but she didn't explode at him again.",
+      "She talked to him calmly, the same patient way, one more time.",
+    ],
+    growing: [
+      "Delilah's little brother had a habit of borrowing her things without asking, and somehow, more often than not, something ended up broken or lost afterward.",
+      "This had happened enough times now that she genuinely couldn't remember the exact count anymore.",
+      "She felt the same flash of frustration she always did, and for a second wanted to yell the way she sometimes had before.",
+      "Instead, she took a breath and talked to him calmly again, the same patient way she had the last several times, even though her patience had been tested plenty already.",
+    ],
+    recognitionPrompts: standardPrompts("Long-suffering"),
+    noticeThisWeek: "This week, notice a repeated frustration where staying patient, again, is harder than it sounds.",
+    storyboard: [
+      { scene: 1, visual: "A little brother holding a broken toy, looking sheepish.", narration: "Delilah's little brother kept borrowing her stuff and breaking it." },
+      { scene: 2, visual: "Delilah's frustrated expression, catching herself before reacting.", narration: "She felt frustrated, but she didn't explode at him again." },
+      { scene: 3, visual: "Delilah talking calmly with her brother, patient despite everything.", narration: "She talked to him calmly, the same patient way, one more time.", onScreenText: "Where have you shown long-suffering patience this week?" },
+    ],
+  },
+  {
+    slug: "mercy-not-telling-on-her",
+    elementName: "Mercy",
+    familyKey: "self-control",
+    title: "Not Telling on Her",
+    beginning: [
+      "Genevieve's friend accidentally broke her favorite necklace.",
+      "She easily could have gotten her friend in real trouble.",
+      "Instead she just said it was okay and let it go.",
+      "Her friend never even had to feel that guilty about it.",
+    ],
+    growing: [
+      "While messing around at Genevieve's house, her friend accidentally snapped the clasp on a necklace that had actually meant a lot to her.",
+      "Genevieve could have made a big deal out of it, told her parents exactly what happened, and let her friend feel the full weight of it.",
+      "Instead, seeing how upset her friend already looked, she just said it was okay, that it could probably be fixed, and let the whole thing go.",
+      "Her friend never had to carry around the guilt of a bigger conversation about it — Genevieve had quietly chosen not to make her pay for an honest accident.",
+    ],
+    recognitionPrompts: standardPrompts("Mercy"),
+    noticeThisWeek: "This week, notice a moment you could let something go instead of making someone pay for a mistake.",
+    storyboard: [
+      { scene: 1, visual: "A necklace's clasp breaking accidentally, a friend looking horrified.", narration: "Genevieve's friend accidentally broke her favorite necklace." },
+      { scene: 2, visual: "Genevieve pausing, deciding not to make a big deal of it.", narration: "She easily could have gotten her friend in real trouble." },
+      { scene: 3, visual: "Genevieve reassuring her friend warmly.", narration: "Her friend never even had to feel that guilty about it.", onScreenText: "Where have you shown mercy this week?" },
+    ],
+  },
+  {
+    slug: "obedience-when-the-whistle-blew",
+    elementName: "Obedience",
+    familyKey: "self-control",
+    title: "When the Whistle Blew",
+    beginning: [
+      "Julian wanted to swim further out past the roped-off area.",
+      "The lifeguard blew a whistle and waved him back in.",
+      "He didn't love it, but he turned around right away.",
+      "Later, he learned there'd been a strong current out there.",
+    ],
+    growing: [
+      "At the lake that afternoon, Julian really wanted to swim out past the roped-off swimming area, where the water looked calm and inviting.",
+      "The moment he crossed the rope, the lifeguard blew a sharp whistle and waved him back toward shore.",
+      "Julian didn't love being called back in front of everyone, but he turned around immediately anyway, trusting that the rule was there for a reason even if he couldn't see it.",
+      "Later that day, he overheard the lifeguard mention a strong undertow out past that exact spot — the rule he'd grumbled about had actually kept him safe.",
+    ],
+    recognitionPrompts: standardPrompts("Obedience"),
+    noticeThisWeek: "This week, notice a rule you followed even though you didn't love it in the moment, and think about why it might exist.",
+    storyboard: [
+      { scene: 1, visual: "A kid swimming toward a roped-off boundary at a lake.", narration: "Julian wanted to swim further out past the roped-off area." },
+      { scene: 2, visual: "A lifeguard blowing a whistle, waving him back.", narration: "The lifeguard blew a whistle and waved him back in." },
+      { scene: 3, visual: "Julian back on shore, later realizing why the rule mattered.", narration: "Later, he learned there'd been a strong current out there.", onScreenText: "Where have you shown obedience this week?" },
+    ],
+  },
+  {
+    slug: "purity-helping-for-no-reason-at-all",
+    elementName: "Purity",
+    familyKey: "self-control",
+    title: "Helping for No Reason At All",
+    beginning: [
+      "Beatrice could have helped her neighbor for a reward.",
+      "Instead she almost didn't mention she'd helped at all.",
+      "She raked the leaves simply because it needed doing.",
+      "She wanted nothing back from it, and meant that completely.",
+    ],
+    growing: [
+      "Beatrice noticed her elderly neighbor's yard was completely covered in fallen leaves, and knew he sometimes paid neighborhood kids a few dollars for yard work.",
+      "She caught herself thinking about mentioning it to him first, so he'd know to pay her — then stopped and decided against it.",
+      "She raked his whole yard simply because it needed doing and she was able to do it, without saying anything about it to him at all.",
+      "When he found out later and tried to pay her anyway, she genuinely didn't want anything for it — she'd done it clean, without any reward attached from the start.",
+    ],
+    recognitionPrompts: standardPrompts("Purity"),
+    noticeThisWeek: "This week, notice a moment you could help with a completely clean intention, wanting nothing back at all.",
+    storyboard: [
+      { scene: 1, visual: "A yard covered in fallen leaves next door.", narration: "Beatrice could have helped her neighbor for a reward." },
+      { scene: 2, visual: "Beatrice raking quietly, telling no one.", narration: "She raked the leaves simply because it needed doing." },
+      { scene: 3, visual: "The neighbor trying to pay her, Beatrice declining warmly.", narration: "She wanted nothing back from it, and meant that completely.", onScreenText: "Where have you shown this kind of purity this week?" },
+    ],
+  },
+  {
+    slug: "temperance-just-one-slice",
+    elementName: "Temperance",
+    familyKey: "self-control",
+    title: "Just One Slice",
+    beginning: [
+      "The holiday dessert table had every kind of treat imaginable.",
+      "Xavier could have piled his plate as high as he wanted.",
+      "He took one slice of pie and one cookie instead.",
+      "He still enjoyed every single bite, without feeling sick after.",
+    ],
+    growing: [
+      "At the big family holiday gathering, the dessert table stretched the whole length of the counter, covered in pies, cookies, and cakes of every kind.",
+      "Xavier could easily have piled his plate as high as it would go, the way a couple of his cousins did.",
+      "Instead, he took one slice of the pie he actually loved most and one cookie, and left it at that.",
+      "He genuinely enjoyed every bite of what he chose, without the uncomfortable, overstuffed feeling some of his cousins ended up complaining about later.",
+    ],
+    recognitionPrompts: standardPrompts("Temperance"),
+    noticeThisWeek: "This week, notice a moment you could enjoy something in a moderate amount instead of overdoing it.",
+    storyboard: [
+      { scene: 1, visual: "An enormous dessert table piled with every kind of treat.", narration: "The holiday dessert table had every kind of treat imaginable." },
+      { scene: 2, visual: "Cousins piling their plates high with sweets.", narration: "Xavier could have piled his plate as high as he wanted." },
+      { scene: 3, visual: "Xavier happily enjoying his one slice of pie and cookie.", narration: "He still enjoyed every single bite, without feeling sick after.", onScreenText: "Where have you shown temperance this week?" },
+    ],
+  }
+);
+
+// ===========================================================================
+// ADDITIONAL INTEGRITY ELEMENTS
+// ===========================================================================
+STORY_LIBRARY.push(
+  {
+    slug: "ethical-the-loophole-he-didnt-use",
+    elementName: "Ethical",
+    familyKey: "integrity",
+    title: "The Loophole He Didn't Use",
+    beginning: [
+      "Theodore found a way to win the game that broke no rules.",
+      "It technically wasn't cheating, but it didn't feel right either.",
+      "He decided not to use it, even though he could have.",
+      "He won or lost fairly instead, and felt better about it.",
+    ],
+    growing: [
+      "While setting up for the class tournament, Theodore noticed a loophole in the game's rules that would let him win almost automatically, without technically breaking anything written down.",
+      "He sat with the idea for a minute, and the more he thought about it, the more it felt like exactly the kind of thing that was allowed but still wrong.",
+      "He decided not to use it, even though nobody would have caught him and nothing in the rulebook actually forbade it.",
+      "He played the game the honest way instead, win or lose, and felt a lot better walking away from it than he would have with a hollow win.",
+    ],
+    recognitionPrompts: standardPrompts("Ethical"),
+    noticeThisWeek: "This week, notice a technically-allowed shortcut you could choose not to take because it doesn't feel right.",
+    storyboard: [
+      { scene: 1, visual: "Theodore noticing a loophole in a game's rules.", narration: "Theodore found a way to win the game that broke no rules." },
+      { scene: 2, visual: "Theodore thinking it over, uneasy despite it being 'allowed.'", narration: "It technically wasn't cheating, but it didn't feel right either." },
+      { scene: 3, visual: "Theodore playing it straight, shaking hands after a fair game.", narration: "He won or lost fairly instead, and felt better about it.", onScreenText: "Where has being ethical mattered this week?" },
+    ],
+  },
+  {
+    slug: "individuality-not-matching-everyone-else",
+    elementName: "Individuality",
+    familyKey: "integrity",
+    title: "Not Matching Everyone Else",
+    beginning: [
+      "Everyone at school seemed to dress and act the same way lately.",
+      "Penelope liked things that weren't really part of that trend.",
+      "She kept wearing and liking what she actually liked anyway.",
+      "Eventually, being herself just felt normal to her again.",
+    ],
+    growing: [
+      "For a while, it seemed like almost everyone at school had settled into the exact same style, the exact same shows, the exact same way of talking.",
+      "Penelope genuinely liked different things — an older style of music, clothes nobody else really wore, hobbies that didn't quite fit the trend.",
+      "For a bit she felt a little self-conscious about it, but she kept wearing and liking what she actually liked instead of switching to match everyone else.",
+      "Over time, being herself stopped feeling like something to explain or defend — it just felt like the most natural, comfortable way to be.",
+    ],
+    recognitionPrompts: standardPrompts("Individuality"),
+    noticeThisWeek: "This week, notice something genuinely yours that's different from what everyone around you is doing.",
+    storyboard: [
+      { scene: 1, visual: "A hallway of students dressed and acting almost identically.", narration: "Everyone at school seemed to dress and act the same way lately." },
+      { scene: 2, visual: "Penelope wearing her own distinct style, standing out slightly.", narration: "Penelope liked things that weren't really part of that trend." },
+      { scene: 3, visual: "Penelope confident and at ease, fully herself.", narration: "Eventually, being herself just felt normal to her again.", onScreenText: "Where have you shown your own individuality this week?" },
+    ],
+  },
+  {
+    slug: "innocence-what-the-kindergartner-said",
+    elementName: "Innocence",
+    familyKey: "integrity",
+    title: "What the Kindergartner Said",
+    beginning: [
+      "A little kindergartner asked a teacher a totally honest question.",
+      "The adults nearby went quiet, a little embarrassed.",
+      "The kid had no hidden reason for asking. He just wondered.",
+      "His simple honesty ended up teaching the adults something.",
+    ],
+    growing: [
+      "During a school assembly, a kindergartner named Milo raised his hand and asked the visiting speaker a completely blunt, completely honest question that nobody else in the room would have dared to ask out loud.",
+      "A few of the adults nearby went a little quiet, slightly embarrassed on the speaker's behalf.",
+      "Milo hadn't asked it to embarrass anyone or make a point — he genuinely just wondered, the way small kids wonder about things without any filter yet.",
+      "The speaker actually laughed, answered honestly, and later told a teacher that the simple, unguarded question had been the most useful one all day.",
+    ],
+    recognitionPrompts: standardPrompts("Innocence"),
+    noticeThisWeek: "This week, notice a moment of simple, unguarded honesty — yours or someone else's — that cuts straight through.",
+    storyboard: [
+      { scene: 1, visual: "A kindergartner raising his hand during an assembly.", narration: "A little kindergartner asked a teacher a totally honest question." },
+      { scene: 2, visual: "Nearby adults exchanging slightly embarrassed glances.", narration: "The adults nearby went quiet, a little embarrassed." },
+      { scene: 3, visual: "The speaker laughing warmly, answering the question honestly.", narration: "His simple honesty ended up teaching the adults something.", onScreenText: "Where have you seen this kind of innocence this week?" },
+    ],
+  },
+  {
+    slug: "morality-the-twenty-dollars-on-the-sidewalk",
+    elementName: "Morality",
+    familyKey: "integrity",
+    title: "The Twenty Dollars on the Sidewalk",
+    beginning: [
+      "Isaiah found a twenty-dollar bill on an empty sidewalk.",
+      "No one was around. No one would have ever known.",
+      "He still turned it in at the corner store nearby instead.",
+      "It took real thought to decide that was the right thing.",
+    ],
+    growing: [
+      "Walking home from school, Isaiah spotted a twenty-dollar bill lying on an otherwise empty stretch of sidewalk.",
+      "He looked around, and there was genuinely no one nearby — no one would have ever known if he'd simply pocketed it and kept walking.",
+      "He actually thought about it for a minute, turning the decision over, before deciding to bring it into the corner store and ask if anyone had reported losing money.",
+      "It wasn't an easy or obvious choice in the moment — twenty dollars is real money — but he decided that doing the right thing mattered more than what he could get away with.",
+    ],
+    recognitionPrompts: standardPrompts("Morality"),
+    noticeThisWeek: "This week, notice a real decision between what's easy and what's right, especially when no one would ever know the difference.",
+    storyboard: [
+      { scene: 1, visual: "A twenty-dollar bill lying on an empty sidewalk.", narration: "Isaiah found a twenty-dollar bill on an empty sidewalk." },
+      { scene: 2, visual: "Isaiah looking around, genuinely alone, thinking hard.", narration: "No one was around. No one would have ever known." },
+      { scene: 3, visual: "Isaiah handing the bill to a store clerk.", narration: "He still turned it in at the corner store nearby instead.", onScreenText: "Where has your own sense of right and wrong mattered this week?" },
+    ],
+  },
+  {
+    slug: "nobility-helping-him-save-face",
+    elementName: "Nobility",
+    familyKey: "integrity",
+    title: "Helping Him Save Face",
+    beginning: [
+      "A classmate got an easy answer embarrassingly wrong out loud.",
+      "Some kids started to laugh at him.",
+      "Adaeze quickly asked a question that changed the subject.",
+      "Nobody even remembered the wrong answer by the end of class.",
+    ],
+    growing: [
+      "When the teacher called on him, a classmate confidently gave an answer that was completely, obviously wrong, and a couple of kids nearby started snickering.",
+      "His face went red, and for a second it looked like the whole class might pile on.",
+      "Adaeze, sitting nearby, quickly raised her hand and asked an unrelated question about the lesson, smoothly pulling everyone's attention away from him.",
+      "By the end of class, the moment had been completely forgotten — nobody even remembered the wrong answer, because Adaeze had quietly given him room to recover.",
+    ],
+    recognitionPrompts: standardPrompts("Nobility"),
+    noticeThisWeek: "This week, notice a moment you could help someone save face instead of letting them stay embarrassed.",
+    storyboard: [
+      { scene: 1, visual: "A classmate answering incorrectly, a few kids starting to laugh.", narration: "A classmate got an easy answer embarrassingly wrong out loud." },
+      { scene: 2, visual: "Adaeze raising her hand, redirecting attention smoothly.", narration: "Adaeze quickly asked a question that changed the subject." },
+      { scene: 3, visual: "The class moving on, the classmate visibly relieved.", narration: "Nobody even remembered the wrong answer by the end of class.", onScreenText: "Where have you shown nobility this week?" },
+    ],
+  },
+  {
+    slug: "principles-his-one-rule",
+    elementName: "Principles",
+    familyKey: "integrity",
+    title: "His One Rule",
+    beginning: [
+      "Damian had one personal rule: never leave a teammate out.",
+      "During a game, it would have been easier to ignore it.",
+      "He stuck to his rule anyway, even when it cost his team a bit.",
+      "He never once regretted holding onto that one rule.",
+    ],
+    growing: [
+      "For as long as he could remember playing team sports, Damian had one personal rule he never broke: never leave a teammate out of the play just because they weren't the strongest player.",
+      "During a close game, it would have been easier and probably more effective to just stop passing to a struggling teammate and carry the team himself.",
+      "He stuck to his rule anyway, kept including that teammate in the plays, even though it may have cost his team a little bit of an edge that game.",
+      "Looking back on it afterward, he never once regretted holding onto that one rule, no matter what the scoreboard said.",
+    ],
+    recognitionPrompts: standardPrompts("Principles"),
+    noticeThisWeek: "This week, notice a personal rule you hold onto even when it would be easier to bend it.",
+    storyboard: [
+      { scene: 1, visual: "Damian stating his rule to a friend: never leave a teammate out.", narration: "Damian had one personal rule: never leave a teammate out." },
+      { scene: 2, visual: "A tense game moment where ignoring the rule would be easier.", narration: "During a game, it would have been easier to ignore it." },
+      { scene: 3, visual: "Damian passing to the struggling teammate anyway.", narration: "He stuck to his rule anyway, even when it cost his team a bit.", onScreenText: "Where have your own principles guided you this week?" },
+    ],
+  },
+  {
+    slug: "probity-too-much-change",
+    elementName: "Probity",
+    familyKey: "integrity",
+    title: "Too Much Change",
+    beginning: [
+      "The cashier accidentally gave Naomi too much change back.",
+      "She noticed it right away, walking out of the store.",
+      "She went back inside and pointed out the mistake.",
+      "No one would have ever known if she'd just kept walking.",
+    ],
+    growing: [
+      "At the corner store, the cashier miscounted while making change and handed Naomi several dollars more than she was actually owed.",
+      "She noticed it almost the moment she stepped outside, feeling the extra weight of coins in her hand.",
+      "Instead of just walking home with the extra money, she turned around, went back inside, and told the cashier exactly what had happened.",
+      "The cashier thanked her, clearly relieved — and Naomi knew that if she'd just kept walking, absolutely no one would have ever known the difference.",
+    ],
+    recognitionPrompts: standardPrompts("Probity"),
+    noticeThisWeek: "This week, notice a small honest correction you could make that no one would ever catch if you didn't.",
+    storyboard: [
+      { scene: 1, visual: "A cashier handing over change, miscounting slightly.", narration: "The cashier accidentally gave Naomi too much change back." },
+      { scene: 2, visual: "Naomi noticing the extra money outside the store.", narration: "She noticed it right away, walking out of the store." },
+      { scene: 3, visual: "Naomi returning the extra change to a relieved cashier.", narration: "No one would have ever known if she'd just kept walking.", onScreenText: "Where have you shown this kind of honesty this week?" },
+    ],
+  },
+  {
+    slug: "vulnerability-admitting-she-was-scared",
+    elementName: "Vulnerability",
+    familyKey: "integrity",
+    title: "Admitting She Was Scared",
+    beginning: [
+      "Everyone assumed Camille wasn't nervous about the recital.",
+      "She'd been pretending to be totally fine all week.",
+      "Finally, she told her best friend the truth: she was terrified.",
+      "Saying it out loud made her feel closer to her friend, not weaker.",
+    ],
+    growing: [
+      "In the days leading up to the piano recital, Camille kept telling everyone, including herself, that she wasn't nervous at all.",
+      "She'd been putting on a calm, confident front all week, even though her stomach had been in knots the entire time.",
+      "The night before, she finally told her best friend the truth — that she was genuinely terrified of messing up in front of everyone.",
+      "Saying it out loud, instead of hiding it, didn't make her feel weak the way she'd feared it would. It actually made her feel closer to her friend than she had all week.",
+    ],
+    recognitionPrompts: standardPrompts("Vulnerability"),
+    noticeThisWeek: "This week, notice something you've been hiding that might actually bring you closer to someone if you admitted it.",
+    storyboard: [
+      { scene: 1, visual: "Camille putting on a confident face in front of others, visibly tense.", narration: "Everyone assumed Camille wasn't nervous about the recital." },
+      { scene: 2, visual: "Camille alone, clearly anxious, the mask slipping.", narration: "She'd been pretending to be totally fine all week." },
+      { scene: 3, visual: "Camille confiding in her best friend, both of them closer for it.", narration: "Saying it out loud made her feel closer to her friend, not weaker.", onScreenText: "Where have you shown vulnerability this week?" },
     ],
   }
 );
