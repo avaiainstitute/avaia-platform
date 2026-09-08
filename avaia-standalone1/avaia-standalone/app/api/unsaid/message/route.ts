@@ -5,7 +5,6 @@ import { AVAIA_MODEL, unsaidSystemPrompt } from "@/lib/engine/prompts";
 import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsaidMessages } from "@/lib/engine/unsaid";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
-import { isMember } from "@/lib/membership";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,16 +32,6 @@ export async function POST(request: Request) {
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
   if (convo.status !== "active") {
     return NextResponse.json({ error: "This conversation is complete." }, { status: 409 });
-  }
-
-  // Same Membership boundary as self-directed Unsung Heroes -- an
-  // experimental capability beyond the free Core Journey. Worth revisiting
-  // once this has actually been used; not a final pricing decision.
-  if (!(await isMember(supabase, user.id))) {
-    return NextResponse.json(
-      { error: "What Still Needs to Be Said requires AVAIA Membership." },
-      { status: 403 }
-    );
   }
 
   const crisis = detectCrisis(message);

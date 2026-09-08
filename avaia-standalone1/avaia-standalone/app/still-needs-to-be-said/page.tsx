@@ -11,7 +11,6 @@ import {
   endUnsaidConversation,
   deleteUnsaidConversation,
 } from "@/lib/engine/unsaid";
-import { isMember as checkIsMember } from "@/lib/membership";
 
 export const metadata = { title: "What Still Needs to Be Said — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -62,33 +61,6 @@ export default async function StillNeedsToBeSaidPage({
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
-
-  const isMember = await checkIsMember(supabase, user.id);
-  if (!isMember) {
-    return (
-      <div className="mx-auto max-w-prose px-5 py-20">
-        <div className="flex items-baseline justify-between">
-          <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
-            AVAIA
-          </Link>
-          <SignOutButton />
-        </div>
-        <p className="label mb-3 mt-8">What Still Needs to Be Said</p>
-        <h1 className="font-serif text-4xl text-ink">This is an AVAIA Membership benefit</h1>
-        <p className="mt-4 text-lg text-muted">
-          Join AVAIA Membership to open this private space and say what still needs to be said.
-        </p>
-        <div className="mt-8">
-          <Link
-            href="/membership"
-            className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-          >
-            Continue to Membership
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   const header = (
     <div className="flex items-baseline justify-between">

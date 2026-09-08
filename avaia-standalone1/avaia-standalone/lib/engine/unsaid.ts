@@ -2,7 +2,6 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isMember as checkIsMember } from "@/lib/membership";
 
 // A parallel record to lib/engine/conversation.ts's DbConversation/DbMessage
 // and lib/engine/unsung-heroes.ts's own pair, backed by
@@ -116,10 +115,6 @@ export async function startUnsaidConversation(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/still-needs-to-be-said");
-
-  if (!(await checkIsMember(supabase, user.id))) {
-    redirect("/still-needs-to-be-said");
-  }
 
   const recipient = String(formData.get("recipient") ?? "").trim();
   if (!recipient) {

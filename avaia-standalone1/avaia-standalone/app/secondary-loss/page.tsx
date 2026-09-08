@@ -67,30 +67,6 @@ export default function SecondaryLossPage() {
         ))}
       </div>
 
-      <div className="mt-12 max-w-prose">
-        <p className="text-muted">
-          Chemistry of Virtue may later offer language for how you choose to participate — it is
-          not an automatic remedy for any Secondary Loss, and nothing here pairs a specific loss
-          to a specific virtue.
-        </p>
-        <Link
-          href="/chemistry"
-          className="mt-3 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
-        >
-          Explore the Chemistry of Virtue →
-        </Link>
-        <p className="mt-6 text-muted">
-          Deeper exploration of any of this — reflections, questions, other voices who&rsquo;ve
-          written about it — belongs in the Living Library.
-        </p>
-        <Link
-          href="/library"
-          className="mt-3 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
-        >
-          Visit the Living Library →
-        </Link>
-      </div>
-
       <div className="mt-12 max-w-prose rule-t border-t border-rule pt-8">
         <p className="text-lg leading-relaxed text-ink">
           You do not need to know which of these applies before you begin. The Journey may help
