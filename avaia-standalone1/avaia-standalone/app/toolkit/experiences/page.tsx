@@ -6,14 +6,16 @@ import type { Experience } from "@/lib/experiences";
 export const metadata = { title: "Experiences — Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Read-only Experience browse for Guides -- minimum first slice. Of the
- *  11 approved Experiences seeded as status='draft' (migration 0020), one
- *  -- "The Things We Lose After the Loss" -- is now published (migration
- *  0031) and links through to its real detail route
- *  (/toolkit/experiences/[experienceId]); the rest still show nothing
- *  here until they're explicitly published too, an honest empty
- *  contribution rather than a broken one. No Experience Builder, no admin
- *  CRUD UI, in this pass. */
+/** Read-only Experience browse for Guides. Of the 11 Experiences
+ *  originally seeded as status='draft' (migration 0020), "The Things We
+ *  Lose After the Loss" was published in migration 0031; migration 0055
+ *  separately published 10 more (The View From Above's ten classes,
+ *  their own titles, not part of the original 0020 list). So this page
+ *  lists 11 published rows today, not 1 -- an honest reflection of
+ *  status='published', not a fixed count. Any Experience not yet
+ *  explicitly published still shows nothing here, which remains correct
+ *  behavior, not a bug. No Experience Builder, no admin CRUD UI, in this
+ *  pass. */
 export default async function ToolkitExperiencesPage() {
   const supabase = createClient();
   const {

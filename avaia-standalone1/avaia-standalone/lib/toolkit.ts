@@ -90,15 +90,15 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "table-formation",
     label: "Table Formation Engine",
-    description: "The structural framework for AVAIA conversations -- Host, Guide, Witness, Council, and Relationship/Virtue/Secondary Loss seats.",
-    status: "not-yet-specified",
+    description: "The structural framework for AVAIA conversations -- Host, Guide, Witness, Council, and Relationship/Virtue/Secondary Loss seats. Specified in institution/source/09_TableFormationEngine.md and lib/institution.ts's ROLES/SEATS; one seat (Audacity) is already live inside Defying Grief's CAT layer. No general-purpose, reusable seat-activation engine is installed yet.",
+    status: "specified-not-installed",
     href: null,
   },
   {
     key: "council",
     label: "Council",
-    description: "Expands perspective while preserving the authority of the Host and the responsibility of the Guide. Advisory only.",
-    status: "not-yet-specified",
+    description: "Expands perspective while preserving the authority of the Host and the responsibility of the Guide. Advisory only. Specified in institution/source/08_CouncilOperatingSystem.md and lib/institution.ts; a narrow councilPerspectives field already exists on every CAT->InnerCompass referral. No Guide-triggerable Council capability is installed yet.",
+    status: "specified-not-installed",
     href: null,
   },
   {

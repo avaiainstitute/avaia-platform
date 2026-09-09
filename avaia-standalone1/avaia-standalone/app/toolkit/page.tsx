@@ -425,23 +425,29 @@ export default async function ToolkitDashboardPage() {
         </section>
       )}
 
-      {/* Experiences / Classes -- minimum first slice. Read-only browse
-          only; the 11 Experiences and 20 Classes are seeded as
-          status='draft' (migration 0020), so these pages legitimately
-          show "nothing published yet" until publication is explicitly
-          approved. No Experience Builder yet. */}
+      {/* Experiences / Classes -- read-only browse. Originally only "The
+          Things We Lose After the Loss" (migration 0031) was published
+          among the 11 seeded in migration 0020; since then migration 0055
+          published 10 more (the View From Above collection), so this list
+          is no longer near-empty the way it once was. This is also the
+          only current entry point to the Defying Grief Master Curriculum
+          (components/DefyingGriefCurriculum.tsx, reached via
+          /toolkit/experiences/[id]) -- named "Master Curriculum" below so
+          a Guide can actually recognize it as the same thing, rather than
+          only ever seeing it once already inside an experience's detail
+          page. No Experience Builder yet. */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
-        <p className="label mb-3 text-muted">Experiences &amp; Classes</p>
+        <p className="label mb-3 text-muted">Experiences &amp; Master Curriculum</p>
         <p className="text-muted">
-          Together in the experience. Individual in the conversation. Full AVAIA Experiences and
-          the modular Class Library — browsing only in this pass.
+          Together in the experience. Individual in the conversation. Full AVAIA Experiences,
+          including the Defying Grief Master Curriculum and The View From Above's ten classes.
         </p>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href="/toolkit/experiences"
             className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
           >
-            Full AVAIA Experiences
+            Master Curriculum &amp; Full AVAIA Experiences
           </Link>
           <Link
             href="/toolkit/classes"

@@ -38,6 +38,12 @@ export default async function DefyingGriefParticipantPrintPage({
   if (!experienceRow) notFound();
   const experience = experienceRow as Experience;
 
+  // Same program-aware heading fix as the Facilitator print route -- this
+  // was hardcoded to "Defying Grief" regardless of which experience was
+  // actually being printed.
+  const isDefyingGrief = experience.components.includes("defying-grief");
+  const packetHeading = isDefyingGrief ? "Defying Grief" : experience.title;
+
   const { data: sectionRows } = await supabase
     .from("experience_sections")
     .select("*")
@@ -93,7 +99,7 @@ export default async function DefyingGriefParticipantPrintPage({
         </div>
       </div>
 
-      <h1>Defying Grief</h1>
+      <h1>{packetHeading}</h1>
       <p className="meta">Participant Materials · {experience.title}</p>
       <p className="intro">
         This packet is yours. Nothing on it has to be shown to anyone — not your Guide, not the

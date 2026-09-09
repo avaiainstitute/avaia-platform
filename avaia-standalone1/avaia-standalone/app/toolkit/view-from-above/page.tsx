@@ -110,6 +110,21 @@ export default async function ToolkitViewFromAbovePage({
         Awareness Profile every Host uses, threaded with this class's context.
       </p>
 
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Link
+          href="/toolkit/view-from-above/print/facilitator"
+          className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          Print Facilitator Workbook (all 10 classes) →
+        </Link>
+        <Link
+          href="/toolkit/view-from-above/print/participant"
+          className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          Print Participant Workbook (all 10 classes) →
+        </Link>
+      </div>
+
       <form action={startViewFromAboveSession} className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
         <label className="label mb-2 block" htmlFor="slug">
           Class

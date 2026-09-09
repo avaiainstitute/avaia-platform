@@ -145,13 +145,30 @@ export function parseModuleFields(body: string): ModuleField[] {
   );
 }
 
-/** Reads just the movement word ("Awareness" / "Understanding" /
- *  "Agency") from a module body's leading "Movement: X." clause, for
- *  grouping modules in the curriculum view. Returns null if the body
- *  doesn't start with a recognized movement clause. */
+/** Reads the movement bucket ("Awareness" / "Understanding" / "Agency")
+ *  from a module body's leading "Movement: X." clause, for grouping
+ *  modules in the curriculum view. Returns null if the body doesn't start
+ *  with a recognized movement clause.
+ *
+ *  Some modules (e.g. the View From Above classes, migrations 0056/0057)
+ *  use a compound or transitional label -- "Movement: Understanding into
+ *  Agency." or "Movement: Agency, closing the collection." -- rather than
+ *  one bare word. A strict exact-match here would silently drop that
+ *  module's entire content from every view that groups by movement (it
+ *  falls into an "Other" bucket that nothing renders), which is exactly
+ *  what was happening for four of the ten classes before this fix. A
+ *  compound label is bucketed by whichever canonical movement it names
+ *  last -- the one the module is transitioning toward -- since that's
+ *  the more advanced point in the sequence a Guide scanning by movement
+ *  would expect to find it under. */
 export function parseModuleMovement(body: string): "Awareness" | "Understanding" | "Agency" | null {
-  const match = body.match(/^Movement:\s*(Awareness|Understanding|Agency)\./);
-  return (match?.[1] as "Awareness" | "Understanding" | "Agency" | undefined) ?? null;
+  const match = body.match(/^Movement:\s*([^.]+)\./);
+  if (!match) return null;
+  const raw = match[1];
+  if (/agency/i.test(raw)) return "Agency";
+  if (/understanding/i.test(raw)) return "Understanding";
+  if (/awareness/i.test(raw)) return "Awareness";
+  return null;
 }
 
 /** Same purpose as parseModuleFields, for a different authored

@@ -49,6 +49,24 @@ export default async function DefyingGriefFacilitatorPrintPage({
   if (!experienceRow) notFound();
   const experience = experienceRow as Experience;
 
+  // The heading, movement line, and sequence label below were hardcoded to
+  // Defying Grief regardless of which experience was actually being
+  // printed -- harmless for Defying Grief itself, but wrong for every
+  // other experience (e.g. a View From Above class), which would print
+  // with the wrong program name at the top. Derived from the experience's
+  // own `components` tag instead, the same tag the live Toolkit delivery
+  // view (DefyingGriefCurriculum.tsx / ViewFromAboveClass.tsx) already
+  // branches on to pick a component in the first place.
+  const isDefyingGrief = experience.components.includes("defying-grief");
+  const isViewFromAbove = experience.components.includes("view-from-above");
+  const packetHeading = isDefyingGrief ? "Defying Grief — A Sacred Rebellion" : experience.title;
+  const movementLine = isDefyingGrief ? "Awareness → Understanding → Agency" : null;
+  const sequenceHeading = isDefyingGrief
+    ? "Master Curriculum — Full Module Sequence"
+    : isViewFromAbove
+      ? "Teaching Sequence"
+      : "Curriculum";
+
   const { data: sectionRows } = await supabase
     .from("experience_sections")
     .select("*")
@@ -62,10 +80,20 @@ export default async function DefyingGriefFacilitatorPrintPage({
   const boundaries = grouped.boundary ?? [];
   const takeHome = grouped.take_home ?? [];
   const formatVariants = grouped.format_variant ?? [];
+  // Includes every "foundation" section type an experience might carry --
+  // not just Defying Grief's own set (orientation/governing_distinction/
+  // anchor/success_definition). Without question/reference/hike_lesson/
+  // conversation_window here, a View From Above class's Human Question,
+  // Virtue Family reference, Hike Lesson, and Conversation Windows would
+  // print as if they didn't exist, even though the data is fully present.
   const overview = [
     ...(grouped.orientation ?? []),
     ...(grouped.governing_distinction ?? []),
+    ...(grouped.question ?? []),
     ...(grouped.anchor ?? []),
+    ...(grouped.reference ?? []),
+    ...(grouped.hike_lesson ?? []),
+    ...(grouped.conversation_window ?? []),
     ...(grouped.success_definition ?? []),
   ];
 
@@ -132,12 +160,12 @@ export default async function DefyingGriefFacilitatorPrintPage({
         </div>
       </div>
 
-      <h1>Defying Grief — A Sacred Rebellion</h1>
+      <h1>{packetHeading}</h1>
       <p className="meta">
         Facilitator Guide · {experience.title}
         {selectedFormat ? ` · ${selectedFormat.title}` : ""}
       </p>
-      <p className="meta">Awareness → Understanding → Agency</p>
+      {movementLine && <p className="meta">{movementLine}</p>}
 
       {selectedFormat && (
         <div className="format-box">
@@ -170,7 +198,7 @@ export default async function DefyingGriefFacilitatorPrintPage({
         </>
       )}
 
-      <h2>Master Curriculum — Full Module Sequence</h2>
+      <h2>{sequenceHeading}</h2>
       <p className="meta">
         Modules marked "In this format" are the ones {selectedFormat?.title ?? "the selected format"}{" "}
         names explicitly above. Every module is printed in full below regardless, for reference.
