@@ -138,6 +138,7 @@ export const SEATS: Seat[] = [
   { name: "Virtue Seats", text: "Virtues invited into the conversation for direction, balance, strength, or clarity — a perspective, not a person." },
   { name: "Secondary Loss Seats", text: "Losses that may need to be recognized because they are influencing the Host's experience." },
   { name: "Empty Chair", text: "A place held for someone or something absent, unresolved, lost, unavailable, or unable to participate directly." },
+  { name: "Burden Seat", text: "One seat, not four -- the voice of guilt, shame, doubt, and fear, however many of the four are present. Gives what a person is already carrying a place to be heard, without giving it authority over the conversation." },
 ];
 
 // ---------------------------------------------------------------------------

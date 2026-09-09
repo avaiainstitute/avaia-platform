@@ -90,16 +90,16 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "table-formation",
     label: "Table Formation Engine",
-    description: "The structural framework for AVAIA conversations -- Host, Guide, Witness, Council, and Relationship/Virtue/Secondary Loss seats. Specified in institution/source/09_TableFormationEngine.md and lib/institution.ts's ROLES/SEATS; one seat (Audacity) is already live inside Defying Grief's CAT layer. No general-purpose, reusable seat-activation engine is installed yet.",
-    status: "specified-not-installed",
-    href: null,
+    description: "The structural framework for AVAIA conversations -- Host, Guide, Witness, Council, and Self/Relationship/Virtue/Secondary Loss/Burden seats. Live inside every adult IAP, CAT, and InnerCompass conversation: seats are recognized and offered conversationally, never configured. See TABLE_FORMATION_INSTRUCTIONS in lib/engine/prompts.ts.",
+    status: "installed",
+    href: "/toolkit/table-formation",
   },
   {
     key: "council",
     label: "Council",
-    description: "Expands perspective while preserving the authority of the Host and the responsibility of the Guide. Advisory only. Specified in institution/source/08_CouncilOperatingSystem.md and lib/institution.ts; a narrow councilPerspectives field already exists on every CAT->InnerCompass referral. No Guide-triggerable Council capability is installed yet.",
-    status: "specified-not-installed",
-    href: null,
+    description: "Expands perspective while preserving the authority of the Host and the responsibility of the Guide. Advisory only. Invokable by the Host or Guide directly in any adult IAP, CAT, or InnerCompass conversation, or offered by AVAIA when it would materially help; perspectives are spoken in the conversation itself and carried forward via the existing Council Perspectives referral field.",
+    status: "installed",
+    href: "/toolkit/table-formation#council",
   },
   {
     key: "give",
