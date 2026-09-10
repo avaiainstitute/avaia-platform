@@ -22,7 +22,7 @@ const ORIENTING_PROMPTS: Record<string, string> = {
   "Dreams / Opportunities": "What future did you have to let go of?",
   "Self-Trust": "Where do you doubt your own judgment now?",
   "Decision-Making / Boundaries": "What's hard to decide, or hard to hold the line on?",
-  "Life Vision": "What did you picture for your life that's changed?",
+  "Life's Vision": "What did you picture for your life that's changed?",
   Connection: "Who feels distant, or hard to reach?",
   Control: "What feels like it's slipping out of your hands?",
   Identity: "Who are you, now that this has happened?",

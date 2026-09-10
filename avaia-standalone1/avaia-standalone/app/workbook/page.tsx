@@ -423,6 +423,41 @@ export default async function WorkbookPage({
       carriedQuestions.length > 0 ||
       anchorPatterns.length > 0);
 
+  // Master Connection Map / Master Control Panel -- established AVAIA
+  // Workbook concepts external to this codebase ("What Becomes Visible:
+  // Clarity and Agency," the official AVAIA visual asset: Connection Map
+  // "shows the people, virtues, losses, and lessons that shape your story";
+  // Control Panel "captures recognitions, insights, tasks, and next right
+  // steps"). Both are pure read-only aggregations over referral fields the
+  // Workbook already fetches above -- no new schema, no new query. Unlike
+  // "Across your journeys" (only what recurs 2+ times, only with 2+
+  // journeys), this is the complete picture, always shown once any referral
+  // exists.
+  //
+  // STATUS (internal -- not shown to the Host): Master Connection Map is
+  // the first usable view of this concept, not a relational graph -- People/
+  // Virtues/Losses/Lessons are independently aggregated from the same
+  // referral records, not linked to each other (no person-to-virtue or
+  // person-to-loss edge exists in the data). Master Control Panel is a
+  // PARTIAL IMPLEMENTATION: Recognitions, Insights, and Next Right Steps are
+  // real; Tasks is absent -- AVAIA has no stateful, completable to-do record
+  // anywhere (no table or field tracks done/not-done). See "Master Control
+  // Panel -- Task Capability" in the outstanding-work list for the smallest
+  // schema addition that would complete it. Deliberately not surfaced to the
+  // Host in the UI below -- development status is a report concern, not
+  // something AVAIA exposes as a limitation to the person using it.
+  const mapPeople = uniq(collectAll(["significantRelationships"]));
+  const mapVirtues = uniq(collectVirtues());
+  const mapLosses = uniq(collectSecondaryLosses());
+  const mapLessons = uniq(collectAll(["whatToPreserve"]));
+  const panelRecognitions = uniq(collectAll(["keyRecognitions", "majorUnderstandings"]));
+  const panelInsights = uniq(collectAll(["anchorStatements", "reflectionsThatEmerged"]));
+  const panelNextSteps = uniq(collectAll(["nextStep", "restorationTargets"]));
+  const hasConnectionMap =
+    mapPeople.length > 0 || mapVirtues.length > 0 || mapLosses.length > 0 || mapLessons.length > 0;
+  const hasControlPanel =
+    panelRecognitions.length > 0 || panelInsights.length > 0 || panelNextSteps.length > 0;
+
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
       <div className="flex items-baseline justify-between">
@@ -579,6 +614,131 @@ export default async function WorkbookPage({
                   <li key={i}>{q}</li>
                 ))}
               </ul>
+            </div>
+          )}
+        </section>
+      )}
+
+      {(hasConnectionMap || hasControlPanel) && (
+        <section className="mt-12 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label text-seal">Your Workbook</p>
+          <h2 className="mt-1 font-serif text-2xl text-ink">Master Connection Map &amp; Control Panel</h2>
+          <p className="mt-1 text-sm text-muted">
+            The complete picture, not just what recurs — everyone, every virtue, every loss, and
+            every lesson your record has already made visible, alongside what you&rsquo;ve
+            recognized, carried, and chosen to do next.
+          </p>
+
+          {hasConnectionMap && (
+            <div className="mt-6">
+              <p className="label text-muted">Master Connection Map</p>
+              <p className="mt-1 text-xs text-muted">
+                The people, virtues, losses, and lessons that shape your story.
+              </p>
+
+              {mapPeople.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">People</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
+                    {mapPeople.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {mapVirtues.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">Virtues</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {mapVirtues.map((label) => {
+                      const [family, element] = label.split(" — ");
+                      return (
+                        <VirtueLink
+                          key={label}
+                          family={family}
+                          virtue={element ?? null}
+                          className="rounded-full border border-rule px-3 py-1 text-sm text-ink transition-colors hover:border-seal"
+                        >
+                          {label}
+                        </VirtueLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {mapLosses.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">Losses</p>
+                  <ul className="mt-2 space-y-1 text-sm text-ink">
+                    {mapLosses.map((l, i) => (
+                      <li key={i}>{l}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {mapLessons.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">Lessons</p>
+                  <ul className="mt-2 space-y-2">
+                    {mapLessons.map((l, i) => (
+                      <li
+                        key={i}
+                        className="border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink"
+                      >
+                        &ldquo;{l}&rdquo;
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasControlPanel && (
+            <div className="mt-6">
+              <p className="label text-muted">Master Control Panel</p>
+              <p className="mt-1 text-xs text-muted">Captures recognitions, insights, and next right steps.</p>
+
+              {panelRecognitions.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">Recognitions</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
+                    {panelRecognitions.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {panelInsights.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">Insights</p>
+                  <ul className="mt-2 space-y-2">
+                    {panelInsights.map((a, i) => (
+                      <li
+                        key={i}
+                        className="border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink"
+                      >
+                        &ldquo;{a}&rdquo;
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {panelNextSteps.length > 0 && (
+                <div className="mt-4">
+                  <p className="label text-muted">Next right steps</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">
+                    {panelNextSteps.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </section>

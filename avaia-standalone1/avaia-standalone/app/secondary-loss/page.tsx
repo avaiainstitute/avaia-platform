@@ -13,7 +13,7 @@ const RECOGNITION_LINE: Record<string, string> = {
   "Dreams / Opportunities": "The future you imagined may need to change.",
   "Self-Trust": "How much you trust your own judgment may be shaken.",
   "Decision-Making / Boundaries": "Making decisions or holding boundaries may feel harder.",
-  "Life Vision": "The life you thought you were building may look different now.",
+  "Life's Vision": "The life you thought you were building may look different now.",
   Connection: "Connection with others may feel different.",
   Control: "Your sense of control may feel different.",
   Identity: "Who you understand yourself to be may be in question.",

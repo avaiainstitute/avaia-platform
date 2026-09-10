@@ -53,7 +53,11 @@ create policy "guide participants are owner-only"
 -- once one exists (null until the Guide actually begins). `tool` uses the
 -- complete canonical registry (see lib/toolkit.ts) even though only 'iap'
 -- has an installed route in this build -- the vocabulary is meant to be
--- complete from the start, per the approved build direction.
+-- complete from the start, matching the component list already
+-- established in lib/institution.ts's COMPONENT_RELATIONSHIPS (Core
+-- Conversations, Operating Systems, Core Engines, Organizational
+-- Operations): the registry names every component that list already
+-- names, not a separate authority of its own.
 -- ---------------------------------------------------------------------------
 create table if not exists public.guide_sessions (
   id               uuid primary key default gen_random_uuid(),

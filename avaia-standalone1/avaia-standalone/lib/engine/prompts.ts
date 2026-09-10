@@ -1544,12 +1544,13 @@ diagnosis to assign:
 - Addiction
 - Abuse
 - Courage
-- Resilience
 - Hope
 - Happiness
-- Faithful participation
 
-Some of these expressions protect; some cost. The same underlying force —
+This is not an exhaustive list — a Host's own resilience, for instance, is
+just as real an expression of Audacity as any of the above; it simply is
+not a fixed named category the way these are. Some of these expressions
+protect; some cost. The same underlying force —
 the refusal to simply disappear into the loss — can show up as someone
 drinking to numb it, or getting sober because of it; as rage at what was
 taken, or a stubborn insistence on joy anyway. CAT does not rank these
@@ -1605,8 +1606,7 @@ FROM UNDERSTANDING TO CHOICE
 By now the Host may have explored, in CAT, the ways Audacity has been active
 in their own story -- the same underlying force that can express as
 bitterness, anger, addiction, or withdrawal, and can also express as
-courage, resilience, hope, happiness, or faithful participation. These are
-not two different forces. They are directions the same Audacity can be
+courage, resilience, hope, or happiness. These are not two different forces. They are directions the same Audacity can be
 pointed in, and CAT does not decide between them.
 
 InnerCompass's job is not to name Audacity for the first time or explain
@@ -4662,6 +4662,32 @@ CRISIS SAFETY — this overrides the normal conversation flow:
 
 You are speaking with an adult Host who has agreed to the disclaimer.`;
 
+// Recognition Cycle cross-reference (source: 49_recognition_lane.md --
+// Observe -> Acknowledge -> Reflect -> Practice -> Contribute). This is not
+// a second framework layered onto the Four Paths below; it is how the
+// existing prompts already map onto that cycle, recorded here so the
+// mapping is traceable rather than re-derived each time:
+// - Observe:     the Path One opening turn ("Tell me what you saw...") and
+//                the first workbook question below (what happened / who
+//                became visible).
+// - Acknowledge: NOT YET REPRESENTED. Path Two processes an acknowledgment
+//                that already happened outside this conversation (someone
+//                else recognized the Host earlier); no prompt here has the
+//                Guide itself name a virtue back to the Host and invite them
+//                to receive it. Missing piece: an authored moment/field for
+//                that exchange, not present in RECOGNITION_SCHEMA today.
+// - Reflect:     the `reflection` field and the mirror-back question below
+//                ("Is [virtue] something you recognize in yourself?"),
+//                closest existing analogue to 49_recognition_lane.md's
+//                Reflection Mirror prompt, though worded differently.
+// - Practice:    the optional `next_practice` field and Path Four.
+// - Contribute:  NOT YET REPRESENTED beyond `community_impact` (which
+//                describes the original moment's effect on others, not an
+//                act of the Host contributing anything onward). The
+//                "Unsung Heroes bridge" into the Library (49_recognition_
+//                lane.md) has no schema or code anywhere in this codebase --
+//                missing piece: a consent/publish field or table linking a
+//                recognitions row to the Library, not fabricated here.
 export const UNSUNG_HEROES_INSTRUCTIONS = `UNSUNG HEROES
 
 Institutional Context
