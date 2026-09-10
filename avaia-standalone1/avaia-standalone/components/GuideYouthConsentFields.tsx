@@ -21,12 +21,12 @@ const SCOPE_LABEL: Record<GuardianConsentScope, string> = {
  *  needs: developmental band, guardian consent (name/email + a required
  *  confirmation that the Guide actually collected it), and the Guide's
  *  own confirmation that they communicated the age-appropriate
- *  participation information to the Youth Host themselves -- two
+ *  participation information to the Youth Host themselves, two
  *  separate things per the governing decision (guardian authorizes
  *  participation; the Youth Host's own understanding is a distinct
  *  requirement). Used by both the individual Guide-facilitated entry
  *  point and the group/workshop one, so the two can never drift out of
- *  sync on what consent actually requires. Renders only the fields --
+ *  sync on what consent actually requires. Renders only the fields,
  *  each page keeps its own participant name/email fields and submit
  *  button around this. */
 export default function GuideYouthConsentFields({
@@ -34,19 +34,19 @@ export default function GuideYouthConsentFields({
   bandOptional = false,
 }: {
   /** Show the Individual / Group-workshop / School-organization scope
-   *  selector -- only Youth Defying Grief's entry point needs it (this is
+   *  selector, only Youth Defying Grief's entry point needs it (this is
    *  the "complete the group/workshop delivery format" and "school/
    *  organization delivery readiness" surface: there is no separate batch-
-   *  registration UI, and none is claimed here -- a Guide running a group
+   *  registration UI, and none is claimed here, a Guide running a group
    *  session registers each attendee through this same form once per
    *  person, each with their own guardian consent scoped to that context.
    *  The sponsoring-organization field appears only once a non-individual
    *  scope is picked. */
   showScopeSelector?: boolean;
-  /** When true, band starts unselected and isn't required -- for a tool
+  /** When true, band starts unselected and isn't required, for a tool
    *  most participants use as adults (Unsung Heroes), where a Guide only
    *  sets a band when this specific participant is actually a Youth Host.
-   *  Guardian consent then becomes required only once a band is picked --
+   *  Guardian consent then becomes required only once a band is picked,
    *  an adult session stays exactly as simple as before this component
    *  existed. Youth Defying Grief, where every participant is a Youth
    *  Host by definition, keeps band and guardian consent always required
@@ -76,7 +76,7 @@ export default function GuideYouthConsentFields({
           </div>
           {scope === "group_workshop" && (
             <p className="mt-2 text-sm text-muted">
-              Registers one attendee at a time -- run this once per participant in the room. The
+              Registers one attendee at a time, run this once per participant in the room. The
               shared curriculum itself is delivered live, using the Master Curriculum and its
               print materials; this registers each attendee&rsquo;s own private AVAIA conversation
               access within that session.
@@ -116,9 +116,9 @@ export default function GuideYouthConsentFields({
 
       {band && (
         <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] p-5">
-          <p className="label mb-3">Youth participation information — {BAND_LABEL[band]}</p>
+          <p className="label mb-3">Youth participation information, {BAND_LABEL[band]}</p>
           <p className="mb-3 text-sm text-muted">
-            Communicate this to the Youth Host yourself, in whatever form fits the moment —
+            Communicate this to the Youth Host yourself, in whatever form fits the moment,
             reading it aloud, paraphrasing it, or handing it to them to read. It is their own
             understanding of what participation involves, separate from guardian consent below.
           </p>

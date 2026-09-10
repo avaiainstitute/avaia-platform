@@ -6,10 +6,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Starts protected private processing for one participant. Returns a
- *  one-time access URL only -- never the conversation itself. The Guide's
+ *  one-time access URL only, never the conversation itself. The Guide's
  *  own session has no way to read what happens at that URL; it's meant to
  *  be handed to the participant and opened in their own browser context
- *  (their own device, or a private/incognito window -- never the Guide's
+ *  (their own device, or a private/incognito window, never the Guide's
  *  own signed-in tab, which would only ever see "link generated," nothing
  *  more). See lib/engine/room.ts's startPrivateProcessing for why. */
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {

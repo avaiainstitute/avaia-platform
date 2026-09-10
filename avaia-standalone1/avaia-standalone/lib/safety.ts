@@ -1,4 +1,4 @@
-// Safety, consent, and crisis content — approved by Dorian Johnson
+// Safety, consent, and crisis content, approved by Dorian Johnson
 // (Answers to AVAIA remaining questions, 2026-07-10). This is the canonical
 // wording for the live conversation engine (login + IAP → CAT → InnerCompass).
 // Kept here so it is version-controlled and used verbatim when the engine ships.
@@ -13,7 +13,7 @@ export const DISCLAIMER =
 /**
  * Crisis protocol (approved, Q1). On detection the AI steps outside the normal
  * flow, responds with warmth and compassion, acknowledges the need for
- * immediate human support, provides resources, and remains present — without
+ * immediate human support, provides resources, and remains present, without
  * counseling, diagnosing, or attempting to resolve the crisis.
  */
 export const CRISIS_PROTOCOL = {

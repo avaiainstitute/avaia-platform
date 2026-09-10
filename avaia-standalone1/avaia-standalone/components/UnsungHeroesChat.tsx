@@ -22,7 +22,7 @@ export default function UnsungHeroesChat({
   pathLabel: string;
   initialMessages: Msg[];
   /** Set only by app/toolkit/unsung-heroes/[sessionId]/page.tsx (Guide-
-   *  facilitated) -- passed through to WhatBecameVisible so "Consider for
+   *  facilitated), passed through to WhatBecameVisible so "Consider for
    *  My Virtue Signature" lands on this participant's own Signature, not
    *  the signed-in Guide's. Omitted by the self-serve /unsung-heroes page. */
   participantId?: string | null;
@@ -37,7 +37,7 @@ export default function UnsungHeroesChat({
   const prevHostCount = useRef(0);
   const [focus, setFocus] = useState<ResolvedFocus | null>(null);
   const lastFocusKeyRef = useRef("");
-  // Bumped on send so dictation stops and can't re-fill the cleared input --
+  // Bumped on send so dictation stops and can't re-fill the cleared input,
   // same pattern as JourneyChat's micStop.
   const [micStop, setMicStop] = useState(0);
   const [formulaFocus, setFormulaFocus] = useState<{ virtues: string[]; outcome: string } | null>(
@@ -85,7 +85,7 @@ export default function UnsungHeroesChat({
   }, []);
 
   // Read-once reminder of a Virtue Formula the Host generated on the
-  // Chemistry of Virtue page and chose to come notice here -- same
+  // Chemistry of Virtue page and chose to come notice here, same
   // sessionStorage-handoff pattern as avaia:focus, a separate key since the
   // shape differs. Purely a visual cue for the Host; nothing here is sent to
   // the AI. Cleared immediately so it doesn't linger into a later, unrelated
@@ -101,7 +101,7 @@ export default function UnsungHeroesChat({
         }
       }
     } catch {
-      /* no stored formula, or storage unavailable -- proceed without the reminder */
+      /* no stored formula, or storage unavailable, proceed without the reminder */
     }
   }, []);
 
@@ -179,7 +179,7 @@ export default function UnsungHeroesChat({
       });
       setShowCardForm(false);
       // Same avaia:focus sessionStorage key JourneyChat already uses so the
-      // Chemistry tab opens with this virtue pre-highlighted -- no new
+      // Chemistry tab opens with this virtue pre-highlighted, no new
       // handoff mechanism.
       try {
         sessionStorage.setItem(
@@ -190,7 +190,7 @@ export default function UnsungHeroesChat({
           })
         );
       } catch {
-        /* storage unavailable -- the link back to Chemistry still works */
+        /* storage unavailable, the link back to Chemistry still works */
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -210,7 +210,7 @@ export default function UnsungHeroesChat({
   if (saved) {
     // Every element in virtue_elements is already validated against the
     // same single virtue_family (see app/api/unsung-heroes/recognition's
-    // own validation), so they share one family display name -- and
+    // own validation), so they share one family display name, and
     // primaryVirtue, when valid, is already included among them (it's the
     // first candidate name filtered the same way). Deduped since the model
     // isn't guaranteed to keep primaryVirtue out of supportingVirtues too.
@@ -226,7 +226,7 @@ export default function UnsungHeroesChat({
           {saved.primaryVirtue ? ` What you noticed: ${saved.primaryVirtue}.` : ""}
         </p>
 
-        {/* The mirror-back bridge, in the Host's own words -- whatever they
+        {/* The mirror-back bridge, in the Host's own words, whatever they
             actually said (yes, no, maybe, not yet, or nothing at all) when
             asked whether the recognized element felt familiar in them too.
             Shown as-is; AVAIA never adds its own conclusion on top of it. */}
@@ -238,11 +238,11 @@ export default function UnsungHeroesChat({
           <WhatBecameVisible
             // recognitions.virtue_family stores the family KEY
             // ("positive-attitude"), not the display name CAT/InnerCompass
-            // referrals use -- resolved here so addSignatureEntryForHost's
+            // referrals use, resolved here so addSignatureEntryForHost's
             // isValidVirtueFamily check (which validates against the
             // canonical display name) sees the same shape either source
             // produces. Every canonically-validated element this recognition
-            // surfaced is offered, not only the primary one -- matching how
+            // surfaced is offered, not only the primary one, matching how
             // a Journey completion card offers every virtue a referral
             // recognized, not just one.
             virtues={elementNames.map((element) => ({ family: familyDisplayName, element }))}
@@ -357,7 +357,7 @@ export default function UnsungHeroesChat({
         <form onSubmit={saveCard} className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
           <p className="font-serif text-lg text-ink">A few details for the card</p>
           <p className="mt-1 text-sm text-muted">
-            Who sees this card follows automatically from this context — not something you choose.
+            Who sees this card follows automatically from this context, not something you choose.
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -455,7 +455,7 @@ export default function UnsungHeroesChat({
                 }
               }}
               rows={3}
-              placeholder="Write or speak — as much or as little as you like…"
+              placeholder="Write or speak, as much or as little as you like…"
               disabled={sending}
               className="w-full resize-none rounded-lg border border-rule bg-white/[0.04] py-3 pl-4 pr-16 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
             />

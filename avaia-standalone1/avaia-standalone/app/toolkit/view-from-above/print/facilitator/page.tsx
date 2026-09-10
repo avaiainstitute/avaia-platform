@@ -8,14 +8,14 @@ import { PrintButton } from "@/components/DefyingGriefPrintControls";
 
 export const dynamic = "force-dynamic";
 
-/** The combined ten-class Facilitator Workbook -- packaging only, no new
+/** The combined ten-class Facilitator Workbook, packaging only, no new
  *  curriculum. Reads the same `experiences` + `experience_sections` rows
  *  the per-class print route and Toolkit delivery view already read
  *  (migrations 0055-0057), one query for all ten instead of one at a
  *  time, ordered to match the collection's own hike sequence
  *  (lib/view-from-above.ts), not alphabetically. If a class's `experiences`
- *  row isn't found -- most plausibly because 0055-0057 haven't been
- *  applied to this database yet -- that class prints a plain notice
+ *  row isn't found, most plausibly because 0055-0057 haven't been
+ *  applied to this database yet, that class prints a plain notice
  *  instead of silently vanishing, so a missing class is visible, not
  *  invisible. */
 export default async function ViewFromAboveFacilitatorWorkbookPage() {
@@ -83,7 +83,7 @@ export default async function ViewFromAboveFacilitatorWorkbookPage() {
       <ol className="toc">
         {VIEW_FROM_ABOVE_CLASSES.map((c) => (
           <li key={c.slug}>
-            {c.title} — {c.virtueFamily}
+            {c.title}, {c.virtueFamily}
             {!byTitle.has(c.title) && " (not found in this database)"}
           </li>
         ))}
@@ -97,7 +97,7 @@ export default async function ViewFromAboveFacilitatorWorkbookPage() {
               <h2>{cls.title}</h2>
               <p className="missing">
                 No published experience row found for "{cls.title}" in this database. This class's
-                content exists in migrations 0055-0057 -- if those haven't been applied here yet,
+                content exists in migrations 0055-0057, if those haven't been applied here yet,
                 that's why it's missing.
               </p>
             </div>

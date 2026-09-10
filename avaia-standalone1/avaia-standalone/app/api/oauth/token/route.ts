@@ -9,7 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Host who approved it.
 //
 // Client credentials may arrive either as HTTP Basic auth (client_secret_basic)
-// or in the request body (client_secret_post) — both are supported since
+// or in the request body (client_secret_post), both are supported since
 // which method GPT Builder's OAuth implementation actually uses isn't
 // documented anywhere AVAIA controls.
 

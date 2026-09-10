@@ -3,13 +3,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ConceptStatus, ProposedBy, JunctionStatus } from "./library-concepts";
 
 // Minimum historical provenance layer (see 0016_library_provenance.sql).
-// Fully separate from library_entries -- a passage connects to a concept
+// Fully separate from library_entries, a passage connects to a concept
 // through its own chain (Person -> Work -> Source Version -> Passage ->
 // Passage<->Concept), never through library_entries or
 // library_entry_concepts. Same two-step (junction rows filtered
 // published, then batch-fetch targets filtered published) pattern as
 // lib/library-concepts.ts, extended one link further at each step of the
-// chain -- passage -> source version -> work -> person -- so a broken or
+// chain, passage -> source version -> work -> person, so a broken or
 // since-unpublished link anywhere in the chain drops that passage from
 // the result rather than rendering a partial/inconsistent provenance.
 
@@ -80,7 +80,7 @@ export type LibraryPassageConcept = {
 };
 
 /** The full, un-collapsed provenance chain for one passage, as connected
- *  to a concept -- person, work, and source version are kept as separate
+ *  to a concept, person, work, and source version are kept as separate
  *  fields rather than flattened into one display string, so the caller
  *  decides how to present attribution (the concept page renders them as
  *  distinct labeled pieces, per the "do not make the historical author
@@ -91,7 +91,7 @@ export type HistoricalPassage = {
   sourceVersion: LibrarySourceVersion;
   work: LibraryWork;
   person: LibraryPerson;
-  /** From the passage<->concept junction -- why this passage belongs in
+  /** From the passage<->concept junction, why this passage belongs in
    *  this concept's neighborhood, editorial content, distinct from
    *  passage.context_note (which is about the passage itself). */
   note: string | null;
@@ -100,7 +100,7 @@ export type HistoricalPassage = {
 /** Published passages connected to a concept, with their full provenance
  *  chain resolved. Every level (junction, passage, source version, work,
  *  person) is filtered to status = 'published' explicitly, on top of RLS
- *  already enforcing the same thing on all five tables -- matching the
+ *  already enforcing the same thing on all five tables, matching the
  *  discipline already established in lib/library-concepts.ts. Returns an
  *  empty array whenever nothing published exists yet, which is the
  *  correct, expected result today: no historical content has been

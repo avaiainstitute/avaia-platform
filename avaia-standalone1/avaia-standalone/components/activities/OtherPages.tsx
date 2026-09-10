@@ -78,7 +78,7 @@ export function NoticePage({ set }: { set: ElementActivitySet }) {
   return (
     <div className="flex flex-1 flex-col gap-6 py-2">
       <p className="text-center font-sans text-base text-[#5b5646]">
-        Notice this week -- where did you see {set.elementName.toLowerCase()}? Draw or write in each box.
+        Notice this week, where did you see {set.elementName.toLowerCase()}? Draw or write in each box.
       </p>
       <div className="grid flex-1 grid-cols-1 gap-5 sm:grid-cols-3">
         {boxes.map((b) => (

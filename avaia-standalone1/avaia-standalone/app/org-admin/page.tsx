@@ -4,13 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listAdministeredOrganizationIds } from "@/lib/organization-admin";
 
-export const metadata = { title: "My Organizations — AVAIA" };
+export const metadata = { title: "My Organizations, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** "MY ORGANIZATIONS" -- the top of the Organization Administrator
+/** "MY ORGANIZATIONS", the top of the Organization Administrator
  *  dashboard hierarchy. Uses the caller's own RLS-scoped client for the
  *  authorization lookup itself (organization_admins' self-read policy is
- *  sufficient) and the admin client only to resolve organization names --
+ *  sufficient) and the admin client only to resolve organization names,
  *  organizations is already readable by any toolkit-authorized Guide, but
  *  an Organization Administrator is a separate identity who may hold no
  *  Guide authorization at all, so this doesn't assume that policy covers

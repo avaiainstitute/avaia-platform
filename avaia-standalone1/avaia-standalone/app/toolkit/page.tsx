@@ -16,10 +16,10 @@ import { startUnsungHeroesSession } from "@/lib/engine/unsung-heroes";
 
 const UNSUNG_HEROES_PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
 
-export const metadata = { title: "Guide Toolkit — AVAIA" };
+export const metadata = { title: "Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Finds an existing AVAIA account by email, if one exists -- same
+/** Finds an existing AVAIA account by email, if one exists, same
  *  page-through-listUsers pattern already used in app/api/share/route.ts,
  *  not a new mechanism. Written fresh here rather than importing that
  *  route's private helper, so the existing, working share flow stays
@@ -37,7 +37,7 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
 }
 
 /** Creates a participant (linked to an existing Host account by email if
- *  one is found -- no invite/auto-link-on-signup mechanism yet, that's a
+ *  one is found, no invite/auto-link-on-signup mechanism yet, that's a
  *  deliberate follow-up, not required for this build) and immediately
  *  starts an IAP session for them, the only installed tool so far. */
 async function startIapSession(formData: FormData) {
@@ -77,7 +77,7 @@ async function startIapSession(formData: FormData) {
   redirect(`/toolkit/iap/${session.id}`);
 }
 
-/** Starts a new IAP session for an existing participant -- same underlying
+/** Starts a new IAP session for an existing participant, same underlying
  *  action as startIapSession above, just skipping participant creation. */
 async function startIapSessionForExisting(formData: FormData) {
   "use server";
@@ -102,17 +102,17 @@ async function startIapSessionForExisting(formData: FormData) {
 }
 
 /** Permanently removes a Guide's own participant and every record linked
- *  to them -- found missing during the demonstration-path audit: a Guide
+ *  to them, found missing during the demonstration-path audit: a Guide
  *  had no way at all to clean up a throwaway participant created here
  *  (e.g. a live demo run with someone), and the admin Youth-data tool's
  *  own search only ever finds participants with a developmental_band set
  *  (see app/admin/youth-data/page.tsx), so an adult demo participant was
- *  unreachable from there too. Reuses deleteYouthParticipantData as-is --
+ *  unreachable from there too. Reuses deleteYouthParticipantData as-is,
  *  despite the name, its cascade was never actually Youth-specific (no
  *  band filter anywhere in it), so this is genuine reuse, not a new
  *  deletion mechanism. Ownership is verified here, with the caller's own
  *  RLS-scoped client, before the admin (service-role) client is ever
- *  used for the actual cascading delete -- same two-step posture the
+ *  used for the actual cascading delete, same two-step posture the
  *  admin route itself uses. */
 async function removeParticipant(formData: FormData) {
   "use server";
@@ -158,7 +158,7 @@ export default async function ToolkitDashboardPage() {
   );
 
   // Guided Journeys (Phase E.4) live at their own route, app/guided-journeys/,
-  // deliberately outside /toolkit -- Toolkit and Guided Journey Facilitation
+  // deliberately outside /toolkit, Toolkit and Guided Journey Facilitation
   // are independent professional capabilities (see app/guided-journeys/
   // layout.tsx's own comment for why). This page only needs to know whether
   // to show the link-out below, not the actual invitation list.
@@ -192,7 +192,7 @@ export default async function ToolkitDashboardPage() {
             </div>
             <div>
               <label className="label mb-2 block" htmlFor="email">
-                Email (optional — links to their AVAIA account if they have one)
+                Email (optional, links to their AVAIA account if they have one)
               </label>
               <input
                 id="email"
@@ -203,7 +203,7 @@ export default async function ToolkitDashboardPage() {
             </div>
           </div>
           <p className="mt-4 text-sm text-muted">
-            Tool: <span className="text-ink">Individual Awareness Profile</span> — CAT and
+            Tool: <span className="text-ink">Individual Awareness Profile</span>, CAT and
             InnerCompass follow automatically as this session progresses, the same handoff every
             Host gets. For an adult Defying Grief session, a Youth participant, or Unsung Heroes,
             use their own entries in the Toolkit below.
@@ -272,7 +272,7 @@ export default async function ToolkitDashboardPage() {
                       className="rounded-md border border-rule bg-white/[0.04] px-2 py-2 font-sans text-sm text-ink outline-none focus:border-seal"
                     >
                       <option value="" disabled className="bg-[#05060b]">
-                        Unsung Heroes path —
+                        Unsung Heroes path,
                       </option>
                       {UNSUNG_HEROES_PATHS.map((path) => (
                         <option key={path} value={path} className="bg-[#05060b]">
@@ -318,7 +318,7 @@ export default async function ToolkitDashboardPage() {
                 >
                   <div>
                     <p className="text-ink">
-                      {participant?.name ?? "Unnamed participant"} — {toolLabel(s.tool)}
+                      {participant?.name ?? "Unnamed participant"}, {toolLabel(s.tool)}
                     </p>
                     <p className="text-xs text-muted">
                       {s.status === "complete" ? "Complete" : "In progress"}
@@ -340,18 +340,18 @@ export default async function ToolkitDashboardPage() {
         </section>
       )}
 
-      {/* Records / continuity -- the Workbook is the existing, real
+      {/* Records / continuity, the Workbook is the existing, real
           continuity view (referrals, transcripts, patterns across
           journeys); it isn't a separate Guide-only record, since
           Guide-facilitated conversations live under the Guide's own
           account. Unsung Heroes recognitions are a separate table with no
           Workbook presence at all (public /unsung-heroes/dashboard is
           their only view, already self-scoped by RLS to observer_id, so it
-          works unchanged for a Guide's own recognitions too) -- linked
+          works unchanged for a Guide's own recognitions too), linked
           here rather than folded into Workbook, since folding it in would
           mean editing that frozen page for a table it was never built to
           read. No "Master Connection Map" or equivalent was found anywhere
-          in the codebase -- not built here, not invented. */}
+          in the codebase, not built here, not invented. */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Records &amp; Continuity</p>
         <p className="text-muted">
@@ -377,23 +377,23 @@ export default async function ToolkitDashboardPage() {
         </div>
       </section>
 
-      {/* Guided Journeys (Phase E.4) -- link out only. The feature itself
+      {/* Guided Journeys (Phase E.4), link out only. The feature itself
           lives at app/guided-journeys/, its own route with its own gate
           (active certification + Guided Journey Facilitation
-          authorization -- deliberately not Toolkit authorization, which
+          authorization, deliberately not Toolkit authorization, which
           this section's own visibility check below also avoids treating
           as a prerequisite). Shown only when this Guide actually holds
           that authorization, so a Guide without it doesn't see a
           dead-end link. */}
-      {/* Shared Room -- more than one person in the same AVAIA experience at
+      {/* Shared Room, more than one person in the same AVAIA experience at
           once. Its own route (app/toolkit/rooms/) since it isn't a single
-          IAP/CAT/InnerCompass session -- gated by the same Toolkit
+          IAP/CAT/InnerCompass session, gated by the same Toolkit
           authorization already required to reach this page at all, no
           separate capability. */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Shared Room</p>
         <p className="text-muted">
-          Facilitate more than one person in the same AVAIA experience -- each person keeps
+          Facilitate more than one person in the same AVAIA experience, each person keeps
           ownership of their own story; nothing moves from private into shared without their
           own choice.
         </p>
@@ -425,17 +425,23 @@ export default async function ToolkitDashboardPage() {
         </section>
       )}
 
-      {/* Experiences / Classes -- read-only browse. Originally only "The
-          Things We Lose After the Loss" (migration 0031) was published
-          among the 11 seeded in migration 0020; since then migration 0055
-          published 10 more (the View From Above collection), so this list
-          is no longer near-empty the way it once was. This is also the
-          only current entry point to the Defying Grief Master Curriculum
+      {/* Experiences, read-only browse. Originally only "The Things We
+          Lose After the Loss" (migration 0031) was published among the 11
+          seeded in migration 0020; since then migration 0055 published 10
+          more (the View From Above collection), so this list is no longer
+          near-empty the way it once was. This is also the only current
+          entry point to the Defying Grief Master Curriculum
           (components/DefyingGriefCurriculum.tsx, reached via
-          /toolkit/experiences/[id]) -- named "Master Curriculum" below so
+          /toolkit/experiences/[id]), named "Master Curriculum" below so
           a Guide can actually recognize it as the same thing, rather than
           only ever seeing it once already inside an experience's detail
-          page. No Experience Builder yet. */}
+          page. No Experience Builder yet.
+          The separate 20-item Class Library (/toolkit/classes, migration
+          0020's `classes` table) is intentionally not linked here, Dorian
+          does not want the 20-class catalog presented on the website right
+          now. The route and its draft-only rows are left in place
+          (nothing published, nothing deleted), just unreachable from any
+          Toolkit navigation. */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Experiences &amp; Master Curriculum</p>
         <p className="text-muted">
@@ -449,20 +455,14 @@ export default async function ToolkitDashboardPage() {
           >
             Master Curriculum &amp; Full AVAIA Experiences
           </Link>
-          <Link
-            href="/toolkit/classes"
-            className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
-          >
-            Class Library
-          </Link>
         </div>
       </section>
 
-      {/* Tool registry -- split into Adult/General vs. Youth so a Guide
+      {/* Tool registry, split into Adult/General vs. Youth so a Guide
           working across both populations doesn't have to scan one flat
           list to tell them apart (found during the admin/Guide usability
           pass: nothing on this dashboard previously distinguished them at
-          all). Same TOOL_REGISTRY data, same cards, just grouped by key --
+          all). Same TOOL_REGISTRY data, same cards, just grouped by key,
           not a redesign of the Toolkit itself. */}
       {(() => {
         const YOUTH_KEYS = new Set(["youth-defying-grief", "youth-group"]);
@@ -491,18 +491,18 @@ export default async function ToolkitDashboardPage() {
         return (
           <>
             <section className="rule-t mt-14 border-t border-rule pt-8">
-              <p className="label mb-3 text-muted">The Toolkit — Adult / General</p>
+              <p className="label mb-3 text-muted">The Toolkit, Adult / General</p>
               <div className="grid gap-3 sm:grid-cols-2">{adultTools.map(renderCard)}</div>
             </section>
             <section className="rule-t mt-10 border-t border-rule pt-8">
-              <p className="label mb-3 text-muted">The Toolkit — Youth</p>
+              <p className="label mb-3 text-muted">The Toolkit, Youth</p>
               <Link
                 href="/toolkit/youth-safety"
                 className="mb-4 block rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 transition-colors hover:border-seal"
               >
-                <p className="font-serif text-lg text-ink">Youth Safety — What To Actually Do</p>
+                <p className="font-serif text-lg text-ink">Youth Safety, What To Actually Do</p>
                 <p className="mt-1 text-sm text-muted">
-                  The one thing to read before facilitating a Youth session — what to notice, what
+                  The one thing to read before facilitating a Youth session, what to notice, what
                   to do, and what the narrow safety exception actually means in practice.
                 </p>
               </Link>

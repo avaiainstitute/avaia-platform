@@ -1,4 +1,4 @@
--- GPT IAP workshop — OAuth provider tables. Run once against the live
+-- GPT IAP workshop, OAuth provider tables. Run once against the live
 -- database (Supabase SQL editor), after 0001-0003.
 --
 -- AVAIA acts as a minimal OAuth 2.0 authorization-code provider for exactly
@@ -6,16 +6,16 @@
 -- through a real consent screen, instead of any value the model has to
 -- remember and reproduce across a conversation.
 --
--- oauth_authorization_codes — short-lived, single-use, created the moment
+-- oauth_authorization_codes, short-lived, single-use, created the moment
 -- the Host approves the consent screen; exchanged by OpenAI's servers
 -- (not the Host's browser) for an access token.
 --
--- oauth_access_tokens — the bearer token the Action actually sends on every
+-- oauth_access_tokens, the bearer token the Action actually sends on every
 -- call afterward. Bound to a host_id; that binding is what lets the
 -- referral endpoint resolve identity without any value the model carries.
 --
 -- Both locked out of anon/authenticated entirely (RLS enabled, zero
--- policies) — service-role only, same posture as the Stripe webhook.
+-- policies), service-role only, same posture as the Stripe webhook.
 
 create table if not exists public.oauth_authorization_codes (
   id               uuid primary key default gen_random_uuid(),
@@ -46,4 +46,4 @@ create index if not exists oauth_access_tokens_token_idx on public.oauth_access_
 create index if not exists oauth_access_tokens_host_idx on public.oauth_access_tokens (host_id);
 
 alter table public.oauth_access_tokens enable row level security;
--- Deliberately no policies on either table — service-role only, by design.
+-- Deliberately no policies on either table, service-role only, by design.

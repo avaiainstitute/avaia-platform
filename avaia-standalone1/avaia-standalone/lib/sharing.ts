@@ -1,4 +1,4 @@
-// Workbook sharing — shared types. Not server-only: the share/revoke buttons
+// Workbook sharing, shared types. Not server-only: the share/revoke buttons
 // (client components) need the ShareScope type too.
 
 export type ShareScope = "conversation" | "workbook" | "referral";
@@ -13,6 +13,6 @@ export type SharedAccessGrant = {
   revoked_at: string | null;
 };
 
-/** Display-only — resolved server-side via the admin client since
+/** Display-only, resolved server-side via the admin client since
  *  shared_access only stores the recipient's user id, not their email. */
 export type SharedAccessGrantWithEmail = SharedAccessGrant & { shared_with_email: string | null };

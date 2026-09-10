@@ -11,7 +11,7 @@ understanding of it) → Seats (perspectives invited to widen that view) →
 Expanded Visibility → Territory (the Host's actual lived reality, which no
 map fully contains) → Host Movement (what the Host chooses from there).
 
-The Host is not the object being examined — the Host places something on
+The Host is not the object being examined, the Host places something on
 the table so it can be looked at. The map is not the territory: a map can
 be incomplete without being wrong, and this engine widens the Host's map
 rather than replacing it with a supposedly correct one.

@@ -25,12 +25,12 @@ const EDIT_ERROR_MESSAGE: Record<string, string> = {
 };
 
 /** Every editable field already belongs to library_entries (Living Library
- *  audit, Section C) -- nothing invented here. Provenance (Voice -> Work ->
+ *  audit, Section C), nothing invented here. Provenance (Voice -> Work ->
  *  Source Version -> Passage) stays deliberately untouched: that chain
  *  connects to Concepts, never to library_entries directly, and this pass
  *  doesn't redesign that architecture. Taxonomy fields (Secondary Losses,
  *  virtues, programs, Journey stages) are always validated against the
- *  same canonical sources every other AVAIA surface uses -- never a
+ *  same canonical sources every other AVAIA surface uses, never a
  *  free-typed duplicate. */
 async function updateLibraryEntry(formData: FormData) {
   "use server";
@@ -79,7 +79,7 @@ async function updateLibraryEntry(formData: FormData) {
 
   // Every taxonomy value is re-validated server-side against its own
   // canonical source, never trusted from the posted checkbox values alone
-  // -- the same discipline every prompt-composition layer in this app
+  //, the same discipline every prompt-composition layer in this app
   // already follows for these exact taxonomies.
   const programs = formData.getAll("programs").map(String).filter((p) => (PROGRAM_KEYS as string[]).includes(p));
   const journey_stages = formData
@@ -173,7 +173,7 @@ export default async function AdminLibraryEntryPage({
   const editError = searchParams?.editError ? EDIT_ERROR_MESSAGE[searchParams.editError] : null;
   const showSuccess = searchParams?.updated === "1" || searchParams?.created === "1";
 
-  // Fixed-row virtue editor -- no dynamic add-row JS in this pass (no
+  // Fixed-row virtue editor, no dynamic add-row JS in this pass (no
   // multi-select/array-input precedent existed anywhere in this codebase
   // before this page; see the audit's admin-architecture research). Pads
   // to at least 4 rows so there's always room to add without saving first.
@@ -302,7 +302,7 @@ export default async function AdminLibraryEntryPage({
             {virtueRows.map((v, i) => (
               <div key={i} className="flex flex-wrap gap-3">
                 <select name="virtueFamily" defaultValue={v.family} className="flex-1 min-w-[160px] rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-ink outline-none backdrop-blur-sm focus:border-seal">
-                  <option value="" className={optionClass}>— none —</option>
+                  <option value="" className={optionClass}>None</option>
                   {VIRTUE_FAMILIES.map((f) => (
                     <option key={f.key} value={f.key} className={optionClass}>{f.name}</option>
                   ))}
@@ -361,7 +361,7 @@ export default async function AdminLibraryEntryPage({
             </div>
           </div>
           <p className="mt-3 text-xs text-muted">
-            Draft entries are never visible to Hosts regardless of visibility — that&rsquo;s enforced
+            Draft entries are never visible to Hosts regardless of visibility, that&rsquo;s enforced
             by row-level security, not this form.
           </p>
         </section>

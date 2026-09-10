@@ -8,15 +8,15 @@ import { createClient } from "@/lib/supabase/client";
  * The safe migration path for AVAIA's existing passwordless Hosts (item 5
  * of the member-auth close-out): supabase.auth.updateUser({ password })
  * against an ALREADY-AUTHENTICATED session sets a password on THIS SAME
- * account -- it is an update, never a sign-up, so there is no way for it
+ * account, it is an update, never a sign-up, so there is no way for it
  * to create a second Host identity. This is deliberately the only path
  * AVAIA offers for setting a password (the other place it's ever touched,
  * /reset-password, is reached only via a Supabase recovery link that
  * already proved account ownership the same way). No "current password"
- * field is asked for, on purpose -- Supabase's own updateUser doesn't
+ * field is asked for, on purpose, Supabase's own updateUser doesn't
  * require one; the live session already is the proof of identity, exactly
  * as it is for every other authenticated action in AVAIA. Reachable for
- * every signed-in Host regardless of age -- setting your own account's
+ * every signed-in Host regardless of age, setting your own account's
  * password is an ordinary account-security action, not a story-content
  * access, so it needs no guardian-consent gate the way Journey content
  * does.
@@ -45,7 +45,7 @@ export default function AccountPage() {
       }
       setEmail(data.user.email ?? null);
 
-      // Family status -- self-read RLS only, see migration 0054. An owner
+      // Family status, self-read RLS only, see migration 0054. An owner
       // sees their own plan's member count; a member sees only that
       // they're on a plan (never who else is on it).
       const { data: ownedPlan } = await supabase
@@ -125,7 +125,7 @@ export default function AccountPage() {
         <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
           <p className="label mb-2 text-muted">Family Membership</p>
           <p className="text-sm text-muted">
-            You manage a Family Membership — {family.memberCount} member{family.memberCount === 1 ? "" : "s"} on
+            You manage a Family Membership, {family.memberCount} member{family.memberCount === 1 ? "" : "s"} on
             the plan. Each person keeps their own private AVAIA account, Journey, and Workbook.
           </p>
           <Link href="/family" className="mt-3 inline-block label text-seal hover:opacity-80">
@@ -138,7 +138,7 @@ export default function AccountPage() {
           <p className="label mb-2 text-muted">Family Membership</p>
           <p className="text-sm text-muted">
             You&rsquo;re a member of a Family AVAIA Membership. Your account, Journey, and Workbook
-            stay private — the plan owner never sees your conversations.
+            stay private, the plan owner never sees your conversations.
           </p>
         </section>
       )}
@@ -148,7 +148,7 @@ export default function AccountPage() {
         <p className="text-sm text-muted">
           Set a password so you can sign in with email and password next time, instead of
           retrieving a code every time. You can still use an emailed code whenever you&rsquo;d
-          rather — setting a password doesn&rsquo;t remove that option.
+          rather, setting a password doesn&rsquo;t remove that option.
         </p>
         <form onSubmit={submit} className="mt-5 space-y-4">
           <label className="label block" htmlFor="password">New password</label>

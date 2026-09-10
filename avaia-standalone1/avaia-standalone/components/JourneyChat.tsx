@@ -8,12 +8,12 @@ import SpeakButton from "@/components/SpeakButton";
 import RichText from "@/components/RichText";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
 import WhatBecameVisible from "@/components/WhatBecameVisible";
-// Type-only -- referral-provenance.ts is "server-only", but a type-only
+// Type-only, referral-provenance.ts is "server-only", but a type-only
 // import is fully erased before bundling, so nothing server-only actually
 // ships to the client. Reused so the card's shape can't drift from what
 // getCompletionSummary() actually returns.
 import type { CompletionSummary } from "@/lib/engine/referral-provenance";
-// Type-only, same reasoning as CompletionSummary above -- prompts.ts is
+// Type-only, same reasoning as CompletionSummary above, prompts.ts is
 // also "server-only"; this import is fully erased before bundling.
 import type { Program } from "@/lib/engine/prompts";
 
@@ -30,21 +30,21 @@ export default function JourneyChat({
 }: {
   conversationId: string;
   stageLabel: string;
-  /** What this stage's referral goes to -- the next stage's own label, or
+  /** What this stage's referral goes to, the next stage's own label, or
    *  "Continuity" for InnerCompass. Resolved server-side (STAGE_LABEL is
    *  server-only) and passed down as a plain string purely for the
    *  completion card's heading below; not used for anything else. */
   nextStageLabel?: string;
   isLast: boolean;
   initialMessages: Msg[];
-  /** Which program this conversation belongs to — decides where finishing
+  /** Which program this conversation belongs to, decides where finishing
    *  the whole journey lands the Host (general Workbook vs. the Defying
    *  Grief dashboard; a Youth conversation falls through to Workbook,
    *  same as general, since there's no Youth dashboard yet). Defaults to
    *  "general" for every existing caller. */
   program?: Program;
   /** Set only by the Guide toolkit pages (app/toolkit/{iap,cat,innercompass}/
-   *  [sessionId]/page.tsx) -- passed straight through to WhatBecameVisible
+   *  [sessionId]/page.tsx), passed straight through to WhatBecameVisible
    *  so "Consider for My Virtue Signature" lands on this participant's own
    *  Signature, not the signed-in Guide's. Omitted by the self-serve
    *  /journey page. */
@@ -58,11 +58,11 @@ export default function JourneyChat({
   const [advancing, setAdvancing] = useState(false);
   const [error, setError] = useState("");
   // Set once the referral has been generated, from either the button or a
-  // typed completion request -- both converge on the same
+  // typed completion request, both converge on the same
   // generateReferral() result and the same compact completion card below.
   // Navigation waits for the Host's own "Continue" click. summary is a
   // handful of fields selected from the already-stored referral
-  // (getCompletionSummary, server-side) -- not the full referral, which
+  // (getCompletionSummary, server-side), not the full referral, which
   // now lives only in Workbook's Guide's Record.
   const [finished, setFinished] = useState<{ done: boolean; summary: CompletionSummary } | null>(
     null
@@ -75,7 +75,7 @@ export default function JourneyChat({
   const [micStop, setMicStop] = useState(0);
 
   // When the Host sends a new message, bring that message to the top of the
-  // viewport so the Guide's reply streams in right below it — fully readable —
+  // viewport so the Guide's reply streams in right below it, fully readable,
   // instead of the page jumping to the very bottom on every streamed token.
   useEffect(() => {
     const hostCount = messages.reduce(
@@ -103,7 +103,7 @@ export default function JourneyChat({
       if (f) sessionStorage.setItem("avaia:focus", JSON.stringify(f));
       else sessionStorage.removeItem("avaia:focus");
     } catch {
-      /* storage unavailable — highlighting still works in-session */
+      /* storage unavailable, highlighting still works in-session */
     }
   }
 
@@ -134,9 +134,9 @@ export default function JourneyChat({
       if (res.headers.get("x-avaia-crisis") === "1") setCrisis(true);
 
       // The Host typed readiness to finish directly into the chat instead of
-      // clicking the button below — the server already generated the
+      // clicking the button below, the server already generated the
       // referral (see isFinishIntent in lib/engine/finish-intent.ts). Drop
-      // the empty guide placeholder (no full-text reply follows anymore --
+      // the empty guide placeholder (no full-text reply follows anymore,
       // the compact completion card below replaces it) and wait for the
       // Host's own "Continue" click rather than reading a body that isn't
       // a stream and navigating immediately.
@@ -185,7 +185,7 @@ export default function JourneyChat({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not move forward.");
       // Wait for the Host's own "Continue" click, the same as a typed
-      // completion request in send() above -- both paths call the same
+      // completion request in send() above, both paths call the same
       // generateReferral() and produce the same compact completion card.
       setFinished({ done: !!data.done, summary: data.summary || {} });
     } catch (err) {
@@ -198,12 +198,12 @@ export default function JourneyChat({
   // Real defect found live (Org Admin / Wake It Up close-out pass): a
   // Guide-facilitated, account-less participant's conversations.host_id is
   // necessarily the Guide's own user id (RLS needs a real auth.users row to
-  // scope by, and this kind of participant has no account of their own --
+  // scope by, and this kind of participant has no account of their own,
   // guide_sessions.participant_id is the actual ownership record, see
   // isAuthorizedGuideConversation in lib/guide.ts). /workbook's own query
   // only ever filtered by host_id, so finishing a facilitated session and
   // landing there put the participant's entire private Journey inside the
-  // signed-in Guide's OWN personal Workbook -- visible, printable,
+  // signed-in Guide's OWN personal Workbook, visible, printable,
   // shareable, exportable as if it were the Guide's own story. Fixed at
   // both ends: app/workbook/page.tsx now excludes any conversation that has
   // a guide_sessions row (never the Guide's own personal Journey to begin
@@ -217,7 +217,7 @@ export default function JourneyChat({
     else router.refresh(); // the next stage's conversation loads
   }
 
-  // Index of the most recent Host message — the scroll anchor for a new turn.
+  // Index of the most recent Host message, the scroll anchor for a new turn.
   let lastHostIdx = -1;
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].role === "host") {
@@ -293,7 +293,7 @@ export default function JourneyChat({
         <div className="mt-10">
           {/* A visual break before the completion card, not a chat bubble.
               The card below shows a handful of fields already selected
-              from the stored referral (getCompletionSummary) -- not the
+              from the stored referral (getCompletionSummary), not the
               full referral, which is not persisted as a chat message
               anymore and lives only in Workbook's Guide's Record. */}
           <div className="h-px bg-rule" aria-hidden />
@@ -365,7 +365,7 @@ export default function JourneyChat({
                 }
               }}
               rows={3}
-              placeholder="Write or speak — as much or as little as you like…"
+              placeholder="Write or speak, as much or as little as you like…"
               disabled={sending || advancing}
               className="w-full resize-none rounded-lg border border-rule bg-white/[0.04] py-3 pl-4 pr-16 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
             />
@@ -398,8 +398,8 @@ export default function JourneyChat({
             </button>
           </div>
           <p className="mt-3 text-xs text-muted">
-            {stageLabel}. This conversation — and the referral prepared when you move forward — is
-            saved to your Workbook. AVAIA is not therapy or crisis care — if you&rsquo;re in crisis,
+            {stageLabel}. This conversation, and the referral prepared when you move forward, is
+            saved to your Workbook. AVAIA is not therapy or crisis care, if you&rsquo;re in crisis,
             call or text 988 (U.S.).
           </p>
         </form>

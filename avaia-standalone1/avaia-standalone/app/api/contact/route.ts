@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That message is too long." }, { status: 400 });
   }
 
-  // No signed-in session exists for a public contact form -- writes go
+  // No signed-in session exists for a public contact form, writes go
   // through the service-role client, the same posture as the Stripe webhook
   // and the GPT OAuth tables: RLS enabled, zero public policies, only this
   // controlled server-side route can ever touch this table.
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Best-effort notification -- the submission above is already safely
+  // Best-effort notification, the submission above is already safely
   // saved regardless of whether this succeeds. Skipped entirely until
   // CONTACT_NOTIFICATION_EMAIL is configured in this deployment; nothing
   // here invents a destination address.

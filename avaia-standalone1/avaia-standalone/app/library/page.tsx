@@ -8,11 +8,11 @@ import { SECONDARY_LOSSES, isValidSecondaryLoss } from "@/lib/institution";
 import { isMember } from "@/lib/membership";
 import type { LibraryEntry } from "@/lib/library";
 
-export const metadata = { title: "Library — AVAIA" };
+export const metadata = { title: "Library, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Plain-language translation of each canonical Secondary Loss name, for
- *  a Host who doesn't yet have Library vocabulary -- presentational copy
+ *  a Host who doesn't yet have Library vocabulary, presentational copy
  *  only, keyed 1:1 to the ten existing SECONDARY_LOSSES names. Not a new
  *  classification: nothing is stored against these strings, they only
  *  decide which existing loss a click means. */
@@ -29,12 +29,12 @@ const ORIENTING_PROMPTS: Record<string, string> = {
   "Attachment / Support": "Who or what did you lean on that isn't there the same way?",
 };
 
-/** The Living Library's permanent entrance. Independently returnable --
+/** The Living Library's permanent entrance. Independently returnable,
  *  works with or without ?journey=<id>, ?q=<search>, or
  *  ?secondary_loss=<name>. ?journey, when present and it actually belongs
  *  to this Host, grounds retrieval in that Journey's own referrals (see
  *  lib/library-retrieval.ts); otherwise, and whenever there isn't enough
- *  legitimate matched evidence, a broad reviewed set is shown instead --
+ *  legitimate matched evidence, a broad reviewed set is shown instead,
  *  never a fabricated personal reason. ?q, when present, switches the
  *  page into deterministic keyword search (see lib/library-search.ts)
  *  instead of retrieval. ?secondary_loss, when present and one of the ten
@@ -42,9 +42,9 @@ const ORIENTING_PROMPTS: Record<string, string> = {
  *  lib/library-orientation.ts): an exact published-concept match redirects
  *  straight there, otherwise matching published entries render inline. All
  *  three are the same optional-searchParam pattern already used by
- *  /journey?new=1&program=... and /unsung-heroes?path=... -- no new
+ *  /journey?new=1&program=... and /unsung-heroes?path=..., no new
  *  session state, no second persistence mechanism. Priority when more than
- *  one is present: q, then secondary_loss, then journey/broad retrieval --
+ *  one is present: q, then secondary_loss, then journey/broad retrieval,
  *  a Host actively searching or orienting is never silently overridden by
  *  a stale ?journey= left on the URL. */
 export function EntryCard({ entry, reasons }: { entry: LibraryEntry; reasons?: string[] }) {
@@ -80,7 +80,7 @@ export default async function LibraryPage({
   if (!user) redirect(`/sign-in?from=/library`);
 
   // The Library has no Youth-aware presentation architecture yet (Living
-  // Library audit, Section Q) -- server-derived, never trusting a client
+  // Library audit, Section Q), server-derived, never trusting a client
   // flag, the same signal /journey already redirects on. Sent to their own
   // Journey home rather than shown adult-register content.
   const { data: youthCheck } = await supabase
@@ -101,14 +101,14 @@ export default async function LibraryPage({
       ? await getOrientationForSecondaryLoss(supabase, lossParam, viewerIsMember)
       : null;
 
-  // A definitive concept match (Connection, today) is the answer -- its
+  // A definitive concept match (Connection, today) is the answer, its
   // own neighborhood page already covers entries/questions/historical
   // voices, so there's nothing further to render here.
   if (orientation?.concept) {
     redirect(`/library/concepts/${orientation.concept.id}`);
   }
 
-  // Search, then a chosen Secondary Loss, then Journey/broad retrieval --
+  // Search, then a chosen Secondary Loss, then Journey/broad retrieval,
   // each active mode fully owns the results area so none silently blends
   // with or gets overridden by a stale param left on the same URL.
   const result =
@@ -123,7 +123,7 @@ export default async function LibraryPage({
 
       <p className="mt-4 max-w-prose text-lg text-muted">
         The Living Library continues the conversation. It connects your questions and
-        experiences to relevant AVAIA material — Secondary Losses, virtues, reflections,
+        experiences to relevant AVAIA material, Secondary Losses, virtues, reflections,
         historical voices, works, research, and related ideas. It doesn&rsquo;t reinterpret or
         rewrite your Journey.
       </p>
@@ -133,7 +133,7 @@ export default async function LibraryPage({
         <p className="mb-2 text-sm text-muted">Begin with what&rsquo;s present for you.</p>
         <p className="mb-4 max-w-prose text-sm text-muted">
           These are doorways for exploration, not diagnoses. AVAIA isn&rsquo;t determining which
-          of these applies to you — if something below sounds like part of what you&rsquo;re
+          of these applies to you, if something below sounds like part of what you&rsquo;re
           carrying, it may be worth exploring further.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -198,7 +198,7 @@ export default async function LibraryPage({
         </p>
       ) : result?.journeyId ? (
         <p className="mt-4 text-lg text-muted">
-          There wasn&rsquo;t enough from that Journey yet to personalize this safely — here&rsquo;s
+          There wasn&rsquo;t enough from that Journey yet to personalize this safely, here&rsquo;s
           the reviewed Library instead.
         </p>
       ) : (

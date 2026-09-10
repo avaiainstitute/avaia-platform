@@ -22,11 +22,11 @@ type Member = {
 const FAMILY_INCLUDED_SEATS = 5;
 
 /** The Family plan owner's roster management page. Governing rule: this
- *  page shows WHO has access and WHETHER they've accepted -- it never
+ *  page shows WHO has access and WHETHER they've accepted, it never
  *  shows or links to any member's Journey, Workbook, or conversation
  *  content. That boundary isn't a UI choice here; family_members' RLS
  *  (migration 0054) makes it structurally true regardless of what this
- *  page tries to render -- there is no query this page could run that
+ *  page tries to render, there is no query this page could run that
  *  would return another member's story content. */
 export default function FamilyPage() {
   const [loading, setLoading] = useState(true);
@@ -123,7 +123,7 @@ export default function FamilyPage() {
         <h1 className="font-serif text-3xl text-ink">You don&rsquo;t have a Family Membership yet.</h1>
         <p className="mt-4 text-muted">
           Family Membership gives up to {FAMILY_INCLUDED_SEATS} people their own AVAIA access under one
-          payment — each person still keeps their own private account, Journey, and Workbook.
+          payment, each person still keeps their own private account, Journey, and Workbook.
         </p>
         <Link
           href="/membership"
@@ -154,7 +154,7 @@ export default function FamilyPage() {
       </p>
       <p className="mt-2 text-sm text-muted">
         Each person on this plan keeps their own private AVAIA account, Journey, and Workbook. You
-        manage who has access — you never see anyone else&rsquo;s conversations or Workbook.
+        manage who has access, you never see anyone else&rsquo;s conversations or Workbook.
       </p>
 
       <section className="mt-12 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
@@ -165,7 +165,7 @@ export default function FamilyPage() {
               <div>
                 <p className="text-ink">{m.invited_email}</p>
                 <p className="text-xs text-muted">
-                  {m.is_owner ? "Plan owner" : m.status === "invited" ? "Invited — waiting to accept" : "Active member"}
+                  {m.is_owner ? "Plan owner" : m.status === "invited" ? "Invited, waiting to accept" : "Active member"}
                   {m.is_extra_seat ? " · additional seat" : ""}
                 </p>
               </div>

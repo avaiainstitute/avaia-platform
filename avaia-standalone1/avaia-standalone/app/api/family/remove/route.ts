@@ -6,7 +6,7 @@ import { removeFamilyMember } from "@/lib/family-membership";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Removes a family member -- callable by the plan owner (removing
+/** Removes a family member, callable by the plan owner (removing
  *  someone else) or by the member themselves (leaving). Authorization is
  *  re-verified inside removeFamilyMember() itself, not here. */
 export async function POST(request: Request) {

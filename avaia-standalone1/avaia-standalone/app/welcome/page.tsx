@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ConsentForm from "@/components/ConsentForm";
 
-export const metadata = { title: "Welcome — AVAIA" };
+export const metadata = { title: "Welcome, AVAIA" };
 export const dynamic = "force-dynamic";
 
 export default async function WelcomePage({
@@ -22,7 +22,7 @@ export default async function WelcomePage({
     .eq("id", user.id)
     .maybeSingle();
 
-  // A real query error must never be silently treated as "not consented" —
+  // A real query error must never be silently treated as "not consented",
   // that's exactly how the membership_status column being missing on the
   // live database turned into an apparent /journey<->/welcome redirect loop
   // on THIS page's sibling. This page's own query doesn't touch that column,
@@ -43,11 +43,11 @@ export default async function WelcomePage({
 
   // Deliberately NOT `redirect("/journey")` here. /journey redirects here
   // when consent is missing; this page used to redirect back to /journey
-  // when consent was present — two server-side redirects that are exact
+  // when consent was present, two server-side redirects that are exact
   // opposites of the same fact. Every fix so far (force-dynamic, hard nav)
   // addressed one possible reason those two reads could disagree, but as
   // long as both directions exist as real redirects, ANY disagreement from
-  // ANY cause — including ones not yet found — produces
+  // ANY cause, including ones not yet found, produces
   // ERR_TOO_MANY_REDIRECTS. A Host who already consented and lands here
   // anyway (bookmark, back button) just gets a link instead of a form; that
   // makes the loop structurally impossible rather than merely unlikely.
@@ -60,9 +60,9 @@ export default async function WelcomePage({
         <>
           <h1 className="font-serif text-4xl text-ink">You&rsquo;re already set up</h1>
           <p className="mt-4 text-lg text-muted">
-            You&rsquo;ve already confirmed the disclaimer below — no need to do it again.
+            You&rsquo;ve already confirmed the disclaimer below, no need to do it again.
           </p>
-          {/* A plain <a>, not next/link's <Link> — every other post-auth-state
+          {/* A plain <a>, not next/link's <Link>, every other post-auth-state
               transition in this app had to move off Next's client router onto
               a real navigation to stop serving stale cached pages; this one
               is no different and was missed in the first pass. */}
@@ -77,13 +77,13 @@ export default async function WelcomePage({
         <>
           <h1 className="font-serif text-4xl text-ink">One thing before we begin</h1>
           <p className="mt-4 text-lg text-muted">
-            AVAIA is a guided, virtue-centered conversation — not therapy. Please read
+            AVAIA is a guided, virtue-centered conversation, not therapy. Please read
             this and confirm you understand.
           </p>
 
           {/* IAP orientation, moved here from the separate JourneyIntro gate
            *  that used to appear after consent (components/JourneyIntro.tsx
-           *  still has that same content for its stage === "iap" branch --
+           *  still has that same content for its stage === "iap" branch,
            *  unchanged, and still shown as a fallback if a Host navigates
            *  back to /journey before ever sending a first message). Consent
            *  becomes the one remaining entry action; see ConsentForm's
@@ -94,11 +94,11 @@ export default async function WelcomePage({
             <span className="text-muted">→</span> Agency
           </p>
           <p className="mt-4 text-muted">
-            The Journey moves through three connected conversations — three movements within one
+            The Journey moves through three connected conversations, three movements within one
             continuing conversation.
           </p>
 
-          <p className="label mb-2 mt-10">1 — Awareness</p>
+          <p className="label mb-2 mt-10">1, Awareness</p>
           <h2 className="font-serif text-3xl text-ink">Individual Awareness Profile</h2>
           <p className="mt-2 font-serif text-lg italic text-muted">What became visible?</p>
           <p className="mt-4 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4 font-serif text-lg leading-relaxed text-ink">

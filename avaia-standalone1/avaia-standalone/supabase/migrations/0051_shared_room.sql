@@ -1,13 +1,17 @@
--- Shared Room — the production capability for AVAIA to facilitate more than
--- one person in the same experience, per Dorian's explicit product decision
--- (2026-09-04): "THE FULL AVAIA SHARED ROOM IS A REQUIRED PRODUCTION
--- CAPABILITY."
+-- Shared Room, the production capability for AVAIA to facilitate more than
+-- one person in the same experience, per Dorian's product decision
+-- (2026-09-04) that the full Shared Room is a required production
+-- capability, not a future item. (Not a verbatim quote -- a description of
+-- that decision.)
 --
--- Governing architecture (do not reinterpret): the Room is not the people --
--- it is what the shared experience has come to be. The Table exists within
--- the Room; Host and Guide are standing seats, Witness is a function not a
--- row. Every participant remains the owner of their own story. The Room may
--- be shared; the stories are not automatically shared.
+-- Governing architecture, in Dorian's own words: "A Room is not who the
+-- people are in it. A room is where the shared conversation is allowed to
+-- develop into whatever it needs to be. In a Shared Room, every participant
+-- keeps ownership of their own voice and story. When a person decides they
+-- need a private conversation, nothing moves from that conversation back
+-- into the Shared Room without the choice and permission of the person
+-- having that private conversation." The Table exists within the Room;
+-- Host and Guide are standing seats, Witness is a function not a row.
 --
 -- Reuse, not reinvention: a Room's PRIVATE processing is not a new engine --
 -- it is an ordinary public.conversations row (the exact same IAP-shaped

@@ -3,14 +3,14 @@
 /** What this link actually does (verified against app/journey/page.tsx's
  *  ?new=1 handler): generates and stores a Guide's Record for the current
  *  active conversation (lib/engine/referral-generation.ts's
- *  generateGuidesRecord -- the same content-generation normal completion
+ *  generateGuidesRecord, the same content-generation normal completion
  *  uses, just without advanceToNextStage, so no CAT/next-stage conversation
  *  is created), preserves its messages, and starts a brand-new Journey with
- *  a fresh IAP -- never just "another conversation" inside the current one.
+ *  a fresh IAP, never just "another conversation" inside the current one.
  *  The confirmation exists so a Host can't trigger that by a single
  *  accidental click on what used to read as a harmless label.
  *
- *  window.location.replace, not router.push -- a soft client-side
+ *  window.location.replace, not router.push, a soft client-side
  *  navigation to the same pathname (/journey, just with ?new=1) can be
  *  served from Next's client Router Cache instead of actually reaching the
  *  server branch that does the work, exactly the stale-page failure mode

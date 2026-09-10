@@ -3,18 +3,18 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SEATS } from "@/lib/institution";
 
-export const metadata = { title: "Table Formation & Council — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Table Formation & Council, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Table Formation and Council are not a separate tool a Guide opens
- *  instead of a conversation -- they are now live inside every adult IAP,
+ *  instead of a conversation, they are now live inside every adult IAP,
  *  CAT, and InnerCompass conversation (see TABLE_FORMATION_INSTRUCTIONS,
  *  lib/engine/prompts.ts), the same way Defying Grief's Audacity seat
  *  already was before this generalized the mechanism behind it. This page
- *  exists to orient a Guide to how that actually shows up -- in the
+ *  exists to orient a Guide to how that actually shows up, in the
  *  ordinary conversation transcript, which a facilitating Guide already
  *  sees in full (components/JourneyChat.tsx is shared by both the Host's
- *  own /journey and every Guide Toolkit session page) -- and to point
+ *  own /journey and every Guide Toolkit session page), and to point
  *  onward to where a specific participant's Table becomes visible after
  *  the fact: Preparation, which already renders every referral field
  *  generically, Council Perspectives and Key Recognitions included, with

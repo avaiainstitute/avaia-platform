@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Experience } from "@/lib/experiences";
 
-export const metadata = { title: "Experiences — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Experiences, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Read-only Experience browse for Guides. Of the 11 Experiences
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  *  Lose After the Loss" was published in migration 0031; migration 0055
  *  separately published 10 more (The View From Above's ten classes,
  *  their own titles, not part of the original 0020 list). So this page
- *  lists 11 published rows today, not 1 -- an honest reflection of
+ *  lists 11 published rows today, not 1, an honest reflection of
  *  status='published', not a fixed count. Any Experience not yet
  *  explicitly published still shows nothing here, which remains correct
  *  behavior, not a bug. No Experience Builder, no admin CRUD UI, in this
@@ -42,7 +42,7 @@ export default async function ToolkitExperiencesPage() {
       <p className="mt-4 text-lg text-muted">
         Together in the experience. Individual in the conversation. Larger Experience containers
         capable of supporting presentations, workshops, retreats, and connected AVAIA
-        conversations — the content-management tooling for building and publishing these is a
+        conversations, the content-management tooling for building and publishing these is a
         separate, later step.
       </p>
 

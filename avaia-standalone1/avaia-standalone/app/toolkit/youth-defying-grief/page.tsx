@@ -10,7 +10,7 @@ function isScope(value: FormDataEntryValue | null): value is GuardianConsentScop
   return value === "individual" || value === "group_workshop" || value === "school_organization";
 }
 
-export const metadata = { title: "Youth Defying Grief — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Youth Defying Grief, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 function isBand(value: FormDataEntryValue | null): value is DevelopmentalBand {
@@ -18,7 +18,7 @@ function isBand(value: FormDataEntryValue | null): value is DevelopmentalBand {
 }
 
 /** Same email-lookup pattern used in app/toolkit/defying-grief/page.tsx and
- *  app/toolkit/page.tsx -- kept local to each start action rather than
+ *  app/toolkit/page.tsx, kept local to each start action rather than
  *  factored out, matching that established precedent. */
 async function findHostIdByEmail(email: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -33,11 +33,11 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
 }
 
 /** Guide-facilitated Youth Defying Grief is not a separate implementation
- *  either -- it's the exact same installed IAP/CAT/InnerCompass tools,
+ *  either, it's the exact same installed IAP/CAT/InnerCompass tools,
  *  started with program: "youth" and session_context: "youth_individual"
  *  instead of "general"/"adult_individual". youthSystemPromptFor (frozen,
  *  untouched) already layers in the Stone-and-Ripples and Audacity framing
- *  unconditionally for every Youth conversation -- Defying Grief is the
+ *  unconditionally for every Youth conversation, Defying Grief is the
  *  Youth program, not a second thing to switch on. The one genuinely new
  *  piece of state a Guide must supply that a self-serve Youth Host
  *  supplies themselves at /youth: the participant's developmental band,
@@ -59,7 +59,7 @@ async function startYouthDefyingGriefSession(formData: FormData) {
 
   // Guardian consent authorizes participation; the Guide's own confirmation
   // that they delivered the age-appropriate assent information to the
-  // Youth Host is a separate requirement -- see
+  // Youth Host is a separate requirement, see
   // components/GuideYouthConsentFields.tsx, whose checkboxes these read.
   // Both required, checked server-side (not just via disabled-button UX),
   // before any participant or session row is created.
@@ -167,12 +167,12 @@ export default async function ToolkitYouthDefyingGriefPage({
       <p className="mt-4 text-lg text-muted">
         The same Individual Awareness Profile, Conversations Across Time, and InnerCompass
         Toolkit tools a self-serve Youth Host already uses at /youth, developmentally adapted and
-        threaded with Defying Grief&rsquo;s own framing -- Stone and Ripples at Awareness, Audacity
+        threaded with Defying Grief&rsquo;s own framing, Stone and Ripples at Awareness, Audacity
         at Understanding and Agency. Nothing about the underlying engine is different; only who is
         present in the room and how it begins.
       </p>
       <p className="mt-3 text-sm text-muted">
-        For a group or workshop, run this form once per attendee — the shared curriculum itself is
+        For a group or workshop, run this form once per attendee, the shared curriculum itself is
         delivered live, using the Master Curriculum content and its print materials; this
         registers each participant&rsquo;s own guardian consent and private conversation access.
       </p>
@@ -202,7 +202,7 @@ export default async function ToolkitYouthDefyingGriefPage({
           </div>
           <div>
             <label className="label mb-2 block" htmlFor="email">
-              Email (optional — links to their AVAIA account if they have one)
+              Email (optional, links to their AVAIA account if they have one)
             </label>
             <input
               id="email"

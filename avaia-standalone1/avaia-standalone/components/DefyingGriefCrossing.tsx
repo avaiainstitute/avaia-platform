@@ -6,7 +6,7 @@ import type { Stage } from "@/lib/engine/prompts";
  * workshop, or from completing CAT on the website) and the next stage's
  * conversation is waiting with exactly its seeded opening message. The
  * public website Journey is IAP -> CAT -> InnerCompass, all three inside
- * AVAIA -- both buttons below continue on the website (via /journey?enter=1,
+ * AVAIA, both buttons below continue on the website (via /journey?enter=1,
  * which app/journey/page.tsx uses specifically to skip back past this same
  * crossing screen and into the real chat). The standalone GPTs
  * (CAT_GPT_URL / INNERCOMPASS_GPT_URL in lib/defying-grief.ts) remain for
@@ -21,7 +21,7 @@ export default function DefyingGriefCrossing({
   stage: Stage;
   roomTitle: string | null;
   /** True for the one page load immediately after a genuine Stripe
-   *  checkout success redirect -- see app/journey/page.tsx's own comment
+   *  checkout success redirect, see app/journey/page.tsx's own comment
    *  on justBecameMember for why this never persists beyond that load. */
   justBecameMember?: boolean;
 }) {
@@ -40,7 +40,7 @@ export default function DefyingGriefCrossing({
         {roomTitle && (
           <div className="mt-4 rounded-lg border border-rule border-l-2 border-l-[#c1502e] bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
             <p className="font-sans text-xs uppercase tracking-wide text-muted">
-              Room Identity — what emerged from your own words
+              Room Identity, what emerged from your own words
             </p>
             <p className="mt-1 font-serif text-xl text-ink">&ldquo;{roomTitle}&rdquo;</p>
           </div>
@@ -52,15 +52,15 @@ export default function DefyingGriefCrossing({
         </p>
         <p className="mt-4 text-lg text-muted">
           From here, the conversation changes shape. This is{" "}
-          <span className="text-ink">Conversations Across Time — The Audacity of Grief</span>. It
+          <span className="text-ink">Conversations Across Time, The Audacity of Grief</span>. It
           moves slower, and it asks harder questions. Somewhere in it, you may notice something
-          that isn&rsquo;t sadness and isn&rsquo;t strength exactly — a stubbornness in you that
+          that isn&rsquo;t sadness and isn&rsquo;t strength exactly, a stubbornness in you that
           kept showing up anyway. That&rsquo;s audacity. You don&rsquo;t have to name it. It will
           be there whether you do or not.
         </p>
         <p className="mt-4 text-lg text-muted">
           This is usually where <span className="text-ink">the audacity to love again</span>{" "}
-          first makes itself known — quietly, often as its own kind of grief.
+          first makes itself known, quietly, often as its own kind of grief.
         </p>
         <div className="mt-8">
           <Link
@@ -83,16 +83,16 @@ export default function DefyingGriefCrossing({
       <p className="label mb-2">What you&rsquo;ve carried this far</p>
       <h2 className="font-serif text-3xl text-ink">The Audacity of Happiness</h2>
       <p className="mt-4 text-lg text-ink">
-        You have been recognized. Nothing here required you to be resolved — only witnessed.
+        You have been recognized. Nothing here required you to be resolved, only witnessed.
       </p>
       <p className="mt-4 text-lg text-muted">
         What&rsquo;s ahead is different again. InnerCompass is where understanding starts to
-        become direction — not a decision about grief, but a decision about the life still in
+        become direction, not a decision about grief, but a decision about the life still in
         front of you. People rarely arrive here the same way; some feel ready, most don&rsquo;t,
         and both are fine reasons to keep going.
       </p>
       <p className="mt-6 text-ink">
-        Some audacities worth naming for yourself before you begin — not to answer, just to carry
+        Some audacities worth naming for yourself before you begin, not to answer, just to carry
         in with you:
       </p>
       <ul className="mt-4 space-y-3">

@@ -23,7 +23,7 @@ export type AiUsageFeature =
   | "room_bring_forward_suggestion"
   | "unsaid_conversation";
 
-/** The subset of an Anthropic Message's `usage` field this records -- same
+/** The subset of an Anthropic Message's `usage` field this records, same
  *  shape whether it came from `messages.create()` directly or from
  *  `messages.stream()`'s `finalMessage()`. Loosely typed (not imported from
  *  the SDK) so call sites that already type their response as `any` (see
@@ -35,13 +35,13 @@ export type AnthropicUsage = {
   cache_read_input_tokens?: number | null;
 };
 
-/** Records one completed Anthropic call as operational telemetry -- raw
+/** Records one completed Anthropic call as operational telemetry, raw
  *  token counts and attribution only, never prompt/response content. Owns
  *  the service-role Supabase dependency itself so every call site only ever
  *  needs `await recordAiUsage({...})`, never its own admin-client import.
  *
  *  Never throws. A telemetry write failing must never turn a successful
- *  Host conversation into a failed one -- the error is logged (Vercel logs)
+ *  Host conversation into a failed one, the error is logged (Vercel logs)
  *  and swallowed, matching the "best-effort" pattern already used elsewhere
  *  in this codebase (e.g. Library's explore-tracking). */
 export async function recordAiUsage(params: {

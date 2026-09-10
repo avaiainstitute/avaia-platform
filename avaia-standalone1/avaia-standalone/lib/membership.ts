@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /** True if this Host currently holds any active entitlement, regardless of
- *  which funding arrangement granted it -- Individual is the only source
+ *  which funding arrangement granted it, Individual is the only source
  *  any code path grants today (see migration 0019), but this resolves
  *  generally so it doesn't need to change again when Family/Gift/Sponsored/
  *  Organization are built. An entitlement with expires_at in the past no

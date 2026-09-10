@@ -14,10 +14,10 @@ import { recordAiUsage } from "@/lib/engine/ai-usage";
 
 // Generates the opening line for a brand-new IAP conversation that carries
 // origin context (a Chemistry element or View From Above class the Host
-// just clicked through from) -- mirrors generateCatOpening's exact
-// mechanism (a live, one-shot generation, falling back to undefined --
+// just clicked through from), mirrors generateCatOpening's exact
+// mechanism (a live, one-shot generation, falling back to undefined,
 // which leaves createConversation's own STAGE_OPENING.iap default in
-// place -- on any failure, never blocking conversation creation).
+// place, on any failure, never blocking conversation creation).
 export async function generateIapOriginOpening(
   origin: OriginContextInput,
   hostId?: string | null,
@@ -58,19 +58,19 @@ export async function generateIapOriginOpening(
 // existing behavior when opening is undefined) on any failure, so a
 // transient generation error never blocks the handoff. Shared by the normal
 // website flow (app/api/referral/route.ts) and the GPT-handoff endpoint
-// (app/api/gpt-actions/iap-referral/route.ts) -- moved here, out of either
+// (app/api/gpt-actions/iap-referral/route.ts), moved here, out of either
 // route file, because a Next.js route.ts file may only export recognized
 // route names (GET, POST, dynamic, ...); an arbitrary export from one route
 // file imported into another can fail the build. hostId/conversationId are
-// for AI-usage attribution only (see lib/engine/ai-usage.ts) -- optional so
+// for AI-usage attribution only (see lib/engine/ai-usage.ts), optional so
 // this stays callable even if a future caller doesn't have them.
 //
-// program/developmentalBand are optional and additive -- every existing
+// program/developmentalBand are optional and additive, every existing
 // caller that doesn't pass them (e.g. the GPT-handoff endpoint, which never
 // touches Youth) behaves exactly as before. When program === "youth", the
 // system prompt gets the same developmental-adaptation layer already
 // governing the rest of that Youth conversation (see YOUTH_OPENING_
-// ADAPTATION's own comment) -- CAT_OPENING_GENERATION itself is untouched
+// ADAPTATION's own comment), CAT_OPENING_GENERATION itself is untouched
 // for every program, including Youth.
 export async function generateCatOpening(
   referralContent: unknown,

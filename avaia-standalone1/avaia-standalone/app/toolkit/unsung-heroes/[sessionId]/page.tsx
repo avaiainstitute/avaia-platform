@@ -6,15 +6,15 @@ import { loadUnsungHeroesMessages, type UnsungHeroesConversation } from "@/lib/e
 import { UNSUNG_HEROES_PATH_LABEL } from "@/lib/engine/prompts";
 import { getGuideSession } from "@/lib/guide";
 
-export const metadata = { title: "Unsung Heroes — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Unsung Heroes, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Renders the same UnsungHeroesChat component the public /unsung-heroes
  *  page uses, driven by the conversation this session's start action
  *  already created (see app/toolkit/unsung-heroes/page.tsx). Unlike the
  *  Journey stages, Unsung Heroes doesn't chain into another conversation on
- *  completion -- it ends when a recognition is saved (client-side, inside
- *  UnsungHeroesChat itself) -- so there's no handoff-detection logic here. */
+ *  completion, it ends when a recognition is saved (client-side, inside
+ *  UnsungHeroesChat itself), so there's no handoff-detection logic here. */
 export default async function ToolkitUnsungHeroesSessionPage({
   params,
 }: {

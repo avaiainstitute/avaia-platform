@@ -7,7 +7,7 @@ import type { Stage } from "@/lib/engine/prompts";
 // One authoritative mapping of referral field -> epistemic/provenance role,
 // per stage. Built once so completion rendering, Workbook rendering, and
 // future host_continuity_entries extraction all classify the same field the
-// same way -- instead of each independently deciding what counts as
+// same way, instead of each independently deciding what counts as
 // Host-authored versus stage-authored, which is exactly how the "authored
 // meaning becoming durable fact" and "provenance flattened" findings
 // happened: the categorization only ever lived inline inside one renderer.
@@ -21,8 +21,8 @@ export type ProvenanceRole =
 
 export type FieldMeta = {
   role: ProvenanceRole;
-  /** Human-readable label reused by every renderer -- completion prose,
-   *  Workbook, future retrieval -- so labeling never drifts between them. */
+  /** Human-readable label reused by every renderer, completion prose,
+   *  Workbook, future retrieval, so labeling never drifts between them. */
   label: string;
 };
 
@@ -94,7 +94,7 @@ export const INNERCOMPASS_FIELD_PROVENANCE: Record<string, FieldMeta> = {
 };
 
 /** The canonical, internal shape every virtue-classification consumer reads
- *  -- element is always present as a key, either a real element name or
+ * , element is always present as a key, either a real element name or
  *  null, never merely omitted. Everything that stores or renders a virtue
  *  classification (Workbook, sharing, CAT -> InnerCompass presentation,
  *  future continuity extraction) should go through normalizeVirtueClassifications
@@ -107,7 +107,7 @@ export type VirtueClassification = { family: string; element: string | null };
  *  - Legacy (historical CAT referrals, pre this round): a flat array of
  *    family-name strings, e.g. ["Integrity", "Positive Attitude"].
  *  - Current: an array of {family, element} objects, element nullable.
- *  This does not rewrite stored data -- referrals already in the database
+ *  This does not rewrite stored data, referrals already in the database
  *  keep whichever shape they were written in; only reading normalizes.
  *  Anything that doesn't validate against the canonical Chemistry of Virtue
  *  hierarchy is silently dropped either way, matching the existing
@@ -135,19 +135,19 @@ export function normalizeVirtueClassifications(value: unknown): VirtueClassifica
       } else if (typeof element === "string" && isValidVirtueElement(family, element)) {
         out.push({ family, element });
       }
-      // else: element present but invalid -- dropped, not guessed at.
+      // else: element present but invalid, dropped, not guessed at.
     }
   }
   return out;
 }
 
 /** Renders a virtue classification array (either legacy flat-string or
- *  current {family, element} shape) as display strings -- "Positive
- *  Attitude — Serenity" when a real element is present, just "Integrity"
+ *  current {family, element} shape) as display strings, "Positive
+ *  Attitude, Serenity" when a real element is present, just "Integrity"
  *  when it's family-only. */
 export function formatVirtueClassifications(value: unknown): string[] {
   return normalizeVirtueClassifications(value).map((v) =>
-    v.element ? `${v.family} — ${v.element}` : v.family
+    v.element ? `${v.family}, ${v.element}` : v.family
   );
 }
 
@@ -155,14 +155,14 @@ export function formatVirtueClassifications(value: unknown): string[] {
  *  - Legacy (every referral before this round): a flat array of free-prose
  *    descriptions ("loss of home") never validated against the canonical
  *    ten Secondary Losses. There is no way to retroactively categorize
- *    these, so they're shown exactly as stored -- not dropped, not
+ *    these, so they're shown exactly as stored, not dropped, not
  *    reclassified.
  *  - Current: an array of {category, description} objects, category
  *    validated against the canonical list, description an optional
  *    Host-specific elaboration alongside it. Renders as
- *    "Dreams / Opportunities — wanting to travel again" when a
+ *    "Dreams / Opportunities, wanting to travel again" when a
  *    description is present, just the category when it isn't. An invalid
- *    category is dropped, not guessed at -- the same backstop treatment
+ *    category is dropped, not guessed at, the same backstop treatment
  *    already proven for virtue classifications. */
 export function formatSecondaryLossClassifications(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -178,7 +178,7 @@ export function formatSecondaryLossClassifications(value: unknown): string[] {
       const description = (item as { description?: unknown }).description;
       if (typeof category !== "string" || !isValidSecondaryLoss(category)) continue;
       if (typeof description === "string" && description.trim()) {
-        out.push(`${category} — ${description.trim()}`);
+        out.push(`${category}, ${description.trim()}`);
       } else {
         out.push(category);
       }
@@ -195,7 +195,7 @@ const FIELD_PROVENANCE_FOR: Record<Stage, Record<string, FieldMeta>> = {
 
 // Exported so a renderer (Workbook) can identify which formatReferralFields
 // items are virtue fields and re-derive their structured {family, element}
-// classifications via normalizeVirtueClassifications(rawContent[key]) --
+// classifications via normalizeVirtueClassifications(rawContent[key]),
 // formatReferralFields itself only returns already-stringified display
 // text, which isn't enough to build a link back to the specific Chemistry
 // of Virtue entry.
@@ -207,7 +207,7 @@ const OUTCOME_TYPE_LABEL: Record<string, string> = {
   direction_chosen: "A direction was chosen",
   possibilities_identified: "Possibilities were identified",
   next_step_only: "A next step was identified",
-  still_discerning: "Still discerning — no decision reached yet",
+  still_discerning: "Still discerning, no decision reached yet",
 };
 
 export type ReferralDisplayItem = {
@@ -218,7 +218,7 @@ export type ReferralDisplayItem = {
 };
 
 /** The one deterministic, render-not-generate formatter for a stored
- *  referral's content -- turns the structured record into an ordered list
+ *  referral's content, turns the structured record into an ordered list
  *  of display-ready {label, role, value} items, driven entirely by the
  *  field -> provenance map above rather than each renderer re-deciding
  *  labels and shapes independently. Reused by Workbook and the
@@ -231,7 +231,7 @@ export type ReferralDisplayItem = {
  *  majorUnderstandings + keyRecognitions; unresolvedQuestions /
  *  followUpQuestions + questionsWorthCarrying under "Still open," ...)
  *  merge into one display item, exact-string deduplicated in first-seen
- *  order -- the same approach already proven in
+ *  order, the same approach already proven in
  *  formatCatReferralForInnerCompass, generalized here so it's driven by
  *  the field metadata itself rather than a hardcoded field-name list, and
  *  applies uniformly wherever it occurs across IAP, CAT, and InnerCompass
@@ -239,8 +239,8 @@ export type ReferralDisplayItem = {
  *  with the same label rendered as two adjacent sections with an
  *  identical, duplicated heading.
  *
- *  `stage` is the referral's `from_stage` -- the schema that produced
- *  `content` -- not the stage it was referred to. Fields absent, empty, or
+ *  `stage` is the referral's `from_stage`, the schema that produced
+ *  `content`, not the stage it was referred to. Fields absent, empty, or
  *  blank are omitted rather than shown empty. */
 export function formatReferralFields(
   stage: Stage,
@@ -281,7 +281,7 @@ export function formatReferralFields(
       continue;
     }
     if (key === "outcomeType") {
-      // Scalar, one-off label ("Outcome") -- never collides with another
+      // Scalar, one-off label ("Outcome"), never collides with another
       // field, so no merge handling needed.
       if (typeof raw === "string" && raw in OUTCOME_TYPE_LABEL) {
         out.push({ key, label: meta.label, role: meta.role, value: OUTCOME_TYPE_LABEL[raw] });
@@ -307,22 +307,22 @@ export type CompletionSummary = {
   outcomeLabel?: string;
   direction?: string;
   /** A short, already-generated field describing what the *next*
-   *  conversation is about -- used for the incoming-referral hand-off
+   *  conversation is about, used for the incoming-referral hand-off
    *  screen (JourneyIntro), not the completion card. Sourced per stage
    *  below; absent for stages nothing follows. */
   description?: string;
   /** Virtue Signature connection fix: the same structured classifications
    *  already stored in this referral (CAT's relevantVirtues, InnerCompass's
-   *  virtuesInvolved -- IAP produces neither, VIRTUE_TABLE_INTEGRATION
+   *  virtuesInvolved, IAP produces neither, VIRTUE_TABLE_INTEGRATION
    *  isn't composed into IAP), surfaced on the completion card so "What
    *  Became Visible" (components/WhatBecameVisible.tsx) can offer each one
    *  for exploring in Chemistry or considering for the Host's own Virtue
-   *  Signature. Not a new generation -- the exact data Workbook already
+   *  Signature. Not a new generation, the exact data Workbook already
    *  renders, just reaching the Host at the moment it's freshest. */
   virtues?: VirtueClassification[];
 };
 
-// A short established-direction field exists for some stages, not others --
+// A short established-direction field exists for some stages, not others,
 // IAP's desiredDirection, InnerCompass's centralDecisionOrDirection. CAT
 // has no equivalent (CAT produces understanding, not a decision), so it's
 // simply absent here rather than guessed at.
@@ -333,9 +333,9 @@ const DIRECTION_FIELD_FOR: Partial<Record<Stage, string>> = {
 
 // Which already-generated field best describes the conversation a Host is
 // about to enter, keyed by the stage that PRODUCED the referral (not the
-// stage it's headed to) -- IAP's currentConcern for the CAT hand-off,
+// stage it's headed to), IAP's currentConcern for the CAT hand-off,
 // CAT's own nextConversationPurpose (literally written for this) for the
-// InnerCompass hand-off. No equivalent for innercompass -- nothing follows
+// InnerCompass hand-off. No equivalent for innercompass, nothing follows
 // it in the three-stage Journey.
 const DESCRIPTION_FIELD_FOR: Partial<Record<Stage, string>> = {
   iap: "currentConcern",
@@ -343,7 +343,7 @@ const DESCRIPTION_FIELD_FOR: Partial<Record<Stage, string>> = {
 };
 
 /** A handful of fields selected from the already-generated, already-stored
- *  referral -- for the compact live-conversation completion card only, not
+ *  referral, for the compact live-conversation completion card only, not
  *  a second generation and not a new summary. Room Identity is found the
  *  same way for every stage (whichever field is labeled "Room Identity" in
  *  that stage's own provenance map, so IAP/CAT's `title` and InnerCompass's
@@ -394,7 +394,7 @@ export function getCompletionSummary(
 }
 
 /** The Room Identity + short description a Host should see on the
- *  hand-off screen entering `forStage` -- e.g. entering "cat" reads the
+ *  hand-off screen entering `forStage`, e.g. entering "cat" reads the
  *  most recent referral addressed to CAT (produced by IAP) and reuses
  *  getCompletionSummary's own field extraction for it, exactly as the
  *  completion card already does for the stage that just finished. Same

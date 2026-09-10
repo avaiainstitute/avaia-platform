@@ -1,5 +1,5 @@
 /**
- * Session refresh for middleware — the documented @supabase/ssr pattern.
+ * Session refresh for middleware, the documented @supabase/ssr pattern.
  * Rotates the auth cookie so `auth.uid()` keeps working across requests.
  *
  * Guarded: if Supabase env vars aren't configured yet, it's a no-op, so the
@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return response; // Supabase not configured — skip.
+  if (!url || !anon) return response; // Supabase not configured, skip.
 
   const supabase = createServerClient(url, anon, {
     cookies: {

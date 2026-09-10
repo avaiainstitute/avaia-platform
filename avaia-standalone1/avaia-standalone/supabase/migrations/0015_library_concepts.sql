@@ -1,4 +1,4 @@
--- AVAIA Living Library — concept/cross-reference foundation.
+-- AVAIA Living Library, concept/cross-reference foundation.
 --
 -- Purely additive: no column on library_entries changes, current
 -- retrieval (lib/library-retrieval.ts) is untouched, current tags/
@@ -18,7 +18,7 @@
 -- invisible to a Host regardless of anything the app forgets to filter.
 
 -- ---------------------------------------------------------------------------
--- library_concepts — a Great Idea / concept. Distinctions and tensions are
+-- library_concepts, a Great Idea / concept. Distinctions and tensions are
 -- kept as small jsonb arrays on the row itself (not their own tables) --
 -- editorial content specific to one concept, not a relationship to
 -- another object, and jsonb keeps the shape extensible without a future
@@ -49,7 +49,7 @@ create policy "library concepts admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_questions — a canonical Human Question, first-class rather than
+-- library_questions, a canonical Human Question, first-class rather than
 -- free text on a concept, since one question may legitimately connect to
 -- several concepts and several entries (see the two junctions below).
 -- ---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ create policy "library questions admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_concept_relations — directional concept <-> concept edges. A
+-- library_concept_relations, directional concept <-> concept edges. A
 -- deliberately small, fixed vocabulary rather than a free-text type field.
 -- "contains" and "dimension of" are the same directional pair expressed
 -- from opposite ends, so only one type (dimension_of) is needed, read as
@@ -118,7 +118,7 @@ create policy "library concept relations admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_entry_concepts — a Library Entry connected to a concept, with a
+-- library_entry_concepts, a Library Entry connected to a concept, with a
 -- reason. Additive alongside library_entries.tags/virtues/secondary_losses
 -- -- none of those change or get removed.
 -- ---------------------------------------------------------------------------
@@ -147,7 +147,7 @@ create policy "library entry concepts admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_question_concepts — a question connected to a concept it raises
+-- library_question_concepts, a question connected to a concept it raises
 -- ("raises question about" from the spec's relationship examples).
 -- ---------------------------------------------------------------------------
 create table if not exists public.library_question_concepts (
@@ -175,7 +175,7 @@ create policy "library question concepts admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_entry_questions — a Library Entry connected to a question it
+-- library_entry_questions, a Library Entry connected to a question it
 -- addresses, independent of whether it shares an explicit concept link.
 -- ---------------------------------------------------------------------------
 create table if not exists public.library_entry_questions (

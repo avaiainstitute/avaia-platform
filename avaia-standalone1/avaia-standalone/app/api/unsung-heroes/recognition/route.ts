@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 const CONTEXT_TYPES = ["school", "community", "family"] as const;
 type ContextType = (typeof CONTEXT_TYPES)[number];
 
-// Workbook entry, not a recognition card — see the migration's own comment
+// Workbook entry, not a recognition card, see the migration's own comment
 // for why. The questions this shape answers (see the Instructions in
 // prompts.ts) are the actual point; the virtue names are how one of those
 // questions gets answered, not the center of the record.
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Already complete." }, { status: 409 });
   }
 
-  // Same authorization rule as /api/unsung-heroes/message -- member, or an
+  // Same authorization rule as /api/unsung-heroes/message, member, or an
   // authorized Guide Toolkit session for this exact conversation. Enforced
   // here too so a non-member can't save a recognition for a conversation
   // they were never authorized to run in the first place.
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Same server-derived signal as /api/unsung-heroes/message -- see that
+  // Same server-derived signal as /api/unsung-heroes/message, see that
   // route's comment for the full reasoning (self-serve reads profiles;
   // Guide-facilitated resolves the band from the guide_participants row
   // the Guide set at session start).
@@ -124,9 +124,9 @@ export async function POST(request: Request) {
     role: "user",
     content:
       "I'm ready. Using everything in this conversation, produce the workbook entry now as " +
-      "structured data. Do not address me — output only the fields. whoBecameVisible, story, " +
+      "structured data. Do not address me, output only the fields. whoBecameVisible, story, " +
       "reflection, personalInsight, and communityImpact must stay close to the Host's own words " +
-      "and only include what they actually said — never invent detail. reflection specifically " +
+      "and only include what they actually said, never invent detail. reflection specifically " +
       "must capture why this mattered, not just what happened; personalInsight must capture what " +
       "the Host recognized about themselves, not a restatement of the story. If the conversation " +
       "never surfaced a genuine answer for nextPractice or questionsToRevisit, use an empty string " +
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
   }
 
   // Virtue names are validated against the real Chemistry of Virtue rather
-  // than trusted as-is — anything that doesn't match a real element in the
+  // than trusted as-is, anything that doesn't match a real element in the
   // stated family is dropped rather than stored invented. virtue_elements
   // is the validated subset of primaryVirtue + supportingVirtues, kept
   // separate from those two (which stay as the model's own words) so the
@@ -197,7 +197,7 @@ export async function POST(request: Request) {
       observer_id: user.id,
       observed_user_id: observedUserId ?? null,
       // Traces this recognition back to the conversation that produced it
-      // (see 0013_guide_toolkit_participant_record.sql) -- doesn't change
+      // (see 0013_guide_toolkit_participant_record.sql), doesn't change
       // anything about this route's request/response shape or behavior.
       conversation_id: conversationId,
       title: content.title,

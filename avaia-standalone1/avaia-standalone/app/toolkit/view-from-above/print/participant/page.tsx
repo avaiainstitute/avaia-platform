@@ -8,7 +8,7 @@ import { PrintButton } from "@/components/DefyingGriefPrintControls";
 
 export const dynamic = "force-dynamic";
 
-/** The combined ten-class Participant Workbook -- packaging only, same
+/** The combined ten-class Participant Workbook, packaging only, same
  *  source rows as the per-class print route (participant_guide +
  *  take_home), same private, second-person writing-space treatment. See
  *  the sibling Facilitator Workbook route for the query/ordering

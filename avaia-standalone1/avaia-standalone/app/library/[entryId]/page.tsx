@@ -17,7 +17,7 @@ type HostEntryRow = {
 };
 
 /** Save / Not for me are one mutually-exclusive, freely reversible choice
- *  -- clicking the currently-active one again clears it back to no
+ * , clicking the currently-active one again clears it back to no
  *  decision, rather than trapping the Host in a one-way state. */
 async function setLibraryState(formData: FormData) {
   "use server";
@@ -28,7 +28,7 @@ async function setLibraryState(formData: FormData) {
   if (!user) redirect("/sign-in?from=/library");
 
   // A Server Action is its own reachable endpoint, not something only
-  // reachable through this page's own render -- re-checked here the same
+  // reachable through this page's own render, re-checked here the same
   // way the page component itself is, matching the admin-action precedent
   // elsewhere in this codebase.
   const { data: youthCheck } = await supabase
@@ -57,7 +57,7 @@ async function setLibraryState(formData: FormData) {
   redirect(`/library/${entryId}`);
 }
 
-/** Host-authored, stored verbatim -- this action never rewrites or
+/** Host-authored, stored verbatim, this action never rewrites or
  *  interprets what the Host typed. */
 async function saveLibraryNote(formData: FormData) {
   "use server";
@@ -93,7 +93,7 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
   if (!user) redirect(`/sign-in?from=/library/${params.entryId}`);
 
   // The Library has no Youth-aware presentation architecture yet (Living
-  // Library audit, Section Q) -- server-derived, never trusting a client
+  // Library audit, Section Q), server-derived, never trusting a client
   // flag, the same signal /journey already redirects on. Sent to their own
   // Journey home rather than shown adult-register content, including via a
   // direct entry URL.
@@ -114,12 +114,12 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
   if (!entry) notFound();
 
   // A member-only entry is never rendered to a non-member, including via a
-  // direct URL -- this is the same rule search/retrieval/orientation/concept
+  // direct URL, this is the same rule search/retrieval/orientation/concept
   // pages already enforce before an entry ever appears as a link; this is
   // the backstop for reaching one straight by id. Acknowledges the entry
   // exists (title/category) rather than a bare 404, but withholds the
   // actual content. MembershipGate (app/journey/page.tsx) isn't reused here
-  // -- its copy is written specifically for the IAP/CAT/InnerCompass
+  //, its copy is written specifically for the IAP/CAT/InnerCompass
   // boundary ("Your Individual Awareness Profile is complete...") and would
   // be inaccurate shown against a Library entry, so this reuses the same
   // underlying MembershipCheckoutButton with Library-appropriate copy
@@ -144,7 +144,7 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
     );
   }
 
-  // Explore = the Host opened this, nothing more inferred -- recorded once,
+  // Explore = the Host opened this, nothing more inferred, recorded once,
   // the first time, alongside reading whatever Save/Not for me/Note state
   // already exists so the buttons below reflect it. Best-effort: a failure
   // here should never block reading the entry itself.
@@ -171,7 +171,7 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
   const isNotForMe = hostEntry?.state === "not_for_me";
   const spokenText = [entry.overview, entry.body].filter(Boolean).join("\n\n");
 
-  // No concept/question content is published yet -- these resolve to
+  // No concept/question content is published yet, these resolve to
   // empty arrays today, and the section below renders nothing until real,
   // editorially reviewed connections exist. Wired in now so nothing else
   // needs to change when they do.
@@ -195,9 +195,9 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
       {/* Body renders whenever it's present, independent of content_type.
           Gating this on content_type === 'avaia-owned' would force
           non-AVAIA (historical/research/contemporary) material to falsely
-          claim avaia-owned just to be readable -- a provenance error, not
+          claim avaia-owned just to be readable, a provenance error, not
           a rendering shortcut. The external-resource attribution block
-          below is unaffected -- it still only appears for
+          below is unaffected, it still only appears for
           content_type === 'external-resource', so an AVAIA-owned entry
           never shows external attribution it doesn't have, and an
           external-resource entry's real authorship stays visible
@@ -232,7 +232,7 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
           {entry.virtues.map((v, i) => (
             <span key={`v-${i}`} className="rounded-full border border-rule px-3 py-0.5 text-xs text-muted">
               {familyOf(v.family).name}
-              {v.element ? ` — ${v.element}` : ""}
+              {v.element ? `, ${v.element}` : ""}
             </span>
           ))}
           {entry.secondary_losses.map((s) => (

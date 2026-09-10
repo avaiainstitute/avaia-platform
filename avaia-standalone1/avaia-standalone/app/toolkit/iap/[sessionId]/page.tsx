@@ -20,20 +20,20 @@ import { ensureNextStageConversation } from "@/lib/engine/referral-generation";
 import { resolveOriginContext } from "@/lib/engine/origin-context";
 import { generateIapOriginOpening } from "@/lib/engine/openings";
 
-export const metadata = { title: "Individual Awareness Profile — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Individual Awareness Profile, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** The installed IAP tool. Reuses the exact same engine, API routes, and
- *  JourneyChat component the public Journey uses -- nothing here is a
+ *  JourneyChat component the public Journey uses, nothing here is a
  *  second implementation of IAP. The only thing new is how the
  *  conversation gets found: a Guide may run several participants' IAP
  *  sessions at once, so this looks up the conversation via this specific
  *  guide_sessions row (set once, at first use) rather than
  *  getActiveConversation(), which assumes one active conversation per
- *  account -- true for an ordinary Host, not true for a Guide.
+ *  account, true for an ordinary Host, not true for a Guide.
  *
  *  Completion is detected by conversation.status === "complete", NOT
- *  conversation.stage -- each stage is its own permanent conversation row
+ *  conversation.stage, each stage is its own permanent conversation row
  *  (stage never changes on an existing row), so this row's stage is always
  *  "iap"; status is what changes when the referral fires. */
 export default async function ToolkitIapSessionPage({
@@ -54,7 +54,7 @@ export default async function ToolkitIapSessionPage({
   let conversationId = session.conversation_id;
   if (!conversationId) {
     // A View From Above session carries which of the ten classes it's
-    // anchored to (session.class_context, migration 0058) -- resolved
+    // anchored to (session.class_context, migration 0058), resolved
     // here into the same structured origin context a self-directed Host
     // gets from the public page, so the Guide-facilitated private
     // conversation opens the same way regardless of entry path.
@@ -89,7 +89,7 @@ export default async function ToolkitIapSessionPage({
       ? await findConversationByJourneyStage(supabase, convo.journey_id, "cat")
       : null;
     // Self-heal a stranded handoff (referral saved, next stage never
-    // created -- see ensureNextStageConversation's own comment for why
+    // created, see ensureNextStageConversation's own comment for why
     // this can happen). No-op on the ordinary path where catConvo already
     // exists.
     if (!catConvo && referralSaved) {
@@ -125,7 +125,7 @@ export default async function ToolkitIapSessionPage({
         <p className="mt-4 text-muted">
           {referralSaved
             ? "The referral has been saved to your Workbook."
-            : "This conversation is marked complete, but no referral was found -- worth a closer look."}
+            : "This conversation is marked complete, but no referral was found, worth a closer look."}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           {continueHref && (

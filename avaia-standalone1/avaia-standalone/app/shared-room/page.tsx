@@ -1,13 +1,13 @@
 import Link from "next/link";
 
-export const metadata = { title: "The Shared Room — AVAIA" };
+export const metadata = { title: "The Shared Room, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Public front door for the Shared Room capability -- built and live
+/** Public front door for the Shared Room capability, built and live
  *  this session, previously unexplained anywhere on the public site. Front-
  *  door language only: no RLS, no auth-identity mechanics, no database
  *  terms. The technical "how" lives in the codebase/internal audit
- *  documentation, not here -- this page answers what/does/becomes-possible,
+ *  documentation, not here, this page answers what/does/becomes-possible,
  *  matching the register every other public AVAIA page already uses. */
 export default function SharedRoomPage() {
   return (
@@ -17,15 +17,22 @@ export default function SharedRoomPage() {
       <p className="mt-4 text-lg leading-relaxed text-ink">
         A way for more than one person to participate in the same AVAIA conversation, while each
         person keeps full ownership of their own experience. Not a group chat, and not one shared
-        account speaking for everyone — a Room where every voice stays its own.
+        account speaking for everyone, a Room where every voice stays its own.
       </p>
 
       <section className="rule-t mt-16 border-t border-rule pt-12">
         <p className="label mb-2">What It Is</p>
-        <h2 className="font-serif text-2xl text-ink">A Room is not the people in it.</h2>
+        <h2 className="font-serif text-2xl text-ink">A Room is not who the people are in it.</h2>
+        <p className="mt-3 text-muted">
+          A room is where the shared conversation is allowed to develop into whatever it needs to
+          be. In a Shared Room, every participant keeps ownership of their own voice and story.
+          When a person decides they need a private conversation, nothing moves from that
+          conversation back into the Shared Room without the choice and permission of the person
+          having that private conversation.
+        </p>
         <p className="mt-3 text-muted">
           A Shared Room is what a conversation becomes when more than one person brings something
-          real to the same Table — a family, a couple, a parent and a teenager, business partners,
+          real to the same Table, a family, a couple, a parent and a teenager, business partners,
           a team. Each person is still their own Host, with their own story. Nobody&rsquo;s account
           of things becomes the official one just because more than one person agrees with it.
         </p>
@@ -37,9 +44,9 @@ export default function SharedRoomPage() {
         <p className="mt-3 text-muted">
           Multiple people can be in the same conversation at once, each heard and addressed as
           themselves. At any point, a participant can step into genuinely private processing of
-          their own — a real, protected space, not just a quieter corner of the same room. Nothing
+          their own, a real, protected space, not just a quieter corner of the same room. Nothing
           from that private space returns to the Room automatically. When they&rsquo;re ready, they
-          choose exactly what — if anything — comes back, in their own words.
+          choose exactly what, if anything, comes back, in their own words.
         </p>
         <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-5">
           <p className="font-serif text-lg text-ink">Private means private unless you choose to share it.</p>
@@ -48,7 +55,7 @@ export default function SharedRoomPage() {
             <li>The person facilitating the Room cannot read that private material by default.</li>
             <li>No other participant can read it.</li>
             <li>Nothing returns to the shared Room automatically.</li>
-            <li>The participant alone decides what, if anything, comes back — and in their own words.</li>
+            <li>The participant alone decides what, if anything, comes back, and in their own words.</li>
           </ul>
         </div>
       </section>
@@ -58,10 +65,10 @@ export default function SharedRoomPage() {
         <h2 className="font-serif text-2xl text-ink">Visibility, without requiring agreement.</h2>
         <p className="mt-3 text-muted">
           Families, relationships, teams, organizations, and communities can become more visible to
-          one another — without needing to agree, without a majority overruling one person, without
+          one another, without needing to agree, without a majority overruling one person, without
           anyone being pressured to disclose something they&rsquo;d rather keep private, and without
           one account being declared the true one. A Room can end with real understanding and real
-          disagreement both still present — that&rsquo;s not a failure of the conversation. Sometimes
+          disagreement both still present, that&rsquo;s not a failure of the conversation. Sometimes
           it&rsquo;s the most honest place it could have landed.
         </p>
       </section>

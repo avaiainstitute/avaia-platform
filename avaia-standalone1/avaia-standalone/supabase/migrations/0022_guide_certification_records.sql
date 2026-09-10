@@ -1,4 +1,4 @@
--- Certified AVAIA Guide — candidacy and certification records (Phase C,
+-- Certified AVAIA Guide, candidacy and certification records (Phase C,
 -- first implementation slice). Purely additive: three new tables, zero
 -- alter statements on any existing table, zero application code changes
 -- required to register them.

@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Owner-only: invites a family member by email. Re-verifies the caller
- *  owns an active Family plan inside inviteFamilyMember() itself -- this
+ *  owns an active Family plan inside inviteFamilyMember() itself, this
  *  route does no authorization decision of its own beyond requiring a
  *  signed-in caller. */
 export async function POST(request: Request) {
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       subject: "You're invited to an AVAIA Family Membership",
       html: `
         <p>You've been invited to join a Family AVAIA Membership.</p>
-        <p>Each person keeps their own private AVAIA account, Journey, and Workbook —
+        <p>Each person keeps their own private AVAIA account, Journey, and Workbook,
         joining a Family plan only shares payment, never your private conversations.</p>
         <p><a href="${acceptUrl}">Accept the invitation</a></p>
         <p style="color:#888">If you weren't expecting this, you can safely ignore this email.</p>

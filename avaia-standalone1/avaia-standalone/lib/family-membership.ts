@@ -4,9 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { stripe, familyExtraSeatPriceId, FAMILY_INCLUDED_SEATS, type MembershipPlan } from "@/lib/stripe";
 
 // AVAIA Family Membership. Governing rule: "Family Membership is shared
-// payment/access -- not shared ownership of stories." Payment gives
+// payment/access, not shared ownership of stories." Payment gives
 // access, not authority. This module owns every mutation to
-// family_memberships/family_members -- both tables have no client write
+// family_memberships/family_members, both tables have no client write
 // policy (see migration 0054's own header), matching the
 // organization-admin precedent exactly: every function here re-verifies
 // the caller's identity itself rather than trusting a route param, and
@@ -20,7 +20,7 @@ import { stripe, familyExtraSeatPriceId, FAMILY_INCLUDED_SEATS, type MembershipP
 // family_memberships, family_members, and entitlements (access/billing
 // rows, not story content). A Family purchaser who wants to read a
 // member's private material has to go find a completely different,
-// unrelated access path -- none exists, by design.
+// unrelated access path, none exists, by design.
 
 export type FamilyMembershipRow = {
   id: string;
@@ -56,7 +56,7 @@ function generateInviteToken(): string {
   return randomBytes(24).toString("hex");
 }
 
-/** The caller's own Family plan, if they own one -- self-read RLS is
+/** The caller's own Family plan, if they own one, self-read RLS is
  *  sufficient, `supabase` should be the caller's own RLS-scoped client. */
 export async function getFamilyMembershipForOwner(
   supabase: SupabaseClient,
@@ -72,7 +72,7 @@ export async function getFamilyMembershipForOwner(
 }
 
 /** The caller's own seat, if they're an active member of ANY Family plan
- *  (their own, or one someone else owns) -- self-read RLS is sufficient.
+ *  (their own, or one someone else owns), self-read RLS is sufficient.
  *  Does not reveal who else is on the plan; only this Host's own row. */
 export async function getMyFamilyMembership(
   supabase: SupabaseClient,
@@ -87,7 +87,7 @@ export async function getMyFamilyMembership(
   return (data as FamilyMemberRow) ?? null;
 }
 
-/** Full roster for an owner's plan -- re-verifies ownership itself rather
+/** Full roster for an owner's plan, re-verifies ownership itself rather
  *  than trusting familyMembershipId came from an authorized page. Reads
  *  through the caller's own RLS-scoped client; the "owner read" policy on
  *  family_members already scopes this correctly. */
@@ -108,7 +108,7 @@ export async function listFamilyRoster(
 }
 
 /** Grants an active 'family'-sourced entitlement to a host, attributed to
- *  this specific plan. Idempotent -- a host who already holds ANY active
+ *  this specific plan. Idempotent, a host who already holds ANY active
  *  entitlement (Individual, or family from this same plan) is left alone;
  *  this never creates a second active row for the same host, matching
  *  grantEntitlement()'s own posture in the Stripe webhook. `admin` must be
@@ -134,7 +134,7 @@ async function grantFamilyEntitlement(
 }
 
 /** Revokes ONLY this host's family-sourced entitlement from this specific
- *  plan -- never touches an Individual entitlement they might separately
+ *  plan, never touches an Individual entitlement they might separately
  *  hold, and never another member's row. This is the exact boundary that
  *  keeps "remove a family member" from ever being able to reach into
  *  someone else's unrelated access. */
@@ -157,7 +157,7 @@ async function revokeFamilyEntitlement(
  *  webhook's checkout.session.completed handler, when the purchased price
  *  was a Family price. `admin` must be the service-role client. Idempotent
  *  against webhook redelivery via the same unique-active-owner index the
- *  migration created -- a second call for an owner who already has an
+ *  migration created, a second call for an owner who already has an
  *  active plan is a no-op. */
 export async function createFamilyMembership(
   admin: SupabaseClient,
@@ -210,7 +210,7 @@ export type InviteResult = { error: string | null; inviteToken: string | null; m
 /** Invites a family member by email. Re-verifies the caller actually owns
  *  an active Family plan (never trusts a route param), and computes seat
  *  billing itself from how many seats are currently occupied
- *  (active + invited) -- the 6th and further concurrently-occupied seat
+ *  (active + invited), the 6th and further concurrently-occupied seat
  *  bills as an extra seat; a freed seat (a prior member removed) is
  *  filled as a base seat again, not billed twice. `supabase` is the
  *  caller's own RLS-scoped client (sufficient for the ownership check);
@@ -266,7 +266,7 @@ export async function inviteFamilyMember(
     .single();
 
   if (error || !created) {
-    // Roll back the seat we just billed, if any -- don't leave someone
+    // Roll back the seat we just billed, if any, don't leave someone
     // billed for a seat with no corresponding invite.
     if (isExtraSeat) await removeExtraSeatBilling(admin, membership);
     console.error("AVAIA Family Membership: failed to create invite:", error);
@@ -342,11 +342,11 @@ async function removeExtraSeatBilling(admin: SupabaseClient, membership: FamilyM
 
 export type AcceptResult = { error: string | null };
 
-/** Accepts a pending invite -- the ONLY way a family_members row moves
+/** Accepts a pending invite, the ONLY way a family_members row moves
  *  from 'invited' to 'active' and the only place a Family entitlement is
  *  granted to anyone other than the owner. Requires the accepting host's
  *  OWN identity and independently confirms their signed-in email matches
- *  the invited address (case-insensitive) -- an invite link cannot be
+ *  the invited address (case-insensitive), an invite link cannot be
  *  used by anyone other than the person it was actually sent to, even if
  *  the token itself leaks. `admin` must be the service-role client
  *  (this legitimately crosses from the invite's owner-created row into
@@ -394,13 +394,13 @@ export async function acceptFamilyInvite(
 
 export type RemoveResult = { error: string | null };
 
-/** Removes a member from the roster -- callable by the plan's owner
+/** Removes a member from the roster, callable by the plan's owner
  *  (removing someone else) or the member themselves (leaving). Re-verifies
  *  the caller's authority itself: either `callerId === ownerHostId of the
  *  plan` or `callerId === the member's own host_id`. Revokes only this
  *  member's family-sourced entitlement from THIS plan, releases the seat,
  *  and decrements extra-seat billing if this was a billed extra seat.
- *  The owner's own seat cannot be removed this way -- ending the plan
+ *  The owner's own seat cannot be removed this way, ending the plan
  *  itself is a separate, Stripe-subscription-level action (cancellation),
  *  not a roster removal. */
 export async function removeFamilyMember(
@@ -446,7 +446,7 @@ export async function removeFamilyMember(
 
 /** Marks a plan canceled and revokes every active member's family-sourced
  *  entitlement (including the owner's own). Called from the Stripe
- *  webhook when the Family subscription itself ends -- mirrors
+ *  webhook when the Family subscription itself ends, mirrors
  *  revokeEntitlement()'s posture for Individual membership, extended to
  *  every seat on the plan rather than one host. Does not touch Stripe
  *  itself (the subscription is already ending/ended by the time this

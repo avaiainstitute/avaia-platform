@@ -4,7 +4,7 @@ import { createConversation, STAGE_ORDER, type DbConversation } from "@/lib/engi
 import type { Stage } from "@/lib/engine/prompts";
 import { generateCatOpening } from "@/lib/engine/openings";
 
-// The entry point every real custom GPT's Action calls — IAP, Conversations
+// The entry point every real custom GPT's Action calls, IAP, Conversations
 // Across Time, and InnerCompass all point here. (The path still says
 // "iap-referral" only because that's what the IAP GPT was already
 // configured with before this became stage-agnostic; renaming it would mean
@@ -15,12 +15,12 @@ import { generateCatOpening } from "@/lib/engine/openings";
 // service-role client, same pattern as the Stripe webhook.
 //
 // Identity comes entirely from a real OAuth bearer access token (issued by
-// app/api/oauth/token/route.ts after the Host approved /oauth/authorize) —
+// app/api/oauth/token/route.ts after the Host approved /oauth/authorize),
 // nothing the model has to remember or reproduce.
 //
 // Because the OAuth token identifies WHO, not WHICH conversation or stage,
 // this looks up the Host's current active conversation directly (whatever
-// stage it's at) and derives from_stage/to_stage/the next stage from that —
+// stage it's at) and derives from_stage/to_stage/the next stage from that,
 // the same "one active conversation per Host" assumption the rest of AVAIA
 // already relies on. That conversation's `program` is read back and carried
 // forward into whichever stage comes next, so a referral coming home from
@@ -30,7 +30,7 @@ import { generateCatOpening } from "@/lib/engine/openings";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Kept from the earlier debugging round — this was the first real test of a
+// Kept from the earlier debugging round, this was the first real test of a
 // brand-new mechanism, and losing visibility again would mean starting from
 // zero if something regresses. Remove once this has run reliably for a
 // while in real use.
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   const authHeader = request.headers.get("authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    debugLog("1_request_received", { result: "FAILED — no Bearer token present" });
+    debugLog("1_request_received", { result: "FAILED, no Bearer token present" });
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const accessToken = authHeader.slice("Bearer ".length);
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     hostId: tokenRow?.host_id ?? null,
     revokedAt: tokenRow?.revoked_at ?? null,
     lookupError: tokenLookupError?.message ?? null,
-    result: tokenLookupError || !tokenRow ? "FAILED — unknown access token" : "OK",
+    result: tokenLookupError || !tokenRow ? "FAILED, unknown access token" : "OK",
   });
 
   if (tokenLookupError || !tokenRow) {
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
 
   const hostId = tokenRow.host_id as string;
 
-  // No .eq("stage", ...) here on purpose -- this endpoint now serves
+  // No .eq("stage", ...) here on purpose, this endpoint now serves
   // whichever stage's GPT calls it, so it just finds whatever this Host's
   // one active conversation currently is.
   const { data: convo, error: convoError } = await admin
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     stage: activeConvo?.stage ?? null,
     program: activeConvo?.program ?? null,
     lookupError: convoError?.message ?? null,
-    result: convoError || !activeConvo ? "FAILED — no active conversation for this Host" : "OK",
+    result: convoError || !activeConvo ? "FAILED, no active conversation for this Host" : "OK",
   });
 
   if (convoError || !activeConvo) {
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
     completeError: completeError ? completeError.message : null,
   });
 
-  // Carry the program tag forward -- without this, a referral coming home
+  // Carry the program tag forward, without this, a referral coming home
   // from a Defying Grief workshop trip would silently land in a 'general'
   // conversation, invisible to the Defying Grief dashboard and crossing
   // screens. Only create the next stage if there is one; InnerCompass
@@ -176,9 +176,9 @@ export async function POST(request: Request) {
   if (nextStage) {
     // Give a CAT conversation created from this handoff the same
     // referral-aware opening the normal website IAP -> CAT flow produces
-    // (see generateCatOpening in lib/engine/openings.ts, shared by both) --
+    // (see generateCatOpening in lib/engine/openings.ts, shared by both),
     // without this it fell back to the generic static opener. InnerCompass's
-    // opening isn't generated on this path yet -- unchanged, out of scope
+    // opening isn't generated on this path yet, unchanged, out of scope
     // for this fix.
     const opening =
       nextStage === "cat" ? await generateCatOpening(referral, hostId, activeConvo.id) : undefined;

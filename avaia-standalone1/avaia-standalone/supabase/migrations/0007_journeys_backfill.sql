@@ -1,7 +1,7 @@
--- Journey continuity, step 1b — deterministic backfill of journey_id for
+-- Journey continuity, step 1b, deterministic backfill of journey_id for
 -- conversations created before 0006_journeys.sql existed.
 --
--- Unlike 0006, this touches existing rows, not just structure — review
+-- Unlike 0006, this touches existing rows, not just structure, review
 -- before running, and run it AFTER 0006 (requires public.journeys and
 -- conversations.journey_id to already exist). Safe to re-run: every step
 -- only ever acts on rows where journey_id is currently null.
@@ -64,7 +64,7 @@ begin
     order by r.created_at
   loop
     if ref.source_journey_id is null then
-      continue; -- source conversation itself unresolved; leave this hop unresolved too
+      continue;, source conversation itself unresolved; leave this hop unresolved too
     end if;
 
     select count(*), max(id) into candidate_count, candidate_id

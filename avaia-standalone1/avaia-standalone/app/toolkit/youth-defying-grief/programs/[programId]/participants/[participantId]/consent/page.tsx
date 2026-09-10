@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** Per-participant guardian consent, offering the choice this program
  *  roster exists to make real: 'guide_or_self_attested' (consent already
- *  collected -- a signed form, a verbal exchange -- immediately active,
+ *  collected, a signed form, a verbal exchange, immediately active,
  *  the same mechanism the individual entry point already uses) or
  *  'guardian_link_confirmed' (generates a unique link only the guardian
  *  can complete; the record starts 'pending' and this participant is not
@@ -127,7 +127,7 @@ export default async function ParticipantConsentPage({
 
       {!band && (
         <p className="mt-6 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          This participant has no developmental band on record yet — set one from the roster before
+          This participant has no developmental band on record yet, set one from the roster before
           they can be cleared to participate, even once consent is confirmed.
         </p>
       )}
@@ -184,14 +184,14 @@ export default async function ParticipantConsentPage({
           <label className="flex cursor-pointer items-start gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3">
             <input type="radio" name="verificationMethod" value="guide_or_self_attested" defaultChecked className="mt-1" />
             <span className="text-sm text-ink">
-              I already collected this guardian&rsquo;s consent (a signed form, a verbal exchange) —
+              I already collected this guardian&rsquo;s consent (a signed form, a verbal exchange),
               record it now.
             </span>
           </label>
           <label className="mt-2 flex cursor-pointer items-start gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3">
             <input type="radio" name="verificationMethod" value="guardian_link_confirmed" className="mt-1" />
             <span className="text-sm text-ink">
-              Send the guardian a private link — they confirm it themselves. This participant stays
+              Send the guardian a private link, they confirm it themselves. This participant stays
               &ldquo;not cleared&rdquo; until they do.
             </span>
           </label>
@@ -217,7 +217,7 @@ export default async function ParticipantConsentPage({
         {band && (
           <details className="mt-4 rounded-md border border-rule bg-white/[0.03] p-4">
             <summary className="cursor-pointer text-sm text-ink">
-              View Youth participation information — {band}
+              View Youth participation information, {band}
             </summary>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted">{YOUTH_ASSENT_TEXT[band]}</p>
           </details>

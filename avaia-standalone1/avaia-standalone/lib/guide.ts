@@ -5,14 +5,14 @@ import type { DbConversation } from "./engine/conversation";
 import type { Stage, Program, DevelopmentalBand } from "./engine/prompts";
 import type { UnsungHeroesConversation } from "./engine/unsung-heroes";
 
-/** Which authorized context a Guide-facilitated session ran under --
+/** Which authorized context a Guide-facilitated session ran under,
  *  infrastructure for youth/group work that doesn't exist yet (see
  *  0013_guide_toolkit_participant_record.sql's comment). Every tool
  *  installed so far only ever creates 'adult_individual' sessions. */
 export type SessionContext = "adult_individual" | "youth_individual" | "group";
 
 /** Mirrors isMember() (lib/membership.ts) and isAdmin() (the unmerged
- *  `library` branch's lib/admin.ts) exactly -- same shape, same one-column
+ *  `library` branch's lib/admin.ts) exactly, same shape, same one-column
  *  check. Guide Toolkit access is independent of membership_status, the
  *  same separation already established for Workshops/Events and One-on-One
  *  Guiding this session: a certified Guide doesn't need to also be a paying
@@ -27,10 +27,10 @@ export async function isGuide(supabase: SupabaseClient, userId: string): Promise
 }
 
 /** True if this Host currently holds an active Toolkit platform
- *  authorization (Phase D) -- mirrors isMember() (lib/membership.ts)
+ *  authorization (Phase D), mirrors isMember() (lib/membership.ts)
  *  exactly: one small, live-checked table, no caching, no role fallback.
  *  This is now the real Toolkit authorization source (see
- *  app/toolkit/layout.tsx) -- profiles.role = 'guide' alone is no longer
+ *  app/toolkit/layout.tsx), profiles.role = 'guide' alone is no longer
  *  sufficient to reach the Toolkit. Certification (guide_certifications)
  *  is a separate institutional fact this function never reads; whether a
  *  host was ever grantable in the first place was already enforced at
@@ -48,11 +48,11 @@ export async function isToolkitAuthorized(supabase: SupabaseClient, userId: stri
 }
 
 /** True if this Guide currently holds an active Guided Journey
- *  Facilitation platform authorization (Phase E.1) -- same shape as
+ *  Facilitation platform authorization (Phase E.1), same shape as
  *  isToolkitAuthorized() above, deliberately not reused for it: Toolkit
  *  and Guided Journey Facilitation are independent capabilities, and this
  *  is never a substitute for the other. Used to gate app/guided-journeys/
- *  (its own route, deliberately separate from /toolkit -- see that
+ *  (its own route, deliberately separate from /toolkit, see that
  *  layout's comment) and for the small link-out shown on /toolkit itself.
  *  The actual data access on journeys/conversations/messages/referrals is
  *  enforced by RLS itself (see 0029_guide_journey_read_access.sql), not by
@@ -73,7 +73,7 @@ export async function isGuidedJourneyFacilitationAuthorized(
 }
 
 /** True if this Guide's guide_certifications standing is currently
- *  'active' -- mirrors isToolkitAuthorized()/isGuidedJourneyFacilitationAuthorized()'s
+ *  'active', mirrors isToolkitAuthorized()/isGuidedJourneyFacilitationAuthorized()'s
  *  shape. Used alongside isGuidedJourneyFacilitationAuthorized() to gate
  *  app/guided-journeys/, matching exactly the two account-level conditions
  *  the Phase E.4 RLS policies also require (the third, an active Host
@@ -98,7 +98,7 @@ export type GuideParticipant = {
   linked_host_id: string | null;
   notes: string | null;
   // Set by the Guide when starting a Youth session for this participant
-  // (0038_youth_guide_facilitation.sql) -- null for every adult participant,
+  // (0038_youth_guide_facilitation.sql), null for every adult participant,
   // and for any Youth participant not yet started. See
   // resolveDevelopmentalBand() below for how a Guide-facilitated
   // conversation actually reads this.
@@ -175,7 +175,7 @@ export async function completeGuideSession(
   await supabase.from("guide_sessions").update({ status: "complete" }).eq("id", sessionId);
 }
 
-/** Whether a referral already exists for this conversation -- reuses
+/** Whether a referral already exists for this conversation, reuses
  *  referrals.conversation_id (added in 0008_referrals_unique_conversation.sql
  *  for exactly this kind of lookup), not a new mechanism. */
 export async function hasReferralForConversation(
@@ -191,11 +191,11 @@ export async function hasReferralForConversation(
   return !!data;
 }
 
-/** Whether a Guide is authorized to run this specific conversation --
+/** Whether a Guide is authorized to run this specific conversation,
  *  requires active Guide certification (guide_certifications.standing =
- *  'active' -- the actual institutional fact establishing Guide standing),
+ *  'active', the actual institutional fact establishing Guide standing),
  *  a live Toolkit platform authorization (re-checked fresh here, not just
- *  at the /toolkit layout gate -- a Guide whose Toolkit authorization is
+ *  at the /toolkit layout gate, a Guide whose Toolkit authorization is
  *  revoked must also lose the ability to continue an already-started
  *  conversation by calling this API directly, not just lose the UI route
  *  to it), and an actual guide_sessions row tying this exact conversation
@@ -206,12 +206,12 @@ export async function hasReferralForConversation(
  *  arbitrary Host's conversation.
  *
  *  Previously required profiles.role = 'guide' (via isGuide()) instead of
- *  isActivelyCertified() -- a stale holdover from before the Phase D
+ *  isActivelyCertified(), a stale holdover from before the Phase D
  *  platform-authorization architecture existed. profiles.role was never
  *  set by the certification grant itself (grantGuideCertification()'s own
  *  comment: "nothing here touches profiles.role") and isn't touched by
  *  Toolkit or Guided Journey Facilitation authorization either, so the two
- *  facts were never actually linked -- an account could hold role='guide'
+ *  facts were never actually linked, an account could hold role='guide'
  *  without ever being certified, or be genuinely certified and explicitly
  *  Toolkit-authorized while holding a different role (e.g. 'admin', for a
  *  Founder/operator account that also needs admin capability). Certifying
@@ -219,11 +219,11 @@ export async function hasReferralForConversation(
  *  Phase D principle (app/toolkit/layout.tsx's own comment: "profiles.role
  *  = 'guide' is no longer sufficient on its own to reach the Toolkit");
  *  this function just hadn't been brought in line with that yet. Not an
- *  admin bypass -- role plays no part in the check at all now, in either
+ *  admin bypass, role plays no part in the check at all now, in either
  *  direction; an uncertified or unauthorized admin still can't facilitate.
  *
  *  guided_journey_facilitation (Phase E.1) is deliberately NOT checked
- *  here -- it's a separate capability gating a different feature entirely
+ *  here, it's a separate capability gating a different feature entirely
  *  (app/guided-journeys/, a Host-invited path into the Host's own existing
  *  Journey, enforced by guide_journey_access RLS per
  *  0029_guide_journey_read_access.sql). This function's own conversations
@@ -249,12 +249,12 @@ export async function isAuthorizedGuideConversation(
   return certified && toolkitAuthorized && !!session.data;
 }
 
-/** Finds the conversation for a given stage within a Journey -- used after
+/** Finds the conversation for a given stage within a Journey, used after
  *  a stage's conversation reaches status: "complete" to find the next-stage
  *  conversation the frozen engine's own generateReferral() already created
  *  automatically (the exact same handoff every Host gets), so the Toolkit
  *  can offer a deliberate "Continue to X" action rather than the Guide
- *  having no way back in. Never creates anything -- if this returns null
+ *  having no way back in. Never creates anything, if this returns null
  *  after a stage is complete, that's a real problem to surface, not paper
  *  over. */
 export async function findConversationByJourneyStage(
@@ -276,17 +276,17 @@ export async function findConversationByJourneyStage(
 /** Finds an existing guide_sessions row already tracking this exact
  *  (conversation, tool) pair, or creates one. This is how a session "hands
  *  off" from one Toolkit stage page to the next while sharing the same
- *  participant -- e.g. the IAP page calls this with the CAT conversation
+ *  participant, e.g. the IAP page calls this with the CAT conversation
  *  the engine just created, tool: "cat", to get (or reuse) the session id
  *  to send the Guide to.
  *
  *  program/sessionContext should be the CURRENT session's own values,
- *  carried forward -- e.g. a Youth Defying Grief IAP session (program:
+ *  carried forward, e.g. a Youth Defying Grief IAP session (program:
  *  'youth', session_context: 'youth_individual') hands off a CAT session
  *  tagged the same way, not the table's bare defaults ('general' /
  *  'adult_individual'). Both default to those bare values for any caller
  *  that doesn't pass them, so this stays backward-compatible. Note this
- *  also fixes the same gap for adult Defying Grief continuity -- previously
+ *  also fixes the same gap for adult Defying Grief continuity, previously
  *  neither call site passed program through, so a Defying Grief chain's CAT
  *  and InnerCompass legs silently reverted to 'general' on this table (the
  *  underlying conversation's own program, which actually governs the
@@ -327,11 +327,11 @@ export async function findOrCreateGuideSessionForConversation(
 
 /** Resolves the developmental band governing a Youth conversation. A
  *  self-serve Youth Host's band lives on their own profile, set at /youth
- *  -- that's what /api/conversation and /api/referral read for an ordinary
+ * , that's what /api/conversation and /api/referral read for an ordinary
  *  Youth Journey. But when the caller is a Guide running this conversation
  *  through their own Toolkit session (isAuthorizedGuideConversation's exact
  *  narrow case), the caller's profile is the GUIDE's, an adult with no
- *  band of their own -- the real answer lives on the guide_participants row
+ *  band of their own, the real answer lives on the guide_participants row
  *  the Guide set when starting the session. Checked in that order: a
  *  guide_sessions row tying this exact conversation to this caller means
  *  it's Guide-facilitated, and the participant's band governs; absent that,
@@ -384,7 +384,7 @@ export type RecognitionRow = {
   story: string;
   virtue_family: string;
   primary_virtue: string | null;
-  // Required at the DB level (0005_unsung_heroes.sql) -- "why this
+  // Required at the DB level (0005_unsung_heroes.sql), "why this
   // mattered," core to the recognition, not optional.
   reflection: string;
   conversation_path: string;
@@ -394,7 +394,7 @@ export type RecognitionRow = {
 
 export type ParticipantSessionRecord = {
   session: GuideSession;
-  // Populated only for tool in (iap, cat, innercompass) -- the frozen
+  // Populated only for tool in (iap, cat, innercompass), the frozen
   // Journey engine's own conversation/referral, resolved via
   // session.conversation_id. Defying Grief isn't a distinct `tool`; it's
   // these same three tools with session.program === 'defying-grief'.
@@ -407,19 +407,19 @@ export type ParticipantSessionRecord = {
 
 export type ParticipantHistory = {
   participant: GuideParticipant;
-  /** Reverse chronological -- newest first, matching listGuideSessions. */
+  /** Reverse chronological, newest first, matching listGuideSessions. */
   sessions: ParticipantSessionRecord[];
 };
 
 /** Everything currently on record for one of a Guide's participants,
- *  organized by session -- the shared data behind both the Participant
+ *  organized by session, the shared data behind both the Participant
  *  Record (continuity/history) and Preparation (pre-session briefing)
  *  pages, so the two surfaces never independently re-derive or drift from
  *  what "this participant's history" actually means. Resolves each
  *  guide_sessions row to its real underlying conversation/referral or
  *  Unsung Heroes conversation/recognition purely by following existing
  *  foreign keys (session.conversation_id, referrals.conversation_id,
- *  recognitions.conversation_id) -- never inventing an association a join
+ *  recognitions.conversation_id), never inventing an association a join
  *  doesn't actually support. A session whose tool isn't one of the above
  *  (future Toolkit activity) still appears, just with every resolved field
  *  null; the caller renders it from `session` alone. */

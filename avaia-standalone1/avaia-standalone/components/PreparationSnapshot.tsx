@@ -3,11 +3,11 @@
 import { useState } from "react";
 import type { ParticipantSnapshot } from "@/lib/engine/preparation";
 
-/** One bounded, Guide-triggered generation -- never a conversation, never
+/** One bounded, Guide-triggered generation, never a conversation, never
  *  auto-run on page load (matching Preparation's own "does not conduct
  *  conversations" boundary and avoiding an AI call on every page view).
  *  Sits above the existing, unchanged ThreadsRecorded / FullSessionDetails
- *  sections on /toolkit/preparation/[participantId] -- this is the one
+ *  sections on /toolkit/preparation/[participantId], this is the one
  *  generative piece that page never had; those two stay exactly as they
  *  were, a strict, non-generative record of what's already on file. */
 
@@ -51,7 +51,7 @@ export default function PreparationSnapshot({ participantId }: { participantId: 
         <div>
           <p className="label text-muted">Participant Snapshot</p>
           <p className="mt-1 text-sm text-muted">
-            Generated only from what&rsquo;s already on record above — organized, not interpreted.
+            Generated only from what&rsquo;s already on record above, organized, not interpreted.
           </p>
         </div>
         <button

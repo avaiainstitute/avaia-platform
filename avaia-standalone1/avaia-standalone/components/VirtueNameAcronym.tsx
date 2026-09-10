@@ -4,9 +4,9 @@ import { useState } from "react";
 import { virtuesForName, familyOf, QUALITY_WORD } from "@/lib/virtues";
 
 /** Types a name, gets each letter mapped to a real Chemistry of Virtue
- *  element -- a self-definition, not a game score. Purely a deterministic
+ *  element, a self-definition, not a game score. Purely a deterministic
  *  lookup (see lib/virtues.ts's virtueForLetter), so the same name always
- *  spells the same thing. No sign-in, nothing saved -- same public posture
+ *  spells the same thing. No sign-in, nothing saved, same public posture
  *  as the rest of this page. */
 export default function VirtueNameAcronym() {
   const [name, setName] = useState("");
@@ -42,7 +42,7 @@ export default function VirtueNameAcronym() {
                 <span>
                   <span className="font-serif text-lg text-ink">{QUALITY_WORD}</span>
                   <span className="ml-2 text-sm text-muted">
-                    not one of the 123 official elements — a seat at the table anyway
+                    not one of the 123 official elements, a seat at the table anyway
                   </span>
                 </span>
               ) : (

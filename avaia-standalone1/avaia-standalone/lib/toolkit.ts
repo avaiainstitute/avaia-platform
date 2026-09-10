@@ -1,4 +1,4 @@
-// The AVAIA Guide Toolkit's canonical tool registry — not server-only,
+// The AVAIA Guide Toolkit's canonical tool registry, not server-only,
 // since it's just static data (no secrets, no DB access) that both the
 // dashboard and the participant-creation form need to render/validate
 // against, and a plain object is simplest for both server and client use.
@@ -9,7 +9,7 @@
 // content but not yet wired into the Toolkit shell. "not-yet-specified" =
 // named and real in AVAIA's own institutional source
 // (institution/source/*.md) but has no behavioral specification anywhere
-// yet -- not invented here, not blocking the build.
+// yet, not invented here, not blocking the build.
 
 export type ToolKey =
   | "preparation"
@@ -44,7 +44,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "preparation",
     label: "Preparation",
-    description: "Organizes what's already on record for a participant before a session -- never interprets, diagnoses, or prescribes what should happen next.",
+    description: "Organizes what's already on record for a participant before a session, never interprets, diagnoses, or prescribes what should happen next.",
     status: "installed",
     href: "/toolkit/preparation",
   },
@@ -53,7 +53,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     label: "Individual Awareness Profile",
     description: "Creates Awareness. The same canonical IAP engine used by the public Journey.",
     status: "installed",
-    // No /toolkit/iap index route exists -- a Guide starts one from the
+    // No /toolkit/iap index route exists, a Guide starts one from the
     // Dashboard's own "Begin Individual Awareness Profile" form, or
     // continues an existing one from a Participant's own page, matching
     // cat/innercompass's identical null href below.
@@ -82,7 +82,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   },
   {
     key: "chemistry",
-    label: "Chemistry of Virtue",
+    label: "The Chemistry of Virtue",
     description: "The 123 elements of virtue, and Virtue Formulas.",
     status: "installed",
     href: "/chemistry",
@@ -90,7 +90,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "table-formation",
     label: "Table Formation Engine",
-    description: "The structural framework for AVAIA conversations -- Host, Guide, Witness, Council, and Self/Relationship/Virtue/Secondary Loss/Burden seats. Live inside every adult IAP, CAT, and InnerCompass conversation: seats are recognized and offered conversationally, never configured. See TABLE_FORMATION_INSTRUCTIONS in lib/engine/prompts.ts.",
+    description: "The structural framework for AVAIA conversations, Host, Guide, Witness, Council, and Self/Relationship/Virtue/Secondary Loss/Burden seats. Live inside every adult IAP, CAT, and InnerCompass conversation: seats are recognized and offered conversationally, never configured. See TABLE_FORMATION_INSTRUCTIONS in lib/engine/prompts.ts.",
     status: "installed",
     href: "/toolkit/table-formation",
   },
@@ -104,14 +104,14 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "give",
     label: "GIVE Method",
-    description: "AVAIA's foundational methodology -- already documented on the public site.",
+    description: "AVAIA's foundational methodology, already documented on the public site.",
     status: "installed",
     href: "/about#give",
   },
   {
     key: "defying-grief",
     label: "Defying Grief",
-    description: "AVAIA applied specifically to loss and disruption -- the same IAP/CAT/InnerCompass tools, threaded with the Audacity framing.",
+    description: "AVAIA applied specifically to loss and disruption, the same IAP/CAT/InnerCompass tools, threaded with the Audacity framing.",
     status: "installed",
     href: "/toolkit/defying-grief",
   },
@@ -132,21 +132,21 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "youth-defying-grief",
     label: "Youth Defying Grief",
-    description: "Guide-facilitated Youth Individual Awareness Profile, Conversations Across Time, and InnerCompass -- Defying Grief is the Youth program, not a separate add-on, so Stone-and-Ripples and Audacity framing are already layered in. Same canonical Youth engine the public /youth Journey uses, adapted by developmental band (8-11 / 12-14 / 15-17), which the Guide sets when starting a session.",
+    description: "Guide-facilitated Youth Individual Awareness Profile, Conversations Across Time, and InnerCompass, Defying Grief is the Youth program, not a separate add-on, so Stone-and-Ripples and Audacity framing are already layered in. Same canonical Youth engine the public /youth Journey uses, adapted by developmental band (8-11 / 12-14 / 15-17), which the Guide sets when starting a session.",
     status: "installed",
     href: "/toolkit/youth-defying-grief",
   },
   {
     key: "youth-group",
     label: "Youth Group / Program / School-Organization",
-    description: "Group-format delivery of Youth conversations -- register a roster of participants for a group, workshop, or school/organization program; track per-person guardian consent and Youth assent; launch each participant's own private session once cleared.",
+    description: "Group-format delivery of Youth conversations, register a roster of participants for a group, workshop, or school/organization program; track per-person guardian consent and Youth assent; launch each participant's own private session once cleared.",
     status: "installed",
     href: "/toolkit/youth-defying-grief/programs",
   },
   {
     key: "view-from-above",
     label: "The View from Above",
-    description: "Ten classes built from the lessons that became visible on Bailand's Hike -- Meaning, Reality, Dreams/Opportunities, Self-Trust, Decision-Making/Boundaries, Life's Vision, Connection, Control, Identity, and Attachment/Support, each paired with a Virtue Family. Facilitate here; a member can also take any class self-directed at /view-from-above.",
+    description: "Ten classes built from the lessons that became visible on Bailand's Hike, Meaning, Reality, Dreams/Opportunities, Self-Trust, Decision-Making/Boundaries, Life's Vision, Connection, Control, Identity, and Attachment/Support, each paired with a Virtue Family. Facilitate here; a member can also take any class self-directed at /view-from-above.",
     status: "installed",
     href: "/toolkit/view-from-above",
   },

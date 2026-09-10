@@ -115,7 +115,7 @@ export default function UnsaidChat({
                 <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-white/[0.07] px-4 py-3 text-ink backdrop-blur-sm">
                   {m.content}
                 </div>
-                {m.heard && <p className="mt-1.5 text-xs italic text-muted">received — no response</p>}
+                {m.heard && <p className="mt-1.5 text-xs italic text-muted">received, no response</p>}
               </>
             ) : (
               <div className="max-w-[90%]">
@@ -170,10 +170,10 @@ export default function UnsaidChat({
           </button>
         </div>
         <p className="mt-3 text-xs text-muted">
-          &ldquo;Just Say This&rdquo; is only received — nothing is generated back.
+          &ldquo;Just Say This&rdquo; is only received, nothing is generated back.
           {hasGrounding
-            ? " If you ask for something back, AVAIA will use what you shared about them to help ground it — offered words, not a claim about what they'd actually say."
-            : " If you ask for something back, AVAIA offers words that might meet what you said — not a claim about what they'd actually think or say."}
+            ? " If you ask for something back, AVAIA will use what you shared about them to help ground it, offered words, not a claim about what they'd actually say."
+            : " If you ask for something back, AVAIA offers words that might meet what you said, not a claim about what they'd actually think or say."}
         </p>
       </div>
 

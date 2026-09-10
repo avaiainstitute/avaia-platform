@@ -78,22 +78,22 @@ insert into public.experiences (title, summary, status, components, conversation
 on conflict do nothing;
 
 insert into public.classes (title, family, summary, status, components, conversation_stages) values
-  ($$The Loss of Meaning — View From Above$$, 'self', $$What is the point? Finding meaning and practicing gratitude.$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Reality — View From Above$$, 'self', $$What is real to me anymore? Humility when foundational beliefs are disrupted.$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Dreams / Opportunities — View From Above$$, 'clarity_agency', $$Where am I going? Direction, hope, and positive expectation.$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Self-Trust — View From Above$$, 'self', $$What is my role? Hard work and following through again.$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Decision-Making / Boundaries — View From Above$$, 'clarity_agency', $$What do I choose when fear, guilt, shame, or doubt are present?$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Life's Vision — View From Above$$, 'clarity_agency', $$Where do I belong? Grounding and direction.$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Connection — View From Above$$, 'relationships', $$What does fair, honest, reciprocal connection look like?$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Control — View From Above$$, 'clarity_agency', $$What is actually mine to govern?$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Identity — View From Above$$, 'self', $$Who am I? Integrity and values.$$, 'published', array['view-from-above'], array['iap']),
-  ($$The Loss of Attachment / Support — View From Above$$, 'relationships', $$Who am I still connected to, and what does that mean?$$, 'published', array['view-from-above'], array['iap'])
+  ($$The Loss of Meaning, View From Above$$, 'self', $$What is the point? Finding meaning and practicing gratitude.$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Reality, View From Above$$, 'self', $$What is real to me anymore? Humility when foundational beliefs are disrupted.$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Dreams / Opportunities, View From Above$$, 'clarity_agency', $$Where am I going? Direction, hope, and positive expectation.$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Self-Trust, View From Above$$, 'self', $$What is my role? Hard work and following through again.$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Decision-Making / Boundaries, View From Above$$, 'clarity_agency', $$What do I choose when fear, guilt, shame, or doubt are present?$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Life's Vision, View From Above$$, 'clarity_agency', $$Where do I belong? Grounding and direction.$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Connection, View From Above$$, 'relationships', $$What does fair, honest, reciprocal connection look like?$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Control, View From Above$$, 'clarity_agency', $$What is actually mine to govern?$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Identity, View From Above$$, 'self', $$Who am I? Integrity and values.$$, 'published', array['view-from-above'], array['iap']),
+  ($$The Loss of Attachment / Support, View From Above$$, 'relationships', $$Who am I still connected to, and what does that mean?$$, 'published', array['view-from-above'], array['iap'])
 on conflict do nothing;
 
 insert into public.experience_classes (experience_id, class_id, note)
 select e.id, c.id, 'Same class, full Experience depth for Guide facilitation.'
 from public.experiences e
-join public.classes c on c.title = e.title || $$ — View From Above$$
+join public.classes c on c.title = e.title || $$, View From Above$$
 where e.title in (
   $$The Loss of Meaning$$, $$The Loss of Reality$$, $$The Loss of Dreams / Opportunities$$,
   $$The Loss of Self-Trust$$, $$The Loss of Decision-Making / Boundaries$$, $$The Loss of Life's Vision$$,

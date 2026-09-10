@@ -3,15 +3,15 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Certified Guide Candidates — AVAIA Admin" };
+export const metadata = { title: "Certified Guide Candidates, AVAIA Admin" };
 export const dynamic = "force-dynamic";
 
 /** Certified AVAIA Guide candidate administration (Phase C.2). Admits an
  *  existing AVAIA account into the candidacy pathway and lists current
- *  candidates. Deliberately does NOT read contact_submissions -- interest
+ *  candidates. Deliberately does NOT read contact_submissions, interest
  *  and candidacy remain separate; an admin admits someone here as an
  *  intentional decision, never automatically from a contact form
- *  submission. Not linked from the global Nav, reachable only by URL --
+ *  submission. Not linked from the global Nav, reachable only by URL,
  *  same posture as /admin/experiences and /toolkit before they were
  *  advertised. */
 
@@ -23,7 +23,7 @@ const ERROR_MESSAGE: Record<string, string> = {
 };
 
 /** Same page-through-listUsers pattern already used in app/api/share/route.ts
- *  and app/toolkit/page.tsx -- copied fresh here (not imported) so those
+ *  and app/toolkit/page.tsx, copied fresh here (not imported) so those
  *  existing, working flows stay untouched. auth.users has no server-side
  *  email filter, so this pages through comparing emails directly. */
 async function findHostIdByEmail(email: string): Promise<string | null> {
@@ -41,7 +41,7 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
 /** Resolves guide_candidates.host_id -> email for display only, the same
  *  bulk-resolution pattern already used for shared_access recipients in
  *  app/workbook/page.tsx. createAdminClient() is used ONLY for this identity
- *  lookup -- never for reading or writing guide_candidates/
+ *  lookup, never for reading or writing guide_candidates/
  *  guide_candidate_history, which always go through the signed-in admin's
  *  own RLS-bound client below. */
 async function resolveEmailsByHostId(hostIds: string[]): Promise<Map<string, string>> {
@@ -64,13 +64,13 @@ async function resolveEmailsByHostId(hostIds: string[]): Promise<Map<string, str
 }
 
 /** Admits an existing AVAIA account as a certification candidate. Requires
- *  only an email -- guide_candidates has no name column, so there is
+ *  only an email, guide_candidates has no name column, so there is
  *  nothing else to require. Creates exactly one guide_candidates row and one
  *  guide_candidate_history row (the admission note if given, otherwise a
- *  default description -- never both, so nothing is duplicated). Both
+ *  default description, never both, so nothing is duplicated). Both
  *  inserts run through the signed-in admin's own RLS-bound client: the
  *  database's existing "admin all" policies (added in 0022) are the real
- *  enforcement, not this action's own role check alone -- but the check is
+ *  enforcement, not this action's own role check alone, but the check is
  *  still required here, since a Server Action is its own reachable endpoint,
  *  not something only rendered inside this gated page. */
 async function admitCandidate(formData: FormData) {

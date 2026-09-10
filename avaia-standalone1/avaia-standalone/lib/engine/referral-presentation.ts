@@ -10,14 +10,14 @@ import {
 // referral-flagged themes (e.g. a "steward/program" identity thread) instead
 // of following what was alive in the live conversation, and its own
 // generated language started echoing internal schema field names (e.g.
-// "That's integration" after seeing a field called integrationPoints) --
+// "That's integration" after seeing a field called integrationPoints),
 // both traced to the raw JSON dump exposing schema vocabulary and treating
 // CAT's own interpretive synthesis as equally authoritative as the Host's
 // verbatim words. This function fixes the data InnerCompass receives, not
 // another prompt instruction competing against that data.
 //
 // Does not touch referral storage, generation, schemas, the Workbook, or
-// sharing -- purely a rendering step between "read from the database" and
+// sharing, purely a rendering step between "read from the database" and
 // "inject into the system prompt," used only at InnerCompass's two
 // referral-receiving call sites (generateInnerCompassOpening in
 // api/referral/route.ts, and the ongoing-conversation injection in
@@ -56,7 +56,7 @@ export function formatCatReferralForInnerCompass(content: CatReferralContent): s
   const title = str(content.title);
   if (title) sections.push(`ROOM IDENTITY: "${title}"`);
 
-  // 2. Host's own words -- anchorStatements + reflectionsThatEmerged,
+  // 2. Host's own words, anchorStatements + reflectionsThatEmerged,
   // exact-string deduplicated. A near-duplicate with extra trailing text
   // is not caught by this and will appear twice; that's an accepted limit
   // of exact matching rather than attempting fuzzy dedup.
@@ -105,7 +105,7 @@ export function formatCatReferralForInnerCompass(content: CatReferralContent): s
     );
   }
 
-  // 4. Still-open material -- exact-deduplicated across both fields
+  // 4. Still-open material, exact-deduplicated across both fields
   const openSeen = new Set<string>();
   const openMaterial = [
     ...arr(content.unresolvedQuestions),
@@ -114,7 +114,7 @@ export function formatCatReferralForInnerCompass(content: CatReferralContent): s
   if (openMaterial.length > 0) {
     sections.push(
       [
-        "STILL OPEN (CAT left these unresolved -- possibilities available to this",
+        "STILL OPEN (CAT left these unresolved, possibilities available to this",
         "conversation, not questions InnerCompass is required to ask)",
         ...openMaterial.map((q) => `- ${q}`),
       ].join("\n")
@@ -136,12 +136,12 @@ export function formatCatReferralForInnerCompass(content: CatReferralContent): s
   return sections.join("\n\n");
 }
 
-// Replaces the generic "established context -- do not ask the Host to
+// Replaces the generic "established context, do not ask the Host to
 // repeat it; build from it" wrapper for InnerCompass specifically, at both
 // call sites. CAT's own referral wrapper (in api/conversation/route.ts, for
 // stage === "cat") is untouched and keeps its original wording.
 export const INNERCOMPASS_REFERRAL_WRAPPER =
-  "CARRIED-FORWARD AVAIA CONTEXT — do not ask the Host to repeat what is " +
+  "CARRIED-FORWARD AVAIA CONTEXT, do not ask the Host to repeat what is " +
   "already here. Use this as memory and prior understanding while allowing " +
   "the current conversation to refine, redirect, or supersede it.";
 

@@ -1,8 +1,8 @@
-// Anonymous usage tracking — same lightweight approach as Yada.
+// Anonymous usage tracking, same lightweight approach as Yada.
 //
 // Fires small JSON events (event name + categorical payload) to a Google Apps
 // Script endpoint that appends rows to a Google Sheet. No personal data: just a
-// random per-browser session id. Journaling TEXT is never sent — it stays on the
+// random per-browser session id. Journaling TEXT is never sent, it stays on the
 // user's device (see lib/journal.ts).
 //
 // The module stays completely inert until NEXT_PUBLIC_AVAIA_TRACK_URL is set, so

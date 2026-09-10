@@ -8,7 +8,7 @@ import VirtueTableBackground from "@/components/VirtueTableBackground";
 import SupabaseSessionSync from "@/components/SupabaseSessionSync";
 
 export const metadata: Metadata = {
-  title: "AVAIA — Clarity Starts With Integrity",
+  title: "AVAIA, Clarity Starts With Integrity",
   description:
     "AVAIA is an institution for guided conversations: understanding before action, Host ownership, continuity over time.",
 };

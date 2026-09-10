@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   // Youth Journey: the developmental band lives on the Host's own profile
   // for a self-serve Youth Journey, or on the guide_participants row for a
   // Guide-facilitated one (the caller is the Guide, who has no band of
-  // their own) -- see resolveDevelopmentalBand's own comment. Only resolved
+  // their own), see resolveDevelopmentalBand's own comment. Only resolved
   // for Youth, so every adult/general/defying-grief message (the
   // overwhelming majority of traffic) is unaffected by the extra query.
   let developmentalBand: DevelopmentalBand | null = null;
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
   // A Guide running this exact conversation through their own Guide Toolkit
-  // session is admitted even without personal membership -- see
+  // session is admitted even without personal membership, see
   // isAuthorizedGuideConversation's comment for why this stays narrow.
   if (
     stage !== "iap" &&
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
   }
 
-  // Crisis safety net — log for oversight; the AI's guardrail handles the response.
+  // Crisis safety net, log for oversight; the AI's guardrail handles the response.
   const crisis = detectCrisis(message);
   if (crisis) {
     await supabase
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   }
 
   // Persist the Host's turn before anything else branches on it. A failed
-  // insert must stop the request here -- continuing to reply as if the
+  // insert must stop the request here, continuing to reply as if the
   // Host's own words were saved is the exact "looked sent, wasn't there on
   // reload" failure mode this check closes.
   const { error: hostMessageError } = await supabase.from("messages").insert({
@@ -103,12 +103,12 @@ export async function POST(request: Request) {
   }
 
   // Convergence: the Host may type completion in ordinary language instead
-  // of clicking "I'm ready to move forward" -- see lib/engine/finish-intent.ts
+  // of clicking "I'm ready to move forward", see lib/engine/finish-intent.ts
   // for the exact, conservative pattern set. Applies uniformly to IAP, CAT,
   // and InnerCompass. When it fires, this calls the same referral
   // generation logic the button does (generateReferral, shared with
   // /api/referral) directly, rather than sending the message to the model
-  // for a normal reply -- honoring the request immediately instead of one
+  // for a normal reply, honoring the request immediately instead of one
   // more exploratory turn first, and producing the one authoritative,
   // sanitized, calibration-disciplined record rather than a second,
   // independently-improvised one. A false negative here just falls
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       );
     }
     // result.summary is a handful of fields selected from the already-
-    // stored referral, for the compact completion card only -- the full
+    // stored referral, for the compact completion card only, the full
     // referral is not persisted as a chat message and lives only in
     // Workbook's Guide's Record (see getCompletionSummary's own comment).
     return NextResponse.json(
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
   // Continuity: if a referral was handed into this stage, give it to the Guide
   // as established context (the CAT/InnerCompass instructions expect this).
   // origin_context only ever matters at IAP (see lib/engine/prompts.ts's own
-  // comment on why -- CAT/InnerCompass carry forward whatever became visible
+  // comment on why, CAT/InnerCompass carry forward whatever became visible
   // via the referral instead), so it's only read for that stage.
   const originContext = stage === "iap" ? convo?.origin_context ?? null : null;
   let system = `${systemPromptFor(stage, program, developmentalBand, originContext)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (referral?.content) {
     // InnerCompass gets the plain-language, epistemically-ordered render
-    // (formatCatReferralForInnerCompass) instead of raw JSON -- see that
+    // (formatCatReferralForInnerCompass) instead of raw JSON, see that
     // function's comment for the root cause this fixes. CAT's own
     // IAP-referral injection is untouched.
     if (stage === "innercompass") {
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
       system +=
         "\n\n" +
         "=".repeat(60) +
-        "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — do not ask the Host to repeat it; build from it):\n\n" +
+        "\n\nINCOMING AVAIA STANDARD REFERRAL (established context, do not ask the Host to repeat it; build from it):\n\n" +
         JSON.stringify(referral.content, null, 2);
     }
     const boundaries = (referral.content as { boundariesToProtect?: unknown })?.boundariesToProtect;
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // Assemble the full history for the model — the Host's turn was already
+  // Assemble the full history for the model, the Host's turn was already
   // persisted above, before the finish-intent check.
   const dbMessages = await loadMessages(supabase, conversationId);
   // The scripted opener is a guide turn, but Anthropic requires the first turn
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
   if (dbMessages[0]?.role === "guide") {
     system +=
       `\n\nYou have already opened this conversation by saying: "${dbMessages[0].content}" ` +
-      "The Host is now responding to that. Continue naturally from what they say — do not greet " +
+      "The Host is now responding to that. Continue naturally from what they say, do not greet " +
       "again, re-introduce yourself, or repeat your opening question.";
     convoMessages = dbMessages.slice(1);
   }
@@ -229,7 +229,7 @@ export async function POST(request: Request) {
           usage: final.usage,
         });
 
-        // Persist the reply WITHOUT the focus marker — it's a UI signal, not
+        // Persist the reply WITHOUT the focus marker, it's a UI signal, not
         // part of the transcript the Host or Workbook should ever see.
         const clean = extractFocus(full).text;
         if (clean.trim()) {
@@ -240,7 +240,7 @@ export async function POST(request: Request) {
             content: clean,
           });
           // The stream has already sent this text to the Host, so there's
-          // nothing left to change client-side -- but a silently-failed
+          // nothing left to change client-side, but a silently-failed
           // insert here is exactly what would make the reply vanish on
           // reload, so it must not go unlogged the way it did before.
           if (replyError) {

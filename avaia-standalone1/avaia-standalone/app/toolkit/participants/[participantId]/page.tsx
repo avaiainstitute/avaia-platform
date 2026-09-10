@@ -12,21 +12,21 @@ import {
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import { VirtueLink } from "@/components/VirtueLink";
 
-export const metadata = { title: "Participant Record — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Participant Record, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
-/** One session card's title -- the tool it ran, with the Defying Grief or
+/** One session card's title, the tool it ran, with the Defying Grief or
  *  Youth framing folded in when that's the program (neither is its own
  *  `tool`; they're iap/cat/innercompass with session.program ===
  *  'defying-grief' or 'youth', so this is the only place that distinction
  *  needs to be surfaced for display). */
 function sessionTitle(record: ParticipantSessionRecord): string {
   const base = toolLabel(record.session.tool);
-  if (record.session.program === "defying-grief") return `${base} — Defying Grief`;
-  if (record.session.program === "youth") return `${base} — Youth`;
+  if (record.session.program === "defying-grief") return `${base}, Defying Grief`;
+  if (record.session.program === "youth") return `${base}, Youth`;
   return base;
 }
 
@@ -60,7 +60,7 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
             // from the raw referral content so this, the Guide-facing
             // counterpart of Workbook for a Guide-facilitated participant,
             // links to real Chemistry of Virtue entries too, instead of
-            // showing the formatted "Family — Element" text as plain,
+            // showing the formatted "Family, Element" text as plain,
             // unlinked strings.
             const virtueClassifications = VIRTUE_FIELD_KEYS.has(item.key)
               ? normalizeVirtueClassifications(
@@ -80,7 +80,7 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
                             virtue={v.element}
                             className="underline decoration-rule underline-offset-2 hover:text-seal"
                           >
-                            {v.element ? `${v.family} — ${v.element}` : v.family}
+                            {v.element ? `${v.family}, ${v.element}` : v.family}
                           </VirtueLink>
                         </li>
                       ))}
@@ -115,7 +115,7 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
             )}
           </div>
           <p className="mt-1 text-sm text-muted">
-            <span className="text-ink">{recognition.who_became_visible}</span> — recognized for it
+            <span className="text-ink">{recognition.who_became_visible}</span>, recognized for it
           </p>
           <p className="mt-2 line-clamp-3 text-sm text-muted">{recognition.story}</p>
         </div>
@@ -124,8 +124,8 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
       {!referral && !recognition && (
         <p className="mt-3 text-sm text-muted">
           {status === "complete"
-            ? "Marked complete, but no referral was found for this session -- worth a closer look."
-            : "Still in progress -- nothing recorded from it yet."}
+            ? "Marked complete, but no referral was found for this session, worth a closer look."
+            : "Still in progress, nothing recorded from it yet."}
         </p>
       )}
 

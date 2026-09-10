@@ -4,10 +4,10 @@ import { useState } from "react";
 
 type MembershipPlan = "monthly" | "annual";
 
-/** Starts Checkout for a NEW Family Membership plan -- mirrors
+/** Starts Checkout for a NEW Family Membership plan, mirrors
  *  MembershipCheckoutButton exactly, pointed at /api/stripe/family-checkout
  *  instead. Kept as its own component (rather than a prop branch on the
- *  Individual button) so the two purchase flows stay visibly separate --
+ *  Individual button) so the two purchase flows stay visibly separate,
  *  Family Membership is a distinct plan, not a variant of Individual. */
 export default function FamilyCheckoutButton({
   plan = "monthly",

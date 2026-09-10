@@ -8,7 +8,7 @@ import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/con
 import type { Stage } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
 
-export const metadata = { title: "Shared with Me — AVAIA" };
+export const metadata = { title: "Shared with Me, AVAIA" };
 export const dynamic = "force-dynamic";
 
 export default async function SharedWithMePage() {
@@ -19,7 +19,7 @@ export default async function SharedWithMePage() {
   if (!user) redirect("/sign-in?from=/shared-with-me");
 
   // RLS ("shared_access recipient read") already scopes this to grants made
-  // TO this account — nothing here can surface another recipient's shares.
+  // TO this account, nothing here can surface another recipient's shares.
   const { data: grantsData } = await supabase
     .from("shared_access")
     .select("owner_id, scope, conversation_id")
@@ -29,12 +29,12 @@ export default async function SharedWithMePage() {
 
   // Group by owner: a 'workbook' grant supersedes any 'conversation' grants
   // from the same owner (they'd be a subset anyway). 'referral' grants are
-  // deliberately NOT added to conversationIds — that set drives which
+  // deliberately NOT added to conversationIds, that set drives which
   // conversations get their transcript fetched below, and a referral-only
   // grant must never expose the transcript. The referrals query further down
   // is unfiltered by conversation and relies entirely on RLS ("referrals
   // shared read", which DOES include 'referral' scope) to surface exactly
-  // the right referrals — so referral-only shares still show up correctly,
+  // the right referrals, so referral-only shares still show up correctly,
   // just without a transcript alongside them.
   const byOwner = new Map<string, { workbook: boolean; conversationIds: Set<string> }>();
   for (const g of grants) {
@@ -44,7 +44,7 @@ export default async function SharedWithMePage() {
     byOwner.set(g.owner_id, entry);
   }
 
-  // Resolve owner ids to emails for display — same admin-lookup pattern as
+  // Resolve owner ids to emails for display, same admin-lookup pattern as
   // the Workbook's "Shared with" list, just resolving the other direction.
   const ownerIds = [...byOwner.keys()];
   const emailById = new Map<string, string>();
@@ -75,7 +75,7 @@ export default async function SharedWithMePage() {
     // RLS ("referrals shared read") scopes this the same way: every referral
     // for the owner when the grant is workbook-wide, or just the one tied to
     // a specifically shared conversation (referrals created before
-    // conversation_id existed won't appear for a conversation-scope grant —
+    // conversation_id existed won't appear for a conversation-scope grant,
     // they only ever show up under a workbook-scope share).
     const { data: referralsData } = await supabase
       .from("referrals")
@@ -105,7 +105,7 @@ export default async function SharedWithMePage() {
       <h1 className="font-serif text-4xl text-ink">Shared with me</h1>
       <p className="mt-4 text-lg text-muted">
         Conversations and Workbooks other Hosts have chosen to share with you. This is kept
-        separate from <Link href="/workbook" className="text-seal hover:underline">your own Workbook</Link> —
+        separate from <Link href="/workbook" className="text-seal hover:underline">your own Workbook</Link>,
         nothing here is yours to edit, and nothing of yours appears here.
       </p>
 

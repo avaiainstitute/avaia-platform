@@ -12,7 +12,7 @@ import {
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
 import { isMember as checkIsMember } from "@/lib/membership";
 
-export const metadata = { title: "Unsung Heroes — AVAIA" };
+export const metadata = { title: "Unsung Heroes, AVAIA" };
 export const dynamic = "force-dynamic";
 
 const PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
@@ -38,7 +38,7 @@ export default async function UnsungHeroesPage({
   // Individual/self-directed Unsung Heroes is an AVAIA Membership benefit.
   // This page is only ever reached for a Host's own conversation
   // (getActiveUnsungHeroesConversation below is always scoped to this
-  // user's own host_id) -- Guide-facilitated sessions run through the
+  // user's own host_id), Guide-facilitated sessions run through the
   // separate /toolkit/unsung-heroes/[sessionId] route entirely, so no
   // guide_sessions fallback is needed at this page level, mirroring how
   // /journey's own membership gate works. The shared message/recognition
@@ -74,7 +74,7 @@ export default async function UnsungHeroesPage({
   // Youth Unsung Heroes is now built (see unsungHeroesSystemPrompt's
   // program/developmentalBand parameters and the API routes that derive
   // them server-side from profiles.minor_with_guardian /
-  // profiles.developmental_band) -- a self-identified minor reaches the
+  // profiles.developmental_band), a self-identified minor reaches the
   // exact same picker and chat below as any other Host; the two API routes
   // are what select the Youth-adapted composition, not this page. The
   // membership gate above already applies uniformly to every Host
@@ -119,7 +119,7 @@ export default async function UnsungHeroesPage({
           guided conversation to help you name what you saw, and say so.
         </p>
 
-        {/* Chemistry connection fix (4/5) -- the same explanatory copy
+        {/* Chemistry connection fix (4/5), the same explanatory copy
             components/UnsungHeroesIntro.tsx already shows a signed-out
             visitor, previously absent once a Host actually signs in. */}
         <p className="label mb-2 mt-8 text-muted">How this connects to Chemistry of Virtue</p>
@@ -127,7 +127,7 @@ export default async function UnsungHeroesPage({
           <Link href="/chemistry" className="underline decoration-rule underline-offset-2 hover:text-seal">
             Chemistry of Virtue
           </Link>{" "}
-          helps you understand virtue — the families, the elements, how they combine. Unsung
+          helps you understand virtue, the families, the elements, how they combine. Unsung
           Heroes is the other half: where you learn to recognize those same elements alive in
           someone else, not just on a chart.
         </p>

@@ -16,12 +16,12 @@ import { isMember } from "@/lib/membership";
 export const dynamic = "force-dynamic";
 
 /** Plain-language rendering of one concept relation from the CURRENT
- *  concept's point of view -- direction matters only for dimension_of
+ *  concept's point of view, direction matters only for dimension_of
  *  (from = dimension/part, to = larger concept/whole; see
  *  0015_library_concepts.sql). getRelatedConcepts labels direction as
  *  "from" when the current concept was the row's from_concept_id (so it
  *  is the part) and "to" when the current concept was to_concept_id (so
- *  it is the whole) -- everything else (related_to/contrasts_with/
+ *  it is the whole), everything else (related_to/contrasts_with/
  *  commonly_confused_with) reads the same regardless of direction. */
 function describeRelation(
   currentName: string,
@@ -36,12 +36,12 @@ function describeRelation(
   return `Related to ${other}`;
 }
 
-/** One historical source, attributed -- never voiced. The AVAIA-authored
+/** One historical source, attributed, never voiced. The AVAIA-authored
  *  paraphrase is the primary content (it's the one field guaranteed
  *  publishable regardless of quotation rights); exact_text renders only
  *  when actually populated, as a clearly secondary, separately-set-off
  *  quotation, not the headline. No "At This Table" framing and no
- *  generated Then/Across Time/Now content -- this renders only what's
+ *  generated Then/Across Time/Now content, this renders only what's
  *  already stored, nothing synthesized here. */
 function HistoricalVoiceCard({ item }: { item: HistoricalPassage }) {
   const { person, work, sourceVersion, passage, note } = item;
@@ -87,7 +87,7 @@ function HistoricalVoiceCard({ item }: { item: HistoricalPassage }) {
   );
 }
 
-/** A published concept's neighborhood -- generated entirely from
+/** A published concept's neighborhood, generated entirely from
  *  published graph data (library_concepts/library_questions/
  *  library_entries and the published rows of their junction tables), not
  *  hard-coded per concept. This is the reusable presentation pattern for
@@ -102,7 +102,7 @@ function HistoricalVoiceCard({ item }: { item: HistoricalPassage }) {
  *  already 404s on its own detail page.
  *
  *  Questions come only from library_question_concepts (a question
- *  editorially placed in this concept's own neighborhood) -- never
+ *  editorially placed in this concept's own neighborhood), never
  *  derived by walking Concept -> Entries -> Entry Questions, which is a
  *  different relationship (a question a specific entry happens to
  *  touch) and would silently blend the two. */
@@ -114,7 +114,7 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
   if (!user) redirect(`/sign-in?from=/library/concepts/${params.conceptId}`);
 
   // The Library has no Youth-aware presentation architecture yet (Living
-  // Library audit, Section Q) -- same server-derived check as every other
+  // Library audit, Section Q), same server-derived check as every other
   // Library route, including this reached-via-Secondary-Loss-redirect path.
   const { data: youthCheck } = await supabase
     .from("profiles")

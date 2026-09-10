@@ -7,7 +7,7 @@ import { consumePostSignInRedirect } from "@/lib/post-signin-redirect";
 /**
  * The disclaimer + eligibility gate. Records consent, then enters the journey.
  *
- * Hard-navigates via window.location rather than next/navigation's router —
+ * Hard-navigates via window.location rather than next/navigation's router,
  * see the matching note in app/auth/callback/page.tsx and app/sign-in/page.tsx.
  * Same reasoning applies here: a soft client-side navigation right after an
  * auth-state-changing write is exactly the pattern that's caused stale-page
@@ -19,21 +19,21 @@ export default function ConsentForm({
 }: {
   /** Chemistry/View From Above origin context carried from /journey through
    *  this consent step (see app/journey/page.tsx's own comment on why the
-   *  hop needs this explicitly) -- only ever present for a genuinely
+   *  hop needs this explicitly), only ever present for a genuinely
    *  first-time Host, since a returning Host never reaches /welcome. */
   origin?: string;
   originKey?: string;
 } = {}) {
   const [age, setAge] = useState<"" | "adult" | "minor">("");
   const [understood, setUnderstood] = useState(false);
-  // Only required, and only meaningful, when age === "minor" -- see the
+  // Only required, and only meaningful, when age === "minor", see the
   // governing guardian-consent decision: a real, named, contactable
   // guardian record replaces the old bare self-attestation checkbox.
   // lib/guardian-consent.ts's disclosure text (shown below) is what this
   // name/email actually consents to.
   const [guardianName, setGuardianName] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
-  // Fully separate from `understood` above -- optional, off by default,
+  // Fully separate from `understood` above, optional, off by default,
   // never required for canSubmit. See app/api/consent/route.ts for how the
   // two are kept apart in storage too.
   const [marketingConsent, setMarketingConsent] = useState(false);
@@ -61,7 +61,7 @@ export default function ConsentForm({
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Could not save.");
       const dest = consumePostSignInRedirect();
       // Defying Grief specifically skips the extra click of landing on that
-      // page and having to press "I'm Still Here" a second time -- see the
+      // page and having to press "I'm Still Here" a second time, see the
       // autostart handling in app/defying-grief/page.tsx. The plain /journey
       // destination gets the same treatment now that IAP orientation lives
       // here on the consent screen: ?enter=1 skips the now-redundant
@@ -119,7 +119,7 @@ export default function ConsentForm({
           <p className="label mb-3">Parent or guardian</p>
           <p className="mb-4 text-sm text-muted">
             AVAIA keeps a record of who gave permission for your participation. This authorizes
-            your participation only -- it does not give your parent or guardian access to what you
+            your participation only, it does not give your parent or guardian access to what you
             say privately in your own AVAIA conversations.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -166,7 +166,7 @@ export default function ConsentForm({
         </span>
       </label>
 
-      {/* Deliberately separate from the required consent above -- its own
+      {/* Deliberately separate from the required consent above, its own
           quieter styling, explicitly optional, off by default, and never
           part of canSubmit. This isn't a second thing to agree to in order
           to begin; it's a fully independent, skippable choice. */}
@@ -178,7 +178,7 @@ export default function ConsentForm({
           onChange={(e) => setMarketingConsent(e.target.checked)}
         />
         <span className="text-muted">
-          <span className="text-ink">Keep me connected with AVAIA</span> (optional) — send me
+          <span className="text-ink">Keep me connected with AVAIA</span> (optional), send me
           occasional updates about programs, classes, resources, workshops, and opportunities.
         </span>
       </label>
@@ -188,7 +188,7 @@ export default function ConsentForm({
         disabled={!canSubmit || submitting}
         className="mt-8 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {submitting ? "Entering…" : "I agree — begin"}
+        {submitting ? "Entering…" : "I agree, begin"}
       </button>
       {error && <p className="mt-3 text-sm text-[#e0857d]">{error}</p>}
     </form>

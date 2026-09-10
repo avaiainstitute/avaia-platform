@@ -13,7 +13,7 @@ export default function ShareButton({
   scope: ShareScope;
   conversationId?: string;
   label: string;
-  /** Only meaningful when scope="conversation" — offers "just the referral,
+  /** Only meaningful when scope="conversation", offers "just the referral,
    *  not the transcript" as an alternative. Doesn't apply to whole-Workbook
    *  shares. */
   allowReferralOnly?: boolean;
@@ -73,8 +73,8 @@ export default function ShareButton({
         <div>
           <p className="text-sm text-ink">
             {result === "granted"
-              ? "Access granted — they can see it the next time they sign in."
-              : "That email doesn't have an AVAIA account yet — an invite was sent. Access activates automatically once they sign up."}
+              ? "Access granted, they can see it the next time they sign in."
+              : "That email doesn't have an AVAIA account yet, an invite was sent. Access activates automatically once they sign up."}
           </p>
           <button
             type="button"

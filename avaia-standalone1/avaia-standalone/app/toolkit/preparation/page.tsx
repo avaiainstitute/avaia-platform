@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listGuideParticipants } from "@/lib/guide";
 
-export const metadata = { title: "Preparation — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Preparation, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Picks which participant to prepare for -- the same listGuideParticipants
+/** Picks which participant to prepare for, the same listGuideParticipants
  *  the dashboard already uses. Preparation itself lives at
  *  /toolkit/preparation/[participantId]; this page exists so "Preparation"
  *  is reachable from the tool registry without already having a
@@ -31,7 +31,7 @@ export default async function PreparationPickerPage() {
       <h1 className="font-serif text-4xl text-ink">Who are you preparing for?</h1>
       <p className="mt-4 text-lg text-muted">
         Organizes what&rsquo;s already on record for a participant before a session. It never
-        interprets, diagnoses, or decides what the conversation should discover -- only what has
+        interprets, diagnoses, or decides what the conversation should discover, only what has
         already, explicitly, been recorded.
       </p>
 

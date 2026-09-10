@@ -15,17 +15,17 @@ export const dynamic = "force-dynamic";
 
 const MOVEMENT_ORDER = ["Awareness", "Understanding", "Agency"] as const;
 
-/** Printable Facilitator Packet for the Defying Grief Master Curriculum --
+/** Printable Facilitator Packet for the Defying Grief Master Curriculum,
  *  a print-only rendering of exactly the same experience_sections rows
  *  the live Guide Toolkit delivery interface (components/
  *  DefyingGriefCurriculum.tsx) already reads, so there is no second
  *  curriculum to keep in sync. Sits inside /toolkit, so
  *  app/toolkit/layout.tsx's own Toolkit authorization gate already
- *  applies before this runs -- same as the sibling
+ *  applies before this runs, same as the sibling
  *  app/toolkit/experiences/[experienceId]/page.tsx, no separate check is
  *  added here. Every module prints in full regardless of the selected
  *  format; the format's own official run-of-show text is shown verbatim
- *  at the top, and modules it names are softly highlighted -- nothing is
+ *  at the top, and modules it names are softly highlighted, nothing is
  *  ever excluded based on a best-effort text match, so this can never
  *  hand a Guide an incomplete or incorrectly-cut packet. */
 export default async function DefyingGriefFacilitatorPrintPage({
@@ -51,7 +51,7 @@ export default async function DefyingGriefFacilitatorPrintPage({
 
   // The heading, movement line, and sequence label below were hardcoded to
   // Defying Grief regardless of which experience was actually being
-  // printed -- harmless for Defying Grief itself, but wrong for every
+  // printed, harmless for Defying Grief itself, but wrong for every
   // other experience (e.g. a View From Above class), which would print
   // with the wrong program name at the top. Derived from the experience's
   // own `components` tag instead, the same tag the live Toolkit delivery
@@ -59,10 +59,10 @@ export default async function DefyingGriefFacilitatorPrintPage({
   // branches on to pick a component in the first place.
   const isDefyingGrief = experience.components.includes("defying-grief");
   const isViewFromAbove = experience.components.includes("view-from-above");
-  const packetHeading = isDefyingGrief ? "Defying Grief — A Sacred Rebellion" : experience.title;
+  const packetHeading = isDefyingGrief ? "Defying Grief, A Sacred Rebellion" : experience.title;
   const movementLine = isDefyingGrief ? "Awareness → Understanding → Agency" : null;
   const sequenceHeading = isDefyingGrief
-    ? "Master Curriculum — Full Module Sequence"
+    ? "Master Curriculum, Full Module Sequence"
     : isViewFromAbove
       ? "Teaching Sequence"
       : "Curriculum";
@@ -80,7 +80,7 @@ export default async function DefyingGriefFacilitatorPrintPage({
   const boundaries = grouped.boundary ?? [];
   const takeHome = grouped.take_home ?? [];
   const formatVariants = grouped.format_variant ?? [];
-  // Includes every "foundation" section type an experience might carry --
+  // Includes every "foundation" section type an experience might carry,
   // not just Defying Grief's own set (orientation/governing_distinction/
   // anchor/success_definition). Without question/reference/hike_lesson/
   // conversation_window here, a View From Above class's Human Question,
@@ -169,7 +169,7 @@ export default async function DefyingGriefFacilitatorPrintPage({
 
       {selectedFormat && (
         <div className="format-box">
-          <strong>{selectedFormat.title} — Run of Show</strong>
+          <strong>{selectedFormat.title}, Run of Show</strong>
           <p className="field-text">{selectedFormat.body}</p>
         </div>
       )}
@@ -188,7 +188,7 @@ export default async function DefyingGriefFacilitatorPrintPage({
 
       {boundaries.length > 0 && (
         <>
-          <h2>Protected Boundaries — Guide Reminders</h2>
+          <h2>Protected Boundaries, Guide Reminders</h2>
           {boundaries.map((b) => (
             <div key={b.id} className="field">
               {b.title && <p className="field-label">{b.title}</p>}

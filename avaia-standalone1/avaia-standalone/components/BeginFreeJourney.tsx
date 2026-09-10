@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /** The Free IAP entry action. Deliberately a click, not something that
- *  fires on page load -- identity creation must be a deliberate visitor
+ *  fires on page load, identity creation must be a deliberate visitor
  *  action, never a side effect of merely loading /journey (crawlers,
  *  prefetch, accidental revisits must not spawn anonymous identities).
  *  On success, router.refresh() re-runs the Server Component with the

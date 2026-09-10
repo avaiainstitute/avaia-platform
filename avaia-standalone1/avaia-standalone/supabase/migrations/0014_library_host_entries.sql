@@ -1,4 +1,4 @@
--- AVAIA Living Library — Phase 1: Host continuity layer only.
+-- AVAIA Living Library, Phase 1: Host continuity layer only.
 --
 -- library_entries already exists (0012_guide_toolkit_expansion.sql) and
 -- needs no schema change for Phase 1 -- its existing virtues/

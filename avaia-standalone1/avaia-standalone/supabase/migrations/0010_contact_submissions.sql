@@ -1,4 +1,4 @@
--- Contact form submissions — the public, unauthenticated form at /contact.
+-- Contact form submissions, the public, unauthenticated form at /contact.
 -- No RLS policies at all (service-role only, the same posture already used
 -- for the Stripe webhook and the GPT OAuth tables): only the server-side
 -- /api/contact route, using the admin client, can ever read or write this

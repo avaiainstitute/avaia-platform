@@ -1,6 +1,6 @@
 /**
  * Server Supabase client (RLS-respecting, cookie-bound session). For Server
- * Components, Route Handlers, and middleware-adjacent code — reads/writes the
+ * Components, Route Handlers, and middleware-adjacent code, reads/writes the
  * auth session cookie via next/headers so `auth.uid()` policies work
  * server-side. The setAll try/catch is the documented @supabase/ssr pattern:
  * Server Components can't set cookies (middleware handles refresh).
@@ -27,7 +27,7 @@ export function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Server Component context — safe to ignore; middleware refreshes.
+            // Server Component context, safe to ignore; middleware refreshes.
           }
         },
       },

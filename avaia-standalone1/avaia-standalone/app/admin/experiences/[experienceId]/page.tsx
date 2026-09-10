@@ -12,12 +12,12 @@ import { TOOL_REGISTRY, type ToolKey, type ToolStatus } from "@/lib/toolkit";
 
 export const dynamic = "force-dynamic";
 
-/** Admin-only draft preview of the Experience Detail architecture --
+/** Admin-only draft preview of the Experience Detail architecture,
  *  not nested under /toolkit, since that layout gates on role='guide'
  *  specifically and would incorrectly block an admin who isn't also a
  *  Guide (app/toolkit/layout.tsx:26). Renders through the exact same
  *  shared ExperienceDetail component the eventual Guide-facing route
- *  will use against published-only data -- this page's own real
+ *  will use against published-only data, this page's own real
  *  security is the "experiences admin all" / "experience sections
  *  admin all" RLS policies (same pattern already used on classes and
  *  experience_classes); the role check below exists so a non-admin
@@ -87,7 +87,7 @@ export default async function AdminExperiencePreviewPage({
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
       <p className="mb-6 text-sm text-muted">
-        Admin draft preview — not visible to ordinary Guides. This renders the
+        Admin draft preview, not visible to ordinary Guides. This renders the
         same shared component the eventual Guide-facing route will use.
       </p>
       {experience.components.includes("defying-grief") ? (

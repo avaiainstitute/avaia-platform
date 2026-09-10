@@ -24,8 +24,8 @@ export default function ChemistryPage() {
   const searchParams = useSearchParams();
 
   // Chemistry connection fix (1/5): an explicit deep link (?family=...&
-  // virtue=...) from a recognized virtue anywhere else in the app --
-  // Workbook, Guide's Record, Preparation, Unsung Heroes -- takes priority
+  // virtue=...) from a recognized virtue anywhere else in the app,
+  // Workbook, Guide's Record, Preparation, Unsung Heroes, takes priority
   // over the ambient sessionStorage continuity below. Resolved through the
   // exact same resolveFocus() the live <<focus: Family | Virtue>> marker
   // already uses, so a family given as either its display name or its key
@@ -46,7 +46,7 @@ export default function ChemistryPage() {
     }
 
     // If the Host was just referred to a virtue in the journey, arrive with that
-    // family lit and that virtue selected — continuity across the two tabs.
+    // family lit and that virtue selected, continuity across the two tabs.
     try {
       const raw = sessionStorage.getItem("avaia:focus");
       if (!raw) return;
@@ -57,12 +57,12 @@ export default function ChemistryPage() {
         if (v) setSelected(v);
       }
     } catch {
-      /* no stored focus — open the table normally */
+      /* no stored focus, open the table normally */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Scrolls the existing detail panel into view -- only when selection was
+  // Scrolls the existing detail panel into view, only when selection was
   // triggered from somewhere off-screen (a Formula pill), not from a direct
   // table click, which is already next to the panel.
   useEffect(() => {
@@ -88,17 +88,17 @@ export default function ChemistryPage() {
       </h1>
       <p className="mt-4 max-w-prose text-lg text-muted">
         {VIRTUES.length} virtues across {VIRTUE_FAMILIES.length} families. In
-        AVAIA these are the elements a conversation works with — how strengths
+        AVAIA these are the elements a conversation works with: how strengths
         interact to support understanding, restoration, and intentional
         participation. Every name and definition here is drawn from the AVAIA
         source materials.
       </p>
 
-      {/* Short orientation -- the fuller explanation, family definitions,
+      {/* Short orientation, the fuller explanation, family definitions,
           "what you can do here," and "three ways in" now live after the
           table (the visual hook), not before it. */}
       <p className="mt-6 max-w-prose text-ink">
-        AVAIA calls this the Chemistry of Virtue because it works like a periodic table — 123
+        AVAIA calls this the Chemistry of Virtue because it works like a periodic table: 123
         elements of virtue organized across 10 families. Explore the table below.
       </p>
 
@@ -173,7 +173,7 @@ export default function ChemistryPage() {
               </p>
               <p className="mt-1 text-sm text-muted">
                 Something about {selected.name} caught your attention. Take it into a private
-                AVAIA conversation — explore what it brought to mind, where you&rsquo;ve seen it,
+                AVAIA conversation, explore what it brought to mind, where you&rsquo;ve seen it,
                 where it may already be present, why it matters to you, or whatever else becomes
                 visible as you talk.
               </p>
@@ -195,7 +195,7 @@ export default function ChemistryPage() {
         </div>
       )}
 
-      {/* Periodic table — laid out to mirror the official artwork.
+      {/* Periodic table, laid out to mirror the official artwork.
           Horizontally scrollable on narrow screens (like a real periodic table). */}
       <div className="mt-8 overflow-x-auto pb-2">
         <div
@@ -243,18 +243,18 @@ export default function ChemistryPage() {
       </div>
 
       <p className="mt-4 text-sm text-muted">
-        Showing {activeFamily ? activeFamily.name : "all"} —{" "}
+        Showing {activeFamily ? activeFamily.name : "all"},{" "}
         {(active ? VIRTUES.filter((v) => v.family === active) : VIRTUES).length} virtues.
         Tap any element to read its definition. On a phone, scroll the table sideways.
       </p>
 
-      {/* How to read this / family explanations — moved here, after the
+      {/* How to read this / family explanations, moved here, after the
           table, so the visual hook comes first. */}
       <section className="mt-10 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
         <p className="label mb-2 text-muted">How to read this</p>
         <p className="text-ink">
           AVAIA calls this the Chemistry of Virtue because it works the way the real periodic
-          table does: 10 broad families of strength — like Wisdom or Justice — each contain
+          table does: 10 broad families of strength, like Wisdom or Justice, each contain
           several individual elements, like Discernment or Fairness. Every element here is a
           virtue; &ldquo;family&rdquo; and &ldquo;element&rdquo; are just two different scales
           of the same 123 virtues.
@@ -282,13 +282,13 @@ export default function ChemistryPage() {
         </div>
       </section>
 
-      {/* Recognition, not judgment -- the explicit "this is not a
+      {/* Recognition, not judgment, the explicit "this is not a
           personality test/score/ranking/diagnosis" statement the page
           didn't previously make outright. */}
       <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
         <p className="label mb-2 text-muted">Recognition, not judgment</p>
         <p className="text-ink">
-          Virtue may already be present in you — in a choice, a relationship, a responsibility
+          Virtue may already be present in you, in a choice, a relationship, a responsibility
           you carry, a boundary you hold, how you respond to difficulty, a hope you
           haven&rsquo;t let go of, an action you took, or a tension between two things you both
           care about. AVAIA may help make that more visible.
@@ -297,12 +297,12 @@ export default function ChemistryPage() {
           Chemistry of Virtue is not a personality type, a score, or a ranking, and it
           doesn&rsquo;t determine anyone&rsquo;s worth. AVAIA recognizes courage, patience,
           integrity, love, wisdom, gratitude, fortitude, restraint, or any of these 123 elements
-          only when a Host&rsquo;s own words or actions support that recognition — never as a
+          only when a Host&rsquo;s own words or actions support that recognition, never as a
           guess, and never to tell someone which virtues they lack.
         </p>
       </div>
 
-      {/* Chemistry and Agency -- the connection to the reconciled Journey
+      {/* Chemistry and Agency, the connection to the reconciled Journey
           and to InnerCompass, kept deliberately short and non-prescriptive. */}
       <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
         <p className="label mb-2 text-muted">Chemistry and Agency</p>
@@ -312,7 +312,7 @@ export default function ChemistryPage() {
           language for the qualities that may give that participation direction.
         </p>
         <p className="mt-3 text-muted">
-          InnerCompass may draw on virtue as part of discernment — but it doesn&rsquo;t select a
+          InnerCompass may draw on virtue as part of discernment, but it doesn&rsquo;t select a
           required virtue for you, and the Guide doesn&rsquo;t decide your direction. Virtue
           informs discernment; it doesn&rsquo;t replace it.
         </p>
@@ -321,15 +321,15 @@ export default function ChemistryPage() {
           doesn&rsquo;t always call for Courage. Anger doesn&rsquo;t always call for Patience.
           Conflict doesn&rsquo;t always call for Forgiveness. Sometimes fear needs stillness, or
           clarity, or grace, or something else you haven&rsquo;t named yet. The real question
-          usually isn&rsquo;t &ldquo;which virtue is the answer&rdquo; — it&rsquo;s what the
+          usually isn&rsquo;t &ldquo;which virtue is the answer&rdquo;, it&rsquo;s what the
           moment actually needs, which only becomes visible with a closer look. AVAIA won&rsquo;t
           guess for you.
         </p>
       </div>
 
-      {/* Wake It Up -- connects Chemistry's non-deterministic posture above
+      {/* Wake It Up, connects Chemistry's non-deterministic posture above
           to the practical invitation Signature (a Host's own recognition
-          record) can't always answer alone. Text only, no new mechanism --
+          record) can't always answer alone. Text only, no new mechanism,
           the "explore the wider Chemistry" it points to is just this same
           page. */}
       <div className="mt-6 rounded-lg border border-rule bg-white/[0.03] px-5 py-6 backdrop-blur-sm">
@@ -339,7 +339,7 @@ export default function ChemistryPage() {
           <Link href="/signature" className="underline decoration-rule underline-offset-2 hover:text-seal">
             Virtue Signature
           </Link>
-          , it can work as orientation — what you&rsquo;ve already recognized becoming visible in
+          , it can work as orientation: what you&rsquo;ve already recognized becoming visible in
           yourself. A given moment may not call on everything in it, and that&rsquo;s not a gap.
           If nothing already there seems to fit, the wider table above is still yours to explore:
           is there something here you need right now that you haven&rsquo;t recognized in
@@ -358,14 +358,14 @@ export default function ChemistryPage() {
         </ul>
       </div>
 
-      {/* Chemistry for Families & Kids -- points to the new family/kids
+      {/* Chemistry for Families & Kids, points to the new family/kids
           learning experience without duplicating any content here; the
           table above stays the one authoritative source either surface
           reads from. */}
       <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-6 backdrop-blur-sm">
         <p className="label mb-2 text-muted">With Your Family</p>
         <p className="text-ink">
-          Chemistry of Virtue also works as a shared language for a family to learn together —
+          Chemistry of Virtue also works as a shared language for a family to learn together,
           choosing one element, reading a short story built around it, and noticing where you've
           seen it this week.
         </p>
@@ -381,7 +381,7 @@ export default function ChemistryPage() {
       <div className="mt-6 rounded-lg border border-dashed border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
         <p className="label mb-2 text-muted">Three ways in</p>
         <p className="text-ink">
-          Identity, Capacity, and Connection aren&rsquo;t three separate features here — they&rsquo;re
+          Identity, Capacity, and Connection aren&rsquo;t three separate features here; they&rsquo;re
           three doors into the same thing. What Your Name Spells is who you already are. A Virtue
           Formula names capacities available to you. And{" "}
           <Link href="/unsung-heroes" className="underline decoration-rule underline-offset-2 hover:text-seal">
@@ -392,7 +392,7 @@ export default function ChemistryPage() {
         <p className="mt-3 text-sm text-muted">
           This same table is what every AVAIA conversation draws on. AVAIA also carries a
           historical lineage connecting each of the Ten Secondary Losses to one of these
-          families as a possible lens for exploration — never a required pairing, and never
+          families as a possible lens for exploration, never a required pairing, and never
           proof a virtue is missing.{" "}
           <Link href="/secondary-loss" className="underline decoration-rule underline-offset-2 hover:text-seal">
             Explore the Secondary Losses →
@@ -400,14 +400,14 @@ export default function ChemistryPage() {
         </p>
       </div>
 
-      {/* Virtue formulas — generated live from the real 123 elements */}
+      {/* Virtue formulas, generated live from the real 123 elements */}
       <section className="rule-t mt-14 border-t border-rule pt-10">
         <p className="label mb-2">Generated live · Capacity</p>
         <h2 className="font-serif text-2xl text-ink">Virtue Formulas</h2>
         <p className="mt-2 max-w-prose text-muted">
           Virtues rarely operate alone. Describe a role, a feeling, or a
-          situation, and AVAIA will assemble a purposeful combination — a
-          primary virtue, supporting virtues, and balancing virtues — using
+          situation, and AVAIA will assemble a purposeful combination, a
+          primary virtue, supporting virtues, and balancing virtues, using
           only real Chemistry of Virtue elements. Nothing is invented; every
           name shown is checked against the table above.
         </p>
@@ -425,10 +425,10 @@ export default function ChemistryPage() {
         <h2 className="font-serif text-2xl text-ink">What Your Name Spells</h2>
         <p className="mt-2 max-w-prose text-muted">
           Type a name, and each letter maps to a real element of the
-          Chemistry of Virtue — a way to define yourself in your own words,
+          Chemistry of Virtue, a way to define yourself in your own words,
           the way people already know you by your first name before
           anything else. Every letter has a real element except Q, which
-          doesn&rsquo;t appear anywhere in the Chemistry of Virtue — that
+          doesn&rsquo;t appear anywhere in the Chemistry of Virtue, that
           letter is shown honestly rather than forced.
         </p>
         <div className="mt-6">
@@ -436,12 +436,12 @@ export default function ChemistryPage() {
         </div>
       </section>
 
-      {/* Distortions — reserved future capability */}
+      {/* Distortions, reserved future capability */}
       <section className="mt-10">
         <p className="label mb-2 text-muted">Future capability</p>
         <p className="max-w-prose text-sm text-muted">
-          <span className="font-serif text-ink">Virtue Distortions</span> — a
-          planned extension of the Chemistry of Virtue — are reserved for when
+          <span className="font-serif text-ink">Virtue Distortions</span>, a
+          planned extension of the Chemistry of Virtue, are reserved for when
           official AVAIA content is developed. No definitions or logic are
           implemented until then.
         </p>

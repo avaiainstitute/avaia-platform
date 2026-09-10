@@ -11,11 +11,11 @@ import {
 } from "@/lib/guide";
 import { ensureNextStageConversation } from "@/lib/engine/referral-generation";
 
-export const metadata = { title: "Conversations Across Time — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Conversations Across Time, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** The installed CAT tool. Unlike IAP, a CAT session is never started fresh
- *  from the dashboard -- it only comes into being via the IAP tool's own
+ *  from the dashboard, it only comes into being via the IAP tool's own
  *  handoff (see app/toolkit/iap/[sessionId]/page.tsx), the same
  *  referral-driven progression every Host gets. This page never creates a
  *  conversation; it only ever finds the one the frozen engine already
@@ -41,7 +41,7 @@ export default async function ToolkitCatSessionPage({
         <h1 className="font-serif text-3xl text-ink">This session has no conversation yet.</h1>
         <p className="mt-4 text-muted">
           CAT sessions only begin as a handoff from a completed Individual Awareness Profile.
-          This one doesn&rsquo;t have one attached, which shouldn&rsquo;t happen -- worth a closer
+          This one doesn&rsquo;t have one attached, which shouldn&rsquo;t happen, worth a closer
           look.
         </p>
         <Link href="/toolkit" className="mt-6 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal">
@@ -65,7 +65,7 @@ export default async function ToolkitCatSessionPage({
       ? await findConversationByJourneyStage(supabase, convo.journey_id, "innercompass")
       : null;
     // Self-heal a stranded handoff (referral saved, next stage never
-    // created -- see ensureNextStageConversation's own comment for why
+    // created, see ensureNextStageConversation's own comment for why
     // this can happen). No-op on the ordinary path where innerConvo
     // already exists.
     if (!innerConvo && referralSaved) {
@@ -101,7 +101,7 @@ export default async function ToolkitCatSessionPage({
         <p className="mt-4 text-muted">
           {referralSaved
             ? "The referral has been saved to your Workbook."
-            : "This conversation is marked complete, but no referral was found -- worth a closer look."}
+            : "This conversation is marked complete, but no referral was found, worth a closer look."}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           {continueHref && (

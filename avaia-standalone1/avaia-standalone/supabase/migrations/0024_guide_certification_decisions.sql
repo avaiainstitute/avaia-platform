@@ -1,4 +1,4 @@
--- Certified AVAIA Guide — certification decision records (Phase C.7B).
+-- Certified AVAIA Guide, certification decision records (Phase C.7B).
 -- Purely additive: one new table, zero alter statements on any existing
 -- table, zero application code changes required to register it.
 --

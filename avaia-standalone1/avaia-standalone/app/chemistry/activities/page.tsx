@@ -31,11 +31,11 @@ export default function ChemistryActivitiesIndexPage() {
     <div className="mx-auto max-w-3xl px-5 py-16">
       <p className="label mb-3">Chemistry of Virtue</p>
       <h1 className="font-serif text-4xl text-ink leading-tight">
-        Chemistry for Kids -- Printable Activities
+        Chemistry for Kids, Printable Activities
       </h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">
         Alongside reading and listening to a story, a child can color it, trace it, draw
-        themselves in it, and notice it out in the world -- something to print, hold, and use
+        themselves in it, and notice it out in the world, something to print, hold, and use
         with their hands.
       </p>
       <p className="mt-3 text-sm text-muted">

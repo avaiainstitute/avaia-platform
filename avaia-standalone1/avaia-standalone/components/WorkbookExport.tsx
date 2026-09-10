@@ -3,7 +3,7 @@
 /**
  * Downloads the Host's Workbook as a plain-text file to their device. The full
  * text is assembled on the server and passed in, so this is a pure client-side
- * save — the browser writes it to Downloads (or wherever the Host chooses).
+ * save, the browser writes it to Downloads (or wherever the Host chooses).
  */
 export default function WorkbookExport({
   text,

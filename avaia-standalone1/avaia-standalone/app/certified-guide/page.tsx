@@ -2,18 +2,18 @@ import Link from "next/link";
 
 export const metadata = { title: "Certified AVAIA Guide" };
 
-/** Phase A of the Certified AVAIA Guide implementation -- the public
+/** Phase A of the Certified AVAIA Guide implementation, the public
  *  doorway only. Copy is drawn directly from the approved Program
  *  Prospectus + Enrollment Guide (Working Master v0.1), condensed for a
  *  single public page rather than the full certification manual. Uses the
  *  same layout/typography conventions as every other single-purpose page
- *  (see app/membership/page.tsx, components/AboutContent.tsx) -- no new
+ *  (see app/membership/page.tsx, components/AboutContent.tsx), no new
  *  visual language introduced.
  *
  *  Deliberately does not build enrollment/payment, an interest-intake
- *  route, or a Find/Book a Guide feature -- those are later phases. The
+ *  route, or a Find/Book a Guide feature, those are later phases. The
  *  CTA reuses the existing /contact form, which already has a
- *  "Certification" reason option (components/ContactForm.tsx) -- no new
+ *  "Certification" reason option (components/ContactForm.tsx), no new
  *  infrastructure needed for a visitor to genuinely reach AVAIA about
  *  this today. */
 export default function CertifiedGuidePage() {
@@ -22,7 +22,7 @@ export default function CertifiedGuidePage() {
       <p className="label mb-3">Certified AVAIA Guide</p>
       <h1 className="font-serif text-4xl text-ink">Become a Certified AVAIA Guide</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">
-        Learn how to Guide a different kind of conversation — one that helps people become more
+        Learn how to Guide a different kind of conversation, one that helps people become more
         visible to themselves without giving away ownership of their story, meaning, or decisions.
       </p>
       <p className="mt-4 text-lg leading-relaxed text-muted">
@@ -135,7 +135,7 @@ export default function CertifiedGuidePage() {
         </div>
         <p className="mt-6 text-muted">
           The Host owns the Table. The Guide protects the Table, not the outcome. A seat at the
-          Table creates visibility, not authority — and nothing leaves the Table unwitnessed.
+          Table creates visibility, not authority, and nothing leaves the Table unwitnessed.
         </p>
       </section>
 
@@ -150,20 +150,20 @@ export default function CertifiedGuidePage() {
         </p>
         <p className="mt-4 text-muted">The candidate pathway moves through:</p>
         <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-ink">
-          <li>Orientation — what Guide permission means, and does not mean</li>
-          <li>Foundations — AVAIA architecture, Journey, roles, governing distinctions</li>
-          <li>Conversation Stewardship — adaptive listening, IAP/CAT/InnerCompass discipline</li>
-          <li>Table Stewardship — Room, Table, seats, Witness, evidence</li>
-          <li>Recognition Systems — Chemistry of Virtue and Secondary Losses</li>
-          <li>Facilitation — groups, classes, Experiences, privacy, capacity</li>
-          <li>Toolkit Assembly — using approved AVAIA components without redesigning them</li>
-          <li>Boundary Gate — privacy, capacity, scope, non-therapy posture</li>
-          <li>Practicum — real-time stewardship, observed</li>
-          <li>Certification Decision — the full evidence portfolio is reviewed</li>
+          <li>Orientation, what Guide permission means, and does not mean</li>
+          <li>Foundations, AVAIA architecture, Journey, roles, governing distinctions</li>
+          <li>Conversation Stewardship, adaptive listening, IAP/CAT/InnerCompass discipline</li>
+          <li>Table Stewardship, Room, Table, seats, Witness, evidence</li>
+          <li>Recognition Systems, Chemistry of Virtue and Secondary Losses</li>
+          <li>Facilitation, groups, classes, Experiences, privacy, capacity</li>
+          <li>Toolkit Assembly, using approved AVAIA components without redesigning them</li>
+          <li>Boundary Gate, privacy, capacity, scope, non-therapy posture</li>
+          <li>Practicum, real-time stewardship, observed</li>
+          <li>Certification Decision, the full evidence portfolio is reviewed</li>
         </ol>
         <p className="mt-6 text-lg leading-relaxed text-ink">
           Completing coursework is not, by itself, certification. A candidate must demonstrate
-          actual Guide competency — through observed practicum work — before final certification
+          actual Guide competency, through observed practicum work, before final certification
           is granted.
         </p>
       </section>
@@ -179,7 +179,7 @@ export default function CertifiedGuidePage() {
           </p>
           <p className="mt-4 text-ink">
             <span className="font-serif text-lg">$4,500.</span> The current program investment.
-            Payment may be made in full, or through an installment arrangement — reach out to ask
+            Payment may be made in full, or through an installment arrangement, reach out to ask
             about current options.
           </p>
           <Link
@@ -214,7 +214,7 @@ export default function CertifiedGuidePage() {
             "Automatic access to anyone's private AVAIA conversations or Workbook.",
             "Authority to diagnose, treat, prescribe, or present AVAIA as therapy.",
             "Authority to decide what a Host should do.",
-            "Youth Guide facilitation — this remains on hold, pending separate guardian-consent architecture.",
+            "Youth Guide facilitation, this remains on hold, pending separate guardian-consent architecture.",
             "Complex Event Lead, Guide Trainer, or Faculty authority.",
             "Automatic permission for every AVAIA Experience, audience, or format.",
           ].map((line) => (

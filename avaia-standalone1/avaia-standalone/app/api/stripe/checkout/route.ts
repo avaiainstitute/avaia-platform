@@ -16,12 +16,12 @@ export async function POST(request: Request) {
 
   const origin = new URL(request.url).origin;
 
-  // Where to land after Stripe redirects back — validated against a fixed
+  // Where to land after Stripe redirects back, validated against a fixed
   // allowlist rather than trusted as-is, since this becomes part of a URL
   // handed to Stripe. Falls back to /journey for anything unrecognized.
   const ALLOWED_RETURN_PATHS = ["/journey", "/defying-grief"];
   // A Library entry's return path is per-entry (its id), so it can't live
-  // in the fixed array above -- validated by shape instead of membership,
+  // in the fixed array above, validated by shape instead of membership,
   // same defensive posture: never trust the client value as-is. Strict
   // UUID match only, same-origin by construction (used as `${origin}${returnTo}`
   // below), so this can't become an open redirect.
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       ? requestedReturnTo
       : "/journey";
 
-  // Plan selection -- validated against a fixed whitelist rather than
+  // Plan selection, validated against a fixed whitelist rather than
   // trusted as an arbitrary string, same defensive posture as returnTo.
   // Defaults to monthly for any call site that doesn't pass one yet.
   const requestedPlan = typeof body?.plan === "string" ? body.plan : "monthly";
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
       client_reference_id: user.id,
-      // "??" only falls back for null/undefined -- an anonymous Free-IAP
+      // "??" only falls back for null/undefined, an anonymous Free-IAP
       // Host's email is "" (empty string), which Stripe rejects outright
       // as an invalid address, so an empty string needs the same fallback.
       customer_email: user.email || undefined,

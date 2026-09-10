@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { SECONDARY_LOSSES } from "@/lib/institution";
 
-export const metadata = { title: "Secondary Loss — AVAIA" };
+export const metadata = { title: "Secondary Loss, AVAIA" };
 
-// Short, plain-language recognition line per canonical loss -- not a
+// Short, plain-language recognition line per canonical loss, not a
 // definition, not clinical, tentative by design (no card asserts anything
 // about the visitor). Keyed to SECONDARY_LOSSES' own loss names so a typo
 // here fails loudly (undefined) rather than silently mismatching.
@@ -28,13 +28,13 @@ export default function SecondaryLossPage() {
 
       <p className="mt-4 max-w-prose text-lg text-muted">
         When something is taken, the primary loss is usually seen at once. The secondary losses
-        often remain hidden — and that is frequently where the pain lives. Bringing them into
+        often remain hidden, and that is frequently where the pain lives. Bringing them into
         view increases understanding and opens the way to restoration.
       </p>
 
       <p className="mt-4 max-w-prose text-muted">
         A Secondary Loss is not necessarily another event. It&rsquo;s what else may have been
-        disrupted alongside the one you can already name — how life makes sense, what feels
+        disrupted alongside the one you can already name, how life makes sense, what feels
         real, the future you imagined, how much you trust yourself, your ability to decide or
         hold boundaries, the life you thought you were building, connection with others, your
         sense of control, who you understand yourself to be, or where support now lives.
@@ -43,7 +43,7 @@ export default function SecondaryLossPage() {
       <p className="mt-4 max-w-prose text-muted">
         These are doorways for recognition, not a diagnosis. AVAIA never looks at what happened
         to you and declares which of these you have. A Secondary Loss becomes meaningful only
-        when your own experience supports it — something below may be present, may be worth
+        when your own experience supports it, something below may be present, may be worth
         exploring, or may simply help name part of what you&rsquo;re carrying. Nothing here is a
         claim about you.
       </p>
@@ -70,7 +70,7 @@ export default function SecondaryLossPage() {
       <div className="mt-12 max-w-prose rule-t border-t border-rule pt-8">
         <p className="text-lg leading-relaxed text-ink">
           You do not need to know which of these applies before you begin. The Journey may help
-          something become visible that was difficult to name beforehand — Secondary Losses can
+          something become visible that was difficult to name beforehand, Secondary Losses can
           support understanding once they&rsquo;re relevant, not before.
         </p>
         <div className="mt-6">

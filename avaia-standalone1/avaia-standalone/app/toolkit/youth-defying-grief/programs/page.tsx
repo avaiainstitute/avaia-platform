@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Youth Programs — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Youth Programs, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 type Organization = { id: string; name: string; org_type: string };
@@ -22,13 +22,13 @@ const CONTEXT_LABEL: Record<Program["delivery_context"], string> = {
   school_organization: "School / organization",
 };
 
-/** Real, first-class program/group entity -- the piece a single labeled
+/** Real, first-class program/group entity, the piece a single labeled
  *  "group/workshop" field on an individual session could never actually
  *  be: something a Guide creates once and registers many participants
  *  into. See migration 0043's own header for why this is new rather than
  *  reusing Classes/Experiences (content containers, not delivery-instance
  *  entities). Organization creation is folded into this same form rather
- *  than a separate CRUD flow -- typing a new name creates one; picking an
+ *  than a separate CRUD flow, typing a new name creates one; picking an
  *  existing one from the list reuses it, so a school running multiple
  *  programs only registers its identity once. */
 async function createProgram(formData: FormData) {
@@ -121,7 +121,7 @@ export default async function YouthProgramsPage({
       .from("experience_sections")
       .select("title, experiences!inner(title)")
       .eq("section_type", "format_variant")
-      .eq("experiences.title", "The Things We Lose After the Loss — Youth"),
+      .eq("experiences.title", "The Things We Lose After the Loss, Youth"),
   ]);
 
   const programs = (programsData as Program[]) ?? [];
@@ -138,7 +138,7 @@ export default async function YouthProgramsPage({
       <p className="label mb-3">Programs</p>
       <h1 className="font-serif text-4xl text-ink">Youth Programs</h1>
       <p className="mt-4 text-lg text-muted">
-        A group, workshop, or school program you run -- register participants, track guardian
+        A group, workshop, or school program you run, register participants, track guardian
         consent and Youth assent per person, and see who&rsquo;s cleared to participate, without
         exposing anyone&rsquo;s private conversation.
       </p>
@@ -186,7 +186,7 @@ export default async function YouthProgramsPage({
                 name="name"
                 type="text"
                 required
-                placeholder="e.g. Fall Workshop — Riverside Middle School"
+                placeholder="e.g. Fall Workshop, Riverside Middle School"
                 className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
               />
             </div>
@@ -233,7 +233,7 @@ export default async function YouthProgramsPage({
                 className="mb-3 w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
               >
                 <option value="" className="bg-[#05060b]">
-                  — Create a new organization below —
+                  Create a new organization below
                 </option>
                 {organizations.map((o) => (
                   <option key={o.id} value={o.id} className="bg-[#05060b]">

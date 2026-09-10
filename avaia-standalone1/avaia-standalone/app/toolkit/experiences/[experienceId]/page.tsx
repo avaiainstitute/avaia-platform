@@ -19,15 +19,15 @@ const STATUS_LABEL: Record<ToolStatus, string> = {
   "not-yet-specified": "Not Yet Available",
 };
 
-/** Guide-facing Experience detail -- the route the admin-only draft
+/** Guide-facing Experience detail, the route the admin-only draft
  *  preview (app/admin/experiences/[experienceId]/page.tsx) was always
  *  meant to be previewing. Reads through the signed-in Guide's own
  *  RLS-bound client, so "experiences guide read" / "experience sections
  *  guide read" (both gated on guide_platform_authorizations, capability
- *  'toolkit' -- see migration 0031) are the real enforcement, not this
+ *  'toolkit', see migration 0031) are the real enforcement, not this
  *  page; sits inside /toolkit, so app/toolkit/layout.tsx's own Toolkit
  *  authorization gate applies before this even runs. Renders through the
- *  exact same shared ExperienceDetail component the admin route uses --
+ *  exact same shared ExperienceDetail component the admin route uses,
  *  no separate rendering path, no content duplicated. */
 export default async function ToolkitExperienceDetailPage({
   params,

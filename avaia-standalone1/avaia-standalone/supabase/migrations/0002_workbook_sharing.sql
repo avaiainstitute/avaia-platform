@@ -1,8 +1,8 @@
--- Consent-based Workbook sharing — run once against the live database
+-- Consent-based Workbook sharing, run once against the live database
 -- (Supabase SQL editor), after 0001_membership_status.sql. Safe to re-run:
 -- every clause is skipped if it already exists.
 
--- referrals.conversation_id — the existing referrals table has no link back
+-- referrals.conversation_id, the existing referrals table has no link back
 -- to the conversation it came from (only host_id + from_stage/to_stage
 -- names), which is too weak to scope a single-conversation share correctly:
 -- a Host may repeat IAP/CAT/InnerCompass across multiple journeys, so stage
@@ -15,15 +15,15 @@ alter table public.referrals
 create index if not exists referrals_conversation_idx on public.referrals (conversation_id);
 
 -- ---------------------------------------------------------------------------
--- shared_access — an active grant. Sharing is read-only: it extends SELECT
--- access on conversations/messages/referrals, never insert/update/delete —
+-- shared_access, an active grant. Sharing is read-only: it extends SELECT
+-- access on conversations/messages/referrals, never insert/update/delete,
 -- only the owning Host can ever write their own record.
 -- ---------------------------------------------------------------------------
 create table if not exists public.shared_access (
   id               uuid primary key default gen_random_uuid(),
   owner_id         uuid not null references auth.users (id) on delete cascade,
   shared_with_id   uuid not null references auth.users (id) on delete cascade,
-  -- 'referral' shares only the AVAIA Standard Referral for one conversation —
+  -- 'referral' shares only the AVAIA Standard Referral for one conversation,
   -- NOT its transcript. Kept distinct from 'conversation' (full transcript +
   -- its referral) so the RLS policies below can tell them apart.
   scope            text not null check (scope in ('conversation', 'workbook', 'referral')),
@@ -53,7 +53,7 @@ create policy "shared_access recipient read"
   using (auth.uid() = shared_with_id);
 
 -- ---------------------------------------------------------------------------
--- shared_access_invites — a pending share to an email with no AVAIA account
+-- shared_access_invites, a pending share to an email with no AVAIA account
 -- yet. handle_new_user() (below) converts matching pending invites into real
 -- shared_access rows the moment that email signs up.
 -- ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ create policy "shared_access_invites owner manage"
 -- grant that covers the row.
 -- ---------------------------------------------------------------------------
 -- 'referral' scope deliberately does NOT appear in the conversations/messages
--- policies below — it grants the referral only, never the transcript. Only
+-- policies below, it grants the referral only, never the transcript. Only
 -- 'workbook' (everything) and 'conversation' (this transcript + its referral)
 -- unlock the transcript itself.
 create policy "conversations shared read"
@@ -125,7 +125,7 @@ create policy "messages shared read"
   );
 
 -- Referrals ARE visible under both 'conversation' and 'referral' scope
--- (as well as 'workbook') — a referral-only share's entire purpose is to
+-- (as well as 'workbook'), a referral-only share's entire purpose is to
 -- grant exactly this, without the transcript access conversation-scope adds.
 create policy "referrals shared read"
   on public.referrals for select

@@ -1,7 +1,7 @@
-// AVAIA Guide Toolkit — Experience Detail sections. Ordered, typed
+// AVAIA Guide Toolkit, Experience Detail sections. Ordered, typed
 // content blocks attached to an Experience (migration 0021). Pilot
 // slice: one Experience ("The Things We Lose After the Loss"), admin
-// draft-preview only — no Guide-facing route reads this yet.
+// draft-preview only, no Guide-facing route reads this yet.
 
 export type SectionType =
   | "orientation"
@@ -73,7 +73,7 @@ export type ExperienceSection = {
 
 /** Groups an Experience's sections by type, each group already ordered
  *  by `position`. Groups with zero rows are simply absent from the
- *  result — the renderer must not invent a placeholder for a category
+ *  result, the renderer must not invent a placeholder for a category
  *  an Experience's source doesn't support. */
 export function groupSectionsByType(
   sections: ExperienceSection[]
@@ -88,14 +88,14 @@ export function groupSectionsByType(
   return grouped;
 }
 
-/** One labeled clause parsed out of a `movement` section's body -- e.g.
+/** One labeled clause parsed out of a `movement` section's body, e.g.
  *  "Purpose: give participants..." becomes { label: "Purpose", text:
  *  "give participants..." }. Every Defying Grief Master Curriculum
  *  module (migration 0033) was authored with this exact labeled-clause
  *  convention specifically so a delivery interface could split one
  *  flowing paragraph back into distinct, scannable fields without a
  *  schema change or a rewrite of the stored content. Not a general
- *  content-authoring rule for every section_type -- only movement
+ *  content-authoring rule for every section_type, only movement
  *  bodies follow it today. */
 export type ModuleField = { label: string; text: string };
 
@@ -105,7 +105,7 @@ const MODULE_FIELD_PATTERN =
 /** Canonical reading order for a module's parsed fields, independent of
  *  the order labels happen to appear in the stored body text (that order
  *  varies slightly module to module, since each was written the way it
- *  reads most naturally). "Movement" is excluded -- callers use it for
+ *  reads most naturally). "Movement" is excluded, callers use it for
  *  grouping/badging, not as a displayed field. */
 const MODULE_FIELD_DISPLAY_ORDER = [
   "Purpose",
@@ -127,7 +127,7 @@ const MODULE_FIELD_DISPLAY_ORDER = [
 
 /** Splits a movement body into its labeled clauses, in canonical display
  *  order. Returns an empty array (not the raw body) if the body doesn't
- *  follow the labeled-clause convention -- callers should fall back to
+ *  follow the labeled-clause convention, callers should fall back to
  *  rendering the raw body text in that case, never invent fields. */
 export function parseModuleFields(body: string): ModuleField[] {
   const matches = [...body.matchAll(MODULE_FIELD_PATTERN)];
@@ -151,14 +151,14 @@ export function parseModuleFields(body: string): ModuleField[] {
  *  with a recognized movement clause.
  *
  *  Some modules (e.g. the View From Above classes, migrations 0056/0057)
- *  use a compound or transitional label -- "Movement: Understanding into
- *  Agency." or "Movement: Agency, closing the collection." -- rather than
+ *  use a compound or transitional label, "Movement: Understanding into
+ *  Agency." or "Movement: Agency, closing the collection.", rather than
  *  one bare word. A strict exact-match here would silently drop that
  *  module's entire content from every view that groups by movement (it
  *  falls into an "Other" bucket that nothing renders), which is exactly
  *  what was happening for four of the ten classes before this fix. A
  *  compound label is bucketed by whichever canonical movement it names
- *  last -- the one the module is transitioning toward -- since that's
+ *  last, the one the module is transitioning toward, since that's
  *  the more advanced point in the sequence a Guide scanning by movement
  *  would expect to find it under. */
 export function parseModuleMovement(body: string): "Awareness" | "Understanding" | "Agency" | null {
@@ -174,11 +174,11 @@ export function parseModuleMovement(body: string): "Awareness" | "Understanding"
 /** Same purpose as parseModuleFields, for a different authored
  *  convention: participant_guide and take_home bodies (migration 0033)
  *  use ALL-CAPS prompt labels followed by either a colon or an em dash
- *  ("THE STONE: ..." / "WHAT CHANGED FIRST — ..."), never the Title-Case
+ *  ("THE STONE: ..." / "WHAT CHANGED FIRST, ..."), never the Title-Case
  *  "Label:" convention movement bodies use. Print views use this to give
  *  each prompt its own block with real writing space, instead of one
  *  unbroken paragraph. Returns an empty array (never the raw body, never
- *  an invented split) when a body doesn't follow the convention -- the
+ *  an invented split) when a body doesn't follow the convention, the
  *  caller falls back to the raw body text. */
 export type PromptField = { label: string; text: string };
 
@@ -202,7 +202,7 @@ export function parsePromptFields(body: string): PromptField[] {
  *  actually names ("Modules 2, 3, and 6", "Modules 1 through 8"). Purely
  *  additive: used only to softly highlight which modules a print
  *  Facilitator Packet's full module library corresponds to for the
- *  selected format -- every module still prints in full regardless, so a
+ *  selected format, every module still prints in full regardless, so a
  *  missed or extra match here never hides or fabricates curriculum
  *  content, it only affects a highlight badge. */
 export function parseReferencedModuleNumbers(formatBody: string): Set<number> {

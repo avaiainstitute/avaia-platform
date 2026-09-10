@@ -6,13 +6,13 @@ import { IDENTITY_FIRST_RING, type VirtueSignatureEntry } from "@/lib/virtue-sig
 
 type Node = { family: string; element: string | null; entryId?: string };
 
-// AVAIA Noble Gas / Identity visual -- source-based, from the recovered
+// AVAIA Noble Gas / Identity visual, source-based, from the recovered
 // VIRTUOUS NOBLE GAS.pptx (center "YOU," a first ring of two, growing
 // outer rings) and Dorian's own Atom video transcript: "that nucleus is
 // the identity of that atom. It doesn't change." / "those two are
 // protecting our identity... the two elements of integrity that keep us
 // who we are." Outer rings are NOT a fixed inventory implying what's
-// missing -- the transcript is explicit that every capacity is already
+// missing, the transcript is explicit that every capacity is already
 // available to "wake up," so an empty or sparse outer ring reads as
 // "not yet added," never as absence.
 //
@@ -61,7 +61,7 @@ export default function VirtueSignatureVisual({
   }
 
   // Vulnerability (index 0 of IDENTITY_FIRST_RING) at 9 o'clock, Authenticity
-  // (index 1) at 3 o'clock -- a deliberate visual correction from the
+  // (index 1) at 3 o'clock, a deliberate visual correction from the
   // default top/bottom placement positionsFor would give a 2-node ring
   // (angle -90deg then +90deg). Purely a layout choice for these two fixed
   // nodes; outer rings still use positionsFor's own top-start distribution,
@@ -91,13 +91,13 @@ export default function VirtueSignatureVisual({
           />
         ))}
 
-        {/* Center -- Identity */}
+        {/* Center, Identity */}
         <circle cx={center} cy={center} r={44} fill="#c1502e" opacity={0.15} stroke="#c1502e" strokeWidth={1.5} />
         <text x={center} y={center + 5} textAnchor="middle" className="fill-current text-ink" fontSize={16} fontWeight={600}>
           {hostLabel}
         </text>
 
-        {/* First ring -- fixed: Vulnerability + Authenticity */}
+        {/* First ring, fixed: Vulnerability + Authenticity */}
         {firstRing.map((node, i) => {
           const pos = firstRingPositions[i];
           const color = familyByName(node.family)?.color ?? "#e08a1e";
@@ -116,7 +116,7 @@ export default function VirtueSignatureVisual({
           );
         })}
 
-        {/* Outer rings -- the Host's own living entries */}
+        {/* Outer rings, the Host's own living entries */}
         {outerRings.map((ring, ri) => {
           const radius = baseRadius + ringGap * (ri + 1);
           const positions = positionsFor(ring, radius);
@@ -142,12 +142,12 @@ export default function VirtueSignatureVisual({
       </svg>
 
       <div className="mt-2 min-h-[1.5rem] text-sm text-muted">
-        {hovered ? (hovered.element ? `${hovered.family} — ${hovered.element}` : hovered.family) : "Hover an element"}
+        {hovered ? (hovered.element ? `${hovered.family}, ${hovered.element}` : hovered.family) : "Hover an element"}
       </div>
 
       {outerNodes.length === 0 && (
         <p className="mt-2 max-w-sm text-center text-sm text-muted">
-          The first ring — Vulnerability and Authenticity — is always here, protecting identity.
+          The first ring, Vulnerability and Authenticity, is always here, protecting identity.
           Everything else is already inside you, waiting to be recognized. Nothing outside this
           center ring is missing; it just hasn&rsquo;t been added yet.
         </p>

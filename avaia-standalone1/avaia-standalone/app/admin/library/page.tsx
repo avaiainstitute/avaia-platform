@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Library — AVAIA Admin" };
+export const metadata = { title: "Library, AVAIA Admin" };
 export const dynamic = "force-dynamic";
 
 const CREATE_ERROR_MESSAGE: Record<string, string> = {
@@ -13,9 +13,9 @@ const CREATE_ERROR_MESSAGE: Record<string, string> = {
 };
 
 /** Smallest safe editorial surface for library_entries (Living Library
- *  audit, Section T -- no admin UI existed at all before this). Every
+ *  audit, Section T, no admin UI existed at all before this). Every
  *  other Library table (concepts, provenance, junctions) is out of scope
- *  for this pass -- see the migration/report for the full boundary. */
+ *  for this pass, see the migration/report for the full boundary. */
 async function createLibraryEntry(formData: FormData) {
   "use server";
   const supabase = createClient();
@@ -47,7 +47,7 @@ async function createLibraryEntry(formData: FormData) {
     redirect("/admin/library?createError=invalid_visibility");
   }
 
-  // Always draft on creation -- explicit publication is a separate,
+  // Always draft on creation, explicit publication is a separate,
   // deliberate step on the entry's own edit page, never automatic.
   const { data: created, error } = await supabase
     .from("library_entries")
@@ -122,7 +122,7 @@ export default async function AdminLibraryPage({
       <h1 className="font-serif text-4xl text-ink">Library</h1>
       <p className="mt-4 text-lg text-muted">
         Every entry currently in production was added by direct SQL, outside version control. This
-        is the smallest safe surface to create and edit entries without that — it does not manage
+        is the smallest safe surface to create and edit entries without that, it does not manage
         Concepts, Provenance, or any other Library table.
       </p>
 

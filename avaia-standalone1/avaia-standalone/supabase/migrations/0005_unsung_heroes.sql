@@ -1,13 +1,13 @@
--- Unsung Heroes program — schema addition. The Secondary Loss -> Virtue
+-- Unsung Heroes program, schema addition. The Secondary Loss -> Virtue
 -- restoration mapping this program draws on already exists as
 -- SECONDARY_LOSSES in lib/institution.ts (Meaning->Gratitude,
--- Reality->Humility, ... Attachment/Support->Love) — nothing new needed there,
+-- Reality->Humility, ... Attachment/Support->Love), nothing new needed there,
 -- Path Three's guidance references it directly rather than duplicating it.
 --
 -- Run this once against the live database (Supabase SQL editor). Safe to
 -- re-run: every clause is skipped if it already exists.
 
--- profiles.role — coarse account type. Plain Hosts are 'member'; a
+-- profiles.role, coarse account type. Plain Hosts are 'member'; a
 -- 'community_leader' account additionally gets cross-school/organization
 -- visibility, scoped by the community_contacts rows below.
 alter table public.profiles
@@ -15,7 +15,7 @@ alter table public.profiles
     check (role in ('member', 'community_leader'));
 
 -- ---------------------------------------------------------------------------
--- community_contacts — the "on file" directory that Unsung Heroes visibility
+-- community_contacts, the "on file" directory that Unsung Heroes visibility
 -- depends on. Recognition visibility is never chosen by the observer; it
 -- follows entirely from these rows: who is the teacher/administrator for a
 -- school, who is a specific person's guardian, who is the contact for a
@@ -50,7 +50,7 @@ create policy "community contacts are self-only"
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
--- recognitions — the Unsung Heroes workbook entry. observer_id is always
+-- recognitions, the Unsung Heroes workbook entry. observer_id is always
 -- the signed-in Host recording it; who_became_visible is who they're
 -- recognizing, optionally linked to a real AVAIA account via
 -- observed_user_id.
@@ -61,11 +61,11 @@ create policy "community contacts are self-only"
 -- did mattered. You matter." is the success condition this table exists to
 -- record evidence of, not a score to accumulate.
 --
--- who_became_visible replaces observed_name deliberately — the point is not
+-- who_became_visible replaces observed_name deliberately, the point is not
 -- who performed an action, it's who was seen. primary_virtue/
 -- supporting_virtues are the model's own words for what it named in
 -- conversation; virtue_elements is the validated subset that actually
--- matches a real Chemistry of Virtue element (lib/virtues.ts — 123 elements
+-- matches a real Chemistry of Virtue element (lib/virtues.ts, 123 elements
 -- is too many to enumerate in a check constraint, so this validation happens
 -- at the application layer, same as the original virtue_name did).
 create table if not exists public.recognitions (
@@ -82,10 +82,10 @@ create table if not exists public.recognitions (
   primary_virtue        text,
   supporting_virtues    text[] not null default '{}',
   virtue_elements       text[] not null default '{}',
-  reflection            text not null,  -- why this mattered / why it was noticed — core, not optional
-  personal_insight      text not null,  -- what the observer recognized about themselves
-  community_impact      text not null,  -- how this moment affected people beyond the two involved
-  next_practice         text,           -- what kind of person/community this points toward
+  reflection            text not null, , why this mattered / why it was noticed, core, not optional
+  personal_insight      text not null, , what the observer recognized about themselves
+  community_impact      text not null, , how this moment affected people beyond the two involved
+  next_practice         text,          , what kind of person/community this points toward
   questions_to_revisit  text[] not null default '{}',
   conversation_path     text not null check (conversation_path in (
                             'i_saw_someone', 'someone_recognized_me',
@@ -176,7 +176,7 @@ create policy "recognitions visible to observer, observed, and community contact
   );
 
 -- ---------------------------------------------------------------------------
--- unsung_heroes_conversations / unsung_heroes_messages — a separate, parallel
+-- unsung_heroes_conversations / unsung_heroes_messages, a separate, parallel
 -- record from the core Journey's conversations/messages tables (see
 -- lib/engine/unsung-heroes.ts). Kept fully independent so nothing here can
 -- affect IAP/CAT/InnerCompass.

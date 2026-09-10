@@ -5,7 +5,7 @@ import { suggestBringForward } from "@/lib/engine/room";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Offers one possible way to word what to bring forward -- called only
+/** Offers one possible way to word what to bring forward, called only
  *  when the participant themselves asks for it (see the "Help me find the
  *  words" button in app/room-access/[token]/page.tsx). Bearer-authenticated
  *  exactly like /api/room-access/message: the same isolated participant

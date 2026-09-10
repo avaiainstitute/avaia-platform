@@ -1,20 +1,20 @@
--- AVAIA conversation engine — Supabase schema (the Workbook).
+-- AVAIA conversation engine, Supabase schema (the Workbook).
 --
 -- Run in the AVAIA Supabase project's SQL editor. Every table is protected by
 -- Row-Level Security: a Host can only ever read or write their own rows
 -- (host_id = auth.uid()). Sensitive personal content lives here, so RLS is the
--- backbone of the privacy model — nothing is exposed cross-Host.
+-- backbone of the privacy model, nothing is exposed cross-Host.
 --
 -- Auth is Supabase magic-link (email). auth.users is managed by Supabase; we
 -- keep an app-level profile keyed to it.
 
 -- ---------------------------------------------------------------------------
--- profiles — one row per Host, with consent + eligibility record
+-- profiles, one row per Host, with consent + eligibility record
 -- ---------------------------------------------------------------------------
 create table if not exists public.profiles (
   id                    uuid primary key references auth.users (id) on delete cascade,
-  consent_at            timestamptz,           -- when the Host accepted the disclaimer
-  disclaimer_version    text,                  -- which disclaimer they accepted
+  consent_at            timestamptz,          , when the Host accepted the disclaimer
+  disclaimer_version    text,                 , which disclaimer they accepted
   adult_confirmed       boolean not null default false,
   minor_with_guardian   boolean not null default false,
   membership_status     text not null default 'free' check (membership_status in ('free', 'member')),
@@ -76,7 +76,7 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ---------------------------------------------------------------------------
--- journeys — explicit grouping of one Host's IAP -> CAT -> InnerCompass
+-- journeys, explicit grouping of one Host's IAP -> CAT -> InnerCompass
 -- conversations into a single Journey. Previously an inference from
 -- timestamp proximity; that broke once (a Defying Grief referral picked up
 -- by an unrelated general-program InnerCompass conversation purely because
@@ -101,7 +101,7 @@ create policy "journeys are self-only"
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
 
 -- ---------------------------------------------------------------------------
--- conversations — one row per stage the Host walks (iap / cat / innercompass)
+-- conversations, one row per stage the Host walks (iap / cat / innercompass)
 -- ---------------------------------------------------------------------------
 create table if not exists public.conversations (
   id            uuid primary key default gen_random_uuid(),
@@ -109,11 +109,11 @@ create table if not exists public.conversations (
   stage         text not null check (stage in ('iap', 'cat', 'innercompass')),
   status        text not null default 'active' check (status in ('active', 'complete')),
   -- Which program this conversation belongs to. A label for scoping queries
-  -- (e.g. Defying Grief's dashboard), not a continuity mechanism — Room
+  -- (e.g. Defying Grief's dashboard), not a continuity mechanism, Room
   -- Identity/referral content/completion state all still live entirely in
   -- this table and referrals, keyed by conversation_id as they always have.
   program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth')),
-  -- Explicit Journey this conversation belongs to — see journeys above.
+  -- Explicit Journey this conversation belongs to, see journeys above.
   journey_id    uuid references public.journeys (id) on delete set null,
   created_at    timestamptz not null default now(),
   completed_at  timestamptz
@@ -128,7 +128,7 @@ create policy "conversations are self-only"
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
 
 -- Read-only extension for Workbook sharing (see shared_access near the end
--- of this file) — never changes who can write.
+-- of this file), never changes who can write.
 create policy "conversations shared read"
   on public.conversations for select
   using (
@@ -145,7 +145,7 @@ create policy "conversations shared read"
   );
 
 -- ---------------------------------------------------------------------------
--- messages — every Host + Guide turn (this IS the Workbook conversation record)
+-- messages, every Host + Guide turn (this IS the Workbook conversation record)
 -- ---------------------------------------------------------------------------
 create table if not exists public.messages (
   id               uuid primary key default gen_random_uuid(),
@@ -180,14 +180,14 @@ create policy "messages shared read"
   );
 
 -- ---------------------------------------------------------------------------
--- referrals — the AVAIA Standard Referral that carries between stages
+-- referrals, the AVAIA Standard Referral that carries between stages
 -- ---------------------------------------------------------------------------
 create table if not exists public.referrals (
   id               uuid primary key default gen_random_uuid(),
   host_id          uuid not null references auth.users (id) on delete cascade,
   from_stage       text not null,
   to_stage         text not null,
-  content          jsonb not null,   -- structured referral fields (Host Overview, Identity Threads, ...)
+  content          jsonb not null,  , structured referral fields (Host Overview, Identity Threads, ...)
   -- Which conversation this referral closed out of. Nullable because it
   -- pre-dates this column; without it, a 'conversation'-scope Workbook share
   -- can't identify which single referral belongs to that conversation.
@@ -222,7 +222,7 @@ create policy "referrals shared read"
   );
 
 -- ---------------------------------------------------------------------------
--- crisis_events — anonymous-count oversight of when the safety net fires.
+-- crisis_events, anonymous-count oversight of when the safety net fires.
 -- No conversation text is stored here (privacy); only that it happened.
 -- ---------------------------------------------------------------------------
 create table if not exists public.crisis_events (
@@ -238,7 +238,7 @@ create policy "crisis insert self"
   on public.crisis_events for insert with check (auth.uid() = host_id);
 
 -- ---------------------------------------------------------------------------
--- Workbook sharing — see supabase/migrations/0002_workbook_sharing.sql for
+-- Workbook sharing, see supabase/migrations/0002_workbook_sharing.sql for
 -- full commentary; kept in sync here for fresh installs.
 -- ---------------------------------------------------------------------------
 
@@ -293,7 +293,7 @@ create policy "shared_access_invites owner manage"
   using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
 
 -- ---------------------------------------------------------------------------
--- GPT IAP workshop OAuth — see supabase/migrations/0004_gpt_iap_workshop.sql
+-- GPT IAP workshop OAuth, see supabase/migrations/0004_gpt_iap_workshop.sql
 -- for full commentary; kept in sync here for fresh installs. Both tables are
 -- service-role only (RLS enabled, zero policies) -- the real IAP custom
 -- GPT's Action is the only client.
@@ -330,7 +330,7 @@ create index if not exists oauth_access_tokens_host_idx on public.oauth_access_t
 alter table public.oauth_access_tokens enable row level security;
 
 -- ---------------------------------------------------------------------------
--- Unsung Heroes — a separate program from the core Journey (IAP/CAT/
+-- Unsung Heroes, a separate program from the core Journey (IAP/CAT/
 -- InnerCompass). See supabase/migrations/0005_unsung_heroes.sql for the full
 -- commentary; virtue recognition is the front door, acknowledgment is the
 -- reason underneath it. Kept in sync here for fresh installs.
@@ -553,7 +553,7 @@ create index if not exists recognitions_conversation_idx
   on public.recognitions (conversation_id);
 
 -- ---------------------------------------------------------------------------
--- contact_submissions — the public, unauthenticated form at /contact
+-- contact_submissions, the public, unauthenticated form at /contact
 -- ---------------------------------------------------------------------------
 create table if not exists public.contact_submissions (
   id         uuid primary key default gen_random_uuid(),
@@ -572,7 +572,7 @@ create table if not exists public.contact_submissions (
 alter table public.contact_submissions enable row level security;
 
 -- ---------------------------------------------------------------------------
--- guide_participants / guide_sessions — the AVAIA Guide Toolkit's
+-- guide_participants / guide_sessions, the AVAIA Guide Toolkit's
 -- lightweight participant/session model. A participant needs no AVAIA
 -- account; a Guide-facilitated conversation still lives in the ordinary
 -- conversations/messages/referrals tables with host_id = the Guide's own
@@ -635,7 +635,7 @@ create policy "guide sessions are owner-only"
   using (auth.uid() = guide_id) with check (auth.uid() = guide_id);
 
 -- ---------------------------------------------------------------------------
--- library_entries — ported from the unmerged `library` branch, unchanged in
+-- library_entries, ported from the unmerged `library` branch, unchanged in
 -- shape. library_suggestions and the admin CRUD/review UI are not ported in
 -- this pass -- this is the data layer plus a read-only Guide browse view.
 -- ---------------------------------------------------------------------------
@@ -702,7 +702,7 @@ create policy "library entries admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_host_entries — Phase 1 Living Library, the Host's own private
+-- library_host_entries, Phase 1 Living Library, the Host's own private
 -- relationship to a Library Entry (explored / saved / dismissed / noted).
 -- See 0014_library_host_entries.sql for the full rationale.
 -- ---------------------------------------------------------------------------

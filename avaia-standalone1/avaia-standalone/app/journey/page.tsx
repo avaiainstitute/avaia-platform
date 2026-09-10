@@ -23,7 +23,7 @@ import { generateGuidesRecord } from "@/lib/engine/referral-generation";
 import { resolveOriginContext } from "@/lib/engine/origin-context";
 import { generateIapOriginOpening } from "@/lib/engine/openings";
 
-export const metadata = { title: "Your Journey — AVAIA" };
+export const metadata = { title: "Your Journey, AVAIA" };
 export const dynamic = "force-dynamic";
 
 export default async function JourneyPage({
@@ -46,7 +46,7 @@ export default async function JourneyPage({
 
   // Free IAP entry: a signed-out visitor is no longer redirected away.
   // BeginFreeJourney starts a real (anonymous) Supabase identity on
-  // deliberate click only -- never automatically on page load -- then
+  // deliberate click only, never automatically on page load, then
   // refreshes so this Server Component re-runs with a session and falls
   // straight into the same consent -> auto-provision path below,
   // unchanged for every other caller. A signed-in Host never sees this.
@@ -56,7 +56,7 @@ export default async function JourneyPage({
         <p className="label mb-3">Individual Awareness Profile</p>
         <h1 className="font-serif text-4xl text-ink">Begin your Journey</h1>
         <p className="mt-4 text-lg text-muted">
-          The first step is free, and you can begin right now — no account required yet.
+          The first step is free, and you can begin right now, no account required yet.
         </p>
         <div className="mt-8">
           <BeginFreeJourney />
@@ -72,7 +72,7 @@ export default async function JourneyPage({
     .maybeSingle();
 
   // A real query error (missing column, RLS misconfiguration, etc.) must
-  // never be treated as "not consented" — that's exactly how the
+  // never be treated as "not consented", that's exactly how the
   // membership_status column being missing on the live database turned into
   // an apparent /journey<->/welcome redirect loop: the error was silently
   // discarded, profile came back null, and the code assumed no consent
@@ -93,11 +93,11 @@ export default async function JourneyPage({
 
   // A brand-new anonymous Host who arrived carrying Chemistry/View From
   // Above origin context still has to pass through /welcome's consent
-  // form first -- that context must survive the hop, or it's silently
+  // form first, that context must survive the hop, or it's silently
   // lost for every genuinely first-time visitor (the exact population
   // this feature is for). router.refresh() after signInAnonymously()
   // preserves this page's own query string, but this redirect() to a
-  // different path does not -- carried forward explicitly instead.
+  // different path does not, carried forward explicitly instead.
   if (!profile?.consent_at) {
     const originParams =
       searchParams?.origin && searchParams?.key
@@ -110,17 +110,17 @@ export default async function JourneyPage({
   // Resolve the conversation to show: the active one, or open IAP on first entry.
   let convo = await getActiveConversation(supabase, user.id);
 
-  // "Begin again" — start a brand-new journey with a fresh IAP conversation,
+  // "Begin again", start a brand-new journey with a fresh IAP conversation,
   // no matter what stage (or which leftover active conversation) the Host was
   // last in. If something's still active, its Guide's Record is generated
   // and stored (see generateGuidesRecord's own comment) before a clean IAP
-  // conversation is created -- deliberately NOT advanceToNextStage, so no
+  // conversation is created, deliberately NOT advanceToNextStage, so no
   // CAT/next-stage conversation is created for the Journey being left.
   // Redirect to a clean URL so a refresh doesn't spawn another empty
   // conversation.
   if (searchParams?.new === "1") {
     // One complimentary IAP per Host: once a non-member has already completed
-    // an IAP, this must not let them begin another one -- that would silently
+    // an IAP, this must not let them begin another one, that would silently
     // archive whatever CAT/InnerCompass conversation is already waiting for
     // them behind the membership gate. A member is never restricted here.
     if (!isMember) {
@@ -141,7 +141,7 @@ export default async function JourneyPage({
         : "general";
 
     // Same protection as the silent brand-new-Host default below (see its
-    // comment for the full reasoning) -- a Host who self-identified as
+    // comment for the full reasoning), a Host who self-identified as
     // under 18 at /welcome must not be routed into a non-Youth program even
     // via an explicit ?new=1&program=... request.
     if (profile?.minor_with_guardian && requestedProgram !== "youth") {
@@ -163,7 +163,7 @@ export default async function JourneyPage({
         program: convo.program,
         developmentalBand,
       });
-      // Generation failed (e.g. a transient AI error) -- leave the Host's
+      // Generation failed (e.g. a transient AI error), leave the Host's
       // current conversation untouched rather than silently losing the
       // record, and don't start a new Journey this click. Same failure
       // posture as normal completion (/api/referral), just without a
@@ -172,7 +172,7 @@ export default async function JourneyPage({
       // conversation so they can try again.
       if (!record.ok) redirect("/journey");
     }
-    // A fresh IAP entered here always begins a new Journey -- never reuses
+    // A fresh IAP entered here always begins a new Journey, never reuses
     // an existing journey_id, even if one was active a moment ago.
     const newJourneyId = await createJourney(supabase, user.id, requestedProgram);
     await createConversation(supabase, user.id, "iap", undefined, requestedProgram, newJourneyId);
@@ -182,7 +182,7 @@ export default async function JourneyPage({
   let journeyComplete = false;
   // Carries the Host's most recent program forward for the "begin again"
   // links below (header's "Start a new conversation" and the completed-
-  // journey screen's "Begin a new journey") -- so a Youth or Defying Grief
+  // journey screen's "Begin a new journey"), so a Youth or Defying Grief
   // Host restarting doesn't silently fall back to general. When there's an
   // active conversation, its own program is already known; otherwise this
   // is resolved from the most recent conversation on record.
@@ -199,10 +199,10 @@ export default async function JourneyPage({
       // A Host who self-identified as under 18 at /welcome (minor_with_
       // guardian, written alongside consent_at in app/api/consent/route.ts)
       // must never be silently defaulted into the adult Defying Grief
-      // engine below -- route them into the existing Youth entry/band-
+      // engine below, route them into the existing Youth entry/band-
       // selection pathway instead, before any Journey is created. This is
       // self-attestation only, not verified guardian consent (see /youth's
-      // own migration and the Youth Production-Readiness Audit) -- it is
+      // own migration and the Youth Production-Readiness Audit), it is
       // used here only to prevent a known minor from entering the adult
       // engine, never as a claim that guardian-consent architecture is
       // complete. A Host who picked "18 or older," or a legacy account
@@ -212,7 +212,7 @@ export default async function JourneyPage({
         redirect("/youth");
       }
       // Defying Grief is the current individual Host pathway (no separate
-      // "General AVAIA Journey" is being positioned against it) -- a
+      // "General AVAIA Journey" is being positioned against it), a
       // genuinely brand-new Host's complimentary IAP is the beginning of
       // Defying Grief, tagged as such from this very first conversation so
       // the CAT Audacity layer, the InnerCompass Audacity-of-Choice layer,
@@ -223,12 +223,12 @@ export default async function JourneyPage({
       // IAP orientation screen intact.
       // A Host who clicked through from a specific Chemistry element or
       // View From Above class carries that origin into this very first
-      // IAP conversation -- resolved server-side against the canonical
+      // IAP conversation, resolved server-side against the canonical
       // data (never trusting the query string's label/family/definition
       // directly), so IAP can open naturally instead of with the generic
       // static line. This never changes program (still unconditionally
       // 'defying-grief' below, same as every other brand-new adult Host)
-      // and never touches the membership gate -- origin context only
+      // and never touches the membership gate, origin context only
       // affects what IAP says, not what a Host is entitled to do.
       const origin = resolveOriginContext(searchParams?.origin, searchParams?.key);
       const firstJourneyId = await createJourney(supabase, user.id, "defying-grief");
@@ -252,7 +252,7 @@ export default async function JourneyPage({
   const restartHref =
     programForRestart === "general" ? "/journey?new=1" : `/journey?new=1&program=${programForRestart}`;
 
-  // showRestart is false only for the membership gate below -- a non-member
+  // showRestart is false only for the membership gate below, a non-member
   // sitting there has nothing "Start a new conversation" could meaningfully
   // do for them now (see the ?new=1 guard above), so the link isn't offered.
   const header = renderHeader(true, restartHref);
@@ -283,7 +283,7 @@ export default async function JourneyPage({
             Begin a new journey
           </Link>
           {/* The Library has no Youth-aware presentation yet (Living Library
-              audit, Section Q) -- a self-identified minor never sees this
+              audit, Section Q), a self-identified minor never sees this
               continuation link, the same discipline already applied to
               profile.minor_with_guardian everywhere else on this page. No
               Youth-appropriate destination exists to substitute in its
@@ -303,7 +303,7 @@ export default async function JourneyPage({
 
   const stage = convo.stage as Stage;
 
-  // The free IAP experience is complete and untouched — but Conversations
+  // The free IAP experience is complete and untouched, but Conversations
   // Across Time (and everything after it) is a membership feature. A free
   // Host who has just been carried into CAT sees the membership gate instead
   // of the chat; a member continues exactly as before.
@@ -321,15 +321,15 @@ export default async function JourneyPage({
   const rawMessages = await loadMessages(supabase, convo.id);
 
   // True only for the one page load immediately after a genuine, successful
-  // Stripe redirect for this same Host -- checkout=success only ever arrives
+  // Stripe redirect for this same Host, checkout=success only ever arrives
   // via that redirect (see app/api/stripe/checkout/route.ts's success_url),
   // and we already know isMember is true here or the gate above would have
-  // returned first. Not persisted anywhere -- once the Host clicks through
+  // returned first. Not persisted anywhere, once the Host clicks through
   // to /journey?enter=1 (or navigates anywhere else), this URL param is gone
   // and the acknowledgment doesn't reappear on any later visit.
   const justBecameMember = stage !== "iap" && searchParams?.checkout === "success";
 
-  // Defying Grief's crossing screens (entering CAT, entering InnerCompass) —
+  // Defying Grief's crossing screens (entering CAT, entering InnerCompass),
   // shown exactly once, before the Host's first message in the new stage.
   // rawMessages.length === 1 means only the seeded opening line exists yet;
   // the moment they send a message this condition is permanently false on
@@ -349,11 +349,11 @@ export default async function JourneyPage({
     );
   }
 
-  // The general-program counterpart to the block above -- same exact
+  // The general-program counterpart to the block above, same exact
   // first-message-not-yet-sent moment, for every case Defying Grief's
   // crossing doesn't cover (every program's first IAP message, and general
   // program's CAT/InnerCompass entries). See JourneyIntro's own comment.
-  // IAP is included regardless of program -- DefyingGriefCrossing above
+  // IAP is included regardless of program, DefyingGriefCrossing above
   // never covers IAP (it only has CAT/InnerCompass content), so without this
   // a Defying-Grief-tagged first IAP conversation would reach neither screen
   // and drop the Host straight into an empty chat with no orientation at all.
@@ -362,10 +362,10 @@ export default async function JourneyPage({
     searchParams?.enter !== "1" &&
     (stage === "iap" || convo.program !== "defying-grief")
   ) {
-    // Room Identity + a short description of what the Host is entering --
+    // Room Identity + a short description of what the Host is entering,
     // reused from the referral already generated at the previous stage,
     // not shown on IAP entry (nothing precedes it). Shared across every
-    // program using this screen, general and Youth alike -- same data,
+    // program using this screen, general and Youth alike, same data,
     // same presentation, no program branch needed here.
     const incoming =
       stage !== "iap" ? await getIncomingSummary(supabase, user.id, stage) : null;
@@ -384,7 +384,7 @@ export default async function JourneyPage({
 
   const messages = rawMessages.map((m) => ({ role: m.role, content: m.content }));
   const currentIdx = STAGE_ORDER.indexOf(stage);
-  // What the completion card should say this stage's referral goes to --
+  // What the completion card should say this stage's referral goes to,
   // the next stage's own label, or "Continuity" for InnerCompass, the last
   // stage in STAGE_ORDER, matching to_stage: 'continuity' already used for
   // its referral row. STAGE_LABEL is server-only, so this is resolved
@@ -393,7 +393,7 @@ export default async function JourneyPage({
     ? STAGE_LABEL[STAGE_ORDER[currentIdx + 1]]
     : "Continuity";
 
-  // Welcome the Host back when they're resuming — they've already engaged (more
+  // Welcome the Host back when they're resuming, they've already engaged (more
   // than the opener) and the last activity was a while ago, not an active session.
   const lastAt = rawMessages[rawMessages.length - 1]?.created_at;
   const returning =
@@ -431,7 +431,7 @@ export default async function JourneyPage({
         <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4">
           <p className="font-serif text-lg text-seal">Welcome back.</p>
           <p className="mt-1 text-sm text-ink">
-            When we last spoke, we were in {STAGE_LABEL[stage]} — your conversation is right below,
+            When we last spoke, we were in {STAGE_LABEL[stage]}, your conversation is right below,
             just where you left it. Take a moment to read back over it if you like, then continue
             whenever you&rsquo;re ready. There&rsquo;s no need to start over.
           </p>
@@ -452,14 +452,14 @@ export default async function JourneyPage({
 }
 
 /** The page header, with "Start a New Journey" (StartNewJourneyLink, with
- *  its own confirmation -- see that component) shown except on the
- *  membership gate -- see the ?new=1 guard above for why that link has
+ *  its own confirmation, see that component) shown except on the
+ *  membership gate, see the ?new=1 guard above for why that link has
  *  nothing meaningful to do for a non-member sitting there. Renamed from
- *  "Start a new conversation" -- verified this actually archives whatever
+ *  "Start a new conversation", verified this actually archives whatever
  *  conversation is active and begins a brand-new Journey, not just another
  *  conversation inside the current one.
  *
- *  No Sign Out here -- it's already in the global Nav (components/Nav.tsx)
+ *  No Sign Out here, it's already in the global Nav (components/Nav.tsx)
  *  on every page including this one, so it was showing twice. Removed only
  *  from this page-specific header; global Sign Out is untouched. */
 function renderHeader(showRestart: boolean, restartHref: string = "/journey?new=1") {
@@ -474,7 +474,7 @@ function renderHeader(showRestart: boolean, restartHref: string = "/journey?new=
 }
 
 /** Shown to a free Host whose IAP is complete and who has been carried into
- *  CAT — Conversations Across Time (and InnerCompass after it) are an AVAIA
+ *  CAT, Conversations Across Time (and InnerCompass after it) are an AVAIA
  *  Membership feature. Their referral and IAP conversation are already saved;
  *  checkout just unlocks continuing into the conversation waiting for them. */
 export function MembershipGate({
@@ -486,25 +486,25 @@ export function MembershipGate({
 }: {
   header: React.ReactNode;
   checkout?: string;
-  /** Where Stripe should send the Host back to after checkout — defaults to
+  /** Where Stripe should send the Host back to after checkout, defaults to
    *  /journey if omitted. Defying Grief passes "/defying-grief" so a Host
    *  who pays from there lands back where they actually were, not on the
    *  general Journey page. */
   returnTo?: string;
-  /** True for a Free-IAP visitor who hasn't attached an email yet --
+  /** True for a Free-IAP visitor who hasn't attached an email yet,
    *  renders an extra "save your progress" section above the membership
    *  pitch. Deliberately its own heading, copy, and form: saving progress
    *  (free) and becoming a paying Member are two different moments and
-   *  must never be collapsed into one combined ask. Skippable -- a Host
+   *  must never be collapsed into one combined ask. Skippable, a Host
    *  who declines still sees the membership option below unchanged. */
   isAnonymous?: boolean;
   /** True immediately after returning from a successful email-confirmation
    *  link (app/auth/callback's ?saved=1). isAnonymous is already false by
-   *  then, so the form above wouldn't render anyway -- this replaces that
+   *  then, so the form above wouldn't render anyway, this replaces that
    *  gap with an explicit acknowledgment instead of silence. */
   justSaved?: boolean;
 }) {
-  // Same gate, same price, same Stripe flow -- only the copy below
+  // Same gate, same price, same Stripe flow, only the copy below
   // acknowledges where the Host actually is, using the returnTo value
   // /defying-grief already passes. No new data, no program-specific
   // entitlement logic.
@@ -521,7 +521,7 @@ export function MembershipGate({
         <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
           <p className="font-serif text-lg text-ink">Save your progress</p>
           <p className="mt-1 text-sm text-muted">
-            Your Individual Awareness Profile isn&rsquo;t attached to an email yet — add one so
+            Your Individual Awareness Profile isn&rsquo;t attached to an email yet, add one so
             you can find your way back to it. This is free and separate from Membership.
           </p>
           <div className="mt-3">
@@ -541,7 +541,7 @@ export function MembershipGate({
           : "Become an AVAIA member to continue into Conversations Across Time and access your ongoing AVAIA membership."}
       </p>
       {checkout === "cancelled" && (
-        <p className="mt-4 text-sm text-muted">Checkout was cancelled — no charge was made.</p>
+        <p className="mt-4 text-sm text-muted">Checkout was cancelled, no charge was made.</p>
       )}
       {checkout === "success" && (
         <p className="mt-4 text-sm text-muted">

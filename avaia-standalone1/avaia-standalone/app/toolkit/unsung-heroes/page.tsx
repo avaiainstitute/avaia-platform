@@ -5,7 +5,7 @@ import { startUnsungHeroesSession } from "@/lib/engine/unsung-heroes";
 import GuideYouthConsentFields from "@/components/GuideYouthConsentFields";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
 
-export const metadata = { title: "Unsung Heroes — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Unsung Heroes, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 const PATHS = Object.keys(UNSUNG_HEROES_PATH_LABEL) as UnsungHeroesPath[];
@@ -31,7 +31,7 @@ export default async function ToolkitUnsungHeroesPage({
       <p className="label mb-3">Programs</p>
       <h1 className="font-serif text-4xl text-ink">Unsung Heroes</h1>
       <p className="mt-4 text-lg text-muted">
-        A short, guided conversation to help a participant name a quiet act of virtue — one they
+        A short, guided conversation to help a participant name a quiet act of virtue, one they
         witnessed, one they received, or one they&rsquo;re hoping to grow into.
       </p>
 
@@ -57,7 +57,7 @@ export default async function ToolkitUnsungHeroesPage({
           </div>
           <div>
             <label className="label mb-2 block" htmlFor="email">
-              Email (optional — links to their AVAIA account if they have one)
+              Email (optional, links to their AVAIA account if they have one)
             </label>
             <input
               id="email"

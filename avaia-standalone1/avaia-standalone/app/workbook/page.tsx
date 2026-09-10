@@ -19,7 +19,7 @@ import {
 } from "@/lib/engine/referral-provenance";
 import { VirtueLink } from "@/components/VirtueLink";
 
-export const metadata = { title: "Your Workbook — AVAIA" };
+export const metadata = { title: "Your Workbook, AVAIA" };
 export const dynamic = "force-dynamic";
 
 type Transcript = Awaited<ReturnType<typeof loadMessages>>;
@@ -36,7 +36,7 @@ function buildWorkbookText(
     "YOUR AVAIA WORKBOOK",
     `Exported: ${exportedOn}`,
     "",
-    "The living record of your AVAIA journey — your conversations, what became",
+    "The living record of your AVAIA journey, your conversations, what became",
     "visible, and the referrals that carried you forward.",
     "",
   ];
@@ -66,7 +66,7 @@ function buildWorkbookText(
 
   conversations.forEach((c, i) => {
     const status = c.status === "complete" ? "Complete" : "In progress";
-    out.push(bar, `${STAGE_LABEL[c.stage as Stage]} — ${status}`, bar, "");
+    out.push(bar, `${STAGE_LABEL[c.stage as Stage]}, ${status}`, bar, "");
     for (const m of transcripts[i]) {
       out.push(`${m.role === "host" ? "You" : "Guide"}: ${m.content}`, "");
     }
@@ -106,16 +106,16 @@ const GUIDE_ACCESS_ERROR_MESSAGE: Record<string, string> = {
   revoke_failed: "Could not revoke this Guide's access. Please try again.",
 };
 
-/** Creates one guide_journey_access row (Phase E.3) -- an explicit,
+/** Creates one guide_journey_access row (Phase E.3), an explicit,
  *  Host-initiated invitation of a specific eligible Guide into a specific
  *  Host-owned Journey. Does NOT grant the Guide any ability to read or
  *  write Journey content; that remains a later, separately-approved phase.
  *  Ownership integrity and Guide eligibility are enforced by the database
  *  itself (the composite foreign key and the INSERT policy's eligibility
- *  checks from migration 0027) -- this action never trusts client input
+ *  checks from migration 0027), this action never trusts client input
  *  for host_id, always uses the signed-in Host's own id, and never bypasses
  *  RLS via a service-role client. A duplicate-active or ineligible-Guide
- *  attempt surfaces as a plain, non-technical message -- never a raw
+ *  attempt surfaces as a plain, non-technical message, never a raw
  *  database error. */
 async function inviteGuideToJourney(formData: FormData) {
   "use server";
@@ -146,7 +146,7 @@ async function inviteGuideToJourney(formData: FormData) {
   redirect("/workbook?guideAccessGranted=1");
 }
 
-/** Revokes one guide_journey_access row -- sets revoked_at, never deletes
+/** Revokes one guide_journey_access row, sets revoked_at, never deletes
  *  the row, preserving it as historical evidence that access once
  *  existed. Scoped to rows the signed-in Host owns and that are still
  *  active; the database trigger from migration 0027 independently
@@ -200,16 +200,16 @@ export default async function WorkbookPage({
 
   // Real defect found live (Org Admin / Wake It Up close-out pass): an
   // account-less Guide-facilitated participant's conversations.host_id is
-  // necessarily set to the facilitating Guide's own user id -- RLS needs a
+  // necessarily set to the facilitating Guide's own user id, RLS needs a
   // real auth.users row to scope by, and that kind of participant has no
   // account of their own. The actual ownership record is guide_sessions
   // (participant_id), which isAuthorizedGuideConversation in lib/guide.ts
-  // already treats as authoritative -- conversations.host_id matching a
+  // already treats as authoritative, conversations.host_id matching a
   // Guide is a technical necessity, never a claim that the conversation is
   // that Guide's own personal story. This query used to trust host_id
   // alone, so a Guide who has ever facilitated an account-less participant
   // found that participant's entire private Journey inside their own
-  // personal Workbook -- readable, printable, shareable, exportable as if
+  // personal Workbook, readable, printable, shareable, exportable as if
   // it were their own. Excluded here at the source, not just at the
   // post-completion link (see JourneyChat.tsx's guideRecordHref), so this
   // holds regardless of how a Guide reaches /workbook.
@@ -237,7 +237,7 @@ export default async function WorkbookPage({
     (r) => !facilitatedConversationIds.has(r.conversation_id as string)
   );
 
-  // Who currently has access to what — the shared_with_id -> email lookup
+  // Who currently has access to what, the shared_with_id -> email lookup
   // needs the admin client since auth.users isn't otherwise queryable; the
   // grants themselves are already scoped to this Host by RLS ("shared_access
   // owner manage"), so this only ever resolves emails for the Host's own
@@ -265,12 +265,12 @@ export default async function WorkbookPage({
     }));
   }
 
-  // Guided Journey access (Phase E.3) -- this Host's own guide_journey_access
+  // Guided Journey access (Phase E.3), this Host's own guide_journey_access
   // rows (self-read RLS, see 0027) and the current list of eligible Guides
   // (0028's list_eligible_guided_journey_guides() SECURITY DEFINER
-  // function -- never a direct profiles query, since profiles has no
+  // function, never a direct profiles query, since profiles has no
   // cross-account read policy). Identity is always the Guide Display Name,
-  // never email -- see 0028's comment on why.
+  // never email, see 0028's comment on why.
   const { data: guideAccessRows } = await supabase
     .from("guide_journey_access")
     .select("id, journey_id, guide_id, granted_at, revoked_at")
@@ -289,7 +289,7 @@ export default async function WorkbookPage({
 
   // Resolve display names for every currently-active access row's guide,
   // even one no longer in the eligible list (authorization can change
-  // after an invitation exists) -- get_guide_display_name() returns the
+  // after an invitation exists), get_guide_display_name() returns the
   // name regardless of current eligibility, unlike the list above.
   const guideNameById = new Map<string, string>(
     eligibleGuides.map((g: { guide_id: string; guide_display_name: string }) => [
@@ -312,7 +312,7 @@ export default async function WorkbookPage({
 
   const hasActive = conversations.some((c) => c.status === "active");
   // Preserves the Host's most recent program for the "Begin a new journey"
-  // link below -- conversations is already ordered oldest-first, so the
+  // link below, conversations is already ordered oldest-first, so the
   // last element is the most recent one on record. No new query needed.
   const lastProgram: Program = conversations[conversations.length - 1]?.program ?? "general";
   const exportedOn = new Date().toISOString().slice(0, 10);
@@ -355,7 +355,7 @@ export default async function WorkbookPage({
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
-  // Patterns across journeys — surface what has already recurred in the Host's own
+  // Patterns across journeys, surface what has already recurred in the Host's own
   // record, without inventing conclusions. Only meaningful with 2+ journeys.
   const collectAll = (keys: string[]) =>
     allReferrals.flatMap((r) => {
@@ -423,28 +423,28 @@ export default async function WorkbookPage({
       carriedQuestions.length > 0 ||
       anchorPatterns.length > 0);
 
-  // Master Connection Map / Master Control Panel -- established AVAIA
+  // Master Connection Map / Master Control Panel, established AVAIA
   // Workbook concepts external to this codebase ("What Becomes Visible:
   // Clarity and Agency," the official AVAIA visual asset: Connection Map
   // "shows the people, virtues, losses, and lessons that shape your story";
   // Control Panel "captures recognitions, insights, tasks, and next right
   // steps"). Both are pure read-only aggregations over referral fields the
-  // Workbook already fetches above -- no new schema, no new query. Unlike
+  // Workbook already fetches above, no new schema, no new query. Unlike
   // "Across your journeys" (only what recurs 2+ times, only with 2+
   // journeys), this is the complete picture, always shown once any referral
   // exists.
   //
-  // STATUS (internal -- not shown to the Host): Master Connection Map is
-  // the first usable view of this concept, not a relational graph -- People/
+  // STATUS (internal, not shown to the Host): Master Connection Map is
+  // the first usable view of this concept, not a relational graph, People/
   // Virtues/Losses/Lessons are independently aggregated from the same
   // referral records, not linked to each other (no person-to-virtue or
   // person-to-loss edge exists in the data). Master Control Panel is a
   // PARTIAL IMPLEMENTATION: Recognitions, Insights, and Next Right Steps are
-  // real; Tasks is absent -- AVAIA has no stateful, completable to-do record
+  // real; Tasks is absent, AVAIA has no stateful, completable to-do record
   // anywhere (no table or field tracks done/not-done). See "Master Control
-  // Panel -- Task Capability" in the outstanding-work list for the smallest
+  // Panel, Task Capability" in the outstanding-work list for the smallest
   // schema addition that would complete it. Deliberately not surfaced to the
-  // Host in the UI below -- development status is a report concern, not
+  // Host in the UI below, development status is a report concern, not
   // something AVAIA exposes as a limitation to the person using it.
   const mapPeople = uniq(collectAll(["significantRelationships"]));
   const mapVirtues = uniq(collectVirtues());
@@ -470,7 +470,7 @@ export default async function WorkbookPage({
       <p className="label mb-3 mt-8">Continuity</p>
       <h1 className="font-serif text-4xl text-ink">Your Workbook</h1>
       <p className="mt-4 text-lg text-muted">
-        The living record of your AVAIA journeys — each conversation, what became visible, and the
+        The living record of your AVAIA journeys, each conversation, what became visible, and the
         referrals that carried you forward. Open any journey below to read, save, or print it.
         It&rsquo;s yours, and only yours.
       </p>
@@ -517,7 +517,7 @@ export default async function WorkbookPage({
         {journeys.length > 0 && <ShareButton scope="workbook" label="Share entire Workbook" />}
       </div>
 
-      {/* Shared with Me lives here rather than in top-level navigation --
+      {/* Shared with Me lives here rather than in top-level navigation,
           it's a receiving view for AVAIA's sharing feature, not a
           destination a stranger or first-time Host needs to see. */}
       <p className="mt-4 text-sm">
@@ -526,7 +526,7 @@ export default async function WorkbookPage({
         </Link>
       </p>
 
-      {/* The Library's permanent entrance -- plain /library, not a
+      {/* The Library's permanent entrance, plain /library, not a
           Journey-specific URL, so it stays reachable on its own regardless
           of which (if any) journey below a Host arrived from. */}
       <p className="mt-2 text-sm">
@@ -549,7 +549,7 @@ export default async function WorkbookPage({
           <p className="label text-seal">Across your journeys</p>
           <h2 className="mt-1 font-serif text-2xl text-ink">What keeps becoming visible</h2>
           <p className="mt-1 text-sm text-muted">
-            Patterns already present in your own record — surfaced, not concluded.
+            Patterns already present in your own record, surfaced, not concluded.
           </p>
 
           {patternVirtues.length > 0 && (
@@ -558,10 +558,10 @@ export default async function WorkbookPage({
               <div className="mt-2 flex flex-wrap gap-2">
                 {patternVirtues.map((v) => {
                   // Chemistry connection fix (1/5): v.label is already
-                  // "Family — Element" or bare "Family" (formatVirtueClassifications'
+                  // "Family, Element" or bare "Family" (formatVirtueClassifications'
                   // own separator, safe to split back on since we control
                   // the format it was built with).
-                  const [family, element] = v.label.split(" — ");
+                  const [family, element] = v.label.split(", ");
                   return (
                     <VirtueLink
                       key={v.label}
@@ -624,7 +624,7 @@ export default async function WorkbookPage({
           <p className="label text-seal">Your Workbook</p>
           <h2 className="mt-1 font-serif text-2xl text-ink">Master Connection Map &amp; Control Panel</h2>
           <p className="mt-1 text-sm text-muted">
-            The complete picture, not just what recurs — everyone, every virtue, every loss, and
+            The complete picture, not just what recurs, everyone, every virtue, every loss, and
             every lesson your record has already made visible, alongside what you&rsquo;ve
             recognized, carried, and chosen to do next.
           </p>
@@ -652,7 +652,7 @@ export default async function WorkbookPage({
                   <p className="label text-muted">Virtues</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {mapVirtues.map((label) => {
-                      const [family, element] = label.split(" — ");
+                      const [family, element] = label.split(", ");
                       return (
                         <VirtueLink
                           key={label}
@@ -745,7 +745,7 @@ export default async function WorkbookPage({
       )}
 
       {journeys.length === 0 && (
-        <p className="mt-12 text-muted">Nothing saved yet — your journey hasn&rsquo;t begun.</p>
+        <p className="mt-12 text-muted">Nothing saved yet, your journey hasn&rsquo;t begun.</p>
       )}
 
       {journeys.length > 0 && (
@@ -754,7 +754,7 @@ export default async function WorkbookPage({
         </p>
       )}
 
-      {/* Filing cabinet — newest journey first, each collapsible. */}
+      {/* Filing cabinet, newest journey first, each collapsible. */}
       {[...journeys].reverse().map((j, idx) => (
         <details
           key={j.convos[0]?.convo.id ?? j.n}
@@ -798,7 +798,7 @@ export default async function WorkbookPage({
             />
 
             {/* Only offered once this Journey is complete and its
-                journey_id is actually known -- a historical conversation
+                journey_id is actually known, a historical conversation
                 predating the journeys table has journey_id: null and gets
                 no link here rather than a guessed one. */}
             {j.complete && j.convos[0]?.convo.journey_id && (
@@ -812,10 +812,10 @@ export default async function WorkbookPage({
               </p>
             )}
 
-            {/* Guided Journey access (Phase E.3) -- Host-owned, Guide-
+            {/* Guided Journey access (Phase E.3), Host-owned, Guide-
                 facilitation-only. Held out entirely for Youth Journeys
                 (program === "youth") until the separate verified
-                guardian-consent architecture exists -- not invented here.
+                guardian-consent architecture exists, not invented here.
                 Held out for a conversation predating the journeys table
                 (no journey_id) since there is nothing stable to grant
                 access to. */}
@@ -834,7 +834,7 @@ export default async function WorkbookPage({
                         <p className="mt-1 text-sm text-muted">Status: Active Permission</p>
                         <p className="mt-3 text-xs text-muted">
                           You remain the owner of this Journey. This Guide has your permission to
-                          facilitate it — that permission does not transfer ownership of your
+                          facilitate it, that permission does not transfer ownership of your
                           Journey, story, or decisions.
                         </p>
                         <form action={revokeGuideJourneyAccess} className="mt-4">
@@ -929,7 +929,7 @@ export default async function WorkbookPage({
                 <section className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] p-5">
                   <h3 className="font-serif text-xl text-seal">In your own words</h3>
                   <p className="mt-1 text-sm text-muted">
-                    What you discovered, asked, and chose along the way — kept in your words.
+                    What you discovered, asked, and chose along the way, kept in your words.
                   </p>
                   {hostVoice.map((g) => (
                     <div key={g.label} className="mt-5">
@@ -978,7 +978,7 @@ export default async function WorkbookPage({
                           m.content
                         ) : (
                           // RichText renders any lightly-formatted Guide
-                          // reply correctly -- the same component
+                          // reply correctly, the same component
                           // JourneyChat already uses live. Raw {m.content}
                           // would collapse line breaks and "- " bullets
                           // into an unreadable run-on block.
@@ -1013,9 +1013,9 @@ export default async function WorkbookPage({
                           r.content as Record<string, unknown> | null
                         ).map((item) => {
                           // Chemistry connection fix (1/5): a virtue field's
-                          // display strings are already-formatted "Family —
+                          // display strings are already-formatted "Family,
                           // Element" text with no way back to which element
-                          // that was -- re-derive the structured
+                          // that was, re-derive the structured
                           // classification from the raw referral content
                           // (already in scope as r.content) so each one can
                           // link to its real Chemistry of Virtue entry.
@@ -1037,7 +1037,7 @@ export default async function WorkbookPage({
                                           virtue={v.element}
                                           className="underline decoration-rule underline-offset-2 hover:text-seal"
                                         >
-                                          {v.element ? `${v.family} — ${v.element}` : v.family}
+                                          {v.element ? `${v.family}, ${v.element}` : v.family}
                                         </VirtueLink>
                                       </li>
                                     ))}

@@ -1,4 +1,4 @@
--- Marketing consent — kept fully separate from consent_at (the required
+-- Marketing consent, kept fully separate from consent_at (the required
 -- legal/eligibility disclaimer). A Host's account existing, and even their
 -- legal consent to use AVAIA, never implies permission to send marketing;
 -- this is a distinct, optional, off-by-default choice, captured (and, in

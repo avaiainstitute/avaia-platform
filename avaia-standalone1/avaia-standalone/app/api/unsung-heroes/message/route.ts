@@ -44,9 +44,9 @@ export async function POST(request: Request) {
 
   // Individual/self-directed Unsung Heroes is an AVAIA Membership benefit.
   // A Guide running this exact conversation through their own authorized
-  // Guide Toolkit session is admitted even without personal membership --
+  // Guide Toolkit session is admitted even without personal membership,
   // the same narrow exception /api/conversation already applies for the
-  // core Journey engine. Never granted on role='guide' alone --
+  // core Journey engine. Never granted on role='guide' alone,
   // isAuthorizedGuideConversation requires a real guide_sessions row
   // tying this exact conversationId to this exact Guide.
   const guideFacilitated = await isAuthorizedGuideConversation(supabase, user.id, conversationId);
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   // the same signal /api/conversation already uses (profiles.
   // minor_with_guardian, set at /welcome; profiles.developmental_band, set
   // at /youth). For a Guide-Toolkit-facilitated session, the caller is the
-  // Guide -- an adult whose own profile is never minor_with_guardian -- so
+  // Guide, an adult whose own profile is never minor_with_guardian, so
   // the band instead comes from the guide_participants row the Guide set
   // when starting the session (resolveDevelopmentalBand, the same
   // resolution the core Journey engine now uses; see lib/guide.ts). A band
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
   if (dbMessages[0]?.role === "guide") {
     system +=
       `\n\nYou have already opened this conversation by saying: "${dbMessages[0].content}" ` +
-      "The Host is now responding to that. Continue naturally from what they say — do not greet " +
+      "The Host is now responding to that. Continue naturally from what they say, do not greet " +
       "again, re-introduce yourself, or repeat your opening question.";
     convoMessages = dbMessages.slice(1);
   }

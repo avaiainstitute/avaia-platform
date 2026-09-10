@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: { roomId: stri
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
   const room = await getRoom(supabase, params.roomId);
-  // RLS already scopes getRoom to this Guide's own Rooms -- a mismatched
+  // RLS already scopes getRoom to this Guide's own Rooms, a mismatched
   // guide_id simply returns no row (403-shaped as 404, matching the
   // convention already used for a conversation not found in
   // /api/conversation).

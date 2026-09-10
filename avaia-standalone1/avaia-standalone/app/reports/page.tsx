@@ -1,6 +1,6 @@
 import { REPORTS, CONSENT_COVERS } from "@/lib/institution";
 
-export const metadata = { title: "Reports & Consent — AVAIA" };
+export const metadata = { title: "Reports & Consent, AVAIA" };
 
 export default function ReportsPage() {
   return (
@@ -9,7 +9,7 @@ export default function ReportsPage() {
       <h1 className="font-serif text-4xl text-ink">The Report Engine</h1>
       <p className="mt-4 max-w-prose text-lg text-muted">
         One conversation, multiple report types. The conversation itself stays
-        unchanged — only the report output changes, and each report shares only
+        unchanged, only the report output changes, and each report shares only
         what its stated purpose requires, only with consent. Reports are starting
         points for conversation, not conclusions about a person.
       </p>

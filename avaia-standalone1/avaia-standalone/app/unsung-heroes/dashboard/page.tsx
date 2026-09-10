@@ -5,7 +5,7 @@ import SignOutButton from "@/components/SignOutButton";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import { VirtueLink } from "@/components/VirtueLink";
 
-export const metadata = { title: "Unsung Heroes — AVAIA" };
+export const metadata = { title: "Unsung Heroes, AVAIA" };
 export const dynamic = "force-dynamic";
 
 type Recognition = {
@@ -34,7 +34,7 @@ export default async function UnsungHeroesDashboardPage() {
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
 
-  // RLS already scopes this to exactly what this account is allowed to see —
+  // RLS already scopes this to exactly what this account is allowed to see,
   // their own given/received entries, plus anything their community_contacts
   // rows (teacher, school admin, guardian, business contact, community_leader)
   // grant visibility into. No extra filtering needed here for that reason.
@@ -56,7 +56,7 @@ export default async function UnsungHeroesDashboardPage() {
       <p className="label mb-3 mt-8">Unsung Heroes</p>
       <h1 className="font-serif text-4xl text-ink">Virtue, Recognized</h1>
       <p className="mt-4 text-lg text-muted">
-        A record of the virtue you&rsquo;ve noticed in the people around you — named, and
+        A record of the virtue you&rsquo;ve noticed in the people around you, named, and
         acknowledged out loud. Not a tally to keep score by; a workbook of what you saw.
       </p>
 
@@ -71,7 +71,7 @@ export default async function UnsungHeroesDashboardPage() {
 
       {recognitions.length === 0 && (
         <p className="mt-12 text-muted">
-          Nothing recorded yet — that&rsquo;s where every one of these starts. Most virtue goes
+          Nothing recorded yet, that&rsquo;s where every one of these starts. Most virtue goes
           unacknowledged only because no one paused long enough to name it.
         </p>
       )}
@@ -99,7 +99,7 @@ export default async function UnsungHeroesDashboardPage() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  <span className="text-ink">{r.who_became_visible}</span> — recognized for it
+                  <span className="text-ink">{r.who_became_visible}</span>, recognized for it
                 </p>
                 <p className="mt-2 line-clamp-2 text-sm text-muted">{r.story}</p>
               </div>

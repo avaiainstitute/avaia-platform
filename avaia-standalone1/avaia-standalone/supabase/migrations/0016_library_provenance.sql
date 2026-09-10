@@ -1,4 +1,4 @@
--- AVAIA Living Library — minimum historical provenance layer.
+-- AVAIA Living Library, minimum historical provenance layer.
 --
 -- Purely additive: library_entries is untouched (no passage_id column,
 -- no rendering change). Historical source material connects to concepts
@@ -29,7 +29,7 @@
 -- with every existing junction table in the Library.
 
 -- ---------------------------------------------------------------------------
--- library_people — a historical/modern source person or institutional
+-- library_people, a historical/modern source person or institutional
 -- voice. Uniqueness is (canonical_name, coalesced disambiguation) rather
 -- than name alone specifically so Alfred Adler and Mortimer J. Adler stay
 -- distinct identities while an accidental duplicate "Aristotle" row is
@@ -62,7 +62,7 @@ create policy "library people admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_works — one intellectual work by a library_people row.
+-- library_works, one intellectual work by a library_people row.
 -- ---------------------------------------------------------------------------
 create table if not exists public.library_works (
   id                  uuid primary key default gen_random_uuid(),
@@ -90,7 +90,7 @@ create policy "library works admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_source_versions — the exact edition/translation/archive
+-- library_source_versions, the exact edition/translation/archive
 -- version of a work used for verification or quotation.
 -- ---------------------------------------------------------------------------
 create table if not exists public.library_source_versions (
@@ -128,7 +128,7 @@ create policy "library source versions admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_passages — a reusable passage/fragment from a source version.
+-- library_passages, a reusable passage/fragment from a source version.
 -- exact_text is nullable by design: AVAIA can publish a verified
 -- AVAIA-authored paraphrase when direct quotation rights aren't cleared,
 -- without withholding the passage entirely. unique(source_version_id,
@@ -165,7 +165,7 @@ create policy "library passages admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_passage_concepts — a passage connected to a concept, with a
+-- library_passage_concepts, a passage connected to a concept, with a
 -- reason. Additive alongside library_entry_concepts; entries and passages
 -- each connect to concepts through their own junction, never through
 -- each other.

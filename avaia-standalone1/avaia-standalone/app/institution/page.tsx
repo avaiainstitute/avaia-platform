@@ -7,10 +7,10 @@ import {
   GOVERNANCE,
 } from "@/lib/institution";
 
-export const metadata = { title: "The Institution — AVAIA" };
+export const metadata = { title: "The Institution, AVAIA" };
 
 /**
- * The deeper institutional/reference page -- the full Constitution, all 18
+ * The deeper institutional/reference page, the full Constitution, all 18
  * Operating Principles, Component Relationships, and Governance policy. The
  * GIVE Method and Host/Guide/Witness live on /about instead (About's job is
  * to explain AVAIA as an institute/approach with real substance; this page
@@ -24,7 +24,7 @@ export default function InstitutionPage() {
       <p className="label mb-3">Reference</p>
       <h1 className="font-serif text-4xl text-ink">The Institution</h1>
       <p className="mt-4 text-lg leading-relaxed text-muted">
-        AVAIA&rsquo;s full governing material — the Constitution, the operating principles, how
+        AVAIA&rsquo;s full governing material, the Constitution, the operating principles, how
         its components relate, and the policy that governs its own development. None of this is
         required reading to begin a conversation; it&rsquo;s here for anyone who wants to
         understand the architecture underneath it.
@@ -41,7 +41,7 @@ export default function InstitutionPage() {
         {CONSTITUTION_ARTICLES.map((a) => (
           <div key={a.n}>
             <p className="font-serif text-xl text-seal">
-              Article {a.n} — {a.title}
+              Article {a.n}, {a.title}
             </p>
             <p className="mt-2 leading-relaxed text-ink">{a.text}</p>
           </div>

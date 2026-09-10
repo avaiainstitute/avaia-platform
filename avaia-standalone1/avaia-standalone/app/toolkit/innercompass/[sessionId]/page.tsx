@@ -5,13 +5,13 @@ import JourneyChat from "@/components/JourneyChat";
 import { loadMessages, STAGE_LABEL, type DbConversation } from "@/lib/engine/conversation";
 import { getGuideSession, hasReferralForConversation, completeGuideSession } from "@/lib/guide";
 
-export const metadata = { title: "InnerCompass — Guide Toolkit — AVAIA" };
+export const metadata = { title: "InnerCompass, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** The installed InnerCompass tool -- the final stage. Like CAT, this is
+/** The installed InnerCompass tool, the final stage. Like CAT, this is
  *  never started fresh; it only exists as a handoff from a completed CAT
  *  session (see app/toolkit/cat/[sessionId]/page.tsx). There is no further
- *  stage to hand off to once this completes -- the Journey itself is done. */
+ *  stage to hand off to once this completes, the Journey itself is done. */
 export default async function ToolkitInnerCompassSessionPage({
   params,
 }: {
@@ -33,7 +33,7 @@ export default async function ToolkitInnerCompassSessionPage({
         <h1 className="font-serif text-3xl text-ink">This session has no conversation yet.</h1>
         <p className="mt-4 text-muted">
           InnerCompass sessions only begin as a handoff from a completed Conversations Across
-          Time. This one doesn&rsquo;t have one attached, which shouldn&rsquo;t happen -- worth a
+          Time. This one doesn&rsquo;t have one attached, which shouldn&rsquo;t happen, worth a
           closer look.
         </p>
         <Link href="/toolkit" className="mt-6 inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal">
@@ -64,7 +64,7 @@ export default async function ToolkitInnerCompassSessionPage({
         <p className="mt-4 text-muted">
           {referralSaved
             ? "The full record has been saved to your Workbook."
-            : "This conversation is marked complete, but no referral was found -- worth a closer look."}
+            : "This conversation is marked complete, but no referral was found, worth a closer look."}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

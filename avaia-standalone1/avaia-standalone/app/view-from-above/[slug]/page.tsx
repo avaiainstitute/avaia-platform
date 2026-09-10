@@ -10,18 +10,18 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const cls = getViewFromAboveClass(params.slug);
-  return { title: cls ? `${cls.title} — The View from Above — AVAIA` : "The View from Above — AVAIA" };
+  return { title: cls ? `${cls.title}, The View from Above, AVAIA` : "The View from Above, AVAIA" };
 }
 
 /** Self-directed member page for one View From Above class. Public
- *  content (matching /defying-grief's own posture -- the teaching itself
+ *  content (matching /defying-grief's own posture, the teaching itself
  *  requires no membership); the "Continue in a private AVAIA conversation"
  *  CTA below leads to the ordinary /journey flow, where the existing
- *  membership gate (beyond the free IAP) already applies unchanged -- no
+ *  membership gate (beyond the free IAP) already applies unchanged, no
  *  new gate is added here. This page and lib/view-from-above.ts carry the
  *  same factual content as this class's Guide-facing Experience
  *  (app/toolkit/experiences/[id], via ViewFromAboveClass.tsx), written in
- *  front-door register instead of facilitator register -- see
+ *  front-door register instead of facilitator register, see
  *  lib/view-from-above.ts's header for why this is a separate hardcoded
  *  layer rather than a database read. */
 export default function ViewFromAboveClassPage({ params }: { params: { slug: string } }) {
@@ -41,7 +41,7 @@ export default function ViewFromAboveClassPage({ params }: { params: { slug: str
       </p>
 
       <p className="label mb-3">
-        The View from Above — Class {index + 1} of {VIEW_FROM_ABOVE_CLASSES.length}
+        The View from Above, Class {index + 1} of {VIEW_FROM_ABOVE_CLASSES.length}
       </p>
       <h1 className="font-serif text-4xl text-ink leading-tight">{cls.title}</h1>
       <p className="mt-3 font-serif text-xl italic text-ink">{cls.humanQuestion}</p>
@@ -61,10 +61,10 @@ export default function ViewFromAboveClassPage({ params }: { params: { slug: str
       </section>
 
       <section className="rule-t mt-10 border-t border-rule pt-10">
-        <p className="label mb-2 text-muted">The Virtue Family — {cls.virtueFamily}</p>
+        <p className="label mb-2 text-muted">The Virtue Family, {cls.virtueFamily}</p>
         <p className="text-muted">
           Every person already carries {cls.virtueFamily}, whether or not it feels awake right
-          now. This class doesn't ask you to acquire it — it asks what {cls.virtueFamily} can help
+          now. This class doesn't ask you to acquire it, it asks what {cls.virtueFamily} can help
           you notice.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -114,8 +114,8 @@ export default function ViewFromAboveClassPage({ params }: { params: { slug: str
 
       <section className="rule-t mt-12 border-t border-rule pt-10">
         <p className="text-muted">
-          Whatever this class brought up for you — a recognition, a question, something you
-          disagree with, something you're still turning over — take it into a private AVAIA
+          Whatever this class brought up for you, a recognition, a question, something you
+          disagree with, something you're still turning over, take it into a private AVAIA
           conversation, in your own words, at your own pace, kept entirely yours.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">

@@ -10,43 +10,43 @@ import { peekPostSignInRedirect } from "@/lib/post-signin-redirect";
  * Magic-link landing. Establishes the session from the sign-in link, then
  * forwards into the journey.
  *
- * token_hash links (checked first, below) are stateless -- verifyOtp()
+ * token_hash links (checked first, below) are stateless, verifyOtp()
  * needs nothing but what's already in the URL, so unlike everything else
  * on this page they work regardless of which browser, device, or profile
  * opens them. The "Change Email Address" template now emits this shape
  * instead of a PKCE ?code=, specifically because that PKCE link depends on
- * a code_verifier surviving in local storage until the link is clicked --
+ * a code_verifier surviving in local storage until the link is clicked,
  * confirmed, live, to fail with "PKCE code verifier not found in storage"
  * when the email is opened somewhere other than where the flow started,
  * which is an ordinary, expected way for a Host to check their email.
  *
  * We do NOT call setSession()/exchangeCodeForSession() ourselves *up front*.
  * createBrowserClient() (lib/supabase/client.ts) forces detectSessionInUrl:
- * true and cannot be configured otherwise — merely constructing the client
+ * true and cannot be configured otherwise, merely constructing the client
  * (here, or in SupabaseSessionSync in the root layout, which mounts on every
  * page including this one) already triggers Supabase's own automatic
  * exchange of whatever's in the URL (hash tokens or a PKCE ?code=) the
  * moment it runs. Calling exchangeCodeForSession() ourselves at the same
  * time would race that automatic one for the SAME single-use code/verifier
- * — and reliably lose, since Supabase deletes the PKCE verifier the instant
+ *, and reliably lose, since Supabase deletes the PKCE verifier the instant
  * either attempt redeems (or fails to redeem) the code. That race was the
  * actual cause of "PKCE code verifier not found in storage": not a missing
  * or misplaced cookie, but the cookie being consumed out from under us by
  * our own duplicate exchange attempt. So we only ever *observe* for the
  * session the automatic exchange produces at first, and only fall back to
  * an explicit exchangeCodeForSession() call ourselves (below, for the
- * ?code= case) after a multi-second delay with nothing having landed --
+ * ?code= case) after a multi-second delay with nothing having landed,
  * late enough that a still-in-flight automatic attempt is very unlikely,
  * never as a simultaneous duplicate.
  *
  * finish() uses a hard window.location navigation, not next/navigation's
  * router. Nav.tsx links to /journey from every page, including pre-auth ones
- * like /sign-in — Next prefetches those on viewport/hover by default, caching
+ * like /sign-in, Next prefetches those on viewport/hover by default, caching
  * the anonymous JourneyIntro render for /journey in the client-side Router
  * Cache well before sign-in happens. router.replace()+router.refresh() back
  * to back in the same tick is a known-unreliable combination for busting that
  * specific cache entry (export const dynamic = "force-dynamic" only affects
- * server-side rendering — it does nothing to the client cache). A full
+ * server-side rendering, it does nothing to the client cache). A full
  * browser navigation bypasses that cache entirely: the server sees a fresh
  * request with whatever cookie now exists, no client-side caching layer
  * involved at all.
@@ -69,7 +69,7 @@ export default function AuthCallbackPage() {
     // Real defect found live (production auth reconciliation pass): the
     // recovery email's actual link is a PKCE `?code=` link with NO `type=`
     // param at all (confirmed live against a real production recovery
-    // email -- `type` above was reliably undefined for it, so the
+    // email, `type` above was reliably undefined for it, so the
     // `type === "recovery"` branch this used to rely on alone never fired,
     // and the flow silently landed a Host in their ordinary Journey
     // instead of /reset-password). GoTrue's own `type` is evidently not
@@ -77,7 +77,7 @@ export default function AuthCallbackPage() {
     // action. Fixed by having AVAIA supply its own explicit signal instead
     // of depending on Supabase's: /sign-in's sendReset() now requests
     // `redirectTo` with `?flow=recovery` already on it, which Supabase
-    // preserves and simply appends `code=`/hash tokens to -- read directly
+    // preserves and simply appends `code=`/hash tokens to, read directly
     // from the URL here, synchronously, with no dependency on which link
     // shape was actually emailed or on any auth-event timing.
     const flow = new URLSearchParams(rawSearch).get("flow");
@@ -87,7 +87,7 @@ export default function AuthCallbackPage() {
       if (done) return;
       done = true;
       // The Free IAP "save your progress" email attachment is the one
-      // flow through this page that isn't a normal sign-in -- send it
+      // flow through this page that isn't a normal sign-in, send it
       // back to the Journey with an explicit "saved" acknowledgment
       // instead of wherever peekPostSignInRedirect() would otherwise
       // send a signed-in visitor.
@@ -96,12 +96,12 @@ export default function AuthCallbackPage() {
         return;
       }
       // Password recovery links land here like every other Supabase auth
-      // link -- verifying one (the token_hash path below, or the automatic
+      // link, verifying one (the token_hash path below, or the automatic
       // detectSessionInUrl exchange) establishes a real session for the
       // account, the same as signing in. That session is exactly what
       // /reset-password needs to call updateUser({ password }); nothing
       // about the recovery mechanism itself lives outside Supabase. Checks
-      // AVAIA's own `flow` marker first (reliable for every link shape --
+      // AVAIA's own `flow` marker first (reliable for every link shape,
       // see the comment above `flow`'s declaration); `type === "recovery"`
       // stays as a harmless fallback for any hash-based recovery link that
       // does carry it.
@@ -123,7 +123,7 @@ export default function AuthCallbackPage() {
         const hp = new URLSearchParams(rawHash);
         const sp = new URLSearchParams(rawSearch);
 
-        // An explicit error from Supabase (expired / already used / denied) —
+        // An explicit error from Supabase (expired / already used / denied),
         // just reading query/hash params, no exchange involved.
         const err =
           hp.get("error_description") ||
@@ -132,7 +132,7 @@ export default function AuthCallbackPage() {
           sp.get("error");
         if (err) return fail(err.replace(/\+/g, " "));
 
-        // Stateless path -- a token_hash link needs no locally stored
+        // Stateless path, a token_hash link needs no locally stored
         // verifier at all. Checked first; on success it returns directly.
         // Every other link shape (magic-link sign-in, etc.) never has this
         // param and falls straight through to the PKCE paths below,
@@ -149,7 +149,7 @@ export default function AuthCallbackPage() {
         }
 
         // No explicit error, and there's something to redeem (hash tokens or
-        // a code) — the client's automatic detectSessionInUrl handling is
+        // a code), the client's automatic detectSessionInUrl handling is
         // already processing it as of the createClient() call above. Wait
         // for it to land rather than attempting our own parallel exchange.
         const { data } = await supabase.auth.getSession();
@@ -168,7 +168,7 @@ export default function AuthCallbackPage() {
         if (code) {
           // A PKCE ?code= link (email-change confirmation links look like
           // this). Give the automatic detectSessionInUrl exchange a head
-          // start -- only attempt our own exchange if nothing has landed
+          // start, only attempt our own exchange if nothing has landed
           // after a few seconds, so this never races the automatic one for
           // the same single-use code (see the file-level comment above on
           // why a simultaneous duplicate attempt reliably loses that race).
@@ -206,7 +206,7 @@ export default function AuthCallbackPage() {
           <h1 className="font-serif text-3xl text-ink">That link didn&rsquo;t take</h1>
           <p className="mt-4 text-muted">
             The sign-in link may have expired or already been used. Sign-in links work once and
-            only for a short time — let&rsquo;s send a fresh one and use it right away.
+            only for a short time, let&rsquo;s send a fresh one and use it right away.
           </p>
           {detail && (
             <p className="mt-3 text-xs text-muted/70">Details: {detail}</p>

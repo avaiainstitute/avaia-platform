@@ -20,16 +20,16 @@ const VALID_LAYERS: SignatureLayer[] = [
 ];
 const VALID_SOURCES: SignatureSourceType[] = ["self", "conversation_referral", "unsung_heroes", "observation_offered"];
 
-/** The "Consider for My Virtue Signature" action -- components/
+/** The "Consider for My Virtue Signature" action, components/
  *  WhatBecameVisible.tsx (Journey completion card, Unsung Heroes) posts
  *  here, both from a self-serve Host's own conversation and from a
  *  Guide-facilitated one. An optional participantId in the body routes to
  *  the participant's own Signature (addSignatureEntryForParticipant,
  *  ownership re-checked here rather than trusted from the client) instead
- *  of the signed-in user's -- without it, a Guide running a session on a
+ *  of the signed-in user's, without it, a Guide running a session on a
  *  Youth participant's behalf would otherwise have the recognition land in
  *  the Guide's own personal Signature, which is what this route did before
- *  this check existed. Nothing here is ever automatic -- this route only
+ *  this check existed. Nothing here is ever automatic, this route only
  *  ever runs from the Host's (or Guide's, on the participant's behalf) own
  *  explicit click. */
 export async function POST(request: Request) {

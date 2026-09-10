@@ -6,21 +6,21 @@ import { STAGE_LABEL, loadMessages, type DbConversation } from "@/lib/engine/con
 import type { Stage } from "@/lib/engine/prompts";
 import { formatReferralFields } from "@/lib/engine/referral-provenance";
 
-export const metadata = { title: "Guided Journey — AVAIA" };
+export const metadata = { title: "Guided Journey, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Read-only view of one Host-owned Journey a Host has invited this Guide
  *  to facilitate (Phase E.4). No message input, no response buttons, no
- *  "Continue conversation," no editing -- Guide participation is E.5, not
+ *  "Continue conversation," no editing, Guide participation is E.5, not
  *  built here. Every query below runs through the signed-in Guide's own
  *  RLS-bound client; the real access control is the Phase E.4 policies
  *  ("journeys guide read" / "conversations guide read" / "messages guide
  *  read" / "referrals guide read", migration 0029), not this page. If the
- *  journey row doesn't come back -- revoked, certification/authorization
- *  lapsed, Youth, or genuinely not invited -- this page has nothing
+ *  journey row doesn't come back, revoked, certification/authorization
+ *  lapsed, Youth, or genuinely not invited, this page has nothing
  *  further to check or decide; it simply has nothing to show. Gated one
  *  level up, in app/guided-journeys/layout.tsx, on active certification +
- *  Guided Journey Facilitation authorization -- not Toolkit authorization,
+ *  Guided Journey Facilitation authorization, not Toolkit authorization,
  *  which this route deliberately has no dependency on. */
 export default async function GuidedJourneyDetailPage({
   params,

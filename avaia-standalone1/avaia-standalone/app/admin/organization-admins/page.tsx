@@ -3,10 +3,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Organization Administrators — Admin — AVAIA" };
+export const metadata = { title: "Organization Administrators, Admin, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Grants Organization Administrator authorization -- platform-admin-only,
+/** Grants Organization Administrator authorization, platform-admin-only,
  *  matching every other authorization grant in this schema (guide
  *  certification, toolkit authorization). Not self-service, not
  *  Guide-granted. Finds the target account by email (same
@@ -152,7 +152,7 @@ export default async function AdminOrganizationAdminsPage({
             className="rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-sm text-ink outline-none focus:border-seal"
           >
             <option value="" className="bg-[#05060b]">
-              — Select organization —
+              Select organization
             </option>
             {(orgs ?? []).map((o) => (
               <option key={o.id} value={o.id} className="bg-[#05060b]">
@@ -179,7 +179,7 @@ export default async function AdminOrganizationAdminsPage({
               <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
                 <div>
                   <p className="text-sm text-ink">
-                    {emailByHost.get(g.host_id) ?? g.host_id} — {orgNameById.get(g.organization_id) ?? g.organization_id}
+                    {emailByHost.get(g.host_id) ?? g.host_id}, {orgNameById.get(g.organization_id) ?? g.organization_id}
                   </p>
                   <p className="text-xs text-muted">{g.status}</p>
                 </div>

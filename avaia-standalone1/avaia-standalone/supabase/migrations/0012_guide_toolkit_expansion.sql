@@ -1,4 +1,4 @@
--- AVAIA Guide Toolkit — expansion pass (CAT/InnerCompass, Unsung Heroes,
+-- AVAIA Guide Toolkit, expansion pass (CAT/InnerCompass, Unsung Heroes,
 -- Library).
 --
 -- 1. guide_sessions.conversation_id was created with a foreign key to
@@ -31,7 +31,7 @@ alter table public.profiles
     check (role in ('member', 'community_leader', 'guide', 'admin'));
 
 -- ---------------------------------------------------------------------------
--- library_entries — ported from the unmerged `library` branch's
+-- library_entries, ported from the unmerged `library` branch's
 -- 0002_library.sql, unchanged in shape. library_suggestions and the admin
 -- CRUD/suggestion-review UI are NOT ported in this pass -- this is the data
 -- layer plus a read-only Guide browse view, not the full content-management

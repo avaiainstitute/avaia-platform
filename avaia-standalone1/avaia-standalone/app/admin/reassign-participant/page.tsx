@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Reassign Participant — Admin — AVAIA" };
+export const metadata = { title: "Reassign Participant, Admin, AVAIA" };
 export const dynamic = "force-dynamic";
 
 type ParticipantResult = {
@@ -18,15 +18,15 @@ type GuideOption = { id: string; email: string | null };
 
 /** Found missing during the multi-organization/multi-Guide scaling audit:
  *  guide_participants.guide_id is a single, fixed owner with no existing
- *  way to move a participant from one Guide to another -- relevant when a
+ *  way to move a participant from one Guide to another, relevant when a
  *  Guide leaves an organization, or a program is reassigned. Reuses the
  *  EXISTING admin trust boundary (the same one that already reaches
  *  across every Guide's data for search/deletion in /admin/youth-data)
- *  rather than inventing a new one -- deliberately not a Guide-to-Guide
+ *  rather than inventing a new one, deliberately not a Guide-to-Guide
  *  self-service handoff, which would need its own consent/notification
  *  workflow this pass has no evidence is actually needed yet. Preserves
  *  every session, referral, consent, and Signature entry exactly as they
- *  were -- only guide_id changes, so continuity is never dropped. */
+ *  were, only guide_id changes, so continuity is never dropped. */
 async function reassignParticipant(formData: FormData) {
   "use server";
 
@@ -48,7 +48,7 @@ async function reassignParticipant(formData: FormData) {
 
   const admin = createAdminClient();
 
-  // Re-verify the target actually holds toolkit authorization right now --
+  // Re-verify the target actually holds toolkit authorization right now,
   // never trust a hidden form field alone for who receives someone's
   // private record.
   const { data: targetAuth } = await admin
@@ -107,7 +107,7 @@ export default async function AdminReassignParticipantPage({
     participantResults = rows.map((r) => ({ ...r, guide_email: emailByGuide.get(r.guide_id) ?? null }));
   }
 
-  // Every currently toolkit-authorized Guide -- the only legitimate
+  // Every currently toolkit-authorized Guide, the only legitimate
   // reassignment targets. Small population by design (this is an
   // admin-mediated, deliberate action, not a general directory).
   const { data: authRows } = await admin
@@ -189,7 +189,7 @@ export default async function AdminReassignParticipantPage({
                   className="rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-sm text-ink outline-none backdrop-blur-sm focus:border-seal"
                 >
                   <option value="" className="bg-[#05060b]">
-                    — Select the new Guide —
+                    Select the new Guide
                   </option>
                   {guideOptions
                     .filter((g) => g.id !== p.guide_id)

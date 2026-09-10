@@ -7,7 +7,7 @@ const STAGES = [
 ] as const;
 
 /** Shared progress indicator for the three Journey explanation pages. Purely
- *  informational -- these are static explanation pages, not a live
+ *  informational, these are static explanation pages, not a live
  *  conversation's actual status, so every other stage stays a plain link
  *  rather than showing complete/in-progress state. */
 export default function JourneyStageProgress({

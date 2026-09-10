@@ -11,7 +11,7 @@ import {
 import { isToolkitAuthorized } from "@/lib/guide";
 import { isParticipantClearedToParticipate, getConsentStatusForParticipant } from "@/lib/guardian-consent";
 
-export const metadata = { title: "Organization Dashboard — AVAIA" };
+export const metadata = { title: "Organization Dashboard, AVAIA" };
 export const dynamic = "force-dynamic";
 
 const PROGRAM_STATUSES = ["planning", "active", "complete", "archived"] as const;
@@ -19,7 +19,7 @@ const PROGRAM_STATUSES = ["planning", "active", "complete", "archived"] as const
 /** Bounded "manage" for V1: an Organization Administrator may change an
  *  existing program's operational status, not create a brand-new program
  *  from scratch (that still requires picking an owning Guide, which
- *  belongs to the Guide's own "Create Program" flow -- see the final
+ *  belongs to the Guide's own "Create Program" flow, see the final
  *  report for why this line was drawn here). Re-verifies organization
  *  admin authorization AND that the program actually belongs to this
  *  organization server-side, never trusting the form alone. */
@@ -59,17 +59,17 @@ async function changeProgramStatus(formData: FormData) {
 }
 
 /** Connects an already-Toolkit-authorized Guide to this organization,
- *  independent of program history (V1.1 -- see migration 0048's own
+ *  independent of program history (V1.1, see migration 0048's own
  *  header for why this exists). Re-verifies Organization Administrator
  *  authorization for THIS organization, finds the target account by
  *  email (same page-through-listUsers pattern used in
  *  app/admin/organization-admins/page.tsx), and re-verifies server-side
  *  that the target actually holds active Toolkit platform authorization
- *  -- an Organization Administrator can only connect a Guide who is
+ * , an Organization Administrator can only connect a Guide who is
  *  already, independently, an authorized AVAIA Guide; this action never
  *  grants Toolkit authorization itself. Writing to organization_guides
  *  grants nothing beyond making this Guide id appear in
- *  listGuidesConnectedToOrganization()'s result -- no
+ *  listGuidesConnectedToOrganization()'s result, no
  *  conversation/message/referral/recognition/Signature/Preparation table
  *  is touched here or anywhere in this action. */
 async function connectGuide(formData: FormData) {
@@ -136,14 +136,14 @@ async function connectGuide(formData: FormData) {
 }
 
 /** Removes a Guide from the "available for new assignment" list for this
- *  organization -- never touches any assignment already made
+ *  organization, never touches any assignment already made
  *  (guide_participants.guide_id is untouched), so any participant this
  *  Guide is already facilitating here keeps that Guide with full
  *  continuity, exactly as if nothing happened. Only meaningful for a
  *  Guide connected via the explicit organization_guides path; a Guide
  *  who is listed here purely because they've run a program in this
  *  organization has no row here to disconnect (the roster UI only offers
- *  this control for the former -- see listExplicitlyConnectedGuideIds). */
+ *  this control for the former, see listExplicitlyConnectedGuideIds). */
 async function disconnectGuide(formData: FormData) {
   "use server";
 
@@ -210,7 +210,7 @@ export default async function OrgAdminOrganizationPage({
     guideEmailById.set(gid, u?.user?.email ?? gid);
   }
 
-  // Recent activity -- uses the caller's own RLS-scoped client (the
+  // Recent activity, uses the caller's own RLS-scoped client (the
   // "organization admin actions org admin read" policy already scopes
   // this correctly), not the admin client, since this is exactly the
   // shape that policy exists to serve.
@@ -221,7 +221,7 @@ export default async function OrgAdminOrganizationPage({
     .order("created_at", { ascending: false })
     .limit(20);
 
-  // Operational roster counts per program -- never story content. Same
+  // Operational roster counts per program, never story content. Same
   // consent/clearance resolution every other AVAIA surface already uses
   // (getConsentStatusForParticipant / isParticipantClearedToParticipate),
   // just run here with the admin client since this crosses Guide-
@@ -242,7 +242,7 @@ export default async function OrgAdminOrganizationPage({
       let awaitingConsent = 0;
       for (const pid of participantIds) {
         // Adult participants (no developmental_band) have no guardian-
-        // consent gate at all -- always cleared, never "awaiting" (see
+        // consent gate at all, always cleared, never "awaiting" (see
         // the matching comment on the roster page for why this branch
         // exists).
         if (!bandById.get(pid)) {

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Guide Candidate — AVAIA Admin" };
+export const metadata = { title: "Guide Candidate, AVAIA Admin" };
 export const dynamic = "force-dynamic";
 
 const HISTORY_ENTRY_LABEL: Record<string, string> = {
@@ -27,21 +27,21 @@ const VALID_STATUSES = [
 type CandidateStatus = (typeof VALID_STATUSES)[number];
 
 // withdrawn/not_certified close a candidacy. Terminal in the ordinary
-// lifecycle control below by design -- reopening a closed candidacy is
+// lifecycle control below by design, reopening a closed candidacy is
 // deliberately not built in this phase (Phase C.3 scope).
 const CLOSED_STATUSES: CandidateStatus[] = ["withdrawn", "not_certified"];
 
 const STATUS_ERROR_MESSAGE: Record<string, string> = {
   invalid_status: "That is not a recognized candidate status.",
   closed: "This candidacy is closed and cannot be changed through this control.",
-  no_change: "No change was made -- that is already the current status.",
+  no_change: "No change was made, that is already the current status.",
   conflict: "The candidate's status changed since this page loaded. Please review and try again.",
   not_found: "Candidate not found.",
   update_failed: "Could not update this candidate's status. Please try again.",
 };
 
 // Exactly the 12 evidence_type values live in guide_candidate_evidence
-// (0023) -- never change these without a schema change. Labels are
+// (0023), never change these without a schema change. Labels are
 // display-only; the stored value is always the plain enum string.
 const EVIDENCE_TYPES = [
   "candidate_agreement",
@@ -94,7 +94,7 @@ const EVIDENCE_ERROR_MESSAGE: Record<string, string> = {
 
 // Exactly the three source-grounded certification decision outcomes
 // (Instrument 11 / Evaluator Handbook §20 / Candidate Pathway §11 / Program
-// Operations Form 9) -- never change without a schema change.
+// Operations Form 9), never change without a schema change.
 const DECISIONS = ["certified", "development_required", "not_currently_eligible"] as const;
 type Decision = (typeof DECISIONS)[number];
 
@@ -141,9 +141,9 @@ const CERTIFICATION_ERROR_MESSAGE: Record<string, string> = {
   insert_failed: "Could not grant certification. Please try again.",
 };
 
-// Phase D -- platform authorization is a separate institutional fact from
+// Phase D, platform authorization is a separate institutional fact from
 // certification (guide_certifications). 'toolkit' and (as of Phase E.1)
-// 'guided_journey_facilitation' are independent capabilities -- holding
+// 'guided_journey_facilitation' are independent capabilities, holding
 // one implies nothing about the other. Future capabilities widen this
 // list without a schema rebuild (see 0025_guide_platform_authorizations.sql
 // and 0026_guide_platform_authorizations_guided_journey_facilitation.sql).
@@ -158,7 +158,7 @@ const TOOLKIT_AUTH_ERROR_MESSAGE: Record<string, string> = {
 
 // Guided Journey Facilitation authorization (Phase E.1) does NOT itself
 // grant access to any Host, Journey, conversation, message, Guide's
-// Record, or Workbook data -- it only establishes that AVAIA authorizes
+// Record, or Workbook data, it only establishes that AVAIA authorizes
 // this Guide to perform that work if/when a Host later, separately grants
 // scoped access to a specific Journey (a later phase, not built here).
 const GUIDED_JOURNEY_AUTH_ERROR_MESSAGE: Record<string, string> = {
@@ -170,7 +170,7 @@ const GUIDED_JOURNEY_AUTH_ERROR_MESSAGE: Record<string, string> = {
   insert_failed: "Could not grant Guided Journey Facilitation authorization. Please try again.",
 };
 
-// Guide Display Name (Phase E.3 prerequisite) -- the narrow, admin-managed
+// Guide Display Name (Phase E.3 prerequisite), the narrow, admin-managed
 // Host-facing identity for an eligible Certified Guide. Not a general
 // profile/display-name system; see 0028_guide_display_name.sql.
 const GUIDE_NAME_ERROR_MESSAGE: Record<string, string> = {
@@ -179,7 +179,7 @@ const GUIDE_NAME_ERROR_MESSAGE: Record<string, string> = {
 };
 
 /** Formats a Date as a datetime-local input value ("YYYY-MM-DDTHH:mm") for
- *  the Decision Date field's default -- local to wherever this renders,
+ *  the Decision Date field's default, local to wherever this renders,
  *  which is acceptable for a default the admin can freely change; nothing
  *  here builds timezone infrastructure. */
 function toDatetimeLocalValue(date: Date): string {
@@ -188,14 +188,14 @@ function toDatetimeLocalValue(date: Date): string {
 }
 
 /** Changes a candidate's lifecycle status and records exactly one
- *  guide_candidate_history row describing the transition -- guide_candidates
+ *  guide_candidate_history row describing the transition, guide_candidates
  *  holds current state, guide_candidate_history holds what happened over
  *  time, per the approved Phase C.3 architecture. Re-reads the current
  *  status fresh (never trusts a hidden form field for it), refuses any
  *  change once the candidacy is already closed, refuses a submission that
  *  doesn't actually change the status (no fake history rows), and guards
  *  the update itself with .eq("status", currentStatus) so a concurrent
- *  change from another admin can't be silently overwritten -- if the
+ *  change from another admin can't be silently overwritten, if the
  *  guarded update affects no rows, that's reported as a conflict instead of
  *  applied blindly. Uses the signed-in admin's own RLS-bound client
  *  throughout; createAdminClient() is never involved in this action. */
@@ -262,12 +262,12 @@ async function updateCandidateStatus(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?statusUpdated=1`);
 }
 
-/** Records one guide_candidate_evidence row (Phase C.5) -- a structured
+/** Records one guide_candidate_evidence row (Phase C.5), a structured
  *  fact about what the candidate demonstrated and what a human evaluator
  *  found, per the approved Phase C.4 evidence architecture. Evidence is
  *  append-only: multiple rows of the same evidence_type are intentional
  *  (reassessment), so this never updates or deduplicates an existing row.
- *  Recording evidence has no automatic consequence -- it never touches
+ *  Recording evidence has no automatic consequence, it never touches
  *  guide_candidates.status or guide_certifications; whether/how a finding
  *  should affect the candidacy remains a separate, later, human decision
  *  through the existing Manage Candidacy Status control. Refuses new
@@ -335,10 +335,10 @@ async function recordEvidence(formData: FormData) {
 
 /** Same page-through-listUsers exact-match pattern already used for
  *  Candidate Admission (app/admin/guide-candidates/page.tsx) and Guide
- *  Toolkit participants -- copied fresh here (not imported) so those
+ *  Toolkit participants, copied fresh here (not imported) so those
  *  existing, working flows stay untouched. Resolves the Evaluator field to
  *  an existing AVAIA account; the evaluator does NOT need to be an admin
- *  or a Guide -- this is attribution only, no evaluator authorization or
+ *  or a Guide, this is attribution only, no evaluator authorization or
  *  role exists yet. */
 async function findHostIdByEmail(email: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -352,18 +352,18 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
   return null;
 }
 
-/** Records one guide_certification_decisions row (Phase C.8) -- the
+/** Records one guide_certification_decisions row (Phase C.8), the
  *  institutional record of what AVAIA decided at a certification review,
  *  per the approved Phase C.7A/C.7B architecture. This is a completed
  *  review conference, not a workflow: evaluated_at/authorized_at both use
  *  the database's own now() default, and authorized_by is always the
- *  signed-in admin recording this -- manual authorizer selection is not
+ *  signed-in admin recording this, manual authorizer selection is not
  *  built. The evaluator field is attribution only (may be any existing
  *  AVAIA account, resolved the same way Candidate Admission resolves an
  *  email); it does not require or imply any role, permission, or
  *  authorization. Recording a decision here does NOT write
  *  guide_candidate_history, does NOT update guide_candidates.status, and
- *  does NOT create or modify guide_certifications -- those remain entirely
+ *  does NOT create or modify guide_certifications, those remain entirely
  *  separate, later, human actions. Refuses new decisions once the
  *  candidacy is closed, same terminal-state posture as the other actions
  *  on this page. Uses the signed-in admin's own RLS-bound client for the
@@ -459,10 +459,10 @@ async function recordCertificationDecision(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?decisionRecorded=1`);
 }
 
-/** Grants the Certified AVAIA Guide credential (Phase C.9) -- the
+/** Grants the Certified AVAIA Guide credential (Phase C.9), the
  *  institutional act of creating exactly one guide_certifications row.
  *  This does NOT independently judge the candidate: it enforces only the
- *  institutional sequence approved for this phase -- a human 'certified'
+ *  institutional sequence approved for this phase, a human 'certified'
  *  decision must already exist in guide_certification_decisions (the
  *  authority for this transition), and this action never reads
  *  guide_candidate_evidence, never interprets ratings, and never
@@ -471,7 +471,7 @@ async function recordCertificationDecision(formData: FormData) {
  *  a UI state) so no duplicate credential can be created. Certification is
  *  deliberately NOT platform authorization: nothing here touches
  *  profiles.role, entitlements, Toolkit access, Guided Journey access,
- *  shared_access, Youth permissions, or any other capability -- and
+ *  shared_access, Youth permissions, or any other capability, and
  *  nothing here changes guide_candidates.status, which has no 'certified'
  *  value by design (certification lives only in guide_certifications).
  *  Uses the signed-in admin's own RLS-bound client for every read and
@@ -531,7 +531,7 @@ async function grantGuideCertification(formData: FormData) {
     redirect(`/admin/guide-candidates/${candidateId}?certificationError=invalid_certification_date`);
   }
 
-  // Duplicate-credential guard -- checked independently here, not merely
+  // Duplicate-credential guard, checked independently here, not merely
   // relied on as a UI state, exactly as this phase requires. Two separate
   // lookups (by candidate_id, then by host_id) rather than a single .or()
   // filter, so no raw filter string is ever built from form input.
@@ -573,7 +573,7 @@ async function grantGuideCertification(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?certificationGranted=1`);
 }
 
-/** Grants Toolkit platform authorization (Phase D.2) -- a separate
+/** Grants Toolkit platform authorization (Phase D.2), a separate
  *  institutional act from certification, per the approved Phase D
  *  architecture. Re-derives the host's certification fresh from
  *  guide_certifications (never from profiles.role, guide_certified_at, or
@@ -582,7 +582,7 @@ async function grantGuideCertification(formData: FormData) {
  *  independently server-side (not merely relied on as a UI state) so no
  *  second simultaneous authorization can be created. This action never
  *  touches guide_certifications, guide_candidates.status, or
- *  profiles.role -- it writes exactly one guide_platform_authorizations
+ *  profiles.role, it writes exactly one guide_platform_authorizations
  *  row and nothing else. Uses the signed-in admin's own RLS-bound client
  *  throughout; createAdminClient() is not involved. */
 async function grantToolkitAuthorization(formData: FormData) {
@@ -616,7 +616,7 @@ async function grantToolkitAuthorization(formData: FormData) {
     redirect(`/admin/guide-candidates/${candidateId}?toolkitAuthError=missing_candidate`);
   }
 
-  // The authoritative credential check -- by candidate_id first, then by
+  // The authoritative credential check, by candidate_id first, then by
   // host_id, the same two-step lookup the page display already uses so
   // this action can never disagree with what the admin sees on screen.
   const { data: certByCandidate } = await supabase
@@ -667,17 +667,17 @@ async function grantToolkitAuthorization(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidateId}?toolkitAuthGranted=1`);
 }
 
-/** Grants Guided Journey Facilitation platform authorization (Phase E.1) --
+/** Grants Guided Journey Facilitation platform authorization (Phase E.1),
  *  independent of Toolkit authorization (Phase D.2); identical shape,
  *  different capability value, its own explicit institutional act. This
  *  authorization does NOT itself grant access to any Host's Journey,
- *  conversation, message, Guide's Record, or Workbook -- it only
+ *  conversation, message, Guide's Record, or Workbook, it only
  *  establishes that AVAIA authorizes this Guide to perform Guided Journey
  *  facilitation if/when a Host later, separately grants scoped access to a
  *  specific Journey (guide_journey_access, a later phase, not built here).
  *  Re-derives the host's certification fresh from guide_certifications and
  *  refuses to grant unless that certification exists and its standing is
- *  exactly 'active' -- never inferred from profiles.role,
+ *  exactly 'active', never inferred from profiles.role,
  *  guide_certified_at, candidate status, certification decisions, or
  *  Toolkit authorization. Refuses a duplicate grant independently
  *  server-side. Uses the signed-in admin's own RLS-bound client
@@ -713,7 +713,7 @@ async function grantGuidedJourneyFacilitationAuthorization(formData: FormData) {
     redirect(`/admin/guide-candidates/${candidateId}?guidedJourneyAuthError=missing_candidate`);
   }
 
-  // The authoritative credential check -- by candidate_id first, then by
+  // The authoritative credential check, by candidate_id first, then by
   // host_id, the same two-step lookup the page display already uses so
   // this action can never disagree with what the admin sees on screen.
   const { data: certByCandidate } = await supabase
@@ -766,7 +766,7 @@ async function grantGuidedJourneyFacilitationAuthorization(formData: FormData) {
 
 /** Sets (or clears) this Guide's Host-facing display name (the Phase E.3
  *  identity prerequisite) via the set_guide_display_name() SECURITY
- *  DEFINER function (0028) -- profiles has no admin-all RLS policy by
+ *  DEFINER function (0028), profiles has no admin-all RLS policy by
  *  design, so this narrow RPC is how the admin's own RLS-bound client
  *  reaches this one field without a broader profiles policy. The function
  *  itself re-checks admin role internally; this action's own check is
@@ -880,11 +880,11 @@ export default async function AdminGuideCandidateDetailPage({
 
   // Evidence Review (Phase C.6): the latest recorded finding per evidence
   // type, derived in application code from the rows already fetched above
-  // -- no view, no SQL function, no schema change. `evidence` is already
+  //, no view, no SQL function, no schema change. `evidence` is already
   // ordered newest-first (see the query above), so the first row seen for
   // a given evidence_type here IS its latest finding; every row after that
   // for the same type is earlier history and is skipped for this map only
-  // -- nothing is mutated, deleted, or hidden from the Evidence Records
+  //, nothing is mutated, deleted, or hidden from the Evidence Records
   // list below, which still shows every row.
   const latestByType = new Map<EvidenceType, (typeof evidence)[number]>();
   for (const e of evidence) {
@@ -900,12 +900,12 @@ export default async function AdminGuideCandidateDetailPage({
     .eq("candidate_id", candidate.id)
     .order("decision_date", { ascending: false });
   const decisions = decisionRows ?? [];
-  // decisions is already ordered newest-first by decision_date -- its first
+  // decisions is already ordered newest-first by decision_date, its first
   // element IS the latest decision, reused below for the Grant Certification
   // eligibility check so no second "latest decision" query is needed.
   const latestDecision = decisions[0] ?? null;
 
-  // Certification (Phase C.9) -- checked by candidate_id first (the direct,
+  // Certification (Phase C.9), checked by candidate_id first (the direct,
   // natural scope of this page), then by host_id, so this display can never
   // disagree with grantGuideCertification's own duplicate-credential guard
   // (a person shouldn't appear "Not Granted" here while a grant attempt
@@ -928,7 +928,7 @@ export default async function AdminGuideCandidateDetailPage({
   const canGrantCertification =
     !certification && !isClosed && latestDecision?.decision === "certified";
 
-  // Toolkit platform authorization (Phase D) -- a separate institutional
+  // Toolkit platform authorization (Phase D), a separate institutional
   // fact from certification, looked up by host_id since it's a property of
   // the certified person, not of any one candidacy row. At most one
   // 'authorized' row can exist per (host_id, capability) at a time (see the
@@ -943,7 +943,7 @@ export default async function AdminGuideCandidateDetailPage({
   const canGrantToolkitAuthorization =
     !!certification && certification.standing === "active" && !toolkitAuthorization;
 
-  // Guided Journey Facilitation platform authorization (Phase E.1) -- same
+  // Guided Journey Facilitation platform authorization (Phase E.1), same
   // shape as Toolkit authorization, independent capability. Does not grant
   // any Host/Journey access by itself; see the server action's own comment.
   const { data: guidedJourneyAuthorization } = await supabase
@@ -956,14 +956,14 @@ export default async function AdminGuideCandidateDetailPage({
   const canGrantGuidedJourneyAuthorization =
     !!certification && certification.standing === "active" && !guidedJourneyAuthorization;
 
-  // Guide Display Name (Phase E.3 prerequisite) -- read via the same
+  // Guide Display Name (Phase E.3 prerequisite), read via the same
   // SECURITY DEFINER function a Host's own page will use, since profiles
   // has no admin-all RLS policy to read another account's row directly.
   const { data: guideDisplayName } = certification
     ? await supabase.rpc("get_guide_display_name", { p_guide_id: candidate.host_id })
     : { data: null as string | null };
 
-  // Identity resolution only -- account email, admitting admin's email,
+  // Identity resolution only, account email, admitting admin's email,
   // each history entry's recorder's email, each evidence row's recorder's
   // email, each decision's evaluator/authorizer email, the certification's
   // certified-by/standing-changed-by email, and each platform
@@ -1109,7 +1109,7 @@ export default async function AdminGuideCandidateDetailPage({
           <div>
             <dt className="label text-muted">Admitted By</dt>
             <dd className="mt-1 text-ink">
-              {candidate.admitted_by ? emailById.get(candidate.admitted_by) ?? "Unknown" : "—"}
+              {candidate.admitted_by ? emailById.get(candidate.admitted_by) ?? "Unknown" : "None"}
             </dd>
           </div>
           <div>
@@ -1187,9 +1187,9 @@ export default async function AdminGuideCandidateDetailPage({
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Certification Evidence</p>
 
-        {/* Evidence Review -- current/latest finding per required evidence
+        {/* Evidence Review, current/latest finding per required evidence
             type, always all 12, review only. Deliberately no readiness
-            calculation, no percentage, no pass/fail language -- just the
+            calculation, no percentage, no pass/fail language, just the
             most recent human finding, or that none exists yet. */}
         <div className="mb-8">
           <p className="label mb-3 text-muted">Evidence Review</p>
@@ -1326,7 +1326,7 @@ export default async function AdminGuideCandidateDetailPage({
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Certification Decisions</p>
         <p className="mb-3 text-sm text-muted">
-          Certification Decision History — these are append-only institutional records. Prior
+          Certification Decision History, these are append-only institutional records. Prior
           decisions are never edited or overwritten.
         </p>
 
@@ -1356,7 +1356,7 @@ export default async function AdminGuideCandidateDetailPage({
                   <div>
                     <dt className="label text-muted">Evaluator</dt>
                     <dd className="mt-1 text-ink">
-                      {d.evaluated_by ? emailById.get(d.evaluated_by) ?? "Unknown" : "—"}
+                      {d.evaluated_by ? emailById.get(d.evaluated_by) ?? "Unknown" : "None"}
                       <span className="ml-2 text-xs text-muted">
                         {new Date(d.evaluated_at).toLocaleString()}
                       </span>
@@ -1365,7 +1365,7 @@ export default async function AdminGuideCandidateDetailPage({
                   <div>
                     <dt className="label text-muted">AVAIA Authorization</dt>
                     <dd className="mt-1 text-ink">
-                      {d.authorized_by ? emailById.get(d.authorized_by) ?? "Unknown" : "—"}
+                      {d.authorized_by ? emailById.get(d.authorized_by) ?? "Unknown" : "None"}
                       <span className="ml-2 text-xs text-muted">
                         {new Date(d.authorized_at).toLocaleString()}
                       </span>
@@ -1494,7 +1494,7 @@ export default async function AdminGuideCandidateDetailPage({
               </div>
             </div>
             <p className="mt-2 text-xs text-muted">
-              These are the human/institutional attestations made at this review — not calculated
+              These are the human/institutional attestations made at this review, not calculated
               by AVAIA.
             </p>
 
@@ -1570,7 +1570,7 @@ export default async function AdminGuideCandidateDetailPage({
               </label>
               <p className="mb-2 text-xs text-muted">
                 Must be an existing AVAIA account. Defaults to you, but may be a different account
-                that performed the evaluation. Attribution only — no evaluator role or
+                that performed the evaluation. Attribution only, no evaluator role or
                 authorization is required or implied.
               </p>
               <input
@@ -1612,7 +1612,7 @@ export default async function AdminGuideCandidateDetailPage({
               <div>
                 <dt className="label text-muted">Certified By</dt>
                 <dd className="mt-1 text-ink">
-                  {certification.certified_by ? emailById.get(certification.certified_by) ?? "Unknown" : "—"}
+                  {certification.certified_by ? emailById.get(certification.certified_by) ?? "Unknown" : "None"}
                 </dd>
               </div>
               <div>
@@ -1638,7 +1638,7 @@ export default async function AdminGuideCandidateDetailPage({
           </div>
         ) : null}
 
-        {/* Toolkit Authorization (Phase D.2) -- a separate institutional
+        {/* Toolkit Authorization (Phase D.2), a separate institutional
             act from certification, only ever offered while the credential
             itself is in active standing. Read-only once granted; no
             revoke/pause control here, that belongs to a later,
@@ -1708,10 +1708,10 @@ export default async function AdminGuideCandidateDetailPage({
           </div>
         )}
 
-        {/* Guided Journey Facilitation Authorization (Phase E.1) -- same
+        {/* Guided Journey Facilitation Authorization (Phase E.1), same
             institutional shape as Toolkit Authorization, an independent
             capability. Explicitly does NOT grant access to any Host's
-            Journey, conversation, message, Guide's Record, or Workbook --
+            Journey, conversation, message, Guide's Record, or Workbook,
             it only authorizes the Guide to perform that work once a Host
             later, separately grants scoped access to a specific Journey
             (a later, not-yet-built phase). */}
@@ -1743,7 +1743,7 @@ export default async function AdminGuideCandidateDetailPage({
                 )}
                 <p className="mt-3 border-t border-rule pt-3 text-xs text-muted">
                   This authorizes the Guide to perform Guided Journey facilitation. It does not by
-                  itself grant access to any Host's Journey — a Host must separately invite this
+                  itself grant access to any Host's Journey, a Host must separately invite this
                   Guide before any facilitation can occur.
                 </p>
               </div>
@@ -1757,7 +1757,7 @@ export default async function AdminGuideCandidateDetailPage({
                 <p className="mt-2 text-xs text-muted">
                   This authorizes the Guide to perform Guided Journey facilitation. It does not
                   grant access to any Host's Journey, conversation, message, Guide's Record, or
-                  Workbook — a Host must separately invite this Guide before any facilitation can
+                  Workbook, a Host must separately invite this Guide before any facilitation can
                   occur.
                 </p>
                 <div className="mt-4">
@@ -1791,7 +1791,7 @@ export default async function AdminGuideCandidateDetailPage({
           </div>
         )}
 
-        {/* Guide Display Name (Phase E.3 prerequisite) -- the narrow,
+        {/* Guide Display Name (Phase E.3 prerequisite), the narrow,
             admin-managed Host-facing identity for an eligible Certified
             Guide. Not a general profile/display-name system; not
             Guide-editable. */}
@@ -1821,7 +1821,7 @@ export default async function AdminGuideCandidateDetailPage({
               <p className="mt-2 text-xs text-muted">
                 {guideDisplayName
                   ? "Currently visible to Hosts as an eligible Guide."
-                  : "Not set — this Guide will not appear in a Host's invitation list until a name is set."}
+                  : "Not set, this Guide will not appear in a Host's invitation list until a name is set."}
               </p>
               <button
                 type="submit"
@@ -1850,13 +1850,13 @@ export default async function AdminGuideCandidateDetailPage({
                 <div>
                   <dt className="label text-muted">Evaluator</dt>
                   <dd className="mt-1 text-ink">
-                    {latestDecision.evaluated_by ? emailById.get(latestDecision.evaluated_by) ?? "Unknown" : "—"}
+                    {latestDecision.evaluated_by ? emailById.get(latestDecision.evaluated_by) ?? "Unknown" : "None"}
                   </dd>
                 </div>
                 <div>
                   <dt className="label text-muted">AVAIA Authorization</dt>
                   <dd className="mt-1 text-ink">
-                    {latestDecision.authorized_by ? emailById.get(latestDecision.authorized_by) ?? "Unknown" : "—"}
+                    {latestDecision.authorized_by ? emailById.get(latestDecision.authorized_by) ?? "Unknown" : "None"}
                   </dd>
                 </div>
               </dl>

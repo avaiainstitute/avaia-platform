@@ -9,21 +9,21 @@ import {
 } from "@/lib/organization-admin";
 import { isParticipantClearedToParticipate, getConsentStatusForParticipant } from "@/lib/guardian-consent";
 
-export const metadata = { title: "Program Roster — Organization Administration — AVAIA" };
+export const metadata = { title: "Program Roster, Organization Administration, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Reassigns a participant to a different Guide -- the Organization
+/** Reassigns a participant to a different Guide, the Organization
  *  Administrator version of the Platform Admin tool (app/admin/
  *  reassign-participant), reusing the exact same guide_id-update
  *  mechanism, scoped two ways the platform-wide version isn't: the
  *  participant must actually be registered in a program under THIS
  *  organization, and the target Guide must actually be "connected" to
- *  this same organization (has run a program here) -- never any
+ *  this same organization (has run a program here), never any
  *  toolkit-authorized Guide platform-wide. This is the only path that
  *  changes who facilitates a participant; it never grants the
  *  Organization Administrator Guide access, and never touches
  *  conversations/messages/referrals/recognitions/virtue_signature_entries
- *  -- only guide_participants.guide_id. */
+ * , only guide_participants.guide_id. */
 async function assignGuide(formData: FormData) {
   "use server";
 
@@ -85,7 +85,7 @@ async function assignGuide(formData: FormData) {
   redirect(`/org-admin/${organizationId}/programs/${programId}?assigned=1`);
 }
 
-/** Removes a participant's registration from THIS program only -- the
+/** Removes a participant's registration from THIS program only, the
  *  same registration_status='removed' correction a Guide's own roster
  *  page already uses, never a delete. Does not touch the participant
  *  record, any session, referral, consent, or Signature entry. */
@@ -174,7 +174,7 @@ export default async function OrgAdminProgramPage({
   const guideIds = await listGuidesConnectedToOrganization(admin, params.organizationId);
   // Also resolve each roster participant's actual current guide_id, even
   // if that Guide has since been disconnected from the organization (or
-  // was never "connected" by either definition -- e.g. reassigned here
+  // was never "connected" by either definition, e.g. reassigned here
   // from outside this org by a Platform Admin). Continuity display, not
   // an access grant: a disconnected Guide keeps facilitating whoever
   // they were already assigned to, and this roster should still show
@@ -190,7 +190,7 @@ export default async function OrgAdminProgramPage({
   }
 
   // isParticipantClearedToParticipate/getConsentStatusForParticipant are
-  // Youth-specific gates (they require a developmental_band on record --
+  // Youth-specific gates (they require a developmental_band on record,
   // see their own comments in lib/guardian-consent.ts); an Adult
   // organizational program has no guardian-consent concept at all, so an
   // adult participant is simply always cleared, with no consent/assent
@@ -285,7 +285,7 @@ export default async function OrgAdminProgramPage({
                       className="rounded-md border border-rule bg-white/[0.04] px-3 py-1.5 text-xs text-ink outline-none focus:border-seal"
                     >
                       <option value="" className="bg-[#05060b]">
-                        — Assign to Guide —
+                        Assign to Guide
                       </option>
                       {guideIds
                         .filter((gid) => gid !== participant.guide_id)

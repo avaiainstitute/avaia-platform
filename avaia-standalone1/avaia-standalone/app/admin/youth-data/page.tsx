@@ -3,14 +3,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Youth Data — Admin — AVAIA" };
+export const metadata = { title: "Youth Data, Admin, AVAIA" };
 export const dynamic = "force-dynamic";
 
 type ParticipantResult = { id: string; name: string; email: string | null; guide_id: string };
 
 /** Youth data retention/deletion, admin-only. Search by participant name/
  *  email (Guide-facilitated) or by a self-serve Youth Host's account
- *  email -- two different underlying tables (guide_participants vs
+ *  email, two different underlying tables (guide_participants vs
  *  profiles), same operational need: find the record, see what's there,
  *  delete it on request. See lib/youth-data-deletion.ts for the actual
  *  cascading delete and the full data-category map. */
@@ -73,8 +73,8 @@ export default async function AdminYouthDataPage({
       <p className="label mb-3">Admin</p>
       <h1 className="font-serif text-4xl text-ink">Youth Data Retention / Deletion</h1>
       <p className="mt-4 text-lg text-muted">
-        Find a Youth-linked record — a Guide-facilitated participant or a self-serve Youth Host&rsquo;s
-        account — and see or delete every record linked to it. The retention PERIOD is not yet a
+        Find a Youth-linked record, a Guide-facilitated participant or a self-serve Youth Host&rsquo;s
+        account, and see or delete every record linked to it. The retention PERIOD is not yet a
         settled policy; this is the technical ability to act on whatever that policy ends up being,
         available now.
       </p>

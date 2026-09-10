@@ -17,7 +17,7 @@ export default function GuideEnrollForm() {
         />
         <span>
           I understand this is a $4,500 one-time payment for the AVAIA Certified Guide Program, and
-          that enrollment begins the certification pathway — it does not itself grant certification
+          that enrollment begins the certification pathway, it does not itself grant certification
           or any AVAIA Guide permission. Certification is a separate, later decision based on
           demonstrated competency.
         </span>

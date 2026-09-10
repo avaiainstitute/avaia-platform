@@ -1,4 +1,4 @@
--- Defying Grief — program tag only. Run once against the live database
+-- Defying Grief, program tag only. Run once against the live database
 -- (Supabase SQL editor), after 0001/0002. Safe to re-run: the whole clause
 -- is skipped if the column exists.
 --
@@ -9,7 +9,7 @@
 -- referrals.content.roomIdentity on InnerCompass, referrals.conversation_id
 -- for linking). This column exists only so Defying Grief's dashboard can
 -- scope its queries to "this participant's conversations that belong to
--- this program" — it is a label, not a tracking mechanism.
+-- this program", it is a label, not a tracking mechanism.
 
 alter table public.conversations
   add column if not exists program text not null default 'general'

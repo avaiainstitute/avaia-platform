@@ -7,11 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 /**
  * Reached only from a Supabase recovery link (see app/auth/callback/
  * page.tsx's type==="recovery" branch), which has already established a
- * real session for the account before redirecting here -- there is no
+ * real session for the account before redirecting here, there is no
  * separate recovery token or storage of any kind on AVAIA's side. Setting
  * the new password is just supabase.auth.updateUser({ password }) against
  * that session; Supabase's own auth store handles hashing and storage, and
- * this page never sees or holds the old password (updateUser needs none --
+ * this page never sees or holds the old password (updateUser needs none,
  * the active session already proves identity, the same way it does for a
  * Host setting their first password from /account).
  *
@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
       ) : done ? (
         <>
           <p className="mt-4 text-lg text-muted">
-            Your password is set. You can sign in with it any time — or keep using an emailed code
+            Your password is set. You can sign in with it any time, or keep using an emailed code
             if you prefer.
           </p>
           <Link

@@ -14,11 +14,11 @@ import {
 } from "@/lib/engine/referral-provenance";
 import type { ParticipantHistory } from "@/lib/guide";
 
-// Generates the Participant Snapshot -- see PREPARATION_SNAPSHOT_GENERATION's
+// Generates the Participant Snapshot, see PREPARATION_SNAPSHOT_GENERATION's
 // own comment in lib/engine/prompts.ts for why this is a single bounded
 // generation call, never a conversation. Reuses the exact same ParticipantHistory
 // shape /toolkit/preparation/[participantId] already loads via
-// getParticipantHistory (lib/guide.ts) -- this function never queries the
+// getParticipantHistory (lib/guide.ts), this function never queries the
 // database itself, so it can never see anything the calling route didn't
 // already legitimately load under that Guide's own ownership check.
 
@@ -55,13 +55,13 @@ export type ParticipantSnapshot = {
   guideReminder: string;
 };
 
-/** Builds the evidence bundle handed to the model -- deliberately narrow:
+/** Builds the evidence bundle handed to the model, deliberately narrow:
  *  only a completed session's host_authored / open_unresolved referral
  *  fields (same discipline as the page's own ThreadsRecorded component),
  *  plus whatever virtue/Secondary Loss recognition that session's own
  *  referral already made, plus a saved Unsung Heroes recognition's own
  *  fields. Never the full referral (stage_synthesis, decision_commitment,
- *  boundary_stewardship fields are withheld -- those are the next Guide's
+ *  boundary_stewardship fields are withheld, those are the next Guide's
  *  own working material, not preparation evidence), and never anything
  *  from an active/unfinished session. */
 export function buildEvidenceText(history: ParticipantHistory): string {
@@ -78,7 +78,7 @@ export function buildEvidenceText(history: ParticipantHistory): string {
       month: "short",
       day: "numeric",
     });
-    lines.push(`SESSION: ${r.session.tool} (${r.session.program}) — ${when}`);
+    lines.push(`SESSION: ${r.session.tool} (${r.session.program}), ${when}`);
 
     if (r.referral) {
       const items = formatReferralFields(r.referral.from_stage, r.referral.content).filter(
@@ -154,7 +154,7 @@ export async function generateParticipantSnapshot(
 
 export type PreparationChatTurn = { role: "guide" | "preparation"; content: string };
 
-/** The interactive Preparation workspace -- built to close the gap found
+/** The interactive Preparation workspace, built to close the gap found
  *  during the admin/Guide usability pass between the static seven-field
  *  Snapshot above (still the right tool for "give me the state of things
  *  at a glance") and everything else the original Preparation capability
@@ -165,10 +165,10 @@ export type PreparationChatTurn = { role: "guide" | "preparation"; content: stri
  *  threads. Same discipline as generateParticipantSnapshot: a bounded
  *  call per turn (not a streamed live conversation), fed only the same
  *  narrow evidence bundle plus canonical reference material the caller
- *  already loaded under the Guide's own ownership check -- this function
+ *  already loaded under the Guide's own ownership check, this function
  *  still never queries the database itself. canonicalActivitiesText is
  *  the published Classes/Experiences the caller found, formatted as
- *  plain text, so an activity suggestion can never be invented -- only
+ *  plain text, so an activity suggestion can never be invented, only
  *  named from what's actually in that list. */
 export async function generatePreparationChatReply(
   history: ParticipantHistory,

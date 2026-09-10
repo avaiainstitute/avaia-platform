@@ -8,18 +8,18 @@ import { createFamilyMembership, cancelFamilyMembership } from "@/lib/family-mem
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Subscription statuses that mean the Host is no longer a paying member --
+/** Subscription statuses that mean the Host is no longer a paying member,
  *  deliberately excludes 'past_due' (Stripe's own retry/grace period; not
  *  yet a real end of access) and 'trialing'/'incomplete'/'paused', which
  *  aren't a prior active paid state ending. */
 const REVOKING_STATUSES = new Set(["canceled", "unpaid", "incomplete_expired"]);
 
 /** Records a completed Certified AVAIA Guide Program payment. A payment
- *  fact only -- deliberately does NOT create a guide_candidates row or any
+ *  fact only, deliberately does NOT create a guide_candidates row or any
  *  other candidacy/certification fact; whether a completed payment should
  *  automatically admit someone as a candidate is an explicit owner
  *  decision (see the Certified Guide audit's Final Report), not assumed
- *  here. Idempotent via stripe_checkout_session_id's unique constraint --
+ *  here. Idempotent via stripe_checkout_session_id's unique constraint,
  *  a redelivered event's duplicate insert is caught and ignored rather
  *  than treated as an error. */
 async function recordGuideCertificationPayment(
@@ -44,7 +44,7 @@ async function recordGuideCertificationPayment(
   }
 }
 
-/** Grants this Host an active Individual entitlement. Idempotent -- Stripe
+/** Grants this Host an active Individual entitlement. Idempotent, Stripe
  *  may redeliver the same event, and this must never create a second
  *  active entitlement for a Host who already has one. The `existing` check
  *  below is also the safe point to decide whether to send the member
@@ -73,12 +73,12 @@ async function grantEntitlement(hostId: string | null | undefined, origin: strin
   await sendMemberWelcomeEmail(admin, hostId, origin);
 }
 
-/** Best-effort only -- never blocks or fails entitlement granting itself; a
+/** Best-effort only, never blocks or fails entitlement granting itself; a
  *  Host who paid gets access whether or not this email succeeds. Only
  *  called from the branch above where a NEW entitlement row was just
  *  inserted, so this never re-sends on a webhook redelivery. Silently does
  *  nothing if the Host has no email on file yet (e.g. still anonymous at
- *  the moment of payment) -- there's nowhere to send it. */
+ *  the moment of payment), there's nowhere to send it. */
 async function sendMemberWelcomeEmail(
   admin: ReturnType<typeof createAdminClient>,
   hostId: string,
@@ -99,7 +99,7 @@ async function sendMemberWelcomeEmail(
 }
 
 /** Revokes this Host's active entitlement when their paid subscription
- *  ends -- access only. Never touches profiles, conversations, messages,
+ *  ends, access only. Never touches profiles, conversations, messages,
  *  referrals, Workbook, or Library data; only this Host's own
  *  entitlements row(s) change. */
 async function revokeEntitlement(hostId: string | null | undefined) {
@@ -117,11 +117,11 @@ async function revokeEntitlement(hostId: string | null | undefined) {
 }
 
 /** Creates the Family plan itself the moment the Family base-price
- *  Checkout Session completes -- mirrors grantEntitlement()'s idempotency
+ *  Checkout Session completes, mirrors grantEntitlement()'s idempotency
  *  posture (createFamilyMembership is itself idempotent against
  *  redelivery, see its own doc comment). Retrieves the just-created
  *  subscription to capture its one line item's id (base_subscription_item_id)
- *  -- needed later so an additional-member invite can add a SECOND item to
+ * , needed later so an additional-member invite can add a SECOND item to
  *  this same subscription rather than creating a new one. */
 async function grantFamilyMembership(
   hostId: string | null | undefined,
@@ -187,8 +187,8 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const hostId = session.client_reference_id ?? session.metadata?.supabase_user_id;
     // Stripe calls this endpoint directly, so request.url's origin is
-    // AVAIA's own live domain -- the same value the checkout route itself
-    // would compute -- used only for the welcome email's Journey link.
+    // AVAIA's own live domain, the same value the checkout route itself
+    // would compute, used only for the welcome email's Journey link.
     const origin = new URL(request.url).origin;
     if (session.metadata?.product === "guide_certification") {
       await recordGuideCertificationPayment(hostId, session);
@@ -199,7 +199,7 @@ export async function POST(request: Request) {
     }
   } else if (event.type === "customer.subscription.deleted") {
     // subscription_data.metadata (set at checkout) carries supabase_user_id
-    // onto the Subscription object itself -- no stored Stripe-customer
+    // onto the Subscription object itself, no stored Stripe-customer
     // lookup table is needed to resolve which Host this is.
     const subscription = event.data.object as Stripe.Subscription;
     if (subscription.metadata?.tier === "family") {

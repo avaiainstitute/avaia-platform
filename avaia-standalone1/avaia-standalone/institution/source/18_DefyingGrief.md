@@ -10,7 +10,7 @@ curriculum, deliverable individually, with a Guide, or in a shared room.
 
 Program Manual, Layer III (Resources). Uses the core conversation
 manuals (02–04), the Secondary Loss Engine (11), and Chemistry of Virtue
-(10) as components — introduces no new engine of its own.
+(10) as components, introduces no new engine of its own.
 
 ## Governing Movement
 
@@ -25,27 +25,27 @@ take-home continuity remain their own.
 
 ## Curriculum Sequence
 
-The seven-question sequence is taught as eleven modules — implemented as
+The seven-question sequence is taught as eleven modules, implemented as
 `movement` sections 1–11 on "The Things We Lose After the Loss" (the
 Experience this curriculum is delivered through; see Delivery below).
 
-1.  What Is Grief? *(Awareness)* — widens grief past death alone.
-2.  What Is Defying Grief? *(Awareness)* — what it is and is not.
-3.  The Stone and the Ripples *(Awareness)* — the Ripple architecture.
-4.  The Things We Lose After the Loss *(Understanding)* — the Ten
+1.  What Is Grief? *(Awareness)*, widens grief past death alone.
+2.  What Is Defying Grief? *(Awareness)*, what it is and is not.
+3.  The Stone and the Ripples *(Awareness)*, The Ripple Effect.
+4.  The Things We Lose After the Loss *(Understanding)*, the Ten
     Secondary Losses.
-5.  What Have I Been Carrying? *(Understanding)* — the accumulated
+5.  What Have I Been Carrying? *(Understanding)*, the accumulated
     weight.
-6.  What Is Audacity? *(Understanding)* — shared-room teaching; one
+6.  What Is Audacity? *(Understanding)*, shared-room teaching; one
     force, two directions.
-7.  What Has Grief Been Allowed to Decide? *(Understanding)* —
+7.  What Has Grief Been Allowed to Decide? *(Understanding)*,
     recognition, never blame.
-8.  What Is Still Here? *(Understanding)* — recognition of what
+8.  What Is Still Here? *(Understanding)*, recognition of what
     remains.
-9.  The Same Audacity *(Agency)* — the bridge into choice.
-10. The Audacity of Choice *(Agency)* — what I cannot control vs. what
+9.  The Same Audacity *(Agency)*, the bridge into choice.
+10. The Audacity of Choice *(Agency)*, what I cannot control vs. what
     I can choose.
-11. We Don't Move On. We Move With. *(Agency)* — integration and
+11. We Don't Move On. We Move With. *(Agency)*, integration and
     take-home continuity.
 
 ## Delivery
@@ -53,29 +53,29 @@ Experience this curriculum is delivered through; see Delivery below).
 Implemented on the Experience's existing content architecture
 (`experience_sections`), not a separate curriculum system:
 
--   Modules 1–11 — `movement` sections, one per module
--   Facilitator Delivery Guide — a `guide_preparation` section,
+-   Modules 1–11, `movement` sections, one per module
+-   Facilitator Delivery Guide, a `guide_preparation` section,
     alongside the existing Presenter Freedom and Certified Guide
     Preparation sections
--   Participant Guide — a private, second-person `participant_guide`
+-   Participant Guide, a private, second-person `participant_guide`
     section a participant can complete without showing anyone
--   Take-Home Record — the existing `take_home` section, expanded with
+-   Take-Home Record, the existing `take_home` section, expanded with
     three fields the modules now produce (What Grief Has Influenced,
     What I Want to Remember, What I Want to Explore Next)
 -   All eight existing activities, the Ten Secondary Losses reference,
     the Shared-Room Rule, and Presenter Freedom are reused by the
     modules above, not duplicated
 
-## Ripple Architecture
+## The Ripple Effect
 
--   Point of Impact — the visible, primary loss
--   Immediate Changes — what shifted right away
--   Secondary Losses — what the loss quietly took alongside it
--   What Has Been Carried — the accumulated weight of both
+-   Point of Impact, the visible, primary loss
+-   Immediate Changes, what shifted right away
+-   Secondary Losses, what the loss quietly took alongside it
+-   What Has Been Carried, the accumulated weight of both
 
 A stone enters still water: the point of impact is seen immediately;
 the rings travel outward. AVAIA does not assign a ripple to a
-participant — the framework supplies language only when a Host's own
+participant, the framework supplies language only when a Host's own
 story already makes it visible.
 
 ## Secondary Losses
@@ -91,30 +91,30 @@ or something not yet named.
 -   Not one of the Chemistry of Virtue elements; not a Secondary Loss
 -   **Audacity of Grief and Audacity of Happiness are not two forces.
     They are the same Audacity, expressed in different directions.**
-    The difference is direction, intention, and use — not which force
+    The difference is direction, intention, and use, not which force
     is present
 -   May become visible as anger, bitterness, withdrawal, addiction,
-    destructive behavior, or shutting down — offered for recognition
+    destructive behavior, or shutting down, offered for recognition
     only, never diagnosis, never an assumption about a given Host
 -   May equally become visible as courage, resilience, hope, laughter,
     or continued participation in life
 -   Recognizing Audacity does not mean grief has ended, and is not
     positive thinking
 
-## Ripple → Audacity Bridge
+## The Ripple Effect → Audacity Bridge
 
-Ripple answers: what happened after the loss? Audacity asks: what
-force has been moving through those ripples? The Ripple makes the
-landscape visible; Audacity is the force recognized as already active
-within it. The two are connected, not collapsed into one another —
-Ripple work precedes and grounds the Audacity question; it is not
+The Ripple Effect answers: what happened after the loss? Audacity asks:
+what force has been moving through those ripples? The Ripple Effect makes
+the landscape visible; Audacity is the force recognized as already active
+within it. The two are connected, not collapsed into one another,
+Ripple Effect work precedes and grounds the Audacity question; it is not
 replaced by it.
 
 ## Audacity of Choice
 
 The same Audacity recognized in Understanding remains available in
 Agency, in whatever direction the Host chooses. Defying Grief does not
-promise the territory changes — only that the Host chooses how to walk
+promise the territory changes, only that the Host chooses how to walk
 it with greater visibility. No direction is prescribed.
 
 ## Shared Room / Private Table
@@ -139,11 +139,11 @@ it with greater visibility. No direction is prescribed.
 
 Components inside the curriculum, not the curriculum itself. Each
 placed as a bounded "conversation window" within a larger shared/private
-sequence — never the entire content of a session.
+sequence, never the entire content of a session.
 
--   IAP — Awareness. Individual Awareness Profile.
--   CAT — Understanding. Conversations Across Time.
--   InnerCompass — Agency.
+-   IAP, Awareness. Individual Awareness Profile.
+-   CAT, Understanding. Conversations Across Time.
+-   InnerCompass, Agency.
 
 ## Activities
 
@@ -151,9 +151,9 @@ sequence — never the entire content of a session.
 -   What Else Changed?
 -   The Invisible Backpack
 -   Before / After / Now
--   The Empty Chair — What Is Missing?
+-   The Empty Chair, What Is Missing?
 -   What Is Still Here? (Chemistry of Virtue may support recognition
-    here — never scored, never implied to compensate for loss)
+    here, never scored, never implied to compensate for loss)
 -   The Next Ripple
 -   The Ripple Map
 -   What Has Grief Been Allowed to Decide? (private; blank space,
@@ -161,7 +161,7 @@ sequence — never the entire content of a session.
 
 ## Take-Home Continuity
 
-The Take-Home Record — Point of Impact, What Changed First, Ripples I
+The Take-Home Record, Point of Impact, What Changed First, Ripples I
 Can See Now, What I Have Been Carrying, What Is Still Here, What May
 Need Restoration, What May Need to Be Grieved, What I Cannot Control,
 What I Can Choose, When the Ripple Returns.
@@ -187,19 +187,19 @@ What I Can Choose, When the Ripple Returns.
 
 ## Scalable Formats
 
-Each format selects or compresses modules from the same eleven —none
+Each format selects or compresses modules from the same eleven; none
 introduce a different sequence.
 
--   20–30 minute presentation — Modules 2, 3, 6, closing with a brief
+-   20–30 minute presentation, Modules 2, 3, 6, closing with a brief
     Module 10
--   60–90 minute workshop — Modules 2–6, 8, a shortened Module 10
--   Half-day workshop — Modules 1–8
--   2-day retreat — Day One: Modules 1–5; Day Two: Modules 6–11
--   3-day retreat — Day One: Modules 1–3; Day Two: Modules 4–9; Day
+-   60–90 minute workshop, Modules 2–6, 8, a shortened Module 10
+-   Half-day workshop, Modules 1–8
+-   2-day retreat, Day One: Modules 1–5; Day Two: Modules 6–11
+-   3-day retreat, Day One: Modules 1–3; Day Two: Modules 4–9; Day
     Three: Modules 10–11
--   Community/grief event — Modules 1–4, no private disclosure
+-   Community/grief event, Modules 1–4, no private disclosure
     required
--   Youth adaptation — separate safeguarded architecture; not
+-   Youth adaptation, separate safeguarded architecture; not
     remapped here
 
 ## Anchor

@@ -12,7 +12,7 @@ import {
   deleteUnsaidConversation,
 } from "@/lib/engine/unsaid";
 
-export const metadata = { title: "What Still Needs to Be Said — AVAIA" };
+export const metadata = { title: "What Still Needs to Be Said, AVAIA" };
 export const dynamic = "force-dynamic";
 
 export default async function StillNeedsToBeSaidPage({
@@ -31,7 +31,7 @@ export default async function StillNeedsToBeSaidPage({
         <p className="label mb-3">What Still Needs to Be Said</p>
         <h1 className="font-serif text-4xl text-ink">Some conversations can&rsquo;t happen in ordinary life</h1>
         <p className="mt-4 text-lg text-muted">
-          A private space to say what still needs to be said — to someone who has died, someone
+          A private space to say what still needs to be said, to someone who has died, someone
           estranged, someone far away, or anyone else you can&rsquo;t have this conversation with
           right now. Say it and let it be received, or ask for something back.
         </p>
@@ -39,7 +39,7 @@ export default async function StillNeedsToBeSaidPage({
           <p className="label mb-2 text-muted">You choose how it goes</p>
           <p className="text-ink">
             Some things just need somewhere to go. Other times you may want to hear something
-            back — not necessarily what you want to hear, but something true. Both are available
+            back, not necessarily what you want to hear, but something true. Both are available
             here, and you decide which, every time you speak.
           </p>
         </div>

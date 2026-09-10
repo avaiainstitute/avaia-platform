@@ -11,15 +11,15 @@ import {
 import type { ComponentAvailabilityItem, RelatedClass } from "@/components/ExperienceDetail";
 import { VIEW_FROM_ABOVE_CLASSES } from "@/lib/view-from-above";
 
-/** Delivery interface for a View From Above class -- rendered by both the
+/** Delivery interface for a View From Above class, rendered by both the
  *  Guide-facing (app/toolkit/experiences/[experienceId]) and admin
  *  draft-preview routes in place of the generic ExperienceDetail,
  *  whenever an Experience's `components` tags include "view-from-above"
  *  (see lib/experiences.ts / migration 0055). Mirrors
- *  DefyingGriefCurriculum.tsx's structure exactly -- same pattern, content
+ *  DefyingGriefCurriculum.tsx's structure exactly, same pattern, content
  *  reorganized for this collection's own field set (a single class, not
  *  an eleven-module program, so one "movement" row rather than many).
- *  Reads only `experiences` and `experience_sections` -- no new table, no
+ *  Reads only `experiences` and `experience_sections`, no new table, no
  *  Host/participant data of any kind. */
 
 type ViewFromAboveClassProps = {
@@ -71,8 +71,8 @@ export default function ViewFromAboveClass({
   return (
     <div>
       <p className="label mb-3">
-        The View from Above — A Class Built on Bailand's Hike
-        {experience.status !== "published" ? " — DRAFT PREVIEW" : ""}
+        The View from Above, A Class Built on Bailand's Hike
+        {experience.status !== "published" ? ", DRAFT PREVIEW" : ""}
       </p>
       <h1 className="font-serif text-4xl text-ink">{experience.title}</h1>
       {experience.summary && <p className="mt-3 text-lg text-muted">{experience.summary}</p>}
@@ -101,16 +101,11 @@ export default function ViewFromAboveClass({
         </Link>
       </div>
 
-      {relatedClasses.length > 0 && (
-        <div className="mt-4">
-          <p className="label mb-2 text-muted">In the Class Library as</p>
-          <ul className="list-disc pl-5 text-sm text-ink">
-            {relatedClasses.map((c) => (
-              <li key={c.id}>{c.title}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* "In the Class Library as..." section intentionally not rendered,
+          Dorian does not want the Class Library catalog presented on the
+          website right now. relatedClasses is still received and typed so
+          this can come back with a one-line change once that's decided;
+          nothing is deleted, just not surfaced. */}
 
       <div className="mt-10 flex flex-wrap gap-2 border-t border-rule pt-8">
         {TABS.map((t) => (
@@ -140,7 +135,7 @@ export default function ViewFromAboveClass({
 
           {anchor && (
             <div className="rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-4">
-              <p className="label mb-1 text-muted">Anchor — Dorian's Own Words</p>
+              <p className="label mb-1 text-muted">Anchor, Dorian's Own Words</p>
               <p className="font-serif text-lg text-ink">{anchor.body}</p>
             </div>
           )}
@@ -172,7 +167,7 @@ export default function ViewFromAboveClass({
               <div className="flex flex-wrap gap-2">
                 {componentAvailability.map((c) => (
                   <span key={c.key} className="rounded-md border border-rule px-3 py-1 text-sm text-ink">
-                    {c.label} — {c.statusLabel}
+                    {c.label}, {c.statusLabel}
                   </span>
                 ))}
               </div>
@@ -235,7 +230,7 @@ export default function ViewFromAboveClass({
       {activeTab === "personal" && (
         <section className="mt-10">
           <div className="rounded-md border border-rule px-4 py-3 text-xs text-muted">
-            PARTICIPANT MATERIAL — previewed here for your preparation only, exactly as a
+            PARTICIPANT MATERIAL, previewed here for your preparation only, exactly as a
             participant would see it. Nothing a participant writes here becomes visible to you.
           </div>
           <div className="mt-5 space-y-4">

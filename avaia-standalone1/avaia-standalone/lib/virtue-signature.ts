@@ -10,14 +10,14 @@ import {
   IDENTITY_FIRST_RING,
 } from "@/lib/virtue-signature-constants";
 
-// AVAIA Virtue Signature -- source-based implementation. See migration
+// AVAIA Virtue Signature, source-based implementation. See migration
 // 0044's own header for the full provenance trail (original AVAIA source
 // material, recovered and read directly, not invented). This module owns
 // the record/query helpers; the six layers, "other people can provide
 // evidence, not identity," and "living record, not frozen" are the
 // governing facts everything here protects. Plain types/constants live in
 // lib/virtue-signature-constants.ts (not server-only) and are re-exported
-// here for server code's convenience -- see that file's own header for why.
+// here for server code's convenience, see that file's own header for why.
 
 export {
   SIGNATURE_LAYER_LABEL,
@@ -27,7 +27,7 @@ export {
 export type { SignatureLayer, SignatureSourceType, VirtueSignatureEntry };
 
 /** Adds one entry to a self-serve Host's own Signature. `supabase` must be
- *  the caller's own RLS-scoped client -- RLS enforces host_id = auth.uid()
+ *  the caller's own RLS-scoped client, RLS enforces host_id = auth.uid()
  *  regardless. family/element are validated against the canonical
  *  Chemistry of Virtue before insert; an invalid pair is rejected rather
  *  than silently stored, matching the same backstop referral generation
@@ -59,7 +59,7 @@ export async function addSignatureEntryForHost(
 }
 
 /** Same as addSignatureEntryForHost, for a Guide-facilitated participant.
- *  `supabase` must be the Guide's own RLS-scoped client -- RLS enforces
+ *  `supabase` must be the Guide's own RLS-scoped client, RLS enforces
  *  the participant belongs to this Guide. */
 export async function addSignatureEntryForParticipant(
   supabase: SupabaseClient,
@@ -87,7 +87,7 @@ export async function addSignatureEntryForParticipant(
   return { error: error?.message ?? null };
 }
 
-/** The Host deciding something no longer belongs -- a status flip, not a
+/** The Host deciding something no longer belongs, a status flip, not a
  *  delete, so their own history of what they once recognized and later
  *  revised isn't erased. RLS (host_id or guide_participant_id ownership)
  *  is the only access check; this function trusts the caller's own
@@ -123,7 +123,7 @@ export async function listSignatureEntriesForParticipant(supabase: SupabaseClien
 }
 
 /** Groups active entries by their six layers, in the source material's own
- *  order -- what components/VirtueSignatureRecord.tsx and the Noble Gas
+ *  order, what components/VirtueSignatureRecord.tsx and the Noble Gas
  *  visual both read from. */
 export function groupByLayer(entries: VirtueSignatureEntry[]): Record<SignatureLayer, VirtueSignatureEntry[]> {
   const grouped = Object.fromEntries(SIGNATURE_LAYER_ORDER.map((l) => [l, [] as VirtueSignatureEntry[]])) as Record<

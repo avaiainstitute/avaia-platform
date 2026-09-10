@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** Called by the participant's own session (bearer token), never by the
  *  Guide. This is the only way a "brought_forward" choice can post
- *  anything into the shared Room -- the Guide's own session has no
+ *  anything into the shared Room, the Guide's own session has no
  *  equivalent endpoint anymore (see the removed PATCH on
  *  /api/room/[roomId]/private). */
 export async function POST(request: Request) {

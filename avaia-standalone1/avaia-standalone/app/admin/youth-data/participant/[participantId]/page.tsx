@@ -63,7 +63,7 @@ export default async function AdminYouthDataParticipantPage({
         .from("youth_program_participants")
         .select("id", { count: "exact", head: true })
         .eq("participant_id", participant.id),
-      // Not separately deleted by deleteYouthParticipantData -- the foreign
+      // Not separately deleted by deleteYouthParticipantData, the foreign
       // key is ON DELETE CASCADE (confirmed live during the admin/Guide
       // usability pass), so the deletion itself is already complete without
       // app code touching this table. Only the preview list was missing it.
@@ -80,7 +80,7 @@ export default async function AdminYouthDataParticipantPage({
           ← Back to Youth Data
         </Link>
       </p>
-      <p className="label mb-3">Admin — Youth Data</p>
+      <p className="label mb-3">Admin, Youth Data</p>
       <h1 className="font-serif text-4xl text-ink">{participant.name}</h1>
       <p className="mt-2 text-muted">
         {participant.email ?? "No email on file"} · Band: {participant.developmental_band ?? "not set"} · On record
@@ -90,7 +90,7 @@ export default async function AdminYouthDataParticipantPage({
       <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5">
         <p className="label mb-3 text-muted">What will be deleted</p>
         <ul className="space-y-1 text-sm text-ink">
-          <li>{sessionCount ?? 0} Guide session(s) — and every conversation, message, and referral they reached</li>
+          <li>{sessionCount ?? 0} Guide session(s), and every conversation, message, and referral they reached</li>
           <li>{consentCount ?? 0} Guardian consent record(s)</li>
           <li>{programCount ?? 0} Program registration(s)</li>
           <li>{signatureCount ?? 0} Virtue Signature entr{signatureCount === 1 ? "y" : "ies"}</li>

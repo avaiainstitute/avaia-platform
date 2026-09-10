@@ -9,15 +9,15 @@ import { recordAiUsage } from "@/lib/engine/ai-usage";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** The private-processing equivalent of /api/conversation -- same engine
+/** The private-processing equivalent of /api/conversation, same engine
  *  (systemPromptFor, GUARDRAILS, the real IAP instruction set), deliberately
  *  authenticated by bearer token instead of the cookie session every other
  *  page uses. That's the whole point: this request is coming from
  *  lib/supabase/participant-client.ts's isolated session, not from the
- *  Guide's signed-in browser -- there is no cookie session to read here,
+ *  Guide's signed-in browser, there is no cookie session to read here,
  *  and there must never be one for this route to work correctly.
  *
- *  Non-streaming (unlike /api/conversation) -- a deliberate scope choice
+ *  Non-streaming (unlike /api/conversation), a deliberate scope choice
  *  for this first pass, not a capability gap: private processing here is a
  *  reflective detour inside a Room, not a full completable IAP/CAT/
  *  InnerCompass Journey with its own referral handoff. If that changes,
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   // RLS (conversations are self-only) already guarantees this row belongs
-  // to this token's own user -- no separate ownership check needed here,
+  // to this token's own user, no separate ownership check needed here,
   // unlike the admin-client paths elsewhere in the Room feature.
   const { data: convo } = await supabase
     .from("conversations")
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   if (dbMessages[0]?.role === "guide") {
     system +=
       `\n\nYou have already opened this conversation by saying: "${dbMessages[0].content}" ` +
-      "The Host is now responding to that. Continue naturally from what they say -- do not greet " +
+      "The Host is now responding to that. Continue naturally from what they say, do not greet " +
       "again, re-introduce yourself, or repeat your opening question.";
     convoMessages = dbMessages.slice(1);
   }

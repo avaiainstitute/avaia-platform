@@ -1,4 +1,4 @@
--- Journey continuity, step 1 — explicit Journey grouping.
+-- Journey continuity, step 1, explicit Journey grouping.
 --
 -- Today, which conversations belong to "the same Journey" is an inference
 -- from timestamp proximity, computed fresh by whatever code happens to look
@@ -9,9 +9,9 @@
 -- manual SQL fix. This migration makes the relationship an explicit,
 -- stored fact instead of a runtime guess.
 --
--- Schema only — additive, non-destructive. Every clause is skipped if it
+-- Schema only, additive, non-destructive. Every clause is skipped if it
 -- already exists, safe to re-run. Historical backfill (assigning journey_id
--- to existing conversations) is a separate, reviewable script — see the
+-- to existing conversations) is a separate, reviewable script, see the
 -- accompanying instructions, not run automatically here, because it touches
 -- existing rows rather than only adding new structure.
 --
@@ -34,7 +34,7 @@ create policy "journeys are self-only"
   on public.journeys for all
   using (auth.uid() = host_id) with check (auth.uid() = host_id);
 
--- Nullable and unenforced by design — a conversation whose Journey can't be
+-- Nullable and unenforced by design, a conversation whose Journey can't be
 -- confidently determined (see the backfill script) stays null rather than
 -- being assigned a guessed value.
 alter table public.conversations

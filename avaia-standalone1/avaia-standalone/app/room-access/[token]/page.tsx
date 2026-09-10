@@ -5,11 +5,11 @@ import { createParticipantClient } from "@/lib/supabase/participant-client";
 
 type Phase = "loading" | "error" | "chatting" | "choosing-return" | "done";
 
-/** The participant's own private-processing page -- opened from a one-time
+/** The participant's own private-processing page, opened from a one-time
  *  link the Guide hands over, never from the Guide's own signed-in tab.
  *  Everything here runs on an isolated Supabase client
  *  (lib/supabase/participant-client.ts) whose session lives in its own
- *  localStorage key, not the cookie session the rest of the app uses --
+ *  localStorage key, not the cookie session the rest of the app uses,
  *  opening this in a second tab of the same browser the Guide is signed
  *  into does not touch or replace the Guide's own session.
  *
@@ -159,8 +159,8 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
       <div className="mx-auto max-w-prose px-5 py-24 text-center">
         <h1 className="font-serif text-2xl text-ink">You&rsquo;re all set.</h1>
         <p className="mt-4 text-muted">
-          You can close this tab now and return to your Guide. Only what you chose to bring forward
-          — if anything — is visible in the Room.
+          You can close this tab now and return to your Guide. Only what you chose to bring forward,
+          if anything, is visible in the Room.
         </p>
       </div>
     );
@@ -168,7 +168,7 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
 
   return (
     <div className="mx-auto max-w-prose px-5 py-12">
-      <p className="label mb-2 text-muted">Private space{roomTitle ? ` — ${roomTitle}` : ""}</p>
+      <p className="label mb-2 text-muted">Private space{roomTitle ? `, ${roomTitle}` : ""}</p>
       <h1 className="font-serif text-2xl text-ink">This is just between you and AVAIA.</h1>
       <p className="mt-2 text-sm text-muted">
         Nothing here is visible to your Guide or anyone else in the Room unless you choose to bring
@@ -235,7 +235,7 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
           </button>
           {suggestError && <p className="mt-1 text-xs text-[#e0857d]">{suggestError}</p>}
           <p className="mt-1 text-xs text-muted">
-            This only looks at what you already said here -- it fills the box above so you can edit,
+            This only looks at what you already said here, it fills the box above so you can edit,
             replace, or clear it. Nothing is sent to the Room until you choose to send it.
           </p>
           <div className="mt-3 flex gap-2">

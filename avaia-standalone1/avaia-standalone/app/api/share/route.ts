@@ -6,7 +6,7 @@ import { sendEmail, inviteEmailHtml } from "@/lib/resend";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** No admin.getUserByEmail exists in supabase-js — listUsers() is the only
+/** No admin.getUserByEmail exists in supabase-js, listUsers() is the only
  *  documented way, and it's paginated with no server-side email filter, so
  *  this pages through every account comparing emails. Fine at pilot scale;
  *  would need a real index (or a public.profiles email mirror) to stay fast
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "You can't share with yourself." }, { status: 400 });
   }
 
-  // Ownership check — a Host may only share conversations (or their
+  // Ownership check, a Host may only share conversations (or their
   // referrals) that are theirs.
   if (scope === "conversation" || scope === "referral") {
     const { data: convo } = await supabase
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: "granted" });
   }
 
-  // No account yet — record the invite and email them; handle_new_user()
+  // No account yet, record the invite and email them; handle_new_user()
   // converts it into a real grant automatically once they sign up.
   const { error: inviteError } = await supabase.from("shared_access_invites").insert({
     owner_id: user.id,
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     });
   } catch (e) {
     console.error("AVAIA Workbook share invite email failed:", e);
-    // The invite row is still saved — access still activates on signup even
+    // The invite row is still saved, access still activates on signup even
     // if the email itself failed to send (e.g. Resend not yet configured).
   }
 

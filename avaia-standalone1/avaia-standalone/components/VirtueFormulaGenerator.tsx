@@ -37,12 +37,12 @@ function VirtuePill({ name, onClick }: { name: string; onClick?: () => void }) {
 }
 
 /** Describes a role or situation in your own words; AVAIA assembles a
- *  Primary + Supporting + Balancing formula from the real 123 elements --
+ *  Primary + Supporting + Balancing formula from the real 123 elements,
  *  generated live, not looked up from a curated library. See the route's
  *  own comments for why every name it returns is validated against the
  *  real Chemistry of Virtue before being shown.
  *
- *  onSelectVirtue, if given, makes each pill clickable -- it reuses the
+ *  onSelectVirtue, if given, makes each pill clickable, it reuses the
  *  Chemistry page's own existing detail-panel state (see selectByName in
  *  app/chemistry/page.tsx) rather than building a second definition view. */
 export default function VirtueFormulaGenerator({
@@ -83,7 +83,7 @@ export default function VirtueFormulaGenerator({
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe a role, a feeling, or a situation -- e.g. &ldquo;being a present dad&rdquo;"
+          placeholder="Describe a role, a feeling, or a situation, e.g. &ldquo;being a present dad&rdquo;"
           maxLength={600}
           className="flex-1 rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
         />
@@ -151,7 +151,7 @@ export default function VirtueFormulaGenerator({
 }
 
 // Carries this formula's virtue names into Unsung Heroes' default recognition
-// path -- same sessionStorage-handoff pattern already used for avaia:focus
+// path, same sessionStorage-handoff pattern already used for avaia:focus
 // (Journey -> Chemistry of Virtue), just a separate key since the shape is
 // different (a small set of virtues + an outcome, not one family/virtue).
 // Read once and cleared on the Unsung Heroes side; nothing is sent to the AI.
@@ -165,7 +165,7 @@ function noticeThisFormula(formula: Formula) {
       JSON.stringify({ virtues, outcome: formula.desiredOutcome })
     );
   } catch {
-    // Storage can be unavailable (private browsing) -- proceeding without the
+    // Storage can be unavailable (private browsing), proceeding without the
     // reminder banner is a fine, harmless outcome.
   }
   window.location.href = "/unsung-heroes?path=i_saw_someone";

@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** Accepts a pending Family invite. Requires the caller be signed in as
- *  the exact person the invite was sent to -- acceptFamilyInvite() itself
+ *  the exact person the invite was sent to, acceptFamilyInvite() itself
  *  checks the signed-in email against the invited address. */
 export async function POST(request: Request) {
   const supabase = createClient();

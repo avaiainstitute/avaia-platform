@@ -1,4 +1,4 @@
--- AVAIA Youth Journey — Phase 1: schema only.
+-- AVAIA Youth Journey, Phase 1: schema only.
 --
 -- Phase 1 is an internal, non-public build of the Youth conversational
 -- path (IAP -> CAT -> InnerCompass) using the existing Journey engine,

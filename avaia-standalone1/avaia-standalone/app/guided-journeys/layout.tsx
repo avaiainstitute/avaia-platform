@@ -4,18 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { isActivelyCertified, isGuidedJourneyFacilitationAuthorized } from "@/lib/guide";
 import SignOutButton from "@/components/SignOutButton";
 
-export const metadata = { title: "Guided Journeys — AVAIA" };
+export const metadata = { title: "Guided Journeys, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Gates the entire /guided-journeys tree -- deliberately its own route,
+/** Gates the entire /guided-journeys tree, deliberately its own route,
  *  separate from /toolkit. Toolkit authorization and Guided Journey
  *  Facilitation authorization are independent professional capabilities
  *  (see lib/guide.ts); nesting this under /toolkit would have silently
  *  added a fourth, unintended requirement (Toolkit access) on top of the
  *  three the Phase E.4 architecture actually specifies. This gate checks
  *  exactly the two account-level conditions those RLS policies
- *  (0029_guide_journey_read_access.sql) also require -- active
- *  certification and authorized guided_journey_facilitation -- nothing
+ *  (0029_guide_journey_read_access.sql) also require, active
+ *  certification and authorized guided_journey_facilitation, nothing
  *  about Toolkit. The third condition (an active Host invitation for one
  *  specific Journey) is necessarily per-journey and is checked by that
  *  Journey's own RLS-protected query in app/guided-journeys/[journeyId]/,

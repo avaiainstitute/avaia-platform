@@ -2,18 +2,18 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ConfirmConsentButton from "@/components/ConfirmConsentButton";
 
-export const metadata = { title: "Guardian Consent — AVAIA" };
+export const metadata = { title: "Guardian Consent, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** The guardian-facing half of the stronger consent pathway
  *  (verification_method: 'guardian_link_confirmed', see
- *  lib/guardian-consent.ts and migration 0043). No login -- a guardian
+ *  lib/guardian-consent.ts and migration 0043). No login, a guardian
  *  never has an AVAIA account. Reads through the narrow SECURITY DEFINER
  *  function get_pending_consent_by_token, which returns only a pending
  *  row matching this exact token and nothing else; confirming calls
  *  confirm_pending_consent, which can only ever flip that one row from
  *  pending to active. A guardian visiting an already-confirmed or
- *  unknown link sees a plain, honest state -- never an error that implies
+ *  unknown link sees a plain, honest state, never an error that implies
  *  something is broken. */
 type PendingConsent = {
   id: string;
@@ -70,7 +70,7 @@ export default async function GuardianConsentPage({ params }: { params: { token:
 
       <p className="mt-6 text-sm text-muted">
         Confirming below authorizes participation only. It does not give you access to what this
-        young person says privately in their own AVAIA conversation — that stays theirs.
+        young person says privately in their own AVAIA conversation, that stays theirs.
       </p>
 
       <ConfirmConsentButton token={params.token} />

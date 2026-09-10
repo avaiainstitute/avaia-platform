@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import GuideEnrollForm from "@/components/GuideEnrollForm";
 
-export const metadata = { title: "Enroll — Certified AVAIA Guide" };
+export const metadata = { title: "Enroll, Certified AVAIA Guide" };
 export const dynamic = "force-dynamic";
 
 export default async function CertifiedGuideEnrollPage({
@@ -61,10 +61,10 @@ export default async function CertifiedGuideEnrollPage({
           <p className="mt-3 text-ink">
             {existingPayment
               ? `Recorded ${new Date(existingPayment.paid_at).toLocaleDateString()}.`
-              : "Thank you — this is now on file."}{" "}
+              : "Thank you, this is now on file."}{" "}
             AVAIA will follow up directly about Orientation and next steps. Enrollment records your
             payment; it does not itself admit you as a certification candidate or grant any Guide
-            permission — that follows as a separate step.
+            permission, that follows as a separate step.
           </p>
           <Link
             href="/contact?reason=certification"
@@ -77,7 +77,7 @@ export default async function CertifiedGuideEnrollPage({
         <>
           <p className="mt-4 text-lg leading-relaxed text-ink">
             The current program investment is <strong>$4,500</strong>, paid in full. Payment is the
-            Enroll step of the certification pathway — Orientation, training, practicum, and the
+            Enroll step of the certification pathway, Orientation, training, practicum, and the
             certification decision itself all follow separately.
           </p>
           <p className="mt-4 text-muted">

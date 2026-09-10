@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Guided Journeys — AVAIA" };
+export const metadata = { title: "Guided Journeys, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Lists this Guide's own active Host invitations (Phase E.4). Uses
@@ -10,10 +10,10 @@ export const dynamic = "force-dynamic";
  *  guide select"), so an invitation still shows honestly even if this
  *  specific Journey has since become unreadable (e.g. it turns out to be
  *  Youth, which the invite flow already prevents but this stays a defensive
- *  check, not an assumption) -- shown as "Not currently accessible" rather
+ *  check, not an assumption), shown as "Not currently accessible" rather
  *  than silently disappearing. This page itself is gated one level up, in
  *  app/guided-journeys/layout.tsx, on active certification + Guided
- *  Journey Facilitation authorization -- not Toolkit authorization. */
+ *  Journey Facilitation authorization, not Toolkit authorization. */
 export default async function GuidedJourneysPage() {
   const supabase = createClient();
   const {

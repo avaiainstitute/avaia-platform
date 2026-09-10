@@ -11,7 +11,7 @@ import PreparationChat from "@/components/PreparationChat";
 import { listSignatureEntriesForParticipant } from "@/lib/virtue-signature";
 import { VirtueLink } from "@/components/VirtueLink";
 
-export const metadata = { title: "Preparation — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Preparation, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 const fmtDate = (iso: string) =>
@@ -19,13 +19,13 @@ const fmtDate = (iso: string) =>
 
 function sessionTitle(record: ParticipantSessionRecord): string {
   const base = toolLabel(record.session.tool);
-  if (record.session.program === "defying-grief") return `${base} — Defying Grief`;
-  if (record.session.program === "youth") return `${base} — Youth`;
+  if (record.session.program === "defying-grief") return `${base}, Defying Grief`;
+  if (record.session.program === "youth") return `${base}, Youth`;
   return base;
 }
 
 /** guide_sessions.status only ever flips to 'complete' on the final stage of
- *  a chain (InnerCompass -- see app/toolkit/innercompass/[sessionId]/page.tsx);
+ *  a chain (InnerCompass, see app/toolkit/innercompass/[sessionId]/page.tsx);
  *  an IAP or CAT session's own row stays 'active' forever even once its
  *  underlying conversation is done and handed off. The conversation's (or
  *  Unsung Heroes conversation's) own status is the real signal whenever one
@@ -37,10 +37,10 @@ function effectiveStatus(record: ParticipantSessionRecord): "active" | "complete
 
 /** Preparation's central discipline: only ever render fields already
  *  produced by a completed stage and stored in its referral (or an already-
- *  saved Unsung Heroes recognition) -- never call the model, never
+ *  saved Unsung Heroes recognition), never call the model, never
  *  summarize, never infer. "host_authored" and "open_unresolved" are the
  *  two provenance roles formatReferralFields already tags as, respectively,
- *  the Host's own verbatim language and material explicitly left open --
+ *  the Host's own verbatim language and material explicitly left open,
  *  the most literal reading of "prior themes/threads that were explicitly
  *  recorded," as opposed to a stage's own synthesis, which belongs in the
  *  full referral below, not this summary. */
@@ -61,7 +61,7 @@ function ThreadsRecorded({ sessions }: { sessions: ParticipantSessionRecord[] })
     <section className="mt-10 rounded-lg border border-seal/40 bg-seal/[0.06] p-5">
       <h2 className="font-serif text-xl text-seal">Threads already recorded</h2>
       <p className="mt-1 text-sm text-muted">
-        In the Host&rsquo;s own words, and what was explicitly left open -- nothing summarized,
+        In the Host&rsquo;s own words, and what was explicitly left open, nothing summarized,
         nothing added.
       </p>
       <div className="mt-5 space-y-5">
@@ -144,7 +144,7 @@ function FullSessionDetails({ record }: { record: ParticipantSessionRecord }) {
               )}
             </div>
             <p className="mt-1 text-sm text-muted">
-              <span className="text-ink">{recognition.who_became_visible}</span> — recognized for it
+              <span className="text-ink">{recognition.who_became_visible}</span>, recognized for it
             </p>
             <p className="mt-2 text-sm text-muted">{recognition.story}</p>
           </div>
@@ -176,13 +176,13 @@ export default async function PreparationPage({
   const active = sessions.filter((r) => effectiveStatus(r) !== "complete");
   const complete = sessions.filter((r) => effectiveStatus(r) === "complete");
 
-  // Distinct (tool, program) combinations this participant has used --
+  // Distinct (tool, program) combinations this participant has used,
   // display only, drawn straight from session.tool/program.
   const toolsUsed = [
     ...new Map(
       sessions.map((r) => [
         `${r.session.tool}:${r.session.program}`,
-        r.session.program === "defying-grief" ? `${toolLabel(r.session.tool)} — Defying Grief` : toolLabel(r.session.tool),
+        r.session.program === "defying-grief" ? `${toolLabel(r.session.tool)}, Defying Grief` : toolLabel(r.session.tool),
       ])
     ).values(),
   ];
@@ -200,7 +200,7 @@ export default async function PreparationPage({
       <div className="mt-5 rounded-lg border border-rule bg-white/[0.04] p-5">
         <p className="text-sm text-ink">
           The Host isn&rsquo;t arriving to be examined. This page only organizes what they&rsquo;ve
-          already, explicitly brought forward -- it doesn&rsquo;t interpret them, diagnose them, or
+          already, explicitly brought forward, it doesn&rsquo;t interpret them, diagnose them, or
           decide what this conversation should discover. It exists so nobody drops their story while
           they walk from one room to the next.
         </p>
@@ -224,7 +224,7 @@ export default async function PreparationPage({
 
       {signatureEntries.length > 0 && (
         <section className="mt-6 rounded-lg border border-rule bg-white/[0.03] p-5">
-          <p className="label mb-2 text-muted">Virtue Signature — qualities this participant has recognized</p>
+          <p className="label mb-2 text-muted">Virtue Signature, qualities this participant has recognized</p>
           <p className="mb-3 text-sm text-muted">
             Evidence the participant has chosen to keep, not a statement of who they are.
           </p>
@@ -236,7 +236,7 @@ export default async function PreparationPage({
                 virtue={e.element}
                 className="rounded-full border border-rule px-3 py-1 text-xs text-ink transition-colors hover:border-seal"
               >
-                {e.element ? `${e.family} — ${e.element}` : e.family}
+                {e.element ? `${e.family}, ${e.element}` : e.family}
               </VirtueLink>
             ))}
           </div>

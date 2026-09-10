@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 /** Where a Family invite link lands. Requires the visitor be signed in as
- *  the exact email the invite was sent to -- acceptFamilyInvite() checks
+ *  the exact email the invite was sent to, acceptFamilyInvite() checks
  *  this server-side regardless of what this page does, but the page also
  *  checks it up front so a signed-in-as-someone-else visitor gets a clear
  *  explanation instead of a confusing server error. */
@@ -79,7 +79,7 @@ export default function AcceptFamilyInvitePage() {
       <h1 className="font-serif text-3xl text-ink">You&rsquo;ve been invited to a Family AVAIA Membership.</h1>
       <p className="mt-4 text-muted">
         Joining gives you AVAIA Membership access under this Family plan. It does not share your
-        conversations, Journey, or Workbook with anyone else on the plan — including whoever
+        conversations, Journey, or Workbook with anyone else on the plan, including whoever
         invited you.
       </p>
 

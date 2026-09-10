@@ -39,9 +39,9 @@
 -- session-specific detail that belongs with the person running the room,
 -- not baked into shared curriculum content.
 update public.experience_sections
-set body = body || ' Using physical Chemistry of Virtue materials: if a printed table, element cards, or similar physical materials are present in the room, this is where they belong -- during "What Is Still Here?", let participants handle and browse them at their own pace, then invite (never require) them to log anything that felt true afterward, privately, in their own AVAIA account -- the same Chemistry of Virtue table and Virtue Signature that live there permanently, once they have one.'
+set body = body || ' Using physical Chemistry of Virtue materials: if a printed table, element cards, or similar physical materials are present in the room, this is where they belong, during "What Is Still Here?", let participants handle and browse them at their own pace, then invite (never require) them to log anything that felt true afterward, privately, in their own AVAIA account, the same Chemistry of Virtue table and Virtue Signature that live there permanently, once they have one.'
 where id = '0634dd3d-2c41-4afc-a783-c300488441a1';
 
 update public.experience_sections
-set body = body || ' HOW TO CONTINUE — This Take-Home Record is yours to keep either way. If you would like it to keep going as your own ongoing AVAIA Journey -- saved privately in your own Workbook, with the full Chemistry of Virtue and your own Virtue Signature -- ask your Guide or facilitator for today''s sign-in link or QR code. The account is yours alone; nothing you wrote above is seen by AVAIA, your Guide, or any organization unless you choose to bring it into a conversation yourself.'
+set body = body || ' HOW TO CONTINUE, This Take-Home Record is yours to keep either way. If you would like it to keep going as your own ongoing AVAIA Journey, saved privately in your own Workbook, with the full Chemistry of Virtue and your own Virtue Signature, ask your Guide or facilitator for today''s sign-in link or QR code. The account is yours alone; nothing you wrote above is seen by AVAIA, your Guide, or any organization unless you choose to bring it into a conversation yourself.'
 where id = '5d41789f-1314-463b-8f1f-6ddea7eacf15';

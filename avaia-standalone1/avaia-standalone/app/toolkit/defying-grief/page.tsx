@@ -4,10 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFYING_GRIEF_PROGRAM_NAME } from "@/lib/defying-grief";
 
-export const metadata = { title: "Defying Grief — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Defying Grief, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Same email-lookup pattern used in app/toolkit/page.tsx -- kept local to
+/** Same email-lookup pattern used in app/toolkit/page.tsx, kept local to
  *  each start action rather than factored out, to avoid touching the
  *  original, working /api/share route. */
 async function findHostIdByEmail(email: string): Promise<string | null> {
@@ -22,7 +22,7 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
   return null;
 }
 
-/** Defying Grief in the Guide Toolkit is not a separate implementation --
+/** Defying Grief in the Guide Toolkit is not a separate implementation,
  *  it's the exact same installed IAP/CAT/InnerCompass tools, just started
  *  with program: "defying-grief" instead of "general", the same way
  *  app/defying-grief/page.tsx's beginDefyingGriefWorkshop threads program
@@ -78,7 +78,7 @@ export default async function ToolkitDefyingGriefPage() {
       <h1 className="font-serif text-4xl text-ink">{DEFYING_GRIEF_PROGRAM_NAME}</h1>
       <p className="mt-4 text-lg text-muted">
         The same Individual Awareness Profile, Conversations Across Time, and InnerCompass
-        Toolkit tools, threaded with the Defying Grief framing -- Audacity enters at CAT, exactly
+        Toolkit tools, threaded with the Defying Grief framing, Audacity enters at CAT, exactly
         as it does for a self-serve Host. Nothing about the underlying engine is different.
       </p>
 
@@ -98,7 +98,7 @@ export default async function ToolkitDefyingGriefPage() {
           </div>
           <div>
             <label className="label mb-2 block" htmlFor="email">
-              Email (optional — links to their AVAIA account if they have one)
+              Email (optional, links to their AVAIA account if they have one)
             </label>
             <input
               id="email"

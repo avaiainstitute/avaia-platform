@@ -32,7 +32,7 @@ export default function UnsaidIntake({ action }: { action: (formData: FormData) 
         ))}
       </div>
       <p className="mt-2 text-xs text-muted">
-        (Just examples — write it however feels right. Nothing here is a fixed category.)
+        (Just examples, write it however feels right. Nothing here is a fixed category.)
       </p>
 
       <details className="mt-8 rounded-lg border border-rule bg-white/[0.03] p-5">
@@ -40,7 +40,7 @@ export default function UnsaidIntake({ action }: { action: (formData: FormData) 
           Add something that might help ground this conversation (optional)
         </summary>
         <p className="mt-3 text-sm text-muted">
-          A memory, something they used to say, how they showed love, a story — anything that
+          A memory, something they used to say, how they showed love, a story, anything that
           might help if you later ask for something back. Never required.
         </p>
         <textarea

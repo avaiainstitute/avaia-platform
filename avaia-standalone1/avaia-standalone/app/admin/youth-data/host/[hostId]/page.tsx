@@ -79,20 +79,20 @@ export default async function AdminYouthDataHostPage({
           ← Back to Youth Data
         </Link>
       </p>
-      <p className="label mb-3">Admin — Youth Data</p>
+      <p className="label mb-3">Admin, Youth Data</p>
       <h1 className="font-serif text-4xl text-ink">{email}</h1>
       <p className="mt-2 text-muted">Self-serve Youth Host</p>
 
       <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5">
         <p className="label mb-3 text-muted">What will be deleted</p>
         <ul className="space-y-1 text-sm text-ink">
-          <li>{convoCount ?? 0} Youth (program=&lsquo;youth&rsquo;) conversation(s) — and their messages, referrals, journeys</li>
+          <li>{convoCount ?? 0} Youth (program=&lsquo;youth&rsquo;) conversation(s), and their messages, referrals, journeys</li>
           <li>{consentCount ?? 0} Guardian consent record(s)</li>
           <li>{signatureCount ?? 0} Virtue Signature entr{signatureCount === 1 ? "y" : "ies"} from those conversations</li>
           <li>The developmental band on this account&rsquo;s profile</li>
         </ul>
         <p className="mt-3 text-xs text-muted">
-          This does not delete the account itself or any non-Youth (adult/general) conversations —
+          This does not delete the account itself or any non-Youth (adult/general) conversations,
           only the Youth-linked record.
         </p>
       </div>

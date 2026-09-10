@@ -10,7 +10,7 @@ import {
 } from "@/lib/engine/room";
 import RoomView from "@/components/RoomView";
 
-export const metadata = { title: "Shared Room — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Shared Room, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 export default async function RoomDetailPage({ params }: { params: { roomId: string } }) {

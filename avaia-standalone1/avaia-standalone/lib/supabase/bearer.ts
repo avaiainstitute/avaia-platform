@@ -9,10 +9,10 @@ import { createClient as createRawClient } from "@supabase/supabase-js";
  * lives in an isolated, non-cookie client (lib/supabase/participant-client.ts)
  * specifically so it never touches the Guide's own cookie-based session in
  * the same browser. Every RLS policy this client hits evaluates auth.uid()
- * as the token's own subject -- the same self-only policies every other
+ * as the token's own subject, the same self-only policies every other
  * Host's data already relies on, unchanged. Using the anon key (not the
  * service-role key) is what keeps this RLS-respecting rather than an admin
- * bypass -- the caller only ever gets back what auth.uid() = host_id (etc.)
+ * bypass, the caller only ever gets back what auth.uid() = host_id (etc.)
  * already allows for their own token.
  */
 export function createClientForBearerToken(accessToken: string) {
@@ -37,7 +37,7 @@ export async function authenticateBearer(
   if (!token) return null;
   const supabase = createClientForBearerToken(token);
   // Pass the token explicitly rather than relying on the client's internal
-  // session state (there is none -- persistSession/autoRefreshToken are
+  // session state (there is none, persistSession/autoRefreshToken are
   // both off) or on the global Authorization header reaching the auth
   // client the same way it reaches PostgREST. getUser(jwt) is the
   // documented, guaranteed-correct way to validate a specific token.

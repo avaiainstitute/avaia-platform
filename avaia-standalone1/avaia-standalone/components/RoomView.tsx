@@ -132,7 +132,7 @@ export default function RoomView({
   }
 
   /** Starts private processing and receives back only a one-time access
-   *  URL -- never the conversation itself. This Room view has no way to
+   *  URL, never the conversation itself. This Room view has no way to
    *  read what happens at that link; it exists only to be copied and
    *  handed to the participant. */
   async function startPrivate(participantId: string) {
@@ -157,11 +157,11 @@ export default function RoomView({
       setCopiedFor(participantId);
       setTimeout(() => setCopiedFor(null), 2000);
     } catch {
-      /* clipboard unavailable — link is still shown on screen to copy manually */
+      /* clipboard unavailable, link is still shown on screen to copy manually */
     }
   }
 
-  /** Re-fetches the Room's shared thread from the server -- the only way
+  /** Re-fetches the Room's shared thread from the server, the only way
    *  this view learns that a participant brought something back, since
    *  that write happens through the participant's own session, not this
    *  browser. No polling; the Guide checks when it's time to check. */
@@ -311,17 +311,17 @@ export default function RoomView({
           </div>
         )}
 
-        {/* Pending private-processing links -- shown only to be handed over.
+        {/* Pending private-processing links, shown only to be handed over.
             This view has no way to see what happens once one is opened;
             "Check for updates" above is the only way anything from it can
             appear back in the Room, and only if the participant chooses
             to bring something forward themselves. */}
         {pendingPrivate.map((pp) => (
           <div key={pp.participantId} className="mt-4 rounded-lg border border-seal/40 bg-seal/[0.06] p-4">
-            <p className="label mb-1 text-muted">Private processing — {pp.participantName}</p>
+            <p className="label mb-1 text-muted">Private processing, {pp.participantName}</p>
             <p className="mb-3 text-sm text-muted">
               Hand this link to {pp.participantName} to open on their own device, or in a private/
-              incognito window — not in this tab. This view cannot see what happens there.
+              incognito window, not in this tab. This view cannot see what happens there.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <code className="flex-1 truncate rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-xs text-ink">

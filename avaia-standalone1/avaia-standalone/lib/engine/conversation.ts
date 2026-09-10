@@ -33,7 +33,7 @@ export type DbConversation = {
   status: "active" | "complete";
   program: Program;
   // Explicit Journey this conversation belongs to (see public.journeys).
-  // Null means the Journey couldn't be confidently determined -- for
+  // Null means the Journey couldn't be confidently determined, for
   // historical rows only; every conversation created from this point
   // forward is assigned one. Never guessed.
   journey_id: string | null;
@@ -58,7 +58,7 @@ export async function getActiveConversation(
   return (data as DbConversation) ?? null;
 }
 
-/** Starts a brand-new Journey -- call this once, at the very first IAP
+/** Starts a brand-new Journey, call this once, at the very first IAP
  *  conversation of a Journey, and carry the returned id into every later
  *  stage's createConversation call via journeyId. A handoff between stages
  *  (IAP -> CAT -> InnerCompass) reuses the same journey_id; it does not
@@ -83,7 +83,7 @@ export async function createJourney(
  *  program tag isn't lost at the IAP -> CAT -> InnerCompass handoffs.
  *  `journeyId` should be a freshly created journey (via createJourney) when
  *  starting a Journey from IAP, or the prior conversation's own journey_id
- *  when handing off to the next stage -- never a new journey at a handoff. */
+ *  when handing off to the next stage, never a new journey at a handoff. */
 export async function createConversation(
   supabase: SupabaseClient,
   hostId: string,

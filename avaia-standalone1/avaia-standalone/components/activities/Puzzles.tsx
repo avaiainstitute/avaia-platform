@@ -4,7 +4,7 @@ const STROKE = "#1c1a16";
 const W = 3.5;
 
 export function MatchingPuzzle() {
-  // Kindness -- draw a line from each small picture to the phrase it matches.
+  // Kindness, draw a line from each small picture to the phrase it matches.
   return (
     <div>
       <p className="mb-6 text-center font-sans text-base text-[#5b5646]">
@@ -45,7 +45,7 @@ export function MatchingPuzzle() {
 }
 
 export function MazePuzzle() {
-  // Courage -- climb the winding ladder path from START to the high dive.
+  // Courage, climb the winding ladder path from START to the high dive.
   return (
     <div>
       <p className="mb-4 text-center font-sans text-base text-[#5b5646]">
@@ -79,7 +79,7 @@ export function MazePuzzle() {
   );
 }
 
-/** Generic fallback maze for any element without a bespoke puzzle -- same
+/** Generic fallback maze for any element without a bespoke puzzle, same
  *  winding-path artwork as MazePuzzle, relabeled for whichever element it's
  *  serving instead of being hardcoded to Courage/"the high dive". */
 export function GenericMazePuzzle({ elementName, symbol }: { elementName: string; symbol: string }) {
@@ -115,7 +115,7 @@ export function GenericMazePuzzle({ elementName, symbol }: { elementName: string
 }
 
 export function SequencePuzzle() {
-  // Patience -- number the four growth panels in order, then color them.
+  // Patience, number the four growth panels in order, then color them.
   const panels = [
     { label: "Seed" },
     { label: "Sprout" },
@@ -168,7 +168,7 @@ export function SequencePuzzle() {
 }
 
 export function CardPuzzle({ elementName }: { elementName: string }) {
-  // Appreciation -- a foldable thank-you card template, used for real.
+  // Appreciation, a foldable thank-you card template, used for real.
   return (
     <div>
       <p className="mb-4 text-center font-sans text-base text-[#5b5646]">
@@ -191,7 +191,7 @@ export function CardPuzzle({ elementName }: { elementName: string }) {
         <line x1="45" y1="310" x2="265" y2="310" stroke={STROKE} strokeWidth={2} strokeDasharray="4 8" />
       </svg>
       <p className="mt-2 text-center text-xs text-[#5b5646]">
-        A real thank-you note for a real person -- like Sam's in {elementName}&apos;s story.
+        A real thank-you note for a real person, like Sam's in {elementName}&apos;s story.
       </p>
     </div>
   );

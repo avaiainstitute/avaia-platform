@@ -1,5 +1,5 @@
-// Conservative, server-side detection of a Host indicating -- in ordinary
-// typed language, not the "I'm ready to move forward" button -- that they
+// Conservative, server-side detection of a Host indicating, in ordinary
+// typed language, not the "I'm ready to move forward" button, that they
 // want to end the current stage and receive its referral/handoff. Used by
 // /api/conversation to route straight to the same generateReferral() the
 // button calls, uniformly for IAP, CAT, and InnerCompass.
@@ -8,14 +8,14 @@
 // storing a referral, advancing to the next conversation), so a false
 // positive is materially worse than a false negative: ending a stage the
 // Host didn't ask to end is a real loss, while missing a genuine request
-// just falls through to a normal reply -- the button is always still
+// just falls through to a normal reply, the button is always still
 // there, and the Host can simply ask again more plainly. Every design
 // choice here follows from that asymmetry.
 //
 // Approach: split the message into sentences and match each sentence
 // against a small set of fixed shapes, rather than scanning the whole
 // message for keywords. Most negative cases found in review are excluded
-// because they simply don't fit any of these shapes -- not because a veto
+// because they simply don't fit any of these shapes, not because a veto
 // caught them after the fact. Two exceptions:
 // - "I'm ready to move forward"/"move on" describes the Host's life, a
 //   decision, or a relationship far more often than it describes this
@@ -24,7 +24,7 @@
 // - A referral/summary request's real phrasing varies too much to fully
 //   anchor ("Please provide a referral." vs. "Will you please put
 //   together a referral for me so that I can move on?"), so it's matched
-//   as a contained clause and protected by CONDITIONAL_VETO instead --
+//   as a contained clause and protected by CONDITIONAL_VETO instead,
 //   "Can you give me a referral after we talk about one more thing?" must
 //   not trigger merely because the clause appears in the sentence.
 
@@ -36,7 +36,7 @@ function splitSentences(message: string): string[] {
 }
 
 // Applied to whatever sentence matched a pattern below, regardless of
-// category -- defense in depth, not the primary mechanism (the anchored
+// category, defense in depth, not the primary mechanism (the anchored
 // patterns already exclude most of this on their own).
 const CONTINUATION_VETO =
   /\b(but|except|although|though|part|for now|with that|with this|just that|not the whole|one thing)\b/i;
@@ -52,7 +52,7 @@ function isVetoed(sentence: string): boolean {
 
 // Whole-sentence shapes only (optional leading filler / trailing
 // punctuation). Deliberately excludes bare "I'm ready" / "I'm ready now"
-// -- ordinary conversational answers that could occur anywhere in any
+//, ordinary conversational answers that could occur anywhere in any
 // stage, not a request to end one.
 const READY_FINISH_PATTERNS: RegExp[] = [
   /^(ok(ay)?,? )?(i think )?i'?m ready to (finish|wrap up)[.!]?$/,
@@ -69,7 +69,7 @@ const CAPACITY_PATTERNS: RegExp[] = [
 
 // Only the two phrasings clearly about the whole conversation, not a
 // subject within it. "I don't have anything else to add" and "That's all
-// I have" are deliberately absent -- common answers to a single question,
+// I have" are deliberately absent, common answers to a single question,
 // not conversation-level statements. They never trigger, alone or
 // otherwise; if the Host also states a real completion signal elsewhere
 // in the same message, that signal triggers on its own regardless.
@@ -78,7 +78,7 @@ const DONE_ENOUGH_PATTERNS: RegExp[] = [
   /^i think we'?re done[.!]?$/,
 ];
 
-// See file header -- "ready to move forward" alone must never trigger.
+// See file header, "ready to move forward" alone must never trigger.
 // Only fires when the sentence itself names the conversation/handoff.
 const MOVE_FORWARD_PATTERNS: RegExp[] = [
   /^(ok(ay)?,? )?(i think )?i'?m ready to move (forward|on) (with (the|my) referral|to (the )?next (conversation|stage))[.!]?$/,

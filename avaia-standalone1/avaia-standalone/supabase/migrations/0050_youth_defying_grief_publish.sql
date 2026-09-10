@@ -1,6 +1,6 @@
 -- AVAIA Youth Defying Grief -- publish. Dorian has explicitly approved
 -- publication of the existing Youth Defying Grief curriculum (experience
--- "The Things We Lose After the Loss — Youth", id
+-- "The Things We Lose After the Loss, Youth", id
 -- c271efca-7872-481e-88b8-d401e52aaedb). This was deliberately left in
 -- 'draft' by 0040's own header ("a decision for Dorian, not an engineering
 -- default") -- that decision has now been made. Nothing about the content

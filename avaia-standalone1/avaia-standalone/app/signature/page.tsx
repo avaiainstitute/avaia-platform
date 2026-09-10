@@ -15,7 +15,7 @@ import {
 } from "@/lib/virtue-signature";
 import { VIRTUE_FAMILIES, virtuesByFamily } from "@/lib/virtues";
 
-export const metadata = { title: "My Virtue Signature — AVAIA" };
+export const metadata = { title: "My Virtue Signature, AVAIA" };
 export const dynamic = "force-dynamic";
 
 function isLayer(value: FormDataEntryValue | null): value is SignatureLayer {
@@ -23,7 +23,7 @@ function isLayer(value: FormDataEntryValue | null): value is SignatureLayer {
 }
 
 /** "A Virtue Signature is a living recognition record, not a ranked trait
- *  list." (AVAIA_My_Virtue_Signature_Master_Format_Kit.docx) -- a Host
+ *  list." (AVAIA_My_Virtue_Signature_Master_Format_Kit.docx), a Host
  *  adding their own recognition directly, the same act "What Became
  *  Visible" (components/WhatBecameVisible.tsx) offers after a
  *  conversation or Unsung Heroes recognition, just self-initiated rather
@@ -91,7 +91,7 @@ export default async function VirtueSignaturePage({
       <p className="label mb-3 mt-8">Chemistry of Virtue</p>
       <h1 className="font-serif text-4xl text-ink">My Virtue Signature</h1>
       <p className="mt-4 text-lg text-muted">
-        Not a personality test. Not a score. A living recognition record — what keeps becoming
+        Not a personality test. Not a score. A living recognition record, what keeps becoming
         visible when you are being you. Other people can offer evidence. Only you author this.
       </p>
 
@@ -99,7 +99,7 @@ export default async function VirtueSignaturePage({
         <VirtueSignatureVisual entries={entries} />
       </div>
 
-      {/* Wake It Up -- Signature as orientation, not just record. Static
+      {/* Wake It Up, Signature as orientation, not just record. Static
           invitation text, no new mechanism: points back to the same
           Chemistry table (app/chemistry/page.tsx) when nothing here fits.
           Only rendered once there's something to orient from. */}
@@ -108,16 +108,16 @@ export default async function VirtueSignaturePage({
           <p className="label mb-2 text-muted">Orientation, not obligation</p>
           <p className="text-ink">
             What in here might you need to wake up right now? A hard moment rarely calls on
-            everything you&rsquo;ve recognized in yourself — that&rsquo;s not a gap in your
+            everything you&rsquo;ve recognized in yourself, that&rsquo;s not a gap in your
             Signature, just what this particular moment happens to need.
           </p>
           <p className="mt-3 text-muted">
-            If nothing here seems to fit, that&rsquo;s not failure either — the wider{" "}
+            If nothing here seems to fit, that&rsquo;s not failure either, the wider{" "}
             <Link href="/chemistry" className="underline decoration-rule underline-offset-2 hover:text-seal">
               Chemistry of Virtue
             </Link>{" "}
             is still yours to explore. Becoming a Noble Gas doesn&rsquo;t mean not needing
-            anyone — it means you don&rsquo;t need another person to supply your identity in
+            anyone, it means you don&rsquo;t need another person to supply your identity in
             order to connect with them.
           </p>
         </div>
@@ -145,7 +145,7 @@ export default async function VirtueSignaturePage({
                       virtue={e.element}
                       className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
                     >
-                      {e.element ? `${e.family} — ${e.element}` : e.family}
+                      {e.element ? `${e.family}, ${e.element}` : e.family}
                     </VirtueLink>
                     {e.note && <p className="mt-1 text-sm text-muted">{e.note}</p>}
                   </div>
@@ -205,7 +205,7 @@ export default async function VirtueSignaturePage({
           </div>
           <div className="mt-4">
             <label className="label mb-2 block" htmlFor="element">
-              Element (optional — leave blank for the family alone)
+              Element (optional, leave blank for the family alone)
             </label>
             <input
               id="element"

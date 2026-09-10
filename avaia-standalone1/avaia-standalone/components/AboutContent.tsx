@@ -1,15 +1,15 @@
 import { GIVE_METHOD } from "@/lib/institution";
 
 /**
- * The public About page — answers "what is AVAIA," in ordinary language.
+ * The public About page, answers "what is AVAIA," in ordinary language.
  * Deliberately does not function as a directory of every AVAIA system,
- * program, tool, or internal structure -- that material still exists
+ * program, tool, or internal structure, that material still exists
  * (Journey architecture, Workbook, Living Library, Programs, Chemistry,
  * Virtue Signature, Host/Guide/Witness, the five Operating Principles, the
  * Institution/Constitution) but is no longer displayed here. It's reachable
  * through its own pages (e.g. /chemistry, /defying-grief) or, for
  * governance material, not exposed on the public site at all. The GIVE
- * Method section below is a deliberate, temporary exception -- the Guide
+ * Method section below is a deliberate, temporary exception, the Guide
  * Toolkit currently links here (lib/toolkit.ts's "give" entry, /about#give)
  * and that dependency is not being touched in this pass.
  */
@@ -46,7 +46,7 @@ export default function AboutContent() {
         professional standards for those certified to steward AVAIA conversations.
       </p>
 
-      {/* GIVE Method -- left exactly in place; the Guide Toolkit links here
+      {/* GIVE Method, left exactly in place; the Guide Toolkit links here
           directly (/about#give). Not touched or reconsidered in this pass. */}
       <section id="give" className="rule-t mt-16 scroll-mt-24 border-t border-rule pt-12">
         <p className="label mb-2">The Method</p>

@@ -5,11 +5,11 @@ import { stripe, guideCertificationPriceId } from "@/lib/stripe";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Pay-in-full checkout for the $4,500 Certified AVAIA Guide Program --
+/** Pay-in-full checkout for the $4,500 Certified AVAIA Guide Program,
  *  mode "payment" (one-time), not "subscription", matching the actual
  *  program price. No installment option is offered here; that requires a
  *  separate, later owner decision (see the Certified Guide audit's Final
- *  Report) -- this route only ever creates a single, full-amount charge. */
+ *  Report), this route only ever creates a single, full-amount charge. */
 export async function POST(request: Request) {
   const supabase = createClient();
   const {

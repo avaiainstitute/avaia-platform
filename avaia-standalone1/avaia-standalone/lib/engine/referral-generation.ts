@@ -30,7 +30,7 @@ import {
 import { getCompletionSummary, type CompletionSummary } from "@/lib/engine/referral-provenance";
 import { recordAiUsage, type AiUsageFeature } from "@/lib/engine/ai-usage";
 
-// The AVAIA Standard Referral generation logic -- shared between
+// The AVAIA Standard Referral generation logic, shared between
 // /api/referral (the Host's explicit "I'm ready to..." button) and
 // /api/conversation (InnerCompass's conservative finish-intent detection,
 // see isFinishIntent below). Extracted so both call the same function
@@ -42,25 +42,25 @@ import { recordAiUsage, type AiUsageFeature } from "@/lib/engine/ai-usage";
 // stage carries the fields that stage's referral is meant to preserve. All fields
 // are required so the structured output is reliable; the model uses empty arrays
 // or brief strings where a field doesn't apply. IAP_REFERRAL_SCHEMA and
-// CAT_REFERRAL_SCHEMA both use this helper unchanged -- IC_REFERRAL_SCHEMA
+// CAT_REFERRAL_SCHEMA both use this helper unchanged, IC_REFERRAL_SCHEMA
 // does not (see its own definition below), so InnerCompass-specific
 // optionality never touches IAP/CAT's required-field behavior.
 const str = { type: "string" } as const;
 const strArr = { type: "array", items: { type: "string" } } as const;
 
 // A Chemistry of Virtue classification: the family always present, the
-// specific element only when genuinely warranted -- never required merely
+// specific element only when genuinely warranted, never required merely
 // because the shape supports one. Validated against the canonical
 // lib/virtues.ts hierarchy server-side after generation (see the sanitizer
 // below), the same backstop-not-just-instruction treatment already proven
 // for CAT's old family-only filter.
 //
-// required includes "element" deliberately, even though it may be null --
+// required includes "element" deliberately, even though it may be null,
 // the canonical shape is { family, element: null }, not { family } with
 // element merely absent. This keeps every newly generated classification
 // structurally identical whether or not an element applies, matching
 // VirtueClassification in lib/engine/referral-provenance.ts. (Historical
-// referrals predate this shape entirely -- flat family-name strings --
+// referrals predate this shape entirely, flat family-name strings,
 // and are handled by normalizeVirtueClassifications on read, not by
 // rewriting stored data.)
 const virtueArr = {
@@ -79,11 +79,11 @@ const virtueArr = {
 // A Secondary Loss classification: the canonical category (validated
 // against the ten official AVAIA Secondary Losses server-side, see the
 // sanitizer below) always present, alongside an optional Host-specific
-// description -- same required-but-nullable treatment as virtueArr's
+// description, same required-but-nullable treatment as virtueArr's
 // element, so the category and the Host's own language can coexist rather
 // than one replacing the other. Historical referrals predate this shape
-// entirely -- flat free-prose descriptions, never validated against the
-// taxonomy -- and are handled by formatSecondaryLossClassifications on
+// entirely, flat free-prose descriptions, never validated against the
+// taxonomy, and are handled by formatSecondaryLossClassifications on
 // read (lib/engine/referral-provenance.ts), not by rewriting stored data.
 const secondaryLossArr = {
   type: "array",
@@ -148,7 +148,7 @@ const CAT_REFERRAL_SCHEMA = schema({
 });
 
 // InnerCompass gets its own bespoke schema construction rather than the
-// shared schema() helper, deliberately -- "still discerning" must be
+// shared schema() helper, deliberately, "still discerning" must be
 // representable honestly, without the model being mechanically forced to
 // manufacture a decision, next step, or commitment that was never actually
 // reached. outcomeType is the explicit, queryable signal of what actually
@@ -156,7 +156,7 @@ const CAT_REFERRAL_SCHEMA = schema({
 // not just this rendering); the four decision-specific fields are optional
 // so they can be genuinely empty rather than invented, matching whichever
 // outcomeType the conversation actually produced. schema() itself, and
-// IAP_REFERRAL_SCHEMA/CAT_REFERRAL_SCHEMA, are unchanged -- this only
+// IAP_REFERRAL_SCHEMA/CAT_REFERRAL_SCHEMA, are unchanged, this only
 // affects InnerCompass.
 const IC_REFERRAL_SCHEMA = {
   type: "object",
@@ -189,7 +189,7 @@ const IC_REFERRAL_SCHEMA = {
   },
   // Stable required core for every completion, regardless of outcome.
   // Deliberately excludes centralDecisionOrDirection, nextStep,
-  // decisionsMade, commitmentsChosen -- those are optional so
+  // decisionsMade, commitmentsChosen, those are optional so
   // "still_discerning" (and the other non-decision outcomes) never forces
   // fabricated content into a field named for a decision that didn't happen.
   required: [
@@ -211,7 +211,7 @@ const IC_REFERRAL_SCHEMA = {
 
 // IC_REFERRAL_SCHEMA is a bespoke object literal (readonly required tuple),
 // not schema()'s return shape, so this is typed loosely enough to hold
-// both -- these are JSON schema payloads handed to the Anthropic SDK as
+// both, these are JSON schema payloads handed to the Anthropic SDK as
 // data, not something relying on schema()'s exact TS shape.
 const SCHEMA_FOR: Record<Stage, Record<string, unknown>> = {
   iap: IAP_REFERRAL_SCHEMA,
@@ -221,14 +221,14 @@ const SCHEMA_FOR: Record<Stage, Record<string, unknown>> = {
 
 // Backstop for CAT_REFERRAL_VIRTUE_DISCIPLINE / INNERCOMPASS_VIRTUE_
 // DISCIPLINE: every {family, element} entry must validate against the
-// canonical lib/virtues.ts hierarchy -- family is one of the ten official
+// canonical lib/virtues.ts hierarchy, family is one of the ten official
 // names, and element (when present) genuinely belongs to that family, not
 // just to the Chemistry of Virtue in general. A silent drop, not an
-// interpretive fix -- the model is responsible for making the connection
+// interpretive fix, the model is responsible for making the connection
 // correctly; this only prevents an invented family, a misplaced element,
 // or a non-Chemistry word (e.g. "Trust") from ever reaching the stored
 // referral. Applies to both CAT's relevantVirtues and InnerCompass's
-// virtuesInvolved -- same shape, same validation, one place.
+// virtuesInvolved, same shape, same validation, one place.
 function sanitizeVirtueClassifications(value: unknown): unknown[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item) => {
@@ -245,10 +245,10 @@ function sanitizeVirtueClassifications(value: unknown): unknown[] {
 // sanitizeVirtueClassifications above: every {category, description}
 // entry must have a category that validates against the canonical ten
 // AVAIA Secondary Losses. description is free Host-specific text and
-// always valid, including null. A silent drop, not an interpretive fix --
+// always valid, including null. A silent drop, not an interpretive fix,
 // prevents an invented or renamed category from ever reaching the stored
 // referral. Applies to IAP's secondaryLossesIdentified and CAT's
-// significantSecondaryLosses -- same shape, same validation, one place.
+// significantSecondaryLosses, same shape, same validation, one place.
 function sanitizeSecondaryLossClassifications(value: unknown): unknown[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item) => {
@@ -259,13 +259,13 @@ function sanitizeSecondaryLossClassifications(value: unknown): unknown[] {
 }
 
 // Generates InnerCompass's referral-aware opening once, at the CAT ->
-// InnerCompass handoff only. Independent of generateCatOpening -- same
+// InnerCompass handoff only. Independent of generateCatOpening, same
 // mechanism, deliberately separate instruction set and call. Same
 // fallback-on-failure behavior. Uses formatCatReferralForInnerCompass so
-// the opening line is never generated from raw referral JSON -- see that
+// the opening line is never generated from raw referral JSON, see that
 // function's own comment for why.
 // program/developmentalBand: same additive treatment as generateCatOpening
-// in lib/engine/openings.ts -- optional, only changes behavior for
+// in lib/engine/openings.ts, optional, only changes behavior for
 // program === "youth", INNERCOMPASS_OPENING_GENERATION itself untouched.
 async function generateInnerCompassOpening(
   referralContent: unknown,
@@ -318,7 +318,7 @@ export type GenerateGuidesRecordResult =
       content: Record<string, unknown>;
       summary: CompletionSummary;
       /** False when this call lost a race to a concurrent completion
-       *  signal for the same conversation (see the 23505 handling below --
+       *  signal for the same conversation (see the 23505 handling below,
        *  a typed request and a button click, or a double-submit, can both
        *  pass the caller's "still active" check before either has written
        *  back). content/summary reflect whatever the OTHER call already
@@ -327,15 +327,15 @@ export type GenerateGuidesRecordResult =
     }
   | { ok: false; error: string; status: number };
 
-/** Generates and stores the Guide's Record -- the AVAIA Standard Referral
- *  content -- for an active conversation, and marks that conversation
+/** Generates and stores the Guide's Record, the AVAIA Standard Referral
+ *  content, for an active conversation, and marks that conversation
  *  complete. This is the Host-facing preservation half of what completing
  *  a stage does; it deliberately does NOT create the next stage's
- *  conversation (see advanceToNextStage below) -- a caller that wants the
+ *  conversation (see advanceToNextStage below), a caller that wants the
  *  record preserved without advancing the Journey (e.g. "Start a New
  *  Journey" leaving an in-progress conversation behind) calls only this.
  *  referrals.conversation_id is unique at the database level, so this can
- *  never produce two records for the same conversation -- a caller that
+ *  never produce two records for the same conversation, a caller that
  *  later wants to hand this same conversation off just passes the
  *  already-stored `content` straight into advanceToNextStage, never
  *  regenerating it. The caller is responsible for auth, loading the
@@ -348,7 +348,7 @@ export async function generateGuidesRecord(
     id: string;
     stage: Stage;
     program: Program;
-    /** Youth Journey, Phase 1 only -- ignored for every other program. */
+    /** Youth Journey, Phase 1 only, ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
   }
 ): Promise<GenerateGuidesRecordResult> {
@@ -360,11 +360,11 @@ export async function generateGuidesRecord(
   history.push({
     role: "user",
     content:
-      "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me — output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted exactly, word for word, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). A quote must be a contiguous, unedited span of the Host's own words. Do not combine two separate sentences into one, do not remove words from the middle of a sentence, and do not smooth, correct, or lightly edit their phrasing. If a full sentence doesn't fit cleanly, choose a genuinely contiguous shorter span instead of editing a longer one down. Leave a Host-Voice array empty rather than inventing, paraphrasing, or reconstructing a quote from separate parts of what they said.",
+      "I'm ready to move forward. Using everything in this conversation, produce the AVAIA Standard Referral now as structured data. Do not address me, output only the referral fields. The Host-Voice fields must be in the HOST's own words, quoted exactly, word for word, not your paraphrase: reflectionsThatEmerged (moments where they defined themselves, named a value or longing, or discovered something); anchorStatements (their core identity, value, longing, and recognition statements); questionsWorthCarrying (open questions the Host is left holding); and, where they exist, decisionsMade and commitmentsChosen (choices the Host actually voiced). A quote must be a contiguous, unedited span of the Host's own words. Do not combine two separate sentences into one, do not remove words from the middle of a sentence, and do not smooth, correct, or lightly edit their phrasing. If a full sentence doesn't fit cleanly, choose a genuinely contiguous shorter span instead of editing a longer one down. Leave a Host-Voice array empty rather than inventing, paraphrasing, or reconstructing a quote from separate parts of what they said.",
   });
 
   // Carry the incoming referral (if any) into context, so fields meant to persist
-  // across stages — like the conversation's title — can be reused or consciously
+  // across stages, like the conversation's title, can be reused or consciously
   // revised instead of generated fresh with no awareness of what came before.
   let system = `${systemPromptFor(stage, program, developmentalBand ?? null)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
   const { data: incoming } = await supabase
@@ -379,7 +379,7 @@ export async function generateGuidesRecord(
     system +=
       "\n\n" +
       "=".repeat(60) +
-      "\n\nINCOMING AVAIA STANDARD REFERRAL (established context — reuse or consciously revise carried-forward fields such as the title; never replace them with no acknowledgment):\n\n" +
+      "\n\nINCOMING AVAIA STANDARD REFERRAL (established context, reuse or consciously revise carried-forward fields such as the title; never replace them with no acknowledgment):\n\n" +
       JSON.stringify(incoming.content, null, 2);
     const boundaries = (incoming.content as { boundariesToProtect?: unknown })?.boundariesToProtect;
     if (Array.isArray(boundaries) && boundaries.length > 0) {
@@ -391,20 +391,20 @@ export async function generateGuidesRecord(
     }
   }
 
-  // Last, most salient system content for every stage's referral writing --
+  // Last, most salient system content for every stage's referral writing,
   // see REFERRAL_CALIBRATION_DISCIPLINE's own comment in lib/engine/prompts.ts
   // for the root cause this addresses. Placed after the incoming-referral
   // block (not right after REFERRAL_FORMAT) so it stays last even when CAT
   // or InnerCompass has incoming referral context appended above.
   system += `\n\n${"=".repeat(60)}\n\n${REFERRAL_CALIBRATION_DISCIPLINE}`;
 
-  // IAP and CAT only -- InnerCompass's schema has no secondary-loss field.
+  // IAP and CAT only, InnerCompass's schema has no secondary-loss field.
   // See SECONDARY_LOSS_DISCIPLINE's own comment in lib/engine/prompts.ts.
   //
   // RESTORED for program === "youth" (Youth Defying Grief individual
   // Journey pass). The prior safety pass excluded Youth here because at
   // that time Youth's live conversation never taught the canonical taxonomy
-  // -- classifying against it anyway was diagnosis-by-omission, not
+  //, classifying against it anyway was diagnosis-by-omission, not
   // recognition. That premise no longer holds: youthSystemPromptFor now
   // unconditionally layers YOUTH_DEFYING_GRIEF_RECOGNITION into every
   // individual Youth IAP/CAT conversation, which holds the same ten-item
@@ -412,7 +412,7 @@ export async function generateGuidesRecord(
   // introduced to the Host) exactly as SECONDARY_LOSS_RECOGNITION does for
   // adult 'defying-grief'. Since the conversation now actually establishes
   // the framework, this referral step applies uniformly again, same as
-  // every other program -- SECONDARY_LOSS_DISCIPLINE itself already
+  // every other program, SECONDARY_LOSS_DISCIPLINE itself already
   // instructs "never invent... if it doesn't genuinely fit any of the ten,
   // it... is not a secondary loss classification," so a Youth referral
   // still only ever names what the Host's own words actually support.
@@ -500,7 +500,7 @@ export async function generateGuidesRecord(
     // supabase/migrations/0008_referrals_unique_conversation.sql). Two
     // near-simultaneous completion signals for the same conversation (a
     // typed request and a button click, or a double-submit) can both pass
-    // the caller's "still active" check before either has written back --
+    // the caller's "still active" check before either has written back,
     // the second call's insert loses the race. Treat that as success, not
     // failure: the Host's completion intent was already honored by the
     // other call. freshlyGenerated: false tells the caller not to advance
@@ -527,7 +527,7 @@ export async function generateGuidesRecord(
     .eq("id", conversationId);
 
   // A few fields selected from the stored record for the compact live-
-  // conversation completion card -- not a second generation, not a
+  // conversation completion card, not a second generation, not a
   // Guide-role message. The full referral is readable only in Workbook's
   // Guide's Record (formatReferralFields), unaffected by this.
   const summary = getCompletionSummary(stage, finalContent);
@@ -535,12 +535,12 @@ export async function generateGuidesRecord(
 }
 
 /** Hands off to the next stage using an already-generated Guide's Record
- *  (see generateGuidesRecord above) -- generates that stage's referral-
+ *  (see generateGuidesRecord above), generates that stage's referral-
  *  aware opening and creates its conversation row. This is the only step
  *  that actually advances the Journey; a caller that wants a Guide's
  *  Record preserved WITHOUT advancing (e.g. "Start a New Journey" leaving
  *  an in-progress conversation behind) simply never calls this. `content`
- *  must be an already-stored referral for `conversation.id` -- this never
+ *  must be an already-stored referral for `conversation.id`, this never
  *  regenerates or duplicates it. Returns `{ nextStage: null }` at
  *  InnerCompass (no further stage to advance to). */
 export async function advanceToNextStage(
@@ -551,7 +551,7 @@ export async function advanceToNextStage(
     stage: Stage;
     program: Program;
     journeyId: string | null;
-    /** Youth Journey, Phase 1 only -- ignored for every other program. */
+    /** Youth Journey, Phase 1 only, ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
   },
   content: Record<string, unknown>
@@ -579,19 +579,19 @@ export async function advanceToNextStage(
  *  advanceToNextStage (generates the next stage's opening via an LLM
  *  call, creates its conversation row) are two separate steps within one
  *  request, not one database transaction. If that request is interrupted
- *  between them -- the likeliest real cause being the second LLM call
+ *  between them, the likeliest real cause being the second LLM call
  *  (a full stage-opening generation, not a quick lookup) pushing the
- *  request past a serverless function's execution time limit -- the
+ *  request past a serverless function's execution time limit, the
  *  source conversation is left permanently marked complete with a saved
  *  referral, but the next-stage conversation was never created. That
  *  strands whoever is in the conversation (Guide or Host) on a completion
- *  screen with no way to continue -- found live during the 25-scenario
+ *  screen with no way to continue, found live during the 25-scenario
  *  human-life audit (a genuinely long, emotionally dense CAT exchange
  *  reproduced it).
  *
  *  Called from each stage's own *-complete branch, which has already
  *  confirmed conversation.status === 'complete' and a saved referral
- *  exist -- this only ever needs to (re)run the missing second half, and
+ *  exist, this only ever needs to (re)run the missing second half, and
  *  is a no-op (one cheap lookup) on the ordinary, non-stranded path where
  *  the next-stage conversation already exists. */
 export async function ensureNextStageConversation(
@@ -633,7 +633,7 @@ export async function ensureNextStageConversation(
 }
 
 /** Normal stage completion: generates and stores the Guide's Record, then
- *  immediately advances to the next stage (if any) -- the combined
+ *  immediately advances to the next stage (if any), the combined
  *  behavior /api/referral and /api/conversation's finish-intent detection
  *  already expect, functionally unchanged from before this function was
  *  split into generateGuidesRecord + advanceToNextStage above. */
@@ -645,7 +645,7 @@ export async function generateReferral(
     stage: Stage;
     program: Program;
     journeyId: string | null;
-    /** Youth Journey, Phase 1 only -- ignored for every other program. */
+    /** Youth Journey, Phase 1 only, ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
   }
 ): Promise<GenerateReferralResult> {
@@ -654,7 +654,7 @@ export async function generateReferral(
 
   if (!record.freshlyGenerated) {
     // Another concurrent call already advanced the stage for this
-    // conversation (see the 23505 handling above) -- do not create a
+    // conversation (see the 23505 handling above), do not create a
     // second next-stage conversation.
     const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(conversation.stage) + 1] ?? null;
     return { ok: true, done: !nextStage, nextStage: nextStage ?? undefined, summary: record.summary };

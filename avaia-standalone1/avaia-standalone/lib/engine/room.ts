@@ -40,7 +40,7 @@ export type RoomMessage = {
 const str = { type: "string" } as const;
 const strArr = { type: "array", items: { type: "string" } } as const;
 
-// The Room's own closing record -- see ROOM_REFERRAL_FORMAT in prompts.ts
+// The Room's own closing record, see ROOM_REFERRAL_FORMAT in prompts.ts
 // for the discipline this schema enforces (no verdicts, no manufactured
 // consensus, disagreement preserved explicitly).
 const ROOM_REFERRAL_SCHEMA = {
@@ -75,7 +75,7 @@ const ROOM_REFERRAL_SCHEMA = {
 } as const;
 
 /** Creates a new, empty Shared Room. Title is set later, once the Room has
- *  found its own identity (see updateRoomTitle) -- never guessed at
+ *  found its own identity (see updateRoomTitle), never guessed at
  *  creation. */
 export async function createRoom(
   supabase: SupabaseClient,
@@ -115,7 +115,7 @@ export async function getRoom(supabase: SupabaseClient, roomId: string): Promise
 
 /** Seats a participant at this Room's Table. Reuses the exact same consent
  *  gate a Youth session already requires everywhere else in AVAIA
- *  (isParticipantClearedToParticipate) -- a Youth cannot be added to a
+ *  (isParticipantClearedToParticipate), a Youth cannot be added to a
  *  Room without an already-active, assent-confirmed guardian consent for
  *  that participant, no new consent mechanism invented here. */
 export async function addParticipantToRoom(
@@ -140,7 +140,7 @@ export async function addParticipantToRoom(
   return { ok: true };
 }
 
-/** Removes a seat -- soft-removal only. Nothing this participant already
+/** Removes a seat, soft-removal only. Nothing this participant already
  *  said or brought back is deleted; they simply stop being addressed as
  *  present going forward. */
 export async function removeParticipantFromRoom(
@@ -236,7 +236,7 @@ export async function loadRoomMessages(
  *  Every active participant's name is passed into the system prompt so the
  *  model addresses people by name instead of "Person A/B" language; a
  *  Youth participant among them adds ROOM_YOUTH_SAFETY. The full shared
- *  transcript is what the model sees -- never any participant's private
+ *  transcript is what the model sees, never any participant's private
  *  conversation content, which lives entirely outside room_messages. */
 export async function postRoomMessage(
   supabase: SupabaseClient,
@@ -303,22 +303,22 @@ export async function postRoomMessage(
 
 /** Finds or creates a real auth.users identity for a guide_participant, so
  *  their private processing can belong to THEM rather than to the Guide's
- *  own account -- the actual mechanism that makes it inaccessible to the
+ *  own account, the actual mechanism that makes it inaccessible to the
  *  Guide by default (every existing conversations/messages/referrals RLS
  *  policy already excludes anyone but auth.uid() = host_id; this is what
  *  makes that auth.uid() the participant's, not the Guide's).
  *
  *  Reuses guide_participants.linked_host_id exactly as it already works
  *  for a self-serve Host account found by email (see app/toolkit/page.tsx's
- *  findHostIdByEmail) -- if already set, that identity is reused as-is
+ *  findHostIdByEmail), if already set, that identity is reused as-is
  *  the same way every day. If not set and the participant has a real email
  *  on file, a new Supabase account is created for that address (no
  *  password; access only ever happens through the one-time link this flow
  *  generates). If no email is on file, a private, unreachable placeholder
- *  address is used instead -- this account is never used for anything
+ *  address is used instead, this account is never used for anything
  *  except this identity boundary; nothing is ever sent to it. Either way
  *  this is the SAME auth.users table and the SAME RLS every other Host
- *  already runs on -- not a parallel identity system. */
+ *  already runs on, not a parallel identity system. */
 async function ensureParticipantAuthUser(
   admin: ReturnType<typeof createAdminClient>,
   supabase: SupabaseClient,
@@ -350,17 +350,17 @@ async function ensureParticipantAuthUser(
 }
 
 /** Opens protected private processing for one participant, from inside a
- *  Room. This is still not a new engine -- it's the exact same IAP-shaped
+ *  Room. This is still not a new engine, it's the exact same IAP-shaped
  *  conversation (createConversation/createJourney) every individual Host
- *  gets -- but it is now provisioned under the PARTICIPANT's own identity
+ *  gets, but it is now provisioned under the PARTICIPANT's own identity
  *  (via the admin client, the one narrow, deliberate use of service-role
  *  privilege in this flow) rather than the Guide's. No guide_sessions row
- *  is created for it -- unlike before, this conversation must NOT surface
+ *  is created for it, unlike before, this conversation must NOT surface
  *  in the Guide's own Record/participant-history views, and creating that
  *  row was the one thing that would have made it do so.
  *
  *  Returns a one-time access URL for the participant, not the conversation
- *  itself -- the Guide's own UI never receives anything that could be used
+ *  itself, the Guide's own UI never receives anything that could be used
  *  to read the private conversation, only a link meant to be handed to the
  *  participant and opened in their own, separate browser context. */
 export async function startPrivateProcessing(
@@ -372,7 +372,7 @@ export async function startPrivateProcessing(
 ): Promise<{ accessUrl: string; roomPrivateSessionId: string } | { error: string }> {
   // Defense-in-depth: addParticipantToRoom already enforces this gate before
   // a Youth can be seated at all, but this endpoint must not assume its
-  // caller always seats first -- found live, exactly this way, before
+  // caller always seats first, found live, exactly this way, before
   // shipping (a direct call with an unconsented participantId, skipping
   // room seating entirely, succeeded until this check was added).
   const cleared = await isParticipantClearedToParticipate(supabase, participantId);
@@ -395,7 +395,7 @@ export async function startPrivateProcessing(
   const roomPrivateSessionId = (rps as { id: string }).id;
 
   // The real Supabase magic-link token is deliberately generated later, at
-  // consume time (see consumePrivateAccessToken), not here -- generateLink's
+  // consume time (see consumePrivateAccessToken), not here, generateLink's
   // own token has a shorter validity window than this access link's 30
   // minutes, and there's no reason to risk it going stale between the Guide
   // creating the link and the participant actually opening it. Our own
@@ -420,7 +420,7 @@ export async function startPrivateProcessing(
  *  the participant's own isolated client (lib/supabase/participant-client.ts)
  *  needs to call verifyOtp() itself, establishing their session client-side.
  *  This function runs with the admin client (the token IS the credential
- *  here -- there is no signed-in user yet to check RLS against), but never
+ *  here, there is no signed-in user yet to check RLS against), but never
  *  returns anything the Guide's own session could use: the token_hash is
  *  handed straight back to the SAME browser context that presented the
  *  one-time token, not persisted anywhere the Guide's account can read. */
@@ -445,7 +445,7 @@ export async function consumePrivateAccessToken(token: string): Promise<
   if (!email) return { error: "This link isn't valid." };
 
   // Re-derive a fresh hashed_token bound to this exact consumption, rather
-  // than reusing the one generated at creation time -- generateLink's
+  // than reusing the one generated at creation time, generateLink's
   // hashed_token is itself only valid for a limited window server-side,
   // and regenerating here (still admin-side, still never touching the
   // Guide's session) keeps this robust even if some minutes passed between
@@ -473,11 +473,11 @@ export async function consumePrivateAccessToken(token: string): Promise<
 }
 
 /** Offers ONE possible way to put what the participant already said into
- *  words for the Room -- never generated automatically, never auto-filled
+ *  words for the Room, never generated automatically, never auto-filled
  *  without the participant asking for it, never able to see anything they
  *  didn't already say to AVAIA themselves. `supabase` must be the
  *  participant's OWN bearer-scoped, RLS-respecting client (see
- *  app/api/room-access/suggest/route.ts) -- the same self-only
+ *  app/api/room-access/suggest/route.ts), the same self-only
  *  conversations/messages RLS that keeps this conversation invisible to
  *  the Guide also means this function structurally cannot run against a
  *  conversation the caller doesn't themselves own. Non-streaming, one-shot,
@@ -522,23 +522,23 @@ export async function suggestBringForward(
 }
 
 /** Returns from private processing, called by the PARTICIPANT's own
- *  authenticated request (see app/api/room-access/return/route.ts) -- never
+ *  authenticated request (see app/api/room-access/return/route.ts), never
  *  by the Guide. `bearerUserId` is that participant's own auth.uid(),
  *  already verified by the caller via their bearer token before this runs.
  *  This function independently re-confirms that roomPrivateSessionId
  *  actually belongs to a private conversation THIS user owns before doing
- *  anything -- a participant cannot act on another participant's private
+ *  anything, a participant cannot act on another participant's private
  *  session by guessing its id.
  *
  *  `choice: "keep_private"` ends it with nothing crossing back into the
- *  Room -- the Room only ever learns that this participant stepped away
+ *  Room, the Room only ever learns that this participant stepped away
  *  and returned, never why or what was said. `choice: "brought_forward"`
  *  requires `content`: the participant's OWN chosen wording. That wording
  *  becomes a room_shared_items row AND is posted into the shared thread as
  *  this participant's own turn, through the same postRoomMessage every
- *  ordinary Room turn uses -- nothing about how it re-enters the Room is a
+ *  ordinary Room turn uses, nothing about how it re-enters the Room is a
  *  separate, hidden mechanism. The actual writes use the admin client
- *  (room_shared_items/room_messages are Guide-owned tables by RLS) --
+ *  (room_shared_items/room_messages are Guide-owned tables by RLS),
  *  reachable only after the ownership check above, not exposed to any
  *  unauthenticated or cross-participant caller. */
 export async function returnToRoomAsParticipant(
@@ -595,7 +595,7 @@ export async function returnToRoomAsParticipant(
 }
 
 /** Generates the Room's own closing record and marks the Room complete.
- *  Only ever reads room_messages (the shared thread) -- never any
+ *  Only ever reads room_messages (the shared thread), never any
  *  participant's private conversation, which this function has no access
  *  path to at all. */
 export async function closeRoom(
@@ -622,7 +622,7 @@ export async function closeRoom(
   history.push({
     role: "user",
     content:
-      "The Table is closing this Room now. Using everything in this Room's shared conversation, produce the Shared Room closing record now as structured data. Do not address anyone -- output only the fields.",
+      "The Table is closing this Room now. Using everything in this Room's shared conversation, produce the Shared Room closing record now as structured data. Do not address anyone, output only the fields.",
   });
 
   let content: unknown;
@@ -679,7 +679,7 @@ export async function getRoomReferral(
   return (data?.content as Record<string, unknown>) ?? null;
 }
 
-/** Active (not yet returned) private sessions for a Room -- lets the Room
+/** Active (not yet returned) private sessions for a Room, lets the Room
  *  UI show which participants are currently away in private processing. */
 export async function listActivePrivateSessions(
   supabase: SupabaseClient,

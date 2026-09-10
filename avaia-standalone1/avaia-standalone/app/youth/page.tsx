@@ -29,7 +29,7 @@ async function startYouthJourney(
     .eq("host_id", userId)
     .eq("status", "active");
 
-  // Every Youth Journey start is a new Journey -- never reuses a prior one,
+  // Every Youth Journey start is a new Journey, never reuses a prior one,
   // matching /journey?new=1 and startDefyingGriefWorkshop. createConversation
   // seeds the normal STAGE_OPENING.iap line automatically since no explicit
   // opening is passed.
@@ -56,15 +56,15 @@ async function beginYouthJourney(formData: FormData) {
   const band = formData.get("band");
   if (!isBand(band)) redirect("/youth");
 
-  // The Youth Host's own understanding of what participation involves --
+  // The Youth Host's own understanding of what participation involves,
   // separate from guardian consent (already recorded at /welcome). Checked
-  // server-side, not just via the client component's disabled button --
+  // server-side, not just via the client component's disabled button,
   // see components/YouthAssentForm.tsx for the actual band-specific text
   // this checkbox follows.
   if (formData.get("assentAcknowledged") !== "1") redirect("/youth");
 
   // Stamps assent_confirmed_at on this Host's own guardian_consents row
-  // (created at /welcome, still pending this fact until now) -- the most
+  // (created at /welcome, still pending this fact until now), the most
   // recent row is always the live one; a Host only ever has one active
   // guardian_consents record for their own account.
   await supabase
@@ -89,7 +89,7 @@ export default async function YouthPage() {
         <p className="label mb-3">AVAIA for Youth</p>
         <h1 className="font-serif text-4xl text-ink">Begin your Youth Journey</h1>
         <p className="mt-4 text-lg text-muted">
-          The same three AVAIA conversations, adapted for you — no account required yet.
+          The same three AVAIA conversations, adapted for you, no account required yet.
         </p>
         <div className="mt-8">
           <Link
@@ -109,7 +109,7 @@ export default async function YouthPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Same posture as /journey -- a real query error must never be silently
+  // Same posture as /journey, a real query error must never be silently
   // treated as "not consented."
   if (profileError) {
     return (
@@ -137,7 +137,7 @@ export default async function YouthPage() {
 
   const mostRecent = youthConvos?.[0] ?? null;
 
-  // A Youth Journey is already under way -- /journey already renders it
+  // A Youth Journey is already under way, /journey already renders it
   // correctly for any program (chat UI, stage transitions, membership gate,
   // referral continuity), so there's nothing Youth-specific to add here.
   if (mostRecent?.status === "active") {
@@ -160,8 +160,8 @@ export default async function YouthPage() {
         {alreadyStarted ? "Begin Another Youth Journey" : "Begin your Youth Journey"}
       </h1>
       <p className="mt-4 text-lg text-muted">
-        The same three conversations every AVAIA Host takes — Individual Awareness Profile,
-        Conversations Across Time, and InnerCompass — adapted for you.
+        The same three conversations every AVAIA Host takes, Individual Awareness Profile,
+        Conversations Across Time, and InnerCompass, adapted for you.
       </p>
 
       <YouthAssentForm

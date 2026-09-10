@@ -188,7 +188,7 @@ export function familyOf(key: VirtueFamilyKey): VirtueFamily {
   return VIRTUE_FAMILIES.find((f) => f.key === key)!;
 }
 
-/** Same lookup as familyOf, keyed by the family's display name instead --
+/** Same lookup as familyOf, keyed by the family's display name instead,
  *  what stored data (referral virtue classifications, virtue_signature_
  *  entries) actually holds, per VirtueClassification's own shape. Returns
  *  undefined rather than throwing on an unrecognized name, since this is
@@ -204,7 +204,7 @@ export function virtuesByFamily(key: VirtueFamilyKey): Virtue[] {
 // ---------------------------------------------------------------------------
 // Authoritative hierarchy for conversational/referral use. Root cause of the
 // "Serenity promoted to a standalone virtue" / "Trust classified as a virtue"
-// finding: no prompt anywhere ever referenced this canonical data -- CAT and
+// finding: no prompt anywhere ever referenced this canonical data, CAT and
 // InnerCompass improvised from a separately hand-authored, approximate
 // family/example-word list embedded in VIRTUE_TABLE_INTEGRATION instead. This
 // is now the single source every virtue-classification prompt and every
@@ -213,7 +213,7 @@ export function virtuesByFamily(key: VirtueFamilyKey): Virtue[] {
 // ---------------------------------------------------------------------------
 
 /** Plain-text "Family: Element, Element, ..." rendering of the complete
- *  Chemistry of Virtue, generated directly from VIRTUE_FAMILIES/VIRTUES --
+ *  Chemistry of Virtue, generated directly from VIRTUE_FAMILIES/VIRTUES,
  *  never hand-copied, so it can't drift from the canonical table. */
 export function formatVirtueHierarchy(): string {
   return VIRTUE_FAMILIES.map((family) => {
@@ -229,7 +229,7 @@ export function isValidVirtueFamily(familyName: string): boolean {
 }
 
 /** True only if elementName is a real Chemistry of Virtue element that
- *  belongs to familyName specifically -- not just a real element of some
+ *  belongs to familyName specifically, not just a real element of some
  *  other family. Case-insensitive on the element name only. */
 export function isValidVirtueElement(familyName: string, elementName: string): boolean {
   const family = VIRTUE_FAMILIES.find((f) => f.name === familyName);
@@ -240,14 +240,14 @@ export function isValidVirtueElement(familyName: string, elementName: string): b
 }
 
 // ---------------------------------------------------------------------------
-// Name-to-virtue acronym — one curated element per letter, so the same name
+// Name-to-virtue acronym, one curated element per letter, so the same name
 // always spells the same thing. This is a deterministic lookup, not an AI
 // pick per request, for exactly that reason: consistency and speed matter
 // more here than variety.
 //
 // Every letter has a real Chemistry of Virtue element except Q, which has
 // none. Rather than invent one or force a weak phonetic stretch, Q maps to
-// "Quality" — a real, meaningful word, explicitly NOT one of the 123
+// "Quality", a real, meaningful word, explicitly NOT one of the 123
 // official elements, the same treatment Audacity gets in Defying Grief: a
 // seat at the table anyway, clearly marked as not officially part of the
 // Chemistry of Virtue. X has a genuine element close enough to use as-is:
@@ -273,7 +273,7 @@ const LETTER_TO_VIRTUE_NAME: Record<string, string> = {
   N: "Nobility",
   O: "Originality",
   P: "Perseverance",
-  // Q intentionally has no entry here -- see QUALITY_WORD above.
+  // Q intentionally has no entry here, see QUALITY_WORD above.
   R: "Respect",
   S: "Sincerity",
   T: "Truth",

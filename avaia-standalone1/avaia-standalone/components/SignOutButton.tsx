@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 
-/** Hard-navigates via window.location — see the matching note in
+/** Hard-navigates via window.location, see the matching note in
  *  app/auth/callback/page.tsx. A soft router.replace()+router.refresh() here
  *  risks serving a stale, still-authenticated cached page after sign-out,
  *  same class of issue as the sign-in-side stale-cache problems. */

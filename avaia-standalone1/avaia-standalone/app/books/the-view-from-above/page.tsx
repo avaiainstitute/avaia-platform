@@ -1,4 +1,4 @@
-export const metadata = { title: "The View from Above — AVAIA" };
+export const metadata = { title: "The View from Above, AVAIA" };
 
 const AMAZON_URL = "https://a.co/d/0fZ57Zi5";
 
@@ -8,13 +8,13 @@ const BUY_BUTTON_CLASSES =
 export default function TheViewFromAbovePage() {
   return (
     <div className="mx-auto max-w-5xl px-5 py-16">
-      {/* Hero — the one deliberate departure from the site's usual single
+      {/* Hero, the one deliberate departure from the site's usual single
           column, so the cover gets real visual weight. Same type/color/
           button tokens as everywhere else, not a new aesthetic. */}
       <div className="grid gap-8 sm:grid-cols-[240px_1fr] sm:items-center">
         <img
           src="/books/the-view-from-above-front.jpg"
-          alt="The View from Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
+          alt="The View from Above book cover, One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
           className="w-full max-w-[240px] rounded-lg shadow-lg mx-auto sm:mx-0"
         />
         <div>
@@ -23,7 +23,7 @@ export default function TheViewFromAbovePage() {
             Before there was AVAIA, there was a story.
           </h1>
           <p className="mt-4 text-muted">
-            <em>The View from Above: One Father&rsquo;s Memoir of Grief Guided to Grace</em> —
+            <em>The View from Above: One Father&rsquo;s Memoir of Grief Guided to Grace</em>,
             by Dorian Johnson and Danielle Palmer
           </p>
           <div className="mt-6">
@@ -46,7 +46,7 @@ export default function TheViewFromAbovePage() {
         </p>
       </section>
 
-      {/* About the book — with the back cover inset here, as part of the
+      {/* About the book, with the back cover inset here, as part of the
           story, not treated as a second product image. */}
       <section className="rule-t mt-16 max-w-prose border-t border-rule pt-12">
         <p className="label mb-2 text-muted">About the Book</p>
@@ -55,7 +55,7 @@ export default function TheViewFromAbovePage() {
           River Canyon, near Preston, Idaho. He did not return. <em>The View from Above</em> is
           Dorian&rsquo;s account of that loss, and of returning a year later to hike the same
           trail as a memorial. Co-written with Danielle Palmer, it follows his restorative
-          process through grief — not toward resolution, but toward grace — and the role virtue
+          process through grief, not toward resolution, but toward grace, and the role virtue
           played in that healing. Published in 2021, it&rsquo;s available in paperback and
           audiobook.
         </p>
@@ -77,11 +77,11 @@ export default function TheViewFromAbovePage() {
         <p className="text-lg leading-relaxed text-ink">
           AVAIA did not begin as an idea for a website or an artificial-intelligence system. Its
           roots are personal. <em>The View from Above</em> represents an earlier part of that
-          journey — part of the experience, questioning, reflection, and search for perspective
+          journey, part of the experience, questioning, reflection, and search for perspective
           that preceded what AVAIA would eventually become.
         </p>
         <p className="mt-4 text-muted">
-          The Chemistry of Virtue existed then too, in an early form — the same idea of virtues
+          The Chemistry of Virtue existed then too, in an early form, the same idea of virtues
           working together like elements on a table, years before AVAIA gave it the shape it has
           today. AVAIA itself did not exist yet. What it would become grew out of roots like this
           one.
@@ -99,12 +99,12 @@ export default function TheViewFromAbovePage() {
         </a>
       </div>
 
-      {/* Closing — Bailand's own words. Nothing follows this. */}
+      {/* Closing, Bailand's own words. Nothing follows this. */}
       <div className="rule-t mt-16 max-w-prose border-t border-rule pt-12 text-center">
         <p className="font-serif text-2xl italic leading-relaxed text-ink">
           &ldquo;This is a beast of a hike, but talk about a view!&rdquo;
         </p>
-        <p className="mt-3 label text-muted">— Bailand&rsquo;s final text to his father</p>
+        <p className="mt-3 label text-muted">Bailand&rsquo;s final text to his father</p>
       </div>
     </div>
   );

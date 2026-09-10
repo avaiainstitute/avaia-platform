@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 /**
- * AVAIA Chemistry Background — a faithful port of the Claude Design piece
+ * AVAIA Chemistry Background, a faithful port of the Claude Design piece
  * "AVAIA Chemistry Background.dc.html". A fixed, full-viewport dark field with:
  *   - two slow floating glow blobs (violet + amber)
  *   - an animated canvas: rising violet→amber particles and drifting chemical

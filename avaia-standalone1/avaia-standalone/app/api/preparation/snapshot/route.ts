@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Guide-only, session-authenticated (not the external GPT-Actions bearer-
-// token pattern -- Preparation is an in-app Guide Toolkit feature, not an
+// token pattern, Preparation is an in-app Guide Toolkit feature, not an
 // external ChatGPT integration; see lib/toolkit.ts's existing "installed"
 // preparation entry and app/toolkit/preparation/[participantId]/page.tsx,
 // the real production surface this powers).
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 // Authorization is identical to, and reuses, the existing Preparation page's
 // own check: getParticipantHistory(supabase, callerId, participantId) only
 // ever returns a participant row scoped to `guide_id = callerId`
-// (lib/guide.ts) -- there is no separate authorization mechanism to keep in
+// (lib/guide.ts), there is no separate authorization mechanism to keep in
 // sync, and no way for this route to see a participant that doesn't already
 // belong to the calling Guide. participantId is the only client input; the
 // Host evidence itself is always re-derived server-side from that

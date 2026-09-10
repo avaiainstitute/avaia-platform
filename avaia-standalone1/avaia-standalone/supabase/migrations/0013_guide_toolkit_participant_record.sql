@@ -1,4 +1,4 @@
--- AVAIA Guide Toolkit — Participant Record, Preparation, and the youth/group
+-- AVAIA Guide Toolkit, Participant Record, Preparation, and the youth/group
 -- session-context foundation.
 --
 -- 1. recognitions.conversation_id -- Unsung Heroes recognitions had no

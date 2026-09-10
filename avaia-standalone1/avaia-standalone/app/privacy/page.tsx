@@ -1,4 +1,4 @@
-export const metadata = { title: "Privacy Policy — AVAIA" };
+export const metadata = { title: "Privacy Policy, AVAIA" };
 
 export default function PrivacyPage() {
   return (
@@ -7,14 +7,14 @@ export default function PrivacyPage() {
       <h1 className="font-serif text-4xl text-ink">Privacy Policy</h1>
       <p className="mt-4 text-lg leading-relaxed text-muted">
         This describes what AVAIA collects, why, and who can see it. AVAIA exists to hold a
-        conversation that belongs to the Host — that same principle governs how their information
+        conversation that belongs to the Host, that same principle governs how their information
         is handled here.
       </p>
 
       <section className="mt-10">
         <p className="font-serif text-xl text-seal">What we collect</p>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-ink">
-          <li>Your email address, used to sign you in with a one-time code — no password is stored.</li>
+          <li>Your email address, used to sign you in with a one-time code, no password is stored.</li>
           <li>
             The content of your conversations with an AVAIA Guide, and the referrals generated
             from them, saved to your own Workbook.
@@ -23,10 +23,10 @@ export default function PrivacyPage() {
             If you use Unsung Heroes, the names and context you choose to include (e.g. a school,
             teacher, or guardian) as part of your own recognition record.
           </li>
-          <li>Your membership status, handled through our payment processor, Stripe — AVAIA never sees or stores your card details.</li>
+          <li>Your membership status, handled through our payment processor, Stripe, AVAIA never sees or stores your card details.</li>
           <li>
             If you connect a custom AVAIA GPT in ChatGPT, a technical access token that identifies
-            your account to AVAIA — not your ChatGPT conversation itself.
+            your account to AVAIA, not your ChatGPT conversation itself.
           </li>
         </ul>
       </section>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           Your conversation content is sent to Anthropic&rsquo;s Claude API to generate the
           Guide&rsquo;s responses, and, if you complete a conversation through one of AVAIA&rsquo;s
           connected ChatGPT GPTs, that conversation happens on OpenAI&rsquo;s platform under
-          OpenAI&rsquo;s own privacy policy — only the finished referral you choose to submit is
+          OpenAI&rsquo;s own privacy policy, only the finished referral you choose to submit is
           sent back to AVAIA. Your email is used only to sign you in and, if you request a
           sign-in code or a Workbook-sharing invite, to deliver that specific email through our
           provider, Resend.
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
         <p className="font-serif text-xl text-seal">Who can see it</p>
         <p className="mt-3 leading-relaxed text-ink">
           Your Workbook, conversations, referrals, and Unsung Heroes recognitions are private to
-          your own account by default, enforced at the database level — not just hidden in the
+          your own account by default, enforced at the database level, not just hidden in the
           interface. The only way anyone else ever sees any of it is if you explicitly share a
           specific entry using AVAIA&rsquo;s own Share feature.
         </p>

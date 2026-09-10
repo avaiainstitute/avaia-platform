@@ -8,24 +8,24 @@ import FamilyCheckoutButton from "@/components/FamilyCheckoutButton";
 export const metadata = { title: "AVAIA Membership" };
 export const dynamic = "force-dynamic";
 
-/** Public home for membership pricing -- separated out from the Journey
+/** Public home for membership pricing, separated out from the Journey
  *  gate (app/journey/page.tsx's MembershipGate) so "continue the Journey"
  *  and "choose a plan" are two different moments, and so future
- *  membership types (Family, etc. -- not built here) have a natural home
+ *  membership types (Family, etc., not built here) have a natural home
  *  that isn't the Journey gate itself. Reuses MembershipCheckoutButton
- *  exactly as the gate already does -- no new Stripe code, no new price
+ *  exactly as the gate already does, no new Stripe code, no new price
  *  resolution, no schema change.
  *
  *  `returnTo` carries the gate's own returnTo prop forward as a query
  *  param (see MembershipGate's "Continue with Membership" link) so a
  *  Host who arrived from /defying-grief still lands back there after
  *  checkout, exactly as before this page existed. This page does no
- *  validation on it itself -- /api/stripe/checkout already validates
+ *  validation on it itself, /api/stripe/checkout already validates
  *  returnTo against a fixed allowlist before using it for anything,
  *  regardless of what any page passes in.
  *
  *  Member-aware: an already-active member sees a plain acknowledgment and
- *  links to existing routes instead of purchase buttons -- reusing the
+ *  links to existing routes instead of purchase buttons, reusing the
  *  same isMember() check every other gate on the site already uses, no
  *  new membership-status concept. Signed-out visitors and signed-in
  *  non-members see the exact same sales copy as before. */
@@ -35,7 +35,7 @@ export default async function MembershipPage({
   searchParams?: { returnTo?: string };
 }) {
   const returnTo = searchParams?.returnTo;
-  // Same membership, same price, same Stripe flow -- only the copy below
+  // Same membership, same price, same Stripe flow, only the copy below
   // acknowledges the Host arrived from Defying Grief, using the returnTo
   // value already carried here from the gate. No program-specific pricing
   // or entitlement logic.
@@ -61,7 +61,7 @@ export default async function MembershipPage({
       <p className="mt-4 text-lg leading-relaxed text-ink">
         {isDefyingGrief
           ? "Membership continues your Defying Grief Journey into Conversations Across Time and InnerCompass, and keeps continuity through your Workbook and AVAIA's other resources."
-          : "Membership gives you a continuing place in AVAIA — to continue your Journey, return for future conversations, preserve what you discover, and access the tools and resources that support what comes next."}
+          : "Membership gives you a continuing place in AVAIA, to continue your Journey, return for future conversations, preserve what you discover, and access the tools and resources that support what comes next."}
       </p>
 
       <section className="rule-t mt-16 border-t border-rule pt-12">
@@ -103,7 +103,7 @@ export default async function MembershipPage({
         </ol>
 
         <p className="mt-8 text-sm text-muted">
-          Chemistry of Virtue and Secondary Losses are AVAIA resources available to everyone —
+          Chemistry of Virtue and Secondary Losses are AVAIA resources available to everyone,
           they don&rsquo;t require membership.
         </p>
 
@@ -162,13 +162,13 @@ export default async function MembershipPage({
             <MembershipCheckoutButton
               returnTo={returnTo}
               plan="monthly"
-              label="Choose Monthly — $19/month"
+              label="Choose Monthly, $19/month"
             />
             <div>
               <MembershipCheckoutButton
                 returnTo={returnTo}
                 plan="annual"
-                label="Choose Annual — $190/year"
+                label="Choose Annual, $190/year"
               />
               <p className="mt-2 text-sm text-muted">Save $38 with annual membership.</p>
             </div>
@@ -180,7 +180,7 @@ export default async function MembershipPage({
         <p className="label mb-2">Family Membership</p>
         <h2 className="font-serif text-3xl text-ink">One plan, up to five people.</h2>
         <p className="mt-3 text-lg text-muted">
-          Family Membership shares payment for up to 5 people — it never shares anyone&rsquo;s
+          Family Membership shares payment for up to 5 people, it never shares anyone&rsquo;s
           story.
         </p>
 
@@ -189,7 +189,7 @@ export default async function MembershipPage({
             Each person keeps their own private AVAIA account, Journey, and Workbook.
           </p>
           <p className="mt-2 text-sm text-muted">
-            No one on a Family plan — including whoever pays for it — can read another
+            No one on a Family plan, including whoever pays for it, can read another
             member&rsquo;s conversations, Journey, or Workbook. Family Membership pays for access.
             It does not grant anyone authority over anyone else&rsquo;s story.
           </p>
@@ -226,9 +226,9 @@ export default async function MembershipPage({
           </p>
         ) : (
           <div className="mt-8 flex flex-wrap items-start gap-6">
-            <FamilyCheckoutButton plan="monthly" label="Start Family — $49/month" />
+            <FamilyCheckoutButton plan="monthly" label="Start Family, $49/month" />
             <div>
-              <FamilyCheckoutButton plan="annual" label="Start Family — $490/year" />
+              <FamilyCheckoutButton plan="annual" label="Start Family, $490/year" />
               <p className="mt-2 text-sm text-muted">Save $98 with annual billing.</p>
             </div>
           </div>

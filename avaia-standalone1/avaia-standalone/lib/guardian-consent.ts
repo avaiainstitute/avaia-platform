@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { GUARDIAN_DISCLOSURE_TEXT } from "./youth-assent-text";
 
-// AVAIA Youth Defying Grief -- Guardian Consent + Youth Privacy & Agency.
+// AVAIA Youth Defying Grief, Guardian Consent + Youth Privacy & Agency.
 // Governing model: "The guardian gives permission for participation. The
 // Youth Host retains ownership of their story and agency over what they
 // choose to share." This module owns the record/query helpers against
@@ -13,7 +13,7 @@ import { GUARDIAN_DISCLOSURE_TEXT } from "./youth-assent-text";
 // components that need to render the correct band's text as it's picked,
 // before any server round-trip) and is re-exported here so server code
 // that needs both the text and the DB helpers has one import. This module
-// has no relationship to content access -- RLS on conversations, messages,
+// has no relationship to content access, RLS on conversations, messages,
 // referrals, and recognitions already scopes those to the Host (or the
 // Guide's own guide_sessions ownership) alone, entirely unchanged here.
 export { GUARDIAN_DISCLOSURE_VERSION, GUARDIAN_DISCLOSURE_TEXT, YOUTH_ASSENT_TEXT } from "./youth-assent-text";
@@ -22,12 +22,12 @@ export type GuardianConsentScope = "individual" | "group_workshop" | "school_org
 
 // 'guide_or_self_attested': a Guide (or the Youth Host themselves at
 // /welcome) directly enters the guardian's name/email and confirms consent
-// was already collected -- immediately active. Real-world-necessary (a
+// was already collected, immediately active. Real-world-necessary (a
 // signed paper form at a school, a verbal exchange in person) and kept as
 // a valid path, not merely a legacy fallback.
 // 'guardian_link_confirmed': a unique, unguessable link is generated
 // instead; the record starts 'pending' and only becomes 'active' when the
-// guardian themselves opens that link and confirms -- a real step toward
+// guardian themselves opens that link and confirms, a real step toward
 // COPPA's lighter "email plus" pathway for internal-use-only data (see
 // migration 0043's own header for the researched basis), though not a
 // claim of fully meeting it. See 0043's confirm_pending_consent function
@@ -82,10 +82,10 @@ async function insertGuardianConsent(
 }
 
 /** Records (or begins) a guardian consent for a self-serve Youth Host.
- *  Called from /api/consent when age === "minor" -- the same request that
+ *  Called from /api/consent when age === "minor", the same request that
  *  already sets profiles.minor_with_guardian. `supabase` must be the
  *  caller's own RLS-scoped client (matches this route's existing
- *  pattern) -- RLS enforces youth_host_id/recorded_by = auth.uid()
+ *  pattern), RLS enforces youth_host_id/recorded_by = auth.uid()
  *  regardless. Returns a consentToken when verificationMethod is
  *  'guardian_link_confirmed', so the caller can render the guardian-
  *  facing link (/consent/[token]). */
@@ -113,7 +113,7 @@ export async function recordGuardianConsentForYouthHost(
 }
 
 /** Records (or begins) a guardian consent a Guide has collected for a
- *  Guide-facilitated participant -- individual, group/workshop, or a
+ *  Guide-facilitated participant, individual, group/workshop, or a
  *  school/organization-sponsored context. `supabase` must be the Guide's
  *  own RLS-scoped client; RLS enforces the participant belongs to this
  *  Guide and recorded_by = auth.uid(). Returns a consentToken when
@@ -146,27 +146,27 @@ export async function recordGuardianConsentForParticipant(
 }
 
 /** The one place "cleared to participate" is decided for a Guide-
- *  facilitated participant -- active guardian consent (whichever
+ *  facilitated participant, active guardian consent (whichever
  *  verification method reached it) AND the Guide's confirmation that
  *  Youth assent was delivered, for a Youth participant (a developmental
  *  band on record). Used both to render status in a roster and,
- *  critically, to actually block session creation -- see
+ *  critically, to actually block session creation, see
  *  app/toolkit/iap/[sessionId]/page.tsx and the Youth Defying Grief /
  *  Unsung Heroes start actions, which now check this before creating a
  *  guide_sessions row rather than only checking "does a consent row
  *  exist."
  *
  *  An ADULT participant (no developmental_band on record) has no
- *  guardian-consent concept at all and is simply always cleared -- found
+ *  guardian-consent concept at all and is simply always cleared, found
  *  as a real defect during the Organization Administrator build: this
  *  function previously required a band unconditionally, which meant an
  *  adult registered through the youth_programs roster system (reused
  *  generically for Adult organizational programs too, e.g. an Adult
- *  Defying Grief cohort -- see that build's own reasoning) could never
+ *  Defying Grief cohort, see that build's own reasoning) could never
  *  actually be launched. "Start session" never appeared for them, and
  *  the server action would have redirected away even if it had. Fixed
- *  here, at the one shared source, so every caller -- the Guide's own
- *  roster page and the Organization Administrator dashboard alike --
+ *  here, at the one shared source, so every caller, the Guide's own
+ *  roster page and the Organization Administrator dashboard alike,
  *  is correct and consistent, rather than diverging per caller. */
 export async function isParticipantClearedToParticipate(
   supabase: SupabaseClient,
@@ -191,7 +191,7 @@ export async function isParticipantClearedToParticipate(
 }
 
 /** Whether an active (non-revoked, non-pending) guardian consent already
- *  exists for a Guide-facilitated participant -- lets a Guide start a
+ *  exists for a Guide-facilitated participant, lets a Guide start a
  *  second Youth session for a returning, already-cleared participant
  *  without re-collecting consent every time. */
 export async function hasActiveGuardianConsent(
@@ -208,7 +208,7 @@ export async function hasActiveGuardianConsent(
   return !!data;
 }
 
-/** The consent status shown in a roster -- one of four states a Guide
+/** The consent status shown in a roster, one of four states a Guide
  *  needs to distinguish at a glance: no consent record at all yet,
  *  waiting on the guardian's own action, fully active, or revoked. */
 export async function getConsentStatusForParticipant(
@@ -226,7 +226,7 @@ export async function getConsentStatusForParticipant(
   return { status: data.status as "pending" | "active" | "revoked", assentConfirmed: !!data.assent_confirmed_at };
 }
 
-/** Revokes a guardian consent -- e.g. the guardian withdraws permission,
+/** Revokes a guardian consent, e.g. the guardian withdraws permission,
  *  or a Youth Host turns 18. `supabase` must be the caller's own
  *  RLS-scoped client; RLS (0041) already restricts this to the owning
  *  Host or the owning Guide. */

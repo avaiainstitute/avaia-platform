@@ -26,7 +26,7 @@ export default function ConfirmConsentButton({ token }: { token: string }) {
   if (state === "done") {
     return (
       <div className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] p-6">
-        <p className="font-serif text-xl text-ink">Thank you — participation is confirmed.</p>
+        <p className="font-serif text-xl text-ink">Thank you, participation is confirmed.</p>
         <p className="mt-2 text-sm text-muted">You can close this page.</p>
       </div>
     );

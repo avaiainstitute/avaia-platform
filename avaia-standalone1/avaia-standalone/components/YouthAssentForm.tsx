@@ -10,7 +10,7 @@ const BAND_LABEL: Record<DevelopmentalBand, string> = {
   "15-17": "15–17",
 };
 
-/** Band selection plus the Youth Host's own assent acknowledgment --
+/** Band selection plus the Youth Host's own assent acknowledgment,
  *  separate from guardian consent (captured earlier, at /welcome, for a
  *  self-serve Host). This is the Youth Host's own understanding of what
  *  participation actually involves, shown at their own band's reading

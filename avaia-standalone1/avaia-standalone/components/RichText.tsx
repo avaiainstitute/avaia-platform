@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /**
- * Minimal, dependency-free renderer for the light markdown the Guide produces —
+ * Minimal, dependency-free renderer for the light markdown the Guide produces,
  * **bold**, *italic*, headings, `---` rules and `-` bullet lists. Builds React
  * elements (never raw HTML), so there's no injection risk. Without this the Host
  * sees literal "**Host Overview**" and "---" in referrals.

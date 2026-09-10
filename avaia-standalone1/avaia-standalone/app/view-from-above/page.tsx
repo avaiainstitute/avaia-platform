@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { VIEW_FROM_ABOVE_CLASSES } from "@/lib/view-from-above";
 
-export const metadata = { title: "The View from Above — AVAIA" };
+export const metadata = { title: "The View from Above, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Public front door for The View from Above collection -- ten classes
+/** Public front door for The View from Above collection, ten classes
  *  built from the lessons that became visible on Bailand's Hike. Front-
  *  door language only, matching /defying-grief and /shared-room's own
  *  register. The hike origin story told here (Prologue + the opening of
  *  Chapter 1) is the only verbatim manuscript text recovered from the
- *  source archive -- see lib/view-from-above.ts's own header for the
+ *  source archive, see lib/view-from-above.ts's own header for the
  *  full source-discipline note. Explicitly NOT reframed as a grief
- *  collection -- the hike is the origin story; the lessons are broader. */
+ *  collection, the hike is the origin story; the lessons are broader. */
 export default function ViewFromAbovePage() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -22,12 +22,12 @@ export default function ViewFromAbovePage() {
       <p className="mt-4 text-lg leading-relaxed text-ink">
         In 2017, Dorian Johnson's son Bailand hiked Molly's Peak in Cub River Canyon, near
         Preston, Idaho, and didn't come home. A year later, Dorian hiked the same trail himself,
-        for the first time all the way to the top. What became visible to him on that mountain —
+        for the first time all the way to the top. What became visible to him on that mountain,
         about meaning, reality, direction, self-trust, boundaries, belonging, connection, control,
-        identity, and attachment — became the ten classes below.
+        identity, and attachment, became the ten classes below.
       </p>
       <p className="mt-4 text-lg leading-relaxed text-ink">
-        The hike is the origin story. The lessons are broader than grief — they're about how
+        The hike is the origin story. The lessons are broader than grief, they're about how
         anyone navigates an ordinary life: entering adulthood, changing careers, building a
         family, making a hard decision, finding their values, learning to lead. You don't need to
         be grieving to take one of these classes.
@@ -61,17 +61,17 @@ export default function ViewFromAbovePage() {
         </div>
         <p className="mt-6 text-sm text-muted">
           This is the only part of Dorian's memoir, <em>The View from Above</em>, told here
-          verbatim — his own written words, recovered directly from his manuscript. Chapters 2
+          verbatim, his own written words, recovered directly from his manuscript. Chapters 2
           through 10 exist as a full audiobook and video series, not as text here, so the specific
           scene-by-scene story of the rest of the hike isn't retold on this page. What follows
           instead are the ten real recognitions and lessons Dorian has directly named as coming out
-          of that mountain — in his own words, not further invented narrative.
+          of that mountain, in his own words, not further invented narrative.
         </p>
 
         <div className="mt-10 grid gap-6 rounded-lg border border-rule bg-white/[0.04] p-6 sm:grid-cols-[180px_1fr] sm:items-center">
           <img
             src="/books/the-view-from-above-front.jpg"
-            alt="The View from Above book cover — One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
+            alt="The View from Above book cover, One Father's Memoir of Grief Guided to Grace, by Dorian Johnson and Danielle Palmer"
             className="mx-auto w-full max-w-[180px] rounded-md shadow-lg sm:mx-0"
           />
           <div>
@@ -79,7 +79,7 @@ export default function ViewFromAbovePage() {
             <h3 className="font-serif text-2xl text-ink">The View from Above</h3>
             <p className="mt-1 text-sm text-muted">By Dorian Johnson, with Danielle Palmer</p>
             <p className="mt-4 text-muted">
-              The Prologue above is the opening of this book — Dorian's own written account of
+              The Prologue above is the opening of this book, Dorian's own written account of
               Bailand's hike, and of returning a year later to climb the same trail himself. The
               ten classes on this page grew directly out of the recognitions Dorian names in it:
               what became visible to him about meaning, reality, direction, and connection, once he
@@ -115,7 +115,7 @@ export default function ViewFromAbovePage() {
         <p className="mt-3 text-muted">
           Take one class. Take several. Take all ten. If you take them in order, they follow the
           shape of a climb: what does this part of the trail teach me, then what does the next part
-          teach me — until, from higher up, you can see the landscape differently than you could
+          teach me, until, from higher up, you can see the landscape differently than you could
           from where you started. Nothing here forces a tidy ending. Some days the honest answer is
           still &ldquo;I don't know yet.&rdquo;
         </p>
@@ -144,7 +144,7 @@ export default function ViewFromAbovePage() {
 
       <section className="rule-t mt-16 border-t border-rule pt-12">
         <p className="text-muted">
-          Each class is facilitated by a Certified AVAIA Guide, or can be taken on your own —
+          Each class is facilitated by a Certified AVAIA Guide, or can be taken on your own,
           reading, a recognition activity, and an optional private AVAIA conversation.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">

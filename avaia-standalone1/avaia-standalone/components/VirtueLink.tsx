@@ -4,14 +4,14 @@ import Link from "next/link";
 // anywhere in the app should be a real link to its canonical Chemistry
 // entry, not plain text. A plain <Link> with query params (not a client
 // component with sessionStorage + navigation) so this works from any
-// Server Component -- Workbook, the Unsung Heroes dashboard, Preparation
-// -- with no client-side wiring needed at the call site. /chemistry's own
+// Server Component, Workbook, the Unsung Heroes dashboard, Preparation
+//, with no client-side wiring needed at the call site. /chemistry's own
 // mount effect (app/chemistry/page.tsx) resolves these params via the
 // exact same resolveFocus() the live <<focus: Family | Virtue>> marker
 // mechanism already uses (lib/virtue-focus.ts), so a family NAME
 // ("Positive Attitude", as referrals store it) or a family KEY ("positive-
 // attitude", as Unsung Heroes' recognitions.virtue_family stores it) both
-// resolve correctly -- callers never need to normalize which shape they
+// resolve correctly, callers never need to normalize which shape they
 // have.
 export function virtueChemistryHref(family: string, virtue?: string | null): string {
   const params = new URLSearchParams({ family });

@@ -7,15 +7,15 @@ import { VIRTUE_FAMILIES, VIRTUES, type VirtueFamilyKey } from "@/lib/virtues";
 import { getActivitySet } from "@/lib/chemistry-activities";
 import SpeakButton from "@/components/SpeakButton";
 
-/** Chemistry for Families & Kids -- the first real architecture for
+/** Chemistry for Families & Kids, the first real architecture for
  *  parents and children to learn the language of virtue together.
  *  Deliberately NOT gated by Youth guardian-consent architecture: this
- *  page is free reading material, the same as a Library entry -- no
+ *  page is free reading material, the same as a Library entry, no
  *  AVAIA conversation opens here. The consent-gated boundary stays
  *  exactly where it already was: a family that wants to go further, into
  *  an actual private Youth AVAIA conversation, is pointed at the
  *  existing Youth Unsung Heroes path (a Certified Guide's Toolkit tool,
- *  already guardian-consent-gated, already developmental-band-aware) --
+ *  already guardian-consent-gated, already developmental-band-aware),
  *  nothing new invented there, and Chemistry for Kids never becomes a
  *  second Unsung Heroes.
  *
@@ -25,7 +25,7 @@ import SpeakButton from "@/components/SpeakButton";
  *  already available to every child; a story just makes one visible.
  *
  *  "Listen to the Story" reuses SpeakButton (components/SpeakButton.tsx)
- *  as-is -- the same on-device browser speech synthesis already used for
+ *  as-is, the same on-device browser speech synthesis already used for
  *  Journey chat, not a new or fake audio feature. A future animated
  *  series (see lib/chemistry-stories.ts's own `storyboard` field, built
  *  per story) would use real recorded/voice-acted narration instead;
@@ -64,7 +64,7 @@ export default function ChemistryFamilyPage() {
         Chemistry for Families & Kids
       </h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">
-        A shared language for noticing virtue together — not a way to grade your child's
+        A shared language for noticing virtue together, not a way to grade your child's
         character, and not a way to produce "good kids." It's a way to help a family recognize
         something that's already there.
       </p>
@@ -72,7 +72,7 @@ export default function ChemistryFamilyPage() {
       <section className="rule-t mt-14 border-t border-rule pt-10">
         <p className="label mb-2 text-muted">What It Is</p>
         <p className="text-muted">
-          Chemistry of Virtue is AVAIA's language for virtue — {totalElements} words like Kindness,
+          Chemistry of Virtue is AVAIA's language for virtue, {totalElements} words like Kindness,
           Courage, Honesty, and Patience, organized into 10 families. Chemistry for Kids is the
           same language, told through short original stories a child can read, or listen to, with
           a few simple questions afterward.
@@ -84,7 +84,7 @@ export default function ChemistryFamilyPage() {
         <p className="text-muted">
           It doesn't ask a child to memorize a definition or score their own character. It gives
           them a word, shows them what that word can look like in an ordinary moment, and asks
-          them to notice it — in the story, in themselves, in the people around them.
+          them to notice it, in the story, in themselves, in the people around them.
         </p>
       </section>
 
@@ -93,7 +93,7 @@ export default function ChemistryFamilyPage() {
         <p className="text-muted">
           A family that has words for what they're already noticing in each other. A child who
           can name what they saw a friend do, or what they felt themselves do, without needing an
-          adult to tell them whether it counted. Nothing here is graded, ranked, or diagnostic —
+          adult to tell them whether it counted. Nothing here is graded, ranked, or diagnostic,
           every child already has access to all of it.
         </p>
       </section>
@@ -145,7 +145,7 @@ export default function ChemistryFamilyPage() {
         <div className="mt-5 flex flex-wrap gap-2">
           {filtered.length === 0 && (
             <p className="text-sm text-muted">
-              No story yet for that search — try another element, or browse by family above.
+              No story yet for that search, try another element, or browse by family above.
             </p>
           )}
           {filtered.map((s) => {
@@ -242,7 +242,7 @@ export default function ChemistryFamilyPage() {
         <p className="text-muted">
           Every story here is built on the same {totalElements}-element table as the Chemistry of
           Virtue card deck being developed. Once a physical card for an element is in hand, the
-          same element's story is meant to be found here — pick up the card, then read (or
+          same element's story is meant to be found here, pick up the card, then read (or
           listen to) its story together.
         </p>
       </section>
@@ -251,7 +251,7 @@ export default function ChemistryFamilyPage() {
         <p className="label mb-2 text-muted">Color, Draw, and Notice</p>
         <p className="text-muted">
           Reading and listening are only part of it. A story can also be colored, traced, and
-          drawn on — something to print and use with your hands: Read → Listen → Color/Create →
+          drawn on, something to print and use with your hands: Read → Listen → Color/Create →
           Notice. Every one of the {totalElements} elements has a full printable set now; four
           (Kindness, Courage, Patience, Appreciation) have a hand-drawn scene from their story, and
           the rest use a decorative coloring page in its place until more scenes are illustrated.
@@ -267,8 +267,8 @@ export default function ChemistryFamilyPage() {
       <section className="rule-t mt-10 border-t border-rule pt-10">
         <p className="label mb-2 text-muted">Going Further</p>
         <p className="text-muted">
-          If your family wants to go further — recognizing a real moment where your child saw or
-          practiced virtue themselves — Unsung Heroes is AVAIA's short guided conversation for
+          If your family wants to go further, recognizing a real moment where your child saw or
+          practiced virtue themselves, Unsung Heroes is AVAIA's short guided conversation for
           exactly that, available for adults and, with a Certified Guide and guardian consent, for
           Youth as well.
         </p>

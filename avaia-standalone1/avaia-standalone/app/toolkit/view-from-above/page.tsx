@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { VIEW_FROM_ABOVE_CLASSES, getViewFromAboveClass } from "@/lib/view-from-above";
 
-export const metadata = { title: "The View from Above — Guide Toolkit — AVAIA" };
+export const metadata = { title: "The View from Above, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 /** Same email-lookup pattern as /toolkit/defying-grief's own start action. */
@@ -20,21 +20,21 @@ async function findHostIdByEmail(email: string): Promise<string | null> {
   return null;
 }
 
-/** The Guide-facing starter for View From Above -- closes the gap found
+/** The Guide-facing starter for View From Above, closes the gap found
  *  during this task's own required verification: the ten classes were
  *  readable as Toolkit curriculum (ViewFromAboveClass.tsx), but a Guide
  *  had no way to actually open a class-anchored private AVAIA
  *  conversation for a participant, unlike Defying Grief's own
- *  /toolkit/defying-grief. This is not a second implementation -- it's
+ *  /toolkit/defying-grief. This is not a second implementation, it's
  *  the exact same installed IAP tool, started with
  *  program: "view-from-above" and class_context: <slug> instead of
  *  "general", the same way Defying Grief threads program through.
  *  class_context is display/continuity only (Preparation, Guide's
- *  Record) -- see migration 0058's own comment; systemPromptFor's
+ *  Record), see migration 0058's own comment; systemPromptFor's
  *  VIEW_FROM_ABOVE_CONTEXT clause is deliberately generic, not
  *  class-specific, so the Guide's own live delivery of the class's
  *  shared teaching (from its Experience page) is what actually carries
- *  the class-specific content -- this tool only opens the private
+ *  the class-specific content, this tool only opens the private
  *  conversation that follows it. */
 async function startViewFromAboveSession(formData: FormData) {
   "use server";
@@ -106,7 +106,7 @@ export default async function ToolkitViewFromAbovePage({
         <Link href="/toolkit/experiences" className="text-ink underline decoration-rule underline-offset-2 hover:text-seal">
           Experiences
         </Link>
-        ), then open a private AVAIA conversation for a participant here — the same Individual
+        ), then open a private AVAIA conversation for a participant here, the same Individual
         Awareness Profile every Host uses, threaded with this class's context.
       </p>
 
@@ -136,12 +136,12 @@ export default async function ToolkitViewFromAbovePage({
           defaultValue={preselected}
           className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
         >
-          <option value="" disabled>
+          <option value="" disabled className="bg-[#05060b] text-ink">
             Choose one of the ten classes…
           </option>
           {VIEW_FROM_ABOVE_CLASSES.map((c, i) => (
-            <option key={c.slug} value={c.slug}>
-              {i + 1}. {c.title} — {c.virtueFamily}
+            <option key={c.slug} value={c.slug} className="bg-[#05060b] text-ink">
+              {i + 1}. {c.title}, {c.virtueFamily}
             </option>
           ))}
         </select>
@@ -161,7 +161,7 @@ export default async function ToolkitViewFromAbovePage({
           </div>
           <div>
             <label className="label mb-2 block" htmlFor="email">
-              Email (optional — links to their AVAIA account if they have one)
+              Email (optional, links to their AVAIA account if they have one)
             </label>
             <input
               id="email"

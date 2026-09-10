@@ -6,13 +6,13 @@ import { generatePreparationChatReply, type PreparationChatTurn } from "@/lib/en
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// The interactive Preparation workspace's backing route -- same
+// The interactive Preparation workspace's backing route, same
 // authorization posture as /api/preparation/snapshot (Guide-only,
 // session-authenticated, ownership enforced entirely through
 // getParticipantHistory's own guide_id scoping, participantId the only
 // client input that reaches a database lookup). guideMessage and
 // priorTurns are the Guide's own typed conversation; they're never
-// persisted here (this workspace is ephemeral by design -- it prepares
+// persisted here (this workspace is ephemeral by design, it prepares
 // the Guide for the next Host conversation, it isn't itself part of any
 // continuity record) and never reach the Host's own Workbook or referral
 // data in either direction.
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const history = await getParticipantHistory(supabase, user.id, participantId);
   if (!history) return NextResponse.json({ error: "Participant not found." }, { status: 404 });
 
-  // Canonical published activities the reply is allowed to reference --
+  // Canonical published activities the reply is allowed to reference,
   // fetched here (not inside lib/engine/preparation.ts, which never
   // queries the database itself) and handed in as plain text, the same
   // "caller loads it, engine only reasons over it" split the rest of this
@@ -48,8 +48,8 @@ export async function POST(request: Request) {
     supabase.from("experiences").select("title, summary").eq("status", "published").order("title"),
   ]);
   const activityLines = [
-    ...(experiences ?? []).map((e) => `- [Experience] ${e.title}${e.summary ? ` — ${e.summary}` : ""}`),
-    ...(classes ?? []).map((c) => `- [Class, ${c.family}] ${c.title}${c.summary ? ` — ${c.summary}` : ""}`),
+    ...(experiences ?? []).map((e) => `- [Experience] ${e.title}${e.summary ? `, ${e.summary}` : ""}`),
+    ...(classes ?? []).map((c) => `- [Class, ${c.family}] ${c.title}${c.summary ? `, ${c.summary}` : ""}`),
   ];
 
   const result = await generatePreparationChatReply(

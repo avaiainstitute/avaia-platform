@@ -15,11 +15,11 @@ export async function POST(request: Request) {
   if (age !== "adult" && age !== "minor") {
     return NextResponse.json({ error: "Please confirm your eligibility." }, { status: 400 });
   }
-  // Fully separate from the required disclaimer above -- optional, off by
+  // Fully separate from the required disclaimer above, optional, off by
   // default, and only ever written here when explicitly opted in.
   const marketingConsent = body?.marketingConsent === true;
 
-  // Required only when age === "minor" -- the governing guardian-consent
+  // Required only when age === "minor", the governing guardian-consent
   // decision's real, named record, replacing the old bare self-attestation
   // checkbox. Validated before touching profiles at all, so a minor can
   // never end up consent_at-stamped with no corresponding guardian record.
@@ -32,11 +32,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // .select() so we can tell "updated" from "matched nothing" — an UPDATE
+  // .select() so we can tell "updated" from "matched nothing", an UPDATE
   // that matches zero rows (e.g. the profile row doesn't exist yet, a race
   // with the signup trigger) returns success with an empty array, not an
   // error. Reporting ok:true in that case would let the client redirect to
-  // /journey believing consent was recorded when it silently wasn't —
+  // /journey believing consent was recorded when it silently wasn't,
   // /journey would then correctly send them back to /welcome, appearing to
   // loop even though nothing here calls redirect() in a cycle.
   const { data, error } = await supabase
@@ -58,15 +58,15 @@ export async function POST(request: Request) {
     );
   }
 
-  // Required, unlike the marketing opt-in below -- a minor's guardian
+  // Required, unlike the marketing opt-in below, a minor's guardian
   // record is the actual substance of the governing consent decision, not
   // an optional nicety. Not wrapped in the same transaction as the
   // profiles update above (this client has no cross-table transaction
-  // primitive) -- a failure here is reported to the Host rather than
+  // primitive), a failure here is reported to the Host rather than
   // silently dropped, even though profiles.consent_at has technically
   // already been set; retrying re-runs both writes harmlessly.
   if (age === "minor") {
-    // assentConfirmed is false here -- Youth assent is band-specific and
+    // assentConfirmed is false here, Youth assent is band-specific and
     // is only actually shown and acknowledged later, at /youth (see
     // beginYouthJourney, which updates this same row's assent_confirmed_at
     // once the Host completes that band-specific screen).
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // Deliberately a separate, best-effort write -- never lets an optional
+  // Deliberately a separate, best-effort write, never lets an optional
   // marketing opt-in block the required consent above, which has already
   // succeeded by this point. Also means a deployment that hasn't yet run
   // supabase/migrations/0009_marketing_consent.sql fails quietly here

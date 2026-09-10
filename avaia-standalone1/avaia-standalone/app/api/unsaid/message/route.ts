@@ -47,10 +47,10 @@ export async function POST(request: Request) {
     wants_response: wantsResponse,
   });
 
-  // The Host chose to just speak -- no reply is generated at all. This is
+  // The Host chose to just speak, no reply is generated at all. This is
   // the default, expected path, not an error or a missing response. Crisis
   // support must still surface here exactly as it would on the response
-  // path -- choosing not to hear back is never a reason to miss it.
+  // path, choosing not to hear back is never a reason to miss it.
   if (!wantsResponse) {
     return NextResponse.json(
       { heard: true },
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   const dbMessages = await loadUnsaidMessages(supabase, conversationId);
   // The seeded opening line and any prior "speak only" turns are real
   // conversational context but were never sent to the model as an
-  // assistant/user exchange the way a normal reply is -- they're included
+  // assistant/user exchange the way a normal reply is, they're included
   // here as ordinary history so the model can see everything the Host has
   // said so far, exactly as toAnthropicMessages already maps host -> user,
   // guide -> assistant.

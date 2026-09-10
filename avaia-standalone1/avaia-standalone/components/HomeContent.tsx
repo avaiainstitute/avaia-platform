@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 /**
- * The public homepage — the front door, not a table of contents. Answers
+ * The public homepage, the front door, not a table of contents. Answers
  * only "what might my experience here be like" and "where do I start."
  * Deliberately carries no Journey architecture, Workbook, Chemistry,
  * Secondary Losses, GIVE, Guide/Host/Witness, or institutional explanation
- * -- those stay one click away via /about and the existing Nav, exactly as
+ *, those stay one click away via /about and the existing Nav, exactly as
  * they already are. The "What Still Needs to Be Said" block below is a
  * deliberately quiet second doorway, visually secondary to the primary
  * invitation and IAP entry point above it.
@@ -23,7 +23,8 @@ export default function HomeContent() {
       </p>
 
       {/* ---------------------------------------------------------------
-          Principal copy — exact, approved text
+          Principal copy, AI-drafted; no documented Dorian review/
+          approval event found for this specific text.
       --------------------------------------------------------------- */}
       <p className="mt-8 text-lg leading-relaxed text-ink">
         Sometimes you don&rsquo;t need someone to tell you what to do. You need a place to say
@@ -69,7 +70,7 @@ export default function HomeContent() {
       <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
 
       {/* ---------------------------------------------------------------
-          Second doorway — quiet, secondary. No further explanation beyond
+          Second doorway, quiet, secondary. No further explanation beyond
           the approved description; the feature explains itself once someone
           arrives.
       --------------------------------------------------------------- */}

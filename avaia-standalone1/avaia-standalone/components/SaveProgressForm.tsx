@@ -3,13 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-/** Attaches an email to the current (anonymous) session -- the same
+/** Attaches an email to the current (anonymous) session, the same
  *  updateUser({ email }) mechanism validated end-to-end this session
  *  via the temporary internal test route: the confirmation link, once
  *  clicked, converts the identity in place (same auth.users.id), so
  *  the profile/Journey/conversation already attached to it carry over
  *  unchanged. This is deliberately its own form, entirely separate
- *  from the membership/checkout CTA it's rendered alongside -- saving
+ *  from the membership/checkout CTA it's rendered alongside, saving
  *  progress and becoming a paying Member are two different asks. */
 export default function SaveProgressForm() {
   const [email, setEmail] = useState("");

@@ -2,24 +2,24 @@ import Link from "next/link";
 import type { Stage } from "@/lib/engine/prompts";
 
 /**
- * The general-program counterpart to DefyingGriefCrossing -- shown at the
+ * The general-program counterpart to DefyingGriefCrossing, shown at the
  * exact same moment (a stage's conversation exists with only its seeded
  * opening message, before the Host has sent anything), using the exact same
  * mechanism (Link to /journey?enter=1, which app/journey/page.tsx already
  * uses to skip back past any crossing screen into the real chat). Where
  * DefyingGriefCrossing only ever covers defying-grief's CAT/InnerCompass
- * entries, this fills every OTHER first-entry moment -- every program's
- * first IAP message, and general program's CAT/InnerCompass entries -- which
+ * entries, this fills every OTHER first-entry moment, every program's
+ * first IAP message, and general program's CAT/InnerCompass entries, which
  * previously had no orientation at all; a brand-new Host was dropped
  * straight into an empty chat with only a stage label above it.
  *
  * Deliberately distributes the Journey's own explanatory copy across the
  * three stages' own first moments rather than the About page's approach of
- * explaining all three movements together up front -- consistent with
+ * explaining all three movements together up front, consistent with
  * "experience before explanation": a Host meets each movement when they
  * actually arrive at it, not as a lecture before they've done anything.
  * Ownership is stated once, here at the very beginning (Awareness); the
- * Workbook/Continuity note is stated once, at the end (Agency) -- neither is
+ * Workbook/Continuity note is stated once, at the end (Agency), neither is
  * repeated at every stage, and once a Host sends their first message this
  * screen never shows again for that stage, exactly like DefyingGriefCrossing.
  */
@@ -30,12 +30,12 @@ export default function JourneyIntro({
   justBecameMember,
 }: {
   stage: Stage;
-  /** From the referral generated at the previous stage -- null on IAP
+  /** From the referral generated at the previous stage, null on IAP
    *  entry (nothing precedes it) or when there's nothing to show yet. */
   roomTitle?: string | null;
   description?: string | null;
   /** True for the one page load immediately after a genuine Stripe
-   *  checkout success redirect -- see app/journey/page.tsx's own comment
+   *  checkout success redirect, see app/journey/page.tsx's own comment
    *  on justBecameMember for why this never persists beyond that load. */
   justBecameMember?: boolean;
 }) {
@@ -48,11 +48,11 @@ export default function JourneyIntro({
           <span className="text-muted">→</span> Agency
         </p>
         <p className="mt-4 text-muted">
-          The Journey moves through three connected conversations — three movements within one
+          The Journey moves through three connected conversations, three movements within one
           continuing conversation.
         </p>
 
-        <p className="label mb-2 mt-10">1 — Awareness</p>
+        <p className="label mb-2 mt-10">1: Awareness</p>
         <h2 className="font-serif text-3xl text-ink">Individual Awareness Profile</h2>
         <p className="mt-2 font-serif text-lg italic text-muted">What became visible?</p>
         <p className="mt-4 text-lg leading-relaxed text-ink">
@@ -95,7 +95,7 @@ export default function JourneyIntro({
             Your Journey is ready to continue.
           </p>
         )}
-        <p className="label mb-2">2 — Understanding</p>
+        <p className="label mb-2">2: Understanding</p>
         <h2 className="font-serif text-3xl text-ink">Conversations Across Time</h2>
         <p className="mt-2 font-serif text-lg italic text-muted">
           How do the different parts of what became visible become understandable together?
@@ -104,7 +104,7 @@ export default function JourneyIntro({
         {roomTitle && (
           <div className="mt-6 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
             <p className="font-sans text-xs uppercase tracking-wide text-muted">
-              Room Identity — what emerged from your own words
+              Room Identity, what emerged from your own words
             </p>
             <p className="mt-1 font-serif text-xl text-ink">&ldquo;{roomTitle}&rdquo;</p>
             {description && (
@@ -139,7 +139,7 @@ export default function JourneyIntro({
   // stage === "innercompass"
   return (
     <div className="mt-8">
-      <p className="label mb-2">3 — Agency</p>
+      <p className="label mb-2">3: Agency</p>
       <h2 className="font-serif text-3xl text-ink">InnerCompass</h2>
       <p className="mt-2 font-serif text-lg italic text-muted">
         Given what I now understand, how do I choose to participate?
@@ -148,7 +148,7 @@ export default function JourneyIntro({
       {roomTitle && (
         <div className="mt-6 rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
           <p className="font-sans text-xs uppercase tracking-wide text-muted">
-            Room Identity — what emerged from your own words
+            Room Identity, what emerged from your own words
           </p>
           <p className="mt-1 font-serif text-xl text-ink">&ldquo;{roomTitle}&rdquo;</p>
           {description && <p className="mt-2 text-sm leading-relaxed text-muted">{description}</p>}
@@ -180,7 +180,7 @@ export default function JourneyIntro({
       <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] px-5 py-5 backdrop-blur-sm">
         <p className="leading-relaxed text-ink">
           You don&rsquo;t have to begin again. What became visible and understood during the
-          Journey can be carried forward through the Workbook — future conversations can build
+          Journey can be carried forward through the Workbook, future conversations can build
           from what has already become visible, rather than requiring you to reconstruct your
           story every time.
         </p>

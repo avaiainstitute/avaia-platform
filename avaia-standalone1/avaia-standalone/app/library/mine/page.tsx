@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { LibraryEntry } from "@/lib/library";
 
-export const metadata = { title: "My Library — AVAIA" };
+export const metadata = { title: "My Library, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** What the Host explicitly chose to keep -- saved entries and entries
+/** What the Host explicitly chose to keep, saved entries and entries
  *  they left a note on. Not a log of everything they've ever opened
  *  (explored-only rows are deliberately excluded), and not entries marked
  *  "not for me" (an explicit dismissal, the opposite of a keep). A
@@ -19,7 +19,7 @@ export default async function MyLibraryPage() {
   if (!user) redirect("/sign-in?from=/library/mine");
 
   // The Library has no Youth-aware presentation architecture yet (Living
-  // Library audit, Section Q) -- same server-derived check as every other
+  // Library audit, Section Q), same server-derived check as every other
   // Library route.
   const { data: youthCheck } = await supabase
     .from("profiles")
@@ -55,7 +55,7 @@ export default async function MyLibraryPage() {
       <p className="label mb-3">Library</p>
       <h1 className="font-serif text-4xl text-ink">My Library</h1>
       <p className="mt-4 text-lg text-muted">
-        What you&rsquo;ve chosen to keep — not everything you&rsquo;ve looked at.
+        What you&rsquo;ve chosen to keep, not everything you&rsquo;ve looked at.
       </p>
 
       {rows.length === 0 ? (
@@ -65,7 +65,7 @@ export default async function MyLibraryPage() {
           {rows.map((row) => {
             const entry = entryById.get(row.library_entry_id);
             if (!entry) {
-              // Retired/archived since the Host saved it -- handled
+              // Retired/archived since the Host saved it, handled
               // honestly rather than silently dropped or crashing.
               return (
                 <div

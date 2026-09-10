@@ -12,12 +12,12 @@ import type { ResolvedFocus } from "@/lib/virtue-focus";
  * so the floating elements and drifting reactions still play.
  *
  * A horizontal mask fades the table out of the centre column and leaves it
- * visible in the side margins — so while the Host reads a centred conversation,
+ * visible in the side margins, so while the Host reads a centred conversation,
  * the periodic table stays legible on the sides for immediate reference.
  *
  * When the Guide names a virtue, the journey chat broadcasts an `avaia:focus`
  * event: the named family's colour region brightens, the specific virtue gets a
- * contrasting outline, and everything else dims — a widening cue, not a verdict.
+ * contrasting outline, and everything else dims, a widening cue, not a verdict.
  */
 export default function VirtueTableBackground() {
   const [focus, setFocus] = useState<ResolvedFocus | null>(null);
@@ -31,7 +31,7 @@ export default function VirtueTableBackground() {
     return () => window.removeEventListener("avaia:focus", onFocus);
   }, []);
 
-  // The Chemistry of Virtue tab IS the full table — no ambient copy behind it.
+  // The Chemistry of Virtue tab IS the full table, no ambient copy behind it.
   if (pathname === "/chemistry") return null;
 
   const active = focus !== null;

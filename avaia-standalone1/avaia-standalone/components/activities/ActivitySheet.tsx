@@ -41,7 +41,7 @@ export default function ActivitySheet({
       <div className="mt-6">{children}</div>
 
       <div className="mt-auto flex items-center justify-between border-t border-[#ddd4bf] pt-3 text-[0.65rem] text-[#5b5646]">
-        <span>From the story &ldquo;{set.storyTitle}&rdquo; -- Chemistry for Families &amp; Kids</span>
+        <span>From the story &ldquo;{set.storyTitle}&rdquo;, Chemistry for Families &amp; Kids</span>
         <span>avaia.org</span>
       </div>
     </div>

@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Admin — AVAIA" };
+export const metadata = { title: "Admin, AVAIA" };
 export const dynamic = "force-dynamic";
 
 type AdminSection = { href: string; label: string; description: string };
 
-// The admin surface AVAIA actually has today -- three separate pages that
+// The admin surface AVAIA actually has today, three separate pages that
 // existed before this one, none linked from anywhere in the app (found
 // during the admin/Guide usability pass: reaching any of them required
 // already knowing its exact URL). This page adds nothing new; it's the

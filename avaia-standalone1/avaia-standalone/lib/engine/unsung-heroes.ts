@@ -33,7 +33,7 @@ function failPath(message: string): string {
 }
 
 // A parallel record to lib/engine/conversation.ts's DbConversation/DbMessage,
-// backed by unsung_heroes_conversations/unsung_heroes_messages — kept fully
+// backed by unsung_heroes_conversations/unsung_heroes_messages, kept fully
 // separate so nothing here touches the core Journey's tables or logic.
 
 export type UnsungHeroesMessage = {
@@ -105,7 +105,7 @@ export async function loadUnsungHeroesMessages(
   return (data as UnsungHeroesMessage[]) ?? [];
 }
 
-/** Starts an Unsung Heroes session from the Guide Toolkit -- either for a
+/** Starts an Unsung Heroes session from the Guide Toolkit, either for a
  *  brand-new participant (name/email/optional band collected inline, same
  *  as this action's original, page-local form) or for an EXISTING roster
  *  participant (participantId present). Unsung Heroes runs on its own
@@ -116,7 +116,7 @@ export async function loadUnsungHeroesMessages(
  *  conversation can exist at all, so participant + session + conversation
  *  are all created in one action rather than lazily on first load.
  *
- *  Deliberately placed in this lib module, not as a page.tsx export --
+ *  Deliberately placed in this lib module, not as a page.tsx export,
  *  Next.js's App Router only allows a fixed set of named exports from a
  *  page.tsx (default, metadata, generateMetadata, etc.); a plain exported
  *  function there fails the build's page-shape typecheck. This is the one
@@ -131,7 +131,7 @@ export async function loadUnsungHeroesMessages(
  *  participant instead of creating a new one, skips re-collecting a
  *  name/email/consent already on file, and gates on the same
  *  isParticipantClearedToParticipate check IAP's own roster launch already
- *  uses -- a Youth participant must already be guardian-consented and
+ *  uses, a Youth participant must already be guardian-consented and
  *  assented, exactly as before, just not re-collected here. Absent
  *  participantId, every original behavior (new participant, guardian
  *  consent collected inline) is unchanged. */
@@ -161,7 +161,7 @@ export async function startUnsungHeroesSession(formData: FormData) {
 
     band = (existing!.developmental_band as DevelopmentalBand | null) ?? null;
     if (band && !(await isParticipantClearedToParticipate(supabase, existing!.id))) {
-      redirect(failPath("This participant isn't cleared yet -- guardian consent and Youth assent are required first."));
+      redirect(failPath("This participant isn't cleared yet, guardian consent and Youth assent are required first."));
     }
     participantId = existing!.id;
   } else {
@@ -169,18 +169,18 @@ export async function startUnsungHeroesSession(formData: FormData) {
     const email = String(formData.get("email") ?? "").trim().toLowerCase();
     if (!name) redirect(failPath("Enter a name and choose a path."));
 
-    // Optional -- most Unsung Heroes participants are adults. Set only when
+    // Optional, most Unsung Heroes participants are adults. Set only when
     // this session is for a Youth participant, exactly the same signal
     // app/toolkit/youth-defying-grief/page.tsx sets: its presence is what
     // /api/unsung-heroes/message and /recognition use to compose the Youth
     // instructions instead of the adult ones (see resolveDevelopmentalBand,
     // lib/guide.ts). Unsung Heroes stays its own single entry point rather
-    // than a parallel "Youth Unsung Heroes" page -- it's a supporting tool
+    // than a parallel "Youth Unsung Heroes" page, it's a supporting tool
     // inside the Youth Defying Grief ecosystem, not a second Youth program.
     const bandField = formData.get("band");
     band = isBand(bandField) ? bandField : null;
 
-    // A band means this participant is a Youth Host -- guardian consent and
+    // A band means this participant is a Youth Host, guardian consent and
     // the Guide's assent-delivery confirmation are then required, the same
     // as Youth Defying Grief. An adult session (no band) needs neither, so
     // it stays exactly as simple as before this requirement existed. See

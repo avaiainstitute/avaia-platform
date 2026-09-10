@@ -1,7 +1,7 @@
 import Link from "next/link";
 import JourneyStageProgress from "@/components/JourneyStageProgress";
 
-export const metadata = { title: "InnerCompass — AVAIA" };
+export const metadata = { title: "InnerCompass, AVAIA" };
 
 /** Journey explanation page, part three of three. See
  *  app/journey/iap/page.tsx for the pattern this follows. See
@@ -11,7 +11,7 @@ export default function InnerCompassJourneyPage() {
     <div className="mx-auto max-w-prose px-5 py-16">
       <JourneyStageProgress current="innercompass" />
 
-      <p className="label mb-2 mt-8">Defying Grief — Agency</p>
+      <p className="label mb-2 mt-8">Defying Grief, Agency</p>
       <h1 className="font-serif text-4xl text-ink">InnerCompass</h1>
       <p className="mt-2 font-serif text-xl text-seal">
         You get to decide what belongs to you from here.
@@ -21,7 +21,7 @@ export default function InnerCompassJourneyPage() {
         <p>InnerCompass asks what that understanding makes possible.</p>
         <p>
           The question changes here. It&rsquo;s no longer <em>what happened</em>, or{" "}
-          <em>what does it mean</em> — it&rsquo;s <em>what does this understanding allow me to
+          <em>what does it mean</em>, it&rsquo;s <em>what does this understanding allow me to
           do now?</em>
         </p>
       </div>
@@ -32,7 +32,7 @@ export default function InnerCompassJourneyPage() {
           InnerCompass doesn&rsquo;t tell you what&rsquo;s correct or hand you an answer. It
           helps you understand why you&rsquo;re drawn toward a particular direction, what&rsquo;s
           actually influencing that pull, what capacities and virtues are already available to
-          you, what&rsquo;s still in the way — and, maybe most importantly, whether the direction
+          you, what&rsquo;s still in the way, and, maybe most importantly, whether the direction
           in front of you actually belongs to you.
         </p>
       </section>
@@ -42,7 +42,7 @@ export default function InnerCompassJourneyPage() {
         <p className="mt-3 text-lg leading-relaxed text-muted">
           Fear, guilt, shame, other people&rsquo;s expectations, or what somebody else wants for
           you can all shape a decision, sometimes without you noticing. That doesn&rsquo;t
-          automatically make a decision wrong — but it helps to know which influences are
+          automatically make a decision wrong, but it helps to know which influences are
           actually present. InnerCompass brings them into view, so that whatever you choose is
           chosen with open eyes, not simply inherited from whichever voice happened to be
           loudest.
@@ -57,7 +57,7 @@ export default function InnerCompassJourneyPage() {
           about it has resolved. The Audacity of Happiness is the nerve it takes to hope again, to
           dream something for yourself again, to laugh without it meaning you&rsquo;ve forgotten.
           Someone may choose to stay with the Audacity of Grief. They may move toward the Audacity
-          of Happiness. AVAIA doesn&rsquo;t prescribe either one — it only helps make sure the
+          of Happiness. AVAIA doesn&rsquo;t prescribe either one, it only helps make sure the
           choice is actually theirs.
         </p>
       </section>

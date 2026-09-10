@@ -1,4 +1,4 @@
--- Closes two narrow gaps found in the "AVAIA — Close the Yellows"
+-- Closes two narrow gaps found in the "AVAIA, Close the Yellows"
 -- completion sweep (2026-09), both confirmed against live production data
 -- before this migration was written.
 --

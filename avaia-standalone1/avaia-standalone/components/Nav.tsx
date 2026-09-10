@@ -5,7 +5,7 @@ import SignOutButton from "@/components/SignOutButton";
 
 // /journey, /defying-grief, /workbook, and /unsung-heroes all render
 // completely differently signed in vs signed out. Next prefetches links by
-// default on viewport/hover — since this Nav renders on every page, that
+// default on viewport/hover, since this Nav renders on every page, that
 // would cache the SIGNED-OUT render of these routes in the client-side
 // Router Cache before the Host ever signs in, and later navigation to them
 // (even once actually signed in) can serve that stale anonymous snapshot
@@ -13,7 +13,7 @@ import SignOutButton from "@/components/SignOutButton";
 type NavLink = { href: string; label: string; prefetch: boolean };
 
 // Signed-out visitors only need enough to understand AVAIA, understand
-// Defying Grief, and begin -- not the full signed-in toolset (Workbook,
+// Defying Grief, and begin, not the full signed-in toolset (Workbook,
 // Shared with Me) sitting in front of them before they've done anything.
 // Unsung Heroes belongs here now that its signed-out page (see
 // UnsungHeroesIntro.tsx) actually explains what it is, instead of being a
@@ -24,7 +24,7 @@ const PUBLIC_LINKS: NavLink[] = [
   { href: "/", label: "Home", prefetch: true },
   { href: "/about", label: "About", prefetch: true },
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
-  { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
+  { href: "/chemistry", label: "The Chemistry of Virtue", prefetch: true },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/still-needs-to-be-said", label: "What Still Needs to Be Said", prefetch: false },
   { href: "/view-from-above", label: "The View from Above", prefetch: false },
@@ -39,9 +39,9 @@ const PUBLIC_LINKS: NavLink[] = [
 // returning-member reconciliation was about); secondary = the same public/
 // program destinations as before, still one click away, just no longer
 // competing visually with Home/Journey/Workbook/Library. Both tiers still
-// render as ordinary flex-wrap lists -- the same responsive mechanism the
+// render as ordinary flex-wrap lists, the same responsive mechanism the
 // Nav already used, not a new dropdown/menu component. Shared with Me isn't
-// here -- it's reachable from Workbook instead (where the sharing feature
+// here, it's reachable from Workbook instead (where the sharing feature
 // itself lives), not as a top-level destination.
 const HOST_PRIMARY_LINKS: NavLink[] = [
   { href: "/", label: "Home", prefetch: true },
@@ -52,7 +52,7 @@ const HOST_PRIMARY_LINKS: NavLink[] = [
 
 const HOST_SECONDARY_LINKS: NavLink[] = [
   { href: "/defying-grief", label: "Defying Grief", prefetch: false },
-  { href: "/chemistry", label: "Chemistry of Virtue", prefetch: true },
+  { href: "/chemistry", label: "The Chemistry of Virtue", prefetch: true },
   { href: "/signature", label: "Virtue Signature", prefetch: false },
   { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
   { href: "/still-needs-to-be-said", label: "What Still Needs to Be Said", prefetch: false },
@@ -71,7 +71,7 @@ export default async function Nav() {
 
   // Phase D.3: matches app/toolkit/layout.tsx's real authorization gate
   // (guide_platform_authorizations, not profiles.role) purely for nav
-  // discoverability -- showing or hiding this link changes nothing about
+  // discoverability, showing or hiding this link changes nothing about
   // who can actually reach /toolkit; someone not authorized typing the URL
   // is still redirected there exactly as before.
   let toolkitAuthorized = false;
@@ -79,14 +79,14 @@ export default async function Nav() {
   let isOrgAdmin = false;
   if (user) {
     toolkitAuthorized = await isToolkitAuthorized(supabase, user.id);
-    // Same purely-for-discoverability posture as toolkitAuthorized above --
+    // Same purely-for-discoverability posture as toolkitAuthorized above,
     // /admin and its sub-pages already re-check profiles.role themselves
     // (this changes nothing about who can actually reach them). Found
     // during the admin/Guide usability pass: /admin/* existed with no link
     // into it from anywhere in the app at all.
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
     isAdmin = profile?.role === "admin";
-    // Same discoverability-only posture -- /org-admin/* re-checks
+    // Same discoverability-only posture, /org-admin/* re-checks
     // organization_admins itself. A cheap existence check (not which/how
     // many organizations) is enough to decide whether to show the link.
     const { data: orgAdminRow } = await supabase

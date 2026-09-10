@@ -9,10 +9,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // to remember and reproduce later.
 //
 // GPT_OAUTH_REDIRECT_URI must be set to the exact callback URL ChatGPT's
-// GPT Builder shows once OAuth is selected as the Action's auth type — that
+// GPT Builder shows once OAuth is selected as the Action's auth type, that
 // value is controlled by OpenAI, not something AVAIA can predict.
 
-const CODE_TTL_MS = 5 * 60 * 1000; // 5 minutes — just long enough for the redirect round trip
+const CODE_TTL_MS = 5 * 60 * 1000; // 5 minutes, just long enough for the redirect round trip
 
 export const dynamic = "force-dynamic";
 
@@ -94,7 +94,7 @@ export default async function OAuthAuthorizePage({
   if (!params.client_id || params.client_id !== process.env.GPT_OAUTH_CLIENT_ID) {
     return (
       <ErrorScreen
-        message={`Unrecognized client. ChatGPT sent client_id: "${params.client_id ?? "(none)"}" — AVAIA has GPT_OAUTH_CLIENT_ID configured as: "${process.env.GPT_OAUTH_CLIENT_ID ?? "(not set)"}". These need to match exactly.`}
+        message={`Unrecognized client. ChatGPT sent client_id: "${params.client_id ?? "(none)"}", AVAIA has GPT_OAUTH_CLIENT_ID configured as: "${process.env.GPT_OAUTH_CLIENT_ID ?? "(not set)"}". These need to match exactly.`}
       />
     );
   }
@@ -121,7 +121,7 @@ export default async function OAuthAuthorizePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Deliberately does NOT chain a ?redirect= back through sign-in — a more
+  // Deliberately does NOT chain a ?redirect= back through sign-in, a more
   // complex URL here has previously caused Supabase's magic-link redirect to
   // fall back to its Site URL (production) instead of matching this
   // deployment's allowlist entry. A flat, simple message costs one manual

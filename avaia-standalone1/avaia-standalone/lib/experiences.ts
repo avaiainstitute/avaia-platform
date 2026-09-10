@@ -1,7 +1,7 @@
-// AVAIA Experience/Class Toolkit — shared types and small constants.
+// AVAIA Experience/Class Toolkit, shared types and small constants.
 // Minimum first slice: the data layer plus a read-only Guide browse view
 // only. No Experience Builder, no admin CRUD UI, no event/group
-// infrastructure, no certification-tier gating — none of that is built
+// infrastructure, no certification-tier gating, none of that is built
 // yet. Content is seeded directly via migration 0020, the same way
 // Library content has always been added (there is no admin UI for this
 // either).
@@ -52,7 +52,7 @@ export type AvaiaClass = {
 };
 
 /** Validate a component tag against the existing Guide Toolkit's own
- *  ToolKey vocabulary (lib/toolkit.ts) — deliberately not a second
+ *  ToolKey vocabulary (lib/toolkit.ts), deliberately not a second
  *  taxonomy. A tag naming an unbuilt tool (e.g. "table-formation",
  *  "council") is still valid; referencing a component never requires
  *  it to exist yet. */

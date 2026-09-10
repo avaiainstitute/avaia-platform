@@ -3,21 +3,21 @@
 import { useEffect, useState } from "react";
 
 /**
- * Read-aloud via the browser's built-in Web Speech API (speechSynthesis) — free,
+ * Read-aloud via the browser's built-in Web Speech API (speechSynthesis), free,
  * on-device, private (no server, no API key). Tap to hear the Guide's words; tap
  * again to stop. Renders nothing where speech synthesis isn't available.
  */
 // Devices default to a flat, robotic voice even when a far more natural one is
 // installed. Prefer the known-good natural voices, in order.
 //
-// Checked before PREFERRED below -- Web Speech exposes no quality/tier
+// Checked before PREFERRED below, Web Speech exposes no quality/tier
 // field to query directly, only a voice's `name`, so these substrings are
 // the only available signal that a name like "Samantha" or "Ava" is the
 // higher-fidelity voice a Host has downloaded (iOS's own naming for this,
 // e.g. "Samantha (Enhanced)"/"Ava (Premium)") rather than the lower-quality
 // default installed under the same base name. Most mobile devices ship
 // only the default; this only helps when a better one is actually present
-// on the device -- it can't select a voice that isn't installed.
+// on the device, it can't select a voice that isn't installed.
 const QUALITY_MARKERS = ["enhanced", "premium", "neural"];
 
 const PREFERRED = [
@@ -35,7 +35,7 @@ const PREFERRED = [
 // shield a span of text from the passes below and restore it afterward.
 // Built via fromCharCode from Private Use Area code points (never
 // otherwise produced by assistant text, so they can't collide with real
-// content) rather than written as \u escape literals -- those were
+// content) rather than written as \u escape literals, those were
 // silently mangled into different characters when saved through this
 // editing pipeline, the same class of corruption seen earlier this
 // session with smart-quote substitution during a SQL paste. fromCharCode
@@ -51,19 +51,19 @@ const PROTECTED_MULTIPLY = String.fromCharCode(0xe004);
  *  characters aren't read aloud literally.
  *
  *  A prior version only stripped *paired* emphasis markers (a leftover,
- *  unmatched "*" -- e.g. "risk*" or "*risk" -- was deliberately left
+ *  unmatched "*", e.g. "risk*" or "*risk", was deliberately left
  *  alone). That turned out to be the actual remaining production case:
  *  real assistant output isn't always cleanly paired, and the unpaired
  *  marker was the literal "*" the speech engine was reading aloud.
  *  Asterisks have essentially one legitimate non-markdown use in AVAIA's
- *  conversational content -- multiplication ("3 * 4") -- which is
+ *  conversational content, multiplication ("3 * 4"), which is
  *  protected explicitly below; every other asterisk, paired or not, is
  *  removed outright rather than relying on pairing logic that malformed
  *  or streamed markdown can defeat.
  *
  *  Underscores can't use the same blanket approach, because "_" doubles
  *  as both a markdown marker and a legitimate identifier character
- *  (snake_case, left_join) -- so a leftover single underscore is only
+ *  (snake_case, left_join), so a leftover single underscore is only
  *  removed when it's flush against a word on exactly one side (the
  *  signature of a stray emphasis marker); flush on *both* sides (a
  *  mid-word underscore) is left alone. A doubled "__" is stripped as an
@@ -72,10 +72,10 @@ const PROTECTED_MULTIPLY = String.fromCharCode(0xe004);
  *
  *  \-escaped punctuation (CommonMark's "treat this literally" syntax) is
  *  protected before any of the above runs, so a deliberate `\*` or `\_`
- *  survives as the literal character rather than being read as -- or
- *  mistaken for -- formatting.
+ *  survives as the literal character rather than being read as, or
+ *  mistaken for, formatting.
  *
- *  Deliberately avoids lookbehind assertions (`(?<=...)`) -- unsupported
+ *  Deliberately avoids lookbehind assertions (`(?<=...)`), unsupported
  *  in Safari before 16.4, which would throw a SyntaxError on this regex
  *  and break Read Aloud entirely on those browsers.
  *
@@ -83,14 +83,14 @@ const PROTECTED_MULTIPLY = String.fromCharCode(0xe004);
  *  is completely untouched by this function. */
 function stripPresentationalMarkdown(text: string): string {
   const working = text
-    // \-escaped punctuation -- protected first so it's never mistaken for
+    // \-escaped punctuation, protected first so it's never mistaken for
     // real markdown syntax by the passes below, then restored as the
     // literal character (minus the backslash) at the very end.
     .replace(/\\\*/g, ESCAPED_ASTERISK)
     .replace(/\\_/g, ESCAPED_UNDERSCORE)
     .replace(/\\#/g, ESCAPED_HASH)
     .replace(/\\-/g, ESCAPED_DASH)
-    // genuine multiplication ("3 * 4") -- protected before the blanket
+    // genuine multiplication ("3 * 4"), protected before the blanket
     // asterisk removal below.
     .replace(/(\d)(\s+)\*(\s+)(\d)/g, `$1$2${PROTECTED_MULTIPLY}$3$4`)
     // heading markers, horizontal rules, bullet markers
@@ -100,12 +100,12 @@ function stripPresentationalMarkdown(text: string): string {
     // __bold__ as an explicit pair (see note above on why "_" needs this)
     .replace(/__(\S(?:[\s\S]*?\S)?)__/g, "$1")
     // any remaining single underscore flush against a word on exactly one
-    // side -- a leftover emphasis marker, paired or not. No lookbehind:
+    // side, a leftover emphasis marker, paired or not. No lookbehind:
     // the left-hand check uses a capture group instead.
     .replace(/(^|[^\w])_(?=\w)/g, "$1")
     .replace(/(\w)_(?!\w)/g, "$1")
-    // every remaining asterisk -- paired, unmatched, or however many in a
-    // row -- is a markdown delimiter, not content, now that multiplication
+    // every remaining asterisk, paired, unmatched, or however many in a
+    // row, is a markdown delimiter, not content, now that multiplication
     // is protected.
     .replace(/\*/g, "")
     // tidy up double spaces left behind by a removed stray marker; line
@@ -120,7 +120,7 @@ function stripPresentationalMarkdown(text: string): string {
     .replace(new RegExp(ESCAPED_DASH, "g"), "-");
 }
 
-/** The automatic pick -- unchanged, and still the default whenever the
+/** The automatic pick, unchanged, and still the default whenever the
  *  Host hasn't chosen a voice of their own (see resolveVoice below). */
 function pickVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis?.getVoices?.() ?? [];
@@ -139,11 +139,11 @@ function pickVoice(): SpeechSynthesisVoice | null {
   return pool.find((v) => !v.name.toLowerCase().includes("compact")) ?? pool[0];
 }
 
-// Host voice choice, remembered per browser/device only -- no account
+// Host voice choice, remembered per browser/device only, no account
 // field, no server round-trip, same as every other purely-local UI
 // preference in this app. A device that changes its installed voices
 // (or a different browser/device entirely) simply won't find a match
-// below and falls back to pickVoice() automatically -- see resolveVoice.
+// below and falls back to pickVoice() automatically, see resolveVoice.
 const VOICE_STORAGE_KEY = "avaia:read-aloud-voice";
 
 function getSavedVoiceName(): string | null {
@@ -151,7 +151,7 @@ function getSavedVoiceName(): string | null {
   try {
     return window.localStorage.getItem(VOICE_STORAGE_KEY);
   } catch {
-    // Private browsing / storage disabled -- selection just won't persist.
+    // Private browsing / storage disabled, selection just won't persist.
     return null;
   }
 }
@@ -162,12 +162,12 @@ function setSavedVoiceName(name: string | null) {
     if (name) window.localStorage.setItem(VOICE_STORAGE_KEY, name);
     else window.localStorage.removeItem(VOICE_STORAGE_KEY);
   } catch {
-    /* ignore -- same as above */
+    /* ignore, same as above */
   }
 }
 
 /** The Host's saved choice if it still exists among the device's current
- *  voices, otherwise the existing automatic pick -- never a broken
+ *  voices, otherwise the existing automatic pick, never a broken
  *  selection, never a silent failure to speak at all. */
 function resolveVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis?.getVoices?.() ?? [];
@@ -180,7 +180,7 @@ function resolveVoice(): SpeechSynthesisVoice | null {
 }
 
 /** English voices (falling back to every voice if the device somehow
- *  reports none as English), deduplicated by name -- some browsers list
+ *  reports none as English), deduplicated by name, some browsers list
  *  the same voice twice (e.g. a local and a network copy under the exact
  *  same name). Used only to populate the selector below; pickVoice's own
  *  pool-building is untouched. */
@@ -211,7 +211,7 @@ export default function SpeakButton({ text }: { text: string }) {
     setSupported(typeof window !== "undefined" && "speechSynthesis" in window);
     const synth = window.speechSynthesis;
     if (!synth) return;
-    // Voice list often loads asynchronously -- populate now, and again
+    // Voice list often loads asynchronously, populate now, and again
     // whenever the browser reports the list has changed (this is also
     // what makes the selector below appear once voices actually arrive,
     // rather than staying empty on first paint).
@@ -245,7 +245,7 @@ export default function SpeakButton({ text }: { text: string }) {
     synth.cancel();
     const spoken = stripPresentationalMarkdown(text);
     // Dev-safe diagnostic: only logs when stripping actually changed
-    // something, and only the two strings involved -- lets RAW vs SPOKEN
+    // something, and only the two strings involved, lets RAW vs SPOKEN
     // be compared directly in the browser console (including in
     // production, via DevTools) for whatever real message triggered a
     // "reads a symbol aloud" report, without adding any UI. A leftover
@@ -271,7 +271,7 @@ export default function SpeakButton({ text }: { text: string }) {
     setSelectedName(name);
     setSavedVoiceName(name || null);
     // A voice switched mid-playback would otherwise finish in the old
-    // voice -- stopping keeps "switch voices, hear it on the next
+    // voice, stopping keeps "switch voices, hear it on the next
     // playback" honest rather than surprising on the current one.
     if (speaking) {
       window.speechSynthesis?.cancel();
@@ -315,7 +315,7 @@ export default function SpeakButton({ text }: { text: string }) {
         )}
         {speaking ? "Stop" : "Read aloud"}
       </button>
-      {/* Only appears once the device has actually reported voices --
+      {/* Only appears once the device has actually reported voices,
        *  see requirement #9's async-population handling above. Native
        *  <select> rather than a custom menu: zero new UI architecture,
        *  keyboard/accessible for free, and its own displayed value

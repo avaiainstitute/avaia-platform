@@ -6,13 +6,13 @@ import { VIRTUE_FAMILIES, type VirtueFamilyKey } from "./virtues";
 import { SECONDARY_LOSSES } from "./institution";
 import type { LibraryEntry } from "./library";
 
-// Deterministic, explainable Phase 1 retrieval -- reuses the frozen
+// Deterministic, explainable Phase 1 retrieval, reuses the frozen
 // referral engine's own already-validated output (normalizeVirtueClassifications
 // from lib/engine/referral-provenance.ts, untouched), adding no new
 // inference of its own. Only three signal types are used, per the approved
 // scope: validated Secondary Losses, validated virtues, and program
 // context. Host-authored free text (anchorStatements, questionsWorthCarrying,
-// desiredDirection, nextStep, etc.) is deliberately NOT read here -- there
+// desiredDirection, nextStep, etc.) is deliberately NOT read here, there
 // is no explicit, deterministic connection from that prose to a specific
 // Library Entry in this build, and guessing one from keywords is exactly
 // the kind of semantic interpretation Phase 1 rules out. If fewer than 3
@@ -24,7 +24,7 @@ import type { LibraryEntry } from "./library";
 // while library_entries.virtues stores the family as its short key (e.g.
 // "positive-attitude", via lib/library.ts's validateVirtueTag). Both are
 // the existing, already-established representations for those two
-// different tables -- this file is simply the first place both are read
+// different tables, this file is simply the first place both are read
 // together, so the name->key conversion happens once, here.
 
 export type RetrievalReason =
@@ -34,7 +34,7 @@ export type RetrievalReason =
 
 export type RetrievedEntry = {
   entry: LibraryEntry;
-  /** Empty in broad (unpersonalized) mode -- never fabricated. */
+  /** Empty in broad (unpersonalized) mode, never fabricated. */
   reasons: RetrievalReason[];
 };
 
@@ -42,7 +42,7 @@ export type RetrievalResult = {
   mode: "personalized" | "broad";
   entries: RetrievedEntry[];
   /** The Host's own Journey this retrieval actually drew from, if a valid
-   *  one was given -- present even when mode ends up "broad" (not enough
+   *  one was given, present even when mode ends up "broad" (not enough
    *  matched), so the caller can say so honestly rather than silently
    *  falling back. */
   journeyId: string | null;
@@ -71,7 +71,7 @@ function scoreEntry(
   }
 
   // 'general' is the default for nearly every Journey and nearly every
-  // entry -- matching on it wouldn't personalize anything, just relabel
+  // entry, matching on it wouldn't personalize anything, just relabel
   // the default case as "personalized." Only 'defying-grief' is actually
   // distinguishing.
   if (program === "defying-grief" && entry.programs.includes(program)) {
@@ -131,7 +131,7 @@ export async function getLibraryEntriesForHost(
           // writes significantSecondaryLosses. A legacy free-prose string
           // (pre-dating the validated {category, description} shape) is
           // only used if it happens to exactly match one of the ten
-          // canonical categories -- never guessed at, matching
+          // canonical categories, never guessed at, matching
           // isValidSecondaryLoss's own existing discipline.
           for (const key of ["secondaryLossesIdentified", "significantSecondaryLosses"]) {
             const raw = content[key];
@@ -152,7 +152,7 @@ export async function getLibraryEntriesForHost(
           }
 
           // Virtues: CAT writes relevantVirtues, InnerCompass writes
-          // virtuesInvolved -- both already validated and normalized by
+          // virtuesInvolved, both already validated and normalized by
           // the frozen engine's own normalizeVirtueClassifications.
           for (const key of ["relevantVirtues", "virtuesInvolved"]) {
             for (const c of normalizeVirtueClassifications(content[key])) {
@@ -172,7 +172,7 @@ export async function getLibraryEntriesForHost(
     .select("*")
     .eq("status", "published")
     .limit(500);
-  // Same visibility filter as lib/library-search.ts -- applied once here,
+  // Same visibility filter as lib/library-search.ts, applied once here,
   // before scoring, so a member-only entry can never surface in either
   // personalized or broad results for a non-member.
   const published = ((publishedData as LibraryEntry[]) ?? []).filter(
@@ -192,7 +192,7 @@ export async function getLibraryEntriesForHost(
         (a, b) =>
           b.reasons.length - a.reasons.length || b.entry.created_at.localeCompare(a.entry.created_at)
       );
-    // Not enough legitimate evidence to personalize safely -- fall back
+    // Not enough legitimate evidence to personalize safely, fall back
     // below rather than stretch a thin match into a "front hall."
     if (scored.length >= 3) {
       mode = "personalized";
@@ -212,12 +212,12 @@ export async function getLibraryEntriesForHost(
 }
 
 /** Plain-language rendering of one reason, traceable directly back to the
- *  persisted signal it came from -- never a fabricated explanation. */
+ *  persisted signal it came from, never a fabricated explanation. */
 export function formatReason(reason: RetrievalReason): string {
   if (reason.type === "secondary_loss") return `Secondary Loss: ${reason.value}`;
   if (reason.type === "virtue") {
     const family = VIRTUE_FAMILIES.find((f) => f.key === reason.family)?.name ?? reason.family;
-    return reason.element ? `${family} — ${reason.element}` : family;
+    return reason.element ? `${family}, ${reason.element}` : family;
   }
   return reason.value === "defying-grief" ? "Defying Grief" : "Your Journey";
 }

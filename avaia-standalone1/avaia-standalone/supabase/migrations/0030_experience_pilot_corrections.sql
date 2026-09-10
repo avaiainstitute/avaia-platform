@@ -28,7 +28,7 @@ returning es.id, es.section_type, es.title, es.updated_at;
 -- reference, and conversation_window sections -- not new material.
 update public.experiences
 set
-  summary = $$An AVAIA Experience that creates room to recognize the ripples of a loss without deciding for the Host what their loss means -- not limited to death, but also divorce, estrangement, relocation, betrayal, disaster, financial collapse, a lost opportunity, or major transition. Moves through Awareness, Understanding, and Agency using the Ripple metaphor, the Ten Secondary Losses, and IAP, CAT, and InnerCompass. We don't move on, we move with.$$,
+  summary = $$An AVAIA Experience that creates room to recognize the ripples of a loss without deciding for the Host what their loss means, not limited to death, but also divorce, estrangement, relocation, betrayal, disaster, financial collapse, a lost opportunity, or major transition. Moves through Awareness, Understanding, and Agency using the Ripple metaphor, the Ten Secondary Losses, and IAP, CAT, and InnerCompass. We don't move on, we move with.$$,
   components = array['iap', 'cat', 'innercompass', 'secondary-loss', 'chemistry', 'defying-grief', 'youth-group'],
   conversation_stages = array['iap', 'cat', 'innercompass'],
   updated_at = now()

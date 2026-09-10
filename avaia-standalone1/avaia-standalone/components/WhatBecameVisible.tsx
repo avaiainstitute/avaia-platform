@@ -4,11 +4,11 @@ import { useState } from "react";
 import { virtueChemistryHref } from "@/components/VirtueLink";
 import type { VirtueClassification } from "@/lib/engine/referral-provenance";
 
-/** "What Became Visible" -- the Chemistry connection point requested for
+/** "What Became Visible", the Chemistry connection point requested for
  *  the Journey completion card (and reused by Unsung Heroes): each
  *  virtue/element a completed conversation already recognized (the same
  *  structured data Workbook renders, from CompletionSummary.virtues),
- *  offered with two Host-controlled actions -- explore its real Chemistry
+ *  offered with two Host-controlled actions, explore its real Chemistry
  *  entry, or add it to the Host's own living Virtue Signature. Recognition
  *  never becomes identity automatically; "Consider for My Virtue
  *  Signature" is the one and only path an entry reaches
@@ -23,7 +23,7 @@ export default function WhatBecameVisible({
   virtues: VirtueClassification[];
   sourceType: "conversation_referral" | "unsung_heroes";
   sourceReference?: string | null;
-  /** Set only inside a Guide-facilitated session -- routes the entry to
+  /** Set only inside a Guide-facilitated session, routes the entry to
    *  this participant's own Signature instead of the signed-in Guide's.
    *  Omitted (self-serve), it lands on the Host's own Signature as before. */
   participantId?: string | null;
@@ -60,7 +60,7 @@ export default function WhatBecameVisible({
       <div className="space-y-2">
         {virtues.map((v, i) => (
           <div key={i} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="text-ink">{v.element ? `${v.family} — ${v.element}` : v.family}</span>
+            <span className="text-ink">{v.element ? `${v.family}, ${v.element}` : v.family}</span>
             <div className="flex items-center gap-3">
               <a
                 href={virtueChemistryHref(v.family, v.element)}

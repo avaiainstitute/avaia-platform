@@ -40,14 +40,14 @@ function isBand(value: string | null): value is DevelopmentalBand {
   return value === "8-11" || value === "12-14" || value === "15-17";
 }
 
-/** Bulk registration -- the "add multiple participants efficiently in one
+/** Bulk registration, the "add multiple participants efficiently in one
  *  workflow" requirement. No file-upload infrastructure exists anywhere
  *  in this codebase (checked before building this), so rather than
  *  inventing one, this parses a plain textarea: one participant per line,
- *  comma-separated Name, Email, Band (email and band both optional --
+ *  comma-separated Name, Email, Band (email and band both optional,
  *  either can be filled in later from the roster). This creates the
  *  participant + program registration only; guardian consent and Youth
- *  assent are deliberately NOT bulk-confirmed here -- a Guide cannot
+ *  assent are deliberately NOT bulk-confirmed here, a Guide cannot
  *  truthfully bulk-attest to collecting consent from several different
  *  guardians in one click, so each participant's consent is recorded
  *  individually, per person, from their own row below. */
@@ -132,9 +132,9 @@ async function addSingleParticipant(formData: FormData) {
   redirect(`/toolkit/youth-defying-grief/programs/${programId}`);
 }
 
-/** Corrects an erroneous registration -- removes the participant from
+/** Corrects an erroneous registration, removes the participant from
  *  THIS program's roster only. Does not delete the guide_participants row
- *  or any guardian_consents record -- a mis-added registration is an
+ *  or any guardian_consents record, a mis-added registration is an
  *  administrative correction, not a request to erase someone's data (see
  *  the separate Youth data deletion tooling for that). */
 async function removeRegistration(formData: FormData) {
@@ -164,14 +164,14 @@ async function removeRegistration(formData: FormData) {
   redirect(`/toolkit/youth-defying-grief/programs/${programId}`);
 }
 
-/** Withdraws guardian consent -- e.g. the guardian contacted the Guide
+/** Withdraws guardian consent, e.g. the guardian contacted the Guide
  *  directly to withdraw permission (the consent page itself tells them
  *  they can do this; before this action existed, there was no way for a
- *  Guide to actually act on that -- revokeGuardianConsent() existed in
+ *  Guide to actually act on that, revokeGuardianConsent() existed in
  *  lib/guardian-consent.ts but nothing in the app ever called it). Flips
  *  the participant's current pending-or-active consent to 'revoked',
  *  which immediately drops them out of isParticipantClearedToParticipate
- *  -- does not touch registration or delete any data; see the separate
+ * , does not touch registration or delete any data; see the separate
  *  Youth data deletion tooling for that. */
 async function revokeConsent(formData: FormData) {
   "use server";
@@ -213,12 +213,12 @@ async function revokeConsent(formData: FormData) {
   redirect(`/toolkit/youth-defying-grief/programs/${programId}`);
 }
 
-/** Starts this participant's own private Youth Defying Grief session --
+/** Starts this participant's own private Youth Defying Grief session,
  *  only reachable when isParticipantClearedToParticipate is true (the
  *  button itself is only rendered then, and this action re-checks
  *  server-side rather than trusting the UI). Identical program='youth',
  *  session_context='youth_individual' shape as the individual entry
- *  point (app/toolkit/youth-defying-grief/page.tsx) -- this is that same
+ *  point (app/toolkit/youth-defying-grief/page.tsx), this is that same
  *  private engine, launched from a roster instead of a standalone form,
  *  never a second implementation. */
 async function launchParticipantSession(formData: FormData) {
@@ -317,7 +317,7 @@ export default async function YouthProgramRosterPage({
   // delivery needs live on the Master Curriculum Experience detail page
   // (/toolkit/experiences/[id], "Print Facilitator Guide"/"Print
   // Participant Materials"), not on /toolkit/youth-defying-grief (the
-  // individual registration form) -- found during the admin/Guide
+  // individual registration form), found during the admin/Guide
   // usability pass, where the link below pointed at the wrong page and
   // left a Guide running an actual program with no path to the materials
   // this section's own copy tells them to go print. Looked up by title
@@ -351,7 +351,7 @@ export default async function YouthProgramRosterPage({
         <div className="mt-6 rounded-lg border border-seal/40 bg-seal/[0.06] p-5">
           <p className="text-sm text-ink">
             Consent link generated for <span className="font-semibold">{searchParams.participant}</span>. Send this
-            to the guardian directly (text, email, however fits) — AVAIA does not send it for you. This
+            to the guardian directly (text, email, however fits), AVAIA does not send it for you. This
             participant is not cleared until the guardian opens it and confirms.
           </p>
           <p className="mt-3 break-all rounded-md border border-rule bg-white/[0.04] px-3 py-2 font-mono text-xs text-ink">
@@ -363,7 +363,7 @@ export default async function YouthProgramRosterPage({
       <section className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5">
         <p className="label mb-2 text-muted">Shared-room delivery</p>
         <p className="mb-3 text-sm text-muted">
-          The curriculum itself is delivered live -- print the Facilitator Guide and Participant
+          The curriculum itself is delivered live, print the Facilitator Guide and Participant
           Materials for the whole room from the Youth Defying Grief curriculum. Private AVAIA
           sessions launch per-participant below, only once cleared.
         </p>
@@ -427,7 +427,7 @@ export default async function YouthProgramRosterPage({
             <input type="hidden" name="programId" value={program.id} />
             <p className="mb-3 text-sm text-ink">Add several at once</p>
             <p className="mb-2 text-xs text-muted">
-              One per line: Name, Email (optional), Band (optional — 8-11, 12-14, or 15-17)
+              One per line: Name, Email (optional), Band (optional, 8-11, 12-14, or 15-17)
             </p>
             <textarea
               name="bulkText"
@@ -467,7 +467,7 @@ export default async function YouthProgramRosterPage({
                   <tr key={participant.id} className="border-b border-rule/50">
                     <td className="py-3 pr-4 text-ink">{participant.name}</td>
                     <td className="py-3 pr-4 text-muted">
-                      {participant.developmental_band ? BAND_LABEL[participant.developmental_band] : "—"}
+                      {participant.developmental_band ? BAND_LABEL[participant.developmental_band] : "None"}
                     </td>
                     <td className="py-3 pr-4 text-muted">
                       {consent.status === "none" && "Not started"}
@@ -530,7 +530,7 @@ export default async function YouthProgramRosterPage({
                               className="rounded-md border border-rule bg-white/[0.04] px-2 py-1.5 text-xs text-ink outline-none focus:border-seal"
                             >
                               <option value="" disabled className="bg-[#05060b]">
-                                Unsung Heroes path —
+                                Unsung Heroes path,
                               </option>
                               {UNSUNG_HEROES_PATHS.map((p) => (
                                 <option key={p} value={p} className="bg-[#05060b]">

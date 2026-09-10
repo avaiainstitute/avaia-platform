@@ -5,28 +5,28 @@ import type { LibraryEntry } from "./library";
 // Types and read-only data access for the Living Library's concept/
 // cross-reference foundation (see 0015_library_concepts.sql). Every read
 // filters status = 'published' explicitly, on top of RLS already
-// enforcing the same thing -- matching the existing pattern in
+// enforcing the same thing, matching the existing pattern in
 // app/toolkit/library/page.tsx. A function here returning an empty
 // result means either nothing published exists yet for that concept/
 // entry/question, or (for most of the Library's history so far) nothing
-// has been wired to read it -- not necessarily that the underlying data
+// has been wired to read it, not necessarily that the underlying data
 // is missing.
 //
 // Deliberately two-step (fetch the junction rows, then batch-fetch the
 // referenced rows by id, then join in TypeScript) rather than a
-// PostgREST embedded-resource select -- the same pattern already proven
+// PostgREST embedded-resource select, the same pattern already proven
 // in getParticipantHistory (lib/guide.ts) and getLibraryEntriesForHost
 // (lib/library-retrieval.ts). library_concept_relations has two foreign
 // keys into library_concepts (from_concept_id, to_concept_id), which
 // would need a disambiguating embedded-select hint tied to Postgres's
-// auto-generated constraint name -- not worth the fragility when a plain
+// auto-generated constraint name, not worth the fragility when a plain
 // second query is just as simple and easy to verify by reading it.
 
 export type ConceptStatus = "draft" | "published" | "archived";
 export type ProposedBy = "editor" | "model";
 export type JunctionStatus = "proposed" | "published";
 // Deliberately excludes anything implying historical development, source/
-// work lineage, or authorship -- the Person/Work/Version/Fragment
+// work lineage, or authorship, the Person/Work/Version/Fragment
 // provenance layer is intentionally deferred, and a concept-to-concept
 // edge is the wrong place for it to arrive prematurely.
 export type ConceptRelationType =
@@ -40,7 +40,7 @@ export type LibraryConcept = {
   name: string;
   description: string | null;
   alternate_terms: string[];
-  /** Small, freeform, extensible -- not a canonical ontology. Shape is
+  /** Small, freeform, extensible, not a canonical ontology. Shape is
    *  intentionally loose ({label, note} or plain strings) until real
    *  editorial content settles what's actually useful. */
   distinctions: unknown[];
@@ -71,7 +71,7 @@ export type LibraryConceptRelation = {
 };
 
 /** Concepts a specific Library Entry is connected to, with the editorial
- *  reason for each connection. Only ever published rows -- a "proposed"
+ *  reason for each connection. Only ever published rows, a "proposed"
  *  (model-suggested, not yet reviewed) connection never reaches a Host,
  *  by RLS as well as this explicit filter. */
 export async function getConceptsForEntry(
@@ -124,7 +124,7 @@ export async function getQuestionsForEntry(
 }
 
 /** Other concepts directly related to a given concept, in either
- *  direction -- the relation itself stays directional (from_concept_id/
+ *  direction, the relation itself stays directional (from_concept_id/
  *  to_concept_id/relation_type preserved) so a caller can render "X is a
  *  dimension of Y" correctly either way round. */
 export async function getRelatedConcepts(
@@ -192,7 +192,7 @@ export async function getConceptsForQuestion(
 }
 
 /** A single published concept by id, or null if it doesn't exist or
- *  isn't published -- the same "not found or not yours to see" shape
+ *  isn't published, the same "not found or not yours to see" shape
  *  every other Library detail lookup already uses (e.g. the entry detail
  *  page's own `.eq("status", "published").maybeSingle()`). */
 export async function getConcept(
@@ -209,7 +209,7 @@ export async function getConcept(
 }
 
 /** Questions directly connected to a concept through library_question_concepts
- *  -- a question belonging in this concept's own exploration neighborhood.
+ * , a question belonging in this concept's own exploration neighborhood.
  *  Deliberately NOT derived by walking Concept -> Entries -> Entry
  *  Questions; that's a different relationship (a question a specific
  *  entry happens to touch), and conflating the two would make a concept
@@ -240,12 +240,12 @@ export async function getQuestionsForConcept(
 }
 
 /** Library Entries directly connected to a concept through
- *  library_entry_concepts -- the reverse of getConceptsForEntry. The only
+ *  library_entry_concepts, the reverse of getConceptsForEntry. The only
  *  function in this file that returns LibraryEntry rows (concepts and
  *  questions have no visibility tiering of their own), so it's the one
  *  place here that needs the same public/member filter already applied in
  *  lib/library-search.ts, lib/library-retrieval.ts, and
- *  lib/library-orientation.ts -- otherwise a concept's neighborhood page
+ *  lib/library-orientation.ts, otherwise a concept's neighborhood page
  *  would leak member-only entries to a non-member. */
 export async function getEntriesForConcept(
   supabase: SupabaseClient,

@@ -8,15 +8,15 @@ export const dynamic = "force-dynamic";
 
 const MEMBERSHIP_PLANS: MembershipPlan[] = ["monthly", "annual"];
 
-/** Starts Stripe Checkout for a NEW Family Membership plan -- deliberately
+/** Starts Stripe Checkout for a NEW Family Membership plan, deliberately
  *  separate from /api/stripe/checkout (Individual) rather than a shared
- *  route with a "tier" branch, so Individual checkout -- already proven
- *  live -- is never touched by this feature. Creates a subscription for
+ *  route with a "tier" branch, so Individual checkout, already proven
+ *  live, is never touched by this feature. Creates a subscription for
  *  the Family base price only (quantity 1, covers the first 5 seats);
  *  additional members are billed later, as a separate subscription item,
  *  only once actually invited (see lib/family-membership.ts). The plan
  *  record itself and the owner's own active seat are created by the
- *  webhook's checkout.session.completed handler, not here -- this route
+ *  webhook's checkout.session.completed handler, not here, this route
  *  only ever starts a Checkout Session. */
 export async function POST(request: Request) {
   const supabase = createClient();

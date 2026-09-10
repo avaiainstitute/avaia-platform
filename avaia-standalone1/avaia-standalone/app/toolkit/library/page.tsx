@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { LibraryEntry } from "@/lib/library";
 
-export const metadata = { title: "Library — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Library, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Read-only Library browse for Guides -- the data layer and RLS ("library
+/** Read-only Library browse for Guides, the data layer and RLS ("library
  *  entries guide read", added in 0012_guide_toolkit_expansion.sql) are
  *  ported from the unmerged `library` branch; the admin CRUD/suggestion-
  *  review UI is not ported in this pass, so this will show "nothing
- *  published yet" until entries exist to publish -- an honest empty state,
+ *  published yet" until entries exist to publish, an honest empty state,
  *  not a broken one. */
 export default async function ToolkitLibraryPage() {
   const supabase = createClient();
@@ -36,7 +36,7 @@ export default async function ToolkitLibraryPage() {
       <p className="label mb-3">Library</p>
       <h1 className="font-serif text-4xl text-ink">AVAIA Library</h1>
       <p className="mt-4 text-lg text-muted">
-        Browsable AVAIA resources — the data layer and Guide access are installed; the full
+        Browsable AVAIA resources, the data layer and Guide access are installed; the full
         content-management tooling (adding and editing entries) is a separate, later step.
       </p>
 

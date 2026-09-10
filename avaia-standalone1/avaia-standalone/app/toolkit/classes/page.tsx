@@ -3,13 +3,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CLASS_FAMILY_LABEL, type AvaiaClass } from "@/lib/experiences";
 
-export const metadata = { title: "Classes — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Classes, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
-/** Read-only Class Library browse for Guides -- minimum first slice. The
+/** Read-only Class Library browse for Guides, minimum first slice. The
  *  20 approved Classes are seeded as status='draft' (migration 0020), so
  *  this page will legitimately show "nothing published yet" until they're
- *  explicitly published -- an honest empty state, not a broken one. No
+ *  explicitly published, an honest empty state, not a broken one. No
  *  Experience Builder, no admin CRUD UI, in this pass. */
 export default async function ToolkitClassesPage() {
   const supabase = createClient();
@@ -37,7 +37,7 @@ export default async function ToolkitClassesPage() {
       <h1 className="font-serif text-4xl text-ink">Classes</h1>
       <p className="mt-4 text-lg text-muted">
         Smaller, focused modules that can stand alone, become breakout sessions, or support one
-        or more full Experiences — the content-management tooling for building and publishing
+        or more full Experiences, the content-management tooling for building and publishing
         these is a separate, later step.
       </p>
 

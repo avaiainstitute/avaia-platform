@@ -2,17 +2,17 @@ import "server-only";
 import { VIRTUES, VIRTUE_FAMILIES } from "@/lib/virtues";
 import { getViewFromAboveClass } from "@/lib/view-from-above";
 
-// Resolves a Host's entry point into a private AVAIA conversation --
+// Resolves a Host's entry point into a private AVAIA conversation,
 // "I clicked this specific Chemistry element" or "I just took this
-// specific View From Above class" -- into structured context the IAP
+// specific View From Above class", into structured context the IAP
 // engine can use to open naturally. `source`/`key` come from a URL
 // query string a Host clicked through on (see app/chemistry/page.tsx,
 // app/chemistry/family/page.tsx, app/view-from-above/[slug]/page.tsx),
-// which is untrusted input -- this function is the one place that
+// which is untrusted input, this function is the one place that
 // input is resolved against AVAIA's own canonical data (lib/virtues.ts,
 // lib/view-from-above.ts) rather than ever being used directly. An
 // unrecognized key returns null (no origin context at all) rather than
-// inventing or passing through anything -- fails closed, never fails
+// inventing or passing through anything, fails closed, never fails
 // open into fabricated content.
 
 export type OriginContext = {

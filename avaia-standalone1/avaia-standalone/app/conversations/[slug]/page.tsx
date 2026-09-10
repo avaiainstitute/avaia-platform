@@ -8,7 +8,7 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
   const c = conversation(params.slug);
-  return { title: c ? `${c.name} — AVAIA` : "AVAIA" };
+  return { title: c ? `${c.name}, AVAIA` : "AVAIA" };
 }
 
 function SpecList({ title, items }: { title: string; items: string[] }) {
@@ -74,7 +74,7 @@ export default function ConversationPage({ params }: { params: { slug: string } 
           <ul className="space-y-2">
             {c.boundaries.map((b) => (
               <li key={b} className="flex gap-3 text-muted">
-                <span className="mt-0.5 shrink-0 font-sans text-sm">—</span>
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-seal" aria-hidden />
                 <span>{b}</span>
               </li>
             ))}
@@ -83,7 +83,7 @@ export default function ConversationPage({ params }: { params: { slug: string } 
       </div>
 
       <div className="rule-t mt-12 border-t border-rule pt-6">
-        <p className="label mb-2">Referral — what carries forward</p>
+        <p className="label mb-2">Referral, what carries forward</p>
         {c.carriesForward && (
           <ul className="mb-4 flex flex-wrap gap-2">
             {c.carriesForward.map((item) => (

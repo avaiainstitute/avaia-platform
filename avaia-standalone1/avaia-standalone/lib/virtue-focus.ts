@@ -1,7 +1,7 @@
 // Virtue-table focus signalling.
 //
-// The Guide can end a message with an invisible marker — <<focus: Family | Virtue>>
-// — to light up the Chemistry of Virtue table for the Host. This module parses
+// The Guide can end a message with an invisible marker, <<focus: Family | Virtue>>
+//, to light up the Chemistry of Virtue table for the Host. This module parses
 // that marker out of the streamed/stored text (so the Host never sees it) and
 // resolves it to a family key + colour the table can act on. Safe on both the
 // server (strip before persisting) and the client (live highlight).

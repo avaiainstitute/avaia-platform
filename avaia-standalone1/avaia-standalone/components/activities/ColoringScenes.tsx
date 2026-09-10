@@ -1,7 +1,7 @@
 // Hand-authored line-art coloring scenes, one per pilot element, each built
 // directly from that element's story in lib/chemistry-stories.ts. Deliberately
 // thick, simple, high-contrast outlines (real coloring-book construction:
-// bold strokes, big shapes, lots of white space to fill in) -- not
+// bold strokes, big shapes, lots of white space to fill in), not
 // illustrative detail. Adding a new element later means adding one more
 // scene component here in the same style.
 
@@ -158,7 +158,7 @@ export function AppreciationScene() {
 /** The scalable fallback: a decorative page for any element that doesn't
  *  (yet) have a hand-authored story scene above. Built entirely from the
  *  element's own name and symbol, so it works for all 123 without any
- *  per-element art -- honestly labeled "Color the Word" rather than
+ *  per-element art, honestly labeled "Color the Word" rather than
  *  "Color the Story" wherever this renders, since there's no story scene
  *  behind it. */
 export function GenericColoringPage({ elementName, symbol }: { elementName: string; symbol: string }) {

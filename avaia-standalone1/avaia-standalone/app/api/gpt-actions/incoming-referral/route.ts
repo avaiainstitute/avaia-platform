@@ -7,10 +7,10 @@ import type { Stage } from "@/lib/engine/prompts";
 // works (see app/api/gpt-actions/iap-referral/route.ts). CAT and
 // InnerCompass's GPTs call this at the very start of a conversation, using
 // the same OAuth bearer token, to receive the referral the previous stage
-// already produced -- so the Host never has to retell their story. IAP has
+// already produced, so the Host never has to retell their story. IAP has
 // nothing before it and never calls this.
 //
-// Returns the referral's content exactly as it was stored -- the full
+// Returns the referral's content exactly as it was stored, the full
 // artifact, not a summary of it. Whatever shape the previous stage's GPT
 // submitted is what comes back here.
 
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   debugLog("1_oauth_token_validated", {
     hostId: tokenRow?.host_id ?? null,
     lookupError: tokenLookupError?.message ?? null,
-    result: tokenLookupError || !tokenRow ? "FAILED — unknown access token" : "OK",
+    result: tokenLookupError || !tokenRow ? "FAILED, unknown access token" : "OK",
   });
 
   if (tokenLookupError || !tokenRow) {
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
   const hostId = tokenRow.host_id as string;
 
   // Same "one active conversation per Host" lookup the submit endpoint uses
-  // -- whichever conversation is currently waiting tells us what stage the
+  //, whichever conversation is currently waiting tells us what stage the
   // Host is arriving at, and therefore which stage's referral to look back
   // for.
   const { data: convo, error: convoError } = await admin

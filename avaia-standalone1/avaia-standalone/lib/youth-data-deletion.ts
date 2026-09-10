@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // operators must retain a child's personal information "for only as long
 // as is necessary to fulfill the purpose for which it was collected and
 // delete the information using reasonable measures." This module is the
-// technical capability that requires -- it does not decide, and does not
+// technical capability that requires, it does not decide, and does not
 // invent, the retention PERIOD (a policy/legal decision AVAIA has not yet
 // made); it makes deletion something an admin can actually do, on demand,
 // right now, for any Youth-linked record.
@@ -22,13 +22,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 //   reached via guide_sessions.conversation_id for tool = 'unsung-heroes'.
 // - guardian_consents: reached via guide_participant_id.
 // - youth_program_participants: this participant's program registrations.
-// - crisis_events: reached via guide_participant_id (manual flags) --
+// - crisis_events: reached via guide_participant_id (manual flags),
 //   automated keyword-backstop rows only carry conversation_id, covered
 //   by the conversation-id-based delete below.
 //
 // Self-serve Youth Host data map (profiles-based, not
 // guide_participants-based): conversations/messages/referrals/journeys
-// where host_id = X and program = 'youth' specifically -- NOT every
+// where host_id = X and program = 'youth' specifically, NOT every
 // conversation this account ever had, since a Host may hold both adult
 // and Youth Journeys over time (e.g. after turning 18) and this is a
 // scoped "erase the Youth-linked record," not full account deletion
@@ -38,10 +38,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type DeletionCounts = Record<string, number>;
 
 /** Deletes every record linked to one Guide-facilitated Youth participant.
- *  `supabase` should be an admin (service-role) client -- this crosses
+ *  `supabase` should be an admin (service-role) client, this crosses
  *  ownership boundaries by design (an admin acting on a Guide's
  *  participant data), which RLS would otherwise correctly block. Callers
- *  must independently verify admin authorization before calling this --
+ *  must independently verify admin authorization before calling this,
  *  see app/admin/youth-data's own re-check, matching the established
  *  admin-action pattern (grantGuideCertification et al. never trust the
  *  page's own gate alone). */
@@ -145,11 +145,11 @@ export async function deleteYouthParticipantData(
   return counts;
 }
 
-/** Deletes the Youth-linked record for a self-serve Youth Host --
+/** Deletes the Youth-linked record for a self-serve Youth Host,
  *  program='youth' conversations/messages/referrals/journeys and their
  *  guardian_consents rows, plus clearing profiles.developmental_band.
  *  Does NOT delete the account/profile itself or any non-Youth
- *  (program != 'youth') data -- this is a scoped erasure of the
+ *  (program != 'youth') data, this is a scoped erasure of the
  *  Youth-linked record, not full account deletion. `supabase` should be
  *  an admin (service-role) client. */
 export async function deleteYouthHostData(supabase: SupabaseClient, hostId: string): Promise<DeletionCounts> {
@@ -196,7 +196,7 @@ export async function deleteYouthHostData(supabase: SupabaseClient, hostId: stri
 
   // Unlike deleteYouthParticipantData above, this path never deletes the
   // account/profile row itself, so virtue_signature_entries' ON DELETE
-  // CASCADE on host_id never fires here -- found during the admin/Guide
+  // CASCADE on host_id never fires here, found during the admin/Guide
   // usability pass: entries from a deleted Youth conversation were being
   // silently left behind. Scoped to entries whose source_reference is one
   // of the Youth conversations just deleted above, since a Signature entry

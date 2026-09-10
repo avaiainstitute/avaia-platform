@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
   // untouched. This backstops the /journey page's own gate against a direct call.
-  // Same narrow Guide exception as /api/conversation -- see
+  // Same narrow Guide exception as /api/conversation, see
   // isAuthorizedGuideConversation's comment.
   if (
     stage !== "iap" &&
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This conversation requires AVAIA Membership." }, { status: 403 });
   }
 
-  // Youth Journey -- see /api/conversation's identical comment.
+  // Youth Journey, see /api/conversation's identical comment.
   let developmentalBand: DevelopmentalBand | null = null;
   if (program === "youth") {
     developmentalBand = await resolveDevelopmentalBand(supabase, user.id, conversationId);
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
   // result.summary is a handful of fields selected from the already-
-  // stored referral, for the compact completion card only -- same shape a
+  // stored referral, for the compact completion card only, same shape a
   // typed completion request in /api/conversation returns, so the button
   // and a typed request are two ways of expressing the same action. The
   // full referral is not persisted as a chat message and lives only in

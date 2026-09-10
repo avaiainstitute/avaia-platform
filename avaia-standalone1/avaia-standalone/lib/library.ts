@@ -1,8 +1,8 @@
-// AVAIA Library — shared types and small constants. Ported from the
+// AVAIA Library, shared types and small constants. Ported from the
 // unmerged `library` branch, unchanged in shape. Deliberately NOT
 // server-only (matches the original) since UI pieces may need these
 // client-side too. Only the data layer + a read-only Guide browse view are
-// installed in this pass -- library_suggestions and the admin CRUD/review
+// installed in this pass, library_suggestions and the admin CRUD/review
 // UI are not ported yet.
 
 import { VIRTUE_FAMILIES, VIRTUES, type VirtueFamilyKey } from "@/lib/virtues";
@@ -48,10 +48,10 @@ export const PROGRAM_LABEL: Record<Program, string> = {
   general: "General Journey",
   "defying-grief": "Defying Grief",
   // Youth Journey, Phase 1: label only exists to satisfy Record<Program, ...>
-  // completeness -- Youth is deliberately absent from PROGRAM_KEYS below, so
+  // completeness, Youth is deliberately absent from PROGRAM_KEYS below, so
   // this never actually surfaces in the Library's program filter UI yet.
   youth: "Youth Journey",
-  // Same posture as Youth above -- View From Above sessions don't need a
+  // Same posture as Youth above, View From Above sessions don't need a
   // Library program-filter entry yet either.
   "view-from-above": "View From Above",
 };

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-/** The only interactive pieces of a Defying Grief print page -- a format
+/** The only interactive pieces of a Defying Grief print page, a format
  *  switcher (facilitator packet only) and the Print button. Everything
  *  else on these pages is a plain Server Component; this exists solely
  *  because Server Components can't hold onChange/onClick handlers. */

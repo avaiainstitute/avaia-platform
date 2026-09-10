@@ -1,21 +1,21 @@
 import type { VirtueFamilyKey } from "@/lib/virtues";
 
-// AVAIA Chemistry of Virtue -- "what this can look like in ordinary
+// AVAIA Chemistry of Virtue, "what this can look like in ordinary
 // life," one set of illustrative expressions per Virtue FAMILY (never
 // per individual element, and never prescriptive). This is deliberately
 // separate from lib/virtues.ts's own VIRTUE_FAMILIES/VIRTUES arrays,
-// which are the immutable official table ("do not make changes") --
+// which are the immutable official table ("do not make changes"),
 // nothing here alters a canonical name or definition; this is AVAIA's
 // own supplementary illustrative material, written once, reused
 // everywhere a "how does this show up" moment is needed (the Digital
 // Chemistry Kit at /chemistry, and originally authored for the ten View
 // From Above classes, which import this exact same export rather than
-// keeping a second copy -- see lib/view-from-above.ts).
+// keeping a second copy, see lib/view-from-above.ts).
 //
 // Governing rule, same as everywhere else Chemistry appears: every
 // person already carries the full table. These are examples of what a
 // family's elements can look like when awake, in different people, in
-// different situations -- never a diagnosis, a personality type, or a
+// different situations, never a diagnosis, a personality type, or a
 // claim that a given moment requires this specific family.
 
 export const VIRTUE_FAMILY_LOOKS_LIKE: Record<VirtueFamilyKey, string[]> = {
@@ -40,12 +40,12 @@ export const VIRTUE_FAMILY_LOOKS_LIKE: Record<VirtueFamilyKey, string[]> = {
     "Choosing a next action sized to what feels safely doable, not to what feels impressive.",
   ],
   fortitude: [
-    "Naming which feeling is actually loudest -- fear, guilt, shame, doubt -- instead of one undifferentiated bad feeling.",
+    "Naming which feeling is actually loudest, fear, guilt, shame, doubt, instead of one undifferentiated bad feeling.",
     "Building a boundary that makes a hard decision safer to make, without waiting for the feeling to disappear first.",
     "Deciding with the feeling present, not despite pretending it isn't there.",
   ],
   wisdom: [
-    "Separating belonging to a place from belonging in a broader sense -- to people, to a role, to your own story.",
+    "Separating belonging to a place from belonging in a broader sense, to people, to a role, to your own story.",
     "Letting discernment about a hard question take real time, rather than forcing a quick answer.",
     "Noticing small, unexpected clarity, even before the fuller picture is visible.",
   ],
@@ -55,7 +55,7 @@ export const VIRTUE_FAMILY_LOOKS_LIKE: Record<VirtueFamilyKey, string[]> = {
     "Asking for something specific and small, rather than staying silently resentful.",
   ],
   "self-control": [
-    "Writing two honest lists side by side -- what I can't control, what I can -- and acting only from the second.",
+    "Writing two honest lists side by side, what I can't control, what I can, and acting only from the second.",
     "Participating fully in something you can't control the outcome of, rather than withdrawing entirely.",
     "Governing your own response and attention, without pretending the feeling isn't there.",
   ],

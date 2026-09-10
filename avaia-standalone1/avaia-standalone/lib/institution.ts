@@ -1,4 +1,4 @@
-// The AVAIA institution — a single, typed source of truth.
+// The AVAIA institution, a single, typed source of truth.
 //
 // Source of record: "The AVAIA Institutional Manual" and Dorian Johnson's build
 // answers (AVAIA Enterprises, LLC). Content below is drawn directly from those
@@ -21,7 +21,7 @@ export function pending(referencedIn: string, need: string): Pending {
 import type { VirtueFamilyKey } from "./virtues";
 
 // ---------------------------------------------------------------------------
-// Layer I — Constitution
+// Layer I, Constitution
 // ---------------------------------------------------------------------------
 
 export const CONSTITUTION_PREAMBLE =
@@ -49,7 +49,7 @@ export const CONSTITUTION_ARTICLES: Article[] = [
 export const CONSTITUTION_CLOSING =
   "AVAIA exists to restore understanding where there is confusion, connection where there is isolation, virtue where there is uncertainty, and participation where life has been interrupted. May every conversation honor the dignity of the person, protect the integrity of the process, and contribute to the flourishing of individuals, relationships, families, and communities.";
 
-// The GIVE Method — Guided Interpersonal Virtue-Centered Experience.
+// The GIVE Method, Guided Interpersonal Virtue-Centered Experience.
 export const GIVE_METHOD = {
   name: "Guided Interpersonal Virtue-Centered Experience",
   purpose:
@@ -108,7 +108,7 @@ export const JOURNEY_MOVEMENTS = [
 ];
 
 // ---------------------------------------------------------------------------
-// The Table — roles and seats (Table Formation Engine)
+// The Table, roles and seats (Table Formation Engine)
 // ---------------------------------------------------------------------------
 
 export interface Role {
@@ -119,7 +119,7 @@ export interface Role {
 export const ROLES: Role[] = [
   { key: "host", name: "Host", charge: "The person whose life, story, question, or situation is being explored. The Host owns the conversation and every decision, and determines what is shared, what stays private, and the pace." },
   { key: "guide", name: "Guide", charge: "A trained human Guide (or, in some implementations, an AI-supported guide function) who protects the process and facilitates understanding. The Guide never owns the outcome." },
-  { key: "witness", name: "Witness", charge: "The function that preserves visibility and continuity — human, system, or both. It records what became visible so each conversation begins where the last concluded." },
+  { key: "witness", name: "Witness", charge: "The function that preserves visibility and continuity, human, system, or both. It records what became visible so each conversation begins where the last concluded." },
   { key: "council", name: "Council", charge: "A structured set of perspectives that expands understanding. It advises, and never governs or overrides the Host." },
 ];
 
@@ -132,16 +132,16 @@ export const SEATS: Seat[] = [
   { name: "Guide", text: "The facilitator who protects the process." },
   { name: "Witness", text: "The keeper of continuity and visibility." },
   { name: "Council", text: "Invited perspectives that broaden understanding." },
-  { name: "Self Seats", text: "Parts of the Host's own experience — younger self, present self, future self, wounded self, wise self, forgotten self." },
+  { name: "Self Seats", text: "Parts of the Host's own experience, younger self, present self, future self, wounded self, wise self, forgotten self." },
   { name: "Relationship Seats", text: "Important people or relationships connected to the Host's situation." },
-  { name: "Virtue Seats", text: "Virtues invited into the conversation for direction, balance, strength, or clarity — a perspective, not a person." },
+  { name: "Virtue Seats", text: "Virtues invited into the conversation for direction, balance, strength, or clarity, a perspective, not a person." },
   { name: "Secondary Loss Seats", text: "Losses that may need to be recognized because they are influencing the Host's experience." },
   { name: "Empty Chair", text: "A place held for someone or something absent, unresolved, lost, unavailable, or unable to participate directly." },
-  { name: "Burden Seat", text: "One seat, not four -- the voice of guilt, shame, doubt, and fear, however many of the four are present. Gives what a person is already carrying a place to be heard, without giving it authority over the conversation." },
+  { name: "Emotional Weight", text: "This seat represents the voice of guilt, shame, doubt, or fear. It allows the emotional weight that a person is already carrying a place to be heard, without being given any authority over the conversation. They all may be present, however, they have only one voice and only one chance to speak." },
 ];
 
 // ---------------------------------------------------------------------------
-// Layer I — How the AVAIA Conversation Works (Manual)
+// Layer I, How the AVAIA Conversation Works (Manual)
 // ---------------------------------------------------------------------------
 
 export const CONVERSATION_WORKS = {
@@ -166,7 +166,7 @@ export const CONVERSATION_WORKS = {
 };
 
 // ---------------------------------------------------------------------------
-// Layer I — Relationship Between All Components (Manual)
+// Layer I, Relationship Between All Components (Manual)
 // ---------------------------------------------------------------------------
 
 export const COMPONENT_RELATIONSHIPS = {
@@ -187,7 +187,7 @@ export const COMPONENT_RELATIONSHIPS = {
 };
 
 // ---------------------------------------------------------------------------
-// Layer I — Governance & Future Development Policy (Manual)
+// Layer I, Governance & Future Development Policy (Manual)
 // ---------------------------------------------------------------------------
 
 export const GOVERNANCE = {
@@ -210,7 +210,7 @@ export const GOVERNANCE = {
 };
 
 // ---------------------------------------------------------------------------
-// Layer II — Core Conversation Manuals
+// Layer II, Core Conversation Manuals
 // ---------------------------------------------------------------------------
 
 export interface ConversationManual {
@@ -235,7 +235,7 @@ export const CONVERSATIONS: ConversationManual[] = [
     slug: "preparation",
     name: "Preparation GPT",
     position: "Occurs before any core conversation.",
-    purpose: "Assists the Guide before a conversation by organizing available information, reviewing prior documentation, and identifying themes and areas to explore — without determining direction or outcome.",
+    purpose: "Assists the Guide before a conversation by organizing available information, reviewing prior documentation, and identifying themes and areas to explore, without determining direction or outcome.",
     objectives: ["Organize available information", "Review previous referrals", "Identify emerging themes", "Highlight possible areas for exploration", "Prepare the Guide for thoughtful engagement", "Promote consistency across conversations"],
     structure: ["Review available documentation", "Summarize prior conversations", "Identify recurring themes", "Highlight possible virtues", "Identify possible secondary losses", "Suggest areas for exploration", "Prepare the Guide"],
     hostDoes: "The Host is not present. Preparation is used by the Guide before a session.",
@@ -249,7 +249,7 @@ export const CONVERSATIONS: ConversationManual[] = [
     name: "Individual Awareness Profile",
     abbr: "IAP",
     position: "Preparation GPT → IAP → CAT",
-    purpose: "The first core conversation. Establishes awareness by helping the Host describe their current experience, identify disruption, and recognize emerging patterns — without solving or interpreting prematurely.",
+    purpose: "The first core conversation. Establishes awareness by helping the Host describe their current experience, identify disruption, and recognize emerging patterns, without solving or interpreting prematurely.",
     objectives: ["Establish rapport and psychological safety", "Listen without premature interpretation", "Identify presenting concerns", "Recognize areas of fragmentation", "Observe emerging themes and patterns", "Identify possible secondary losses", "Recognize existing strengths and virtues"],
     structure: ["Establish connection", "Explore the presenting concern", "Increase awareness of significant experiences", "Observe patterns and relationships", "Identify areas requiring further understanding", "Summarize what has become visible", "Prepare a referral to CAT"],
     hostDoes: "The Host describes what is happening and what brought them to AVAIA.",
@@ -265,7 +265,7 @@ export const CONVERSATIONS: ConversationManual[] = [
     name: "Conversations Across Time",
     abbr: "CAT",
     position: "IAP → CAT → InnerCompass",
-    purpose: "Deepens understanding by exploring relationships, perspectives, meanings, and internal voices across time. Its purpose is understanding — not decision-making. The conversation is held as a round table.",
+    purpose: "Deepens understanding by exploring relationships, perspectives, meanings, and internal voices across time. Its purpose is understanding, not decision-making. The conversation is held as a round table.",
     objectives: ["Increase visibility", "Explore relationships", "Examine meaning", "Understand tensions", "Identify competing perspectives", "Clarify patterns across time", "Prepare for intentional decision-making"],
     structure: ["Review the referral", "Explore relationships", "Expand perspectives", "Examine meanings", "Increase visibility", "Recognize patterns", "Summarize understanding", "Prepare referral to InnerCompass"],
     hostDoes: "The Host explores relationships, perspectives, meaning, history, and tensions.",
@@ -303,7 +303,7 @@ export const JOURNEY_FLOW = [
 ];
 
 // ---------------------------------------------------------------------------
-// Layer II — Operating Systems
+// Layer II, Operating Systems
 // ---------------------------------------------------------------------------
 
 export interface OperatingSystem {
@@ -321,7 +321,7 @@ export const OPERATING_SYSTEMS: OperatingSystem[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Layer II — Core Engines
+// Layer II, Core Engines
 // ---------------------------------------------------------------------------
 
 export interface Engine {
@@ -335,7 +335,7 @@ export interface Engine {
   awaiting?: Pending;
 }
 export const ENGINES: Engine[] = [
-  { slug: "table-formation", name: "Table Formation Engine", abbr: "TFE", purpose: "Provides the structural framework for AVAIA conversations — establishing the table, activating only the seats that serve understanding, and preventing any voice from taking control. Follows one working flow: the Object the Host places on the table, the Map that is their present understanding of it, the Seats invited to widen that view, the Expanded Visibility that results, the Territory of the Host's actual lived reality that no map fully contains, and the Host's own movement from there.", responsibilities: ["Organize the conversation", "Balance perspectives", "Increase visibility", "Support understanding", "Distinguish the object under examination from the Host examining it", "Widen the Host's map without replacing it with a supposedly correct one"], boundaries: ["Does not determine conclusions", "Does not direct decisions", "Does not operate independently of the Guide", "Does not fix the object, the map, or the seats into a required checklist"] },
+  { slug: "table-formation", name: "Table Formation Engine", abbr: "TFE", purpose: "Provides the structural framework for AVAIA conversations, establishing the table, activating only the seats that serve understanding, and preventing any voice from taking control. Follows one working flow: the Object the Host places on the table, the Map that is their present understanding of it, the Seats invited to widen that view, the Expanded Visibility that results, the Territory of the Host's actual lived reality that no map fully contains, and the Host's own movement from there.", responsibilities: ["Organize the conversation", "Balance perspectives", "Increase visibility", "Support understanding", "Distinguish the object under examination from the Host examining it", "Widen the Host's map without replacing it with a supposedly correct one"], boundaries: ["Does not determine conclusions", "Does not direct decisions", "Does not operate independently of the Guide", "Does not fix the object, the map, or the seats into a required checklist"] },
   { slug: "chemistry-of-virtue", name: "Chemistry of Virtue", trademark: true, purpose: "A systematic framework for how virtues function individually and together to strengthen character, relationships, discernment, and intentional participation. Recognizes strengths before deficiencies and balance rather than perfection.", responsibilities: ["Organize virtue relationships", "Support virtue combinations and formulas", "Integrate with conversations", "Support report generation"], boundaries: ["Do not invent virtue definitions", "Do not assign moral worth or label individuals"] },
   { slug: "secondary-loss", name: "Secondary Loss Engine", abbr: "SLE", purpose: "Identifies and organizes the often-unrecognized secondary losses that accompany significant disruption. Bringing them into view increases understanding and supports restoration.", responsibilities: ["Identify secondary losses", "Support awareness", "Integrate with IAP, CAT, and InnerCompass", "Support reporting"], boundaries: ["No diagnosis", "No assumptions", "Does not assign blame"] },
   { slug: "referral", name: "Referral Engine", purpose: "Transfers structured information between AVAIA conversations so the Host never has to start over. Each referral preserves what became visible and what belongs in the next conversation.", responsibilities: ["Preserve continuity", "Transfer relevant information", "Prevent duplication", "Support report generation"], boundaries: ["Referrals support conversations", "Referrals do not replace conversations"] },
@@ -343,7 +343,7 @@ export const ENGINES: Engine[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Secondary Losses — with their healing virtue family (Manual)
+// Secondary Losses, with their healing virtue family (Manual)
 // ---------------------------------------------------------------------------
 
 export interface SecondaryLoss {
@@ -365,7 +365,7 @@ export const SECONDARY_LOSSES: SecondaryLoss[] = [
 ];
 
 // Authoritative-source helpers, same treatment as formatVirtueHierarchy /
-// isValidVirtueFamily in lib/virtues.ts -- IAP and CAT referral generation
+// isValidVirtueFamily in lib/virtues.ts, IAP and CAT referral generation
 // previously invented free-prose secondary-loss labels ("loss of home,"
 // "loss of professional meaning") instead of using these ten official
 // categories, the same root cause the Chemistry of Virtue fix addressed
@@ -373,7 +373,7 @@ export const SECONDARY_LOSSES: SecondaryLoss[] = [
 // lib/engine/prompts.ts and its use in lib/engine/referral-generation.ts.
 
 /** Plain-text "Loss (restoration: Family)" rendering of the complete
- *  Secondary Loss taxonomy, generated directly from SECONDARY_LOSSES --
+ *  Secondary Loss taxonomy, generated directly from SECONDARY_LOSSES,
  *  never hand-copied, so it can't drift from the canonical list. */
 export function formatSecondaryLossHierarchy(): string {
   return SECONDARY_LOSSES.map((s) => `${s.loss} (restoration: ${s.healingLabel})`).join("\n");
@@ -399,7 +399,7 @@ export const REPORTS: ReportType[] = [
   { name: "Counselor Report", recipient: "Counselor or approved support professional", contains: "High-level context, strengths, stressors, and areas for exploration." },
   { name: "Student Success Report", recipient: "Student and approved advisor / counselor", contains: "Learning patterns, transition needs, support needs, and strengths." },
   { name: "Leadership Report", recipient: "Participant and approved leadership facilitator", contains: "Communication patterns, strengths, growth areas, and participation themes." },
-  { name: "Organizational Report", recipient: "Organization admin", contains: "Aggregated, non-private, non-identifying insights — unless explicit consent is given." },
+  { name: "Organizational Report", recipient: "Organization admin", contains: "Aggregated, non-private, non-identifying insights, unless explicit consent is given." },
 ];
 
 export const CONSENT_COVERS = [
@@ -428,7 +428,7 @@ export const WORKBOOK_CONTENTS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Layer III — Programs
+// Layer III, Programs
 // ---------------------------------------------------------------------------
 
 export interface Program {
@@ -437,9 +437,9 @@ export interface Program {
   status: "flagship" | "active" | "planned";
 }
 export const PROGRAMS: Program[] = [
-  { name: "Defying Grief", blurb: "AVAIA's flagship grief education and restoration program — understanding grief, recognizing primary and secondary losses, cultivating virtue, and participating intentionally in life while honoring what was lost.", status: "flagship" },
+  { name: "Defying Grief", blurb: "AVAIA's flagship grief education and restoration program, understanding grief, recognizing primary and secondary losses, cultivating virtue, and participating intentionally in life while honoring what was lost.", status: "flagship" },
   { name: "Certification Program", blurb: "Trains and certifies AVAIA Guides in the Constitution, GIVE Method, conversations, operating systems, engines, boundaries, and documentation standards.", status: "active" },
-  { name: "Workshops & Speaking", blurb: "Educational outreach introducing AVAIA's principles and method — invitations to understanding rather than promotional events.", status: "active" },
+  { name: "Workshops & Speaking", blurb: "Educational outreach introducing AVAIA's principles and method, invitations to understanding rather than promotional events.", status: "active" },
   { name: "Future Programs", blurb: "Governed to remain constitutionally aligned while expanding AVAIA's ability to serve individuals, relationships, organizations, and communities.", status: "planned" },
 ];
 

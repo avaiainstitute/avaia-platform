@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 // Mirrors the four labels in lib/engine/prompts.ts's UNSUNG_HEROES_PATH_LABEL,
-// duplicated here as plain strings rather than imported -- that module has
+// duplicated here as plain strings rather than imported, that module has
 // `import "server-only"` and can't be pulled into a client component.
 // Illustrative only on this page; the real, functional picker (keyed by
 // UnsungHeroesPath) still only renders once signed in, on this same route.
@@ -17,7 +17,7 @@ const EXAMPLE_PATHS = [
 
 /** Shown to visitors who aren't signed in. A client component (not the
  *  server page's default) only so it can check for a Virtue Formula the
- *  visitor stashed on the Chemistry of Virtue page before signing in --
+ *  visitor stashed on the Chemistry of Virtue page before signing in,
  *  when present, the sign-in link carries a ?from= so they land straight
  *  back in the "I saw someone" path afterward, instead of the general
  *  Unsung Heroes picker. See UnsungHeroesChat's own read of the same key
@@ -31,7 +31,7 @@ export default function UnsungHeroesIntro() {
         setSignInHref(`/sign-in?from=${encodeURIComponent("/unsung-heroes?path=i_saw_someone")}`);
       }
     } catch {
-      /* storage unavailable -- the default sign-in link is a fine fallback */
+      /* storage unavailable, the default sign-in link is a fine fallback */
     }
   }, []);
 
@@ -40,16 +40,16 @@ export default function UnsungHeroesIntro() {
       <p className="label mb-3">Unsung Heroes</p>
       <h1 className="font-serif text-4xl text-ink">You noticed something real</h1>
       <p className="mt-4 text-lg text-muted">
-        A short, guided conversation to help you name a quiet act of virtue — one you witnessed,
+        A short, guided conversation to help you name a quiet act of virtue, one you witnessed,
         one you received, or one you&rsquo;re hoping to grow into.
       </p>
 
       <div className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-2 text-muted">Why this exists</p>
         <p className="text-ink">
-          Most people who go unacknowledged aren&rsquo;t missing virtue — they&rsquo;re missing
+          Most people who go unacknowledged aren&rsquo;t missing virtue, they&rsquo;re missing
           a witness. Unsung Heroes exists so that when you notice something real in someone
-          else — courage, patience, integrity, kindness, whatever it was — there&rsquo;s
+          else, courage, patience, integrity, kindness, whatever it was, there&rsquo;s
           somewhere to say so, and somewhere for it to be kept.
         </p>
 
@@ -61,7 +61,7 @@ export default function UnsungHeroesIntro() {
           >
             Chemistry of Virtue
           </Link>{" "}
-          helps you understand virtue — the families, the elements, how they combine. Unsung
+          helps you understand virtue, the families, the elements, how they combine. Unsung
           Heroes is the other half: where you learn to recognize those same elements alive in
           someone else, not just on a chart.
         </p>

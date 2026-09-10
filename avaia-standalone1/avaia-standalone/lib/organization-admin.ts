@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 // AVAIA Organization Administrator V1. Governing principle: "The
 // Organization Administrator administers access, participation, people,
-// and programs -- but never administers the Host's story." See migration
+// and programs, but never administers the Host's story." See migration
 // 0047's own header for the full authorization-model reasoning (why this
 // reads through the service-role admin client with an explicit re-check
 // here, rather than new RLS on guide_participants/youth_programs/
@@ -23,7 +23,7 @@ export type OrganizationAdminRow = {
 
 /** Re-verifies a caller is a currently-active Organization Administrator
  *  for one specific organization. Callers must call this themselves at
- *  the top of every Org Admin server action/page -- never trust a route
+ *  the top of every Org Admin server action/page, never trust a route
  *  param or a prior page's own gate. `supabase` should be the caller's
  *  own RLS-scoped client (the self-read policy on organization_admins is
  *  sufficient for this one check; no admin client needed here). */
@@ -42,7 +42,7 @@ export async function isOrganizationAdmin(
   return !!data;
 }
 
-/** Every organization this Host currently, actively administers -- the
+/** Every organization this Host currently, actively administers, the
  *  self-read policy on organization_admins already scopes this to their
  *  own rows, so the caller's own RLS-scoped client is sufficient. */
 export async function listAdministeredOrganizationIds(
@@ -57,19 +57,19 @@ export async function listAdministeredOrganizationIds(
   return (data ?? []).map((r) => r.organization_id as string);
 }
 
-/** Every Guide "connected" to an organization -- the union of two
+/** Every Guide "connected" to an organization, the union of two
  *  independent paths (V1.1): (a) has created at least one youth_programs
- *  row under this organization_id (the original V1 definition -- a Guide
+ *  row under this organization_id (the original V1 definition, a Guide
  *  who has actually run a program here), or (b) holds an explicit,
  *  currently-'connected' row in organization_guides (added in migration
  *  0048 so an Organization Administrator can bring an already-Toolkit-
  *  authorized Guide into an organization before that Guide has ever run
- *  a program there -- see connectGuide() in
+ *  a program there, see connectGuide() in
  *  app/org-admin/[organizationId]/page.tsx). Both paths only ever affect
- *  this list -- who may be OFFERED as an assignment target in the roster
+ *  this list, who may be OFFERED as an assignment target in the roster
  *  UI. Neither path grants any Host/participant/conversation access on
  *  its own; that still arises only from guide_participants.guide_id.
- *  `supabase` must be the service-role admin client -- this crosses
+ *  `supabase` must be the service-role admin client, this crosses
  *  Guide-ownership boundaries by design, the same as
  *  deleteYouthParticipantData and the Platform Admin reassignment tool. */
 export async function listGuidesConnectedToOrganization(
@@ -91,7 +91,7 @@ export async function listGuidesConnectedToOrganization(
 }
 
 /** Guide ids explicitly connected (status='connected') to this
- *  organization via organization_guides -- i.e. the subset of
+ *  organization via organization_guides, i.e. the subset of
  *  listGuidesConnectedToOrganization()'s result that came from path (b),
  *  not from program history. Used only to decide whether to render a
  *  "Disconnect" control for a given Guide row: a Guide who is only
@@ -121,7 +121,7 @@ export type OrgActionType =
   | "guide_connected"
   | "guide_disconnected";
 
-/** Records one Organization Administrator action for the audit trail --
+/** Records one Organization Administrator action for the audit trail,
  *  action/detail are short operational labels only (see migration 0047's
  *  own comment for why), never conversation content. `supabase` must be
  *  the service-role admin client, matching the table's write posture

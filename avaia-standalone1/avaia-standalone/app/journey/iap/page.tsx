@@ -1,23 +1,23 @@
 import Link from "next/link";
 import JourneyStageProgress from "@/components/JourneyStageProgress";
 
-export const metadata = { title: "Individual Awareness Profile — AVAIA" };
+export const metadata = { title: "Individual Awareness Profile, AVAIA" };
 
 /** Journey explanation page, part one of three. Why this stage exists and
- *  what it means for the Host -- not an instruction page, not how the AI
+ *  what it means for the Host, not an instruction page, not how the AI
  *  works. See /conversations/iap for the operational manual entry. */
 export default function IapJourneyPage() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
       <JourneyStageProgress current="iap" />
 
-      <p className="label mb-2 mt-8">Defying Grief — Awareness</p>
+      <p className="label mb-2 mt-8">Defying Grief, Awareness</p>
       <h1 className="font-serif text-4xl text-ink">Individual Awareness Profile</h1>
       <p className="mt-2 font-serif text-xl text-seal">You get to say it.</p>
 
       <div className="mt-8 space-y-6 text-lg leading-relaxed text-ink">
         <p>
-          You&rsquo;ve probably seen the videos — someone walks up to a stranger, hands them a
+          You&rsquo;ve probably seen the videos, someone walks up to a stranger, hands them a
           flower and a note. The note says something like, <em>I hope you heal from all the
           things you don&rsquo;t ever talk about.</em>
         </p>
@@ -30,7 +30,7 @@ export default function IapJourneyPage() {
           href="/journey"
           className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
-          Start Your IAP — Free
+          Start Your IAP, Free
         </Link>
       </div>
 
@@ -39,7 +39,7 @@ export default function IapJourneyPage() {
         <p className="mt-3 text-lg leading-relaxed text-muted">
           IAP isn&rsquo;t here to diagnose you, solve anything, or decide what your experiences
           mean. It gives you room to say what you&rsquo;ve been carrying, in your own words, at
-          your own pace — and it helps make visible what can be genuinely hard to see while
+          your own pace, and it helps make visible what can be genuinely hard to see while
           you&rsquo;re still living inside it: what happened, who&rsquo;s involved, what&rsquo;s
           in tension, what&rsquo;s still strong in you, the patterns that keep showing up,
           what&rsquo;s been lost.
@@ -59,7 +59,7 @@ export default function IapJourneyPage() {
           attachment and support you used to be able to count on.
         </p>
         <p className="mt-3 text-lg leading-relaxed text-muted">
-          Those are Secondary Losses — real, even when nobody ever names them out loud. IAP
+          Those are Secondary Losses, real, even when nobody ever names them out loud. IAP
           helps you start to see which ones are actually present for you.
         </p>
       </section>
@@ -69,7 +69,7 @@ export default function IapJourneyPage() {
         <p className="mt-3 text-lg leading-relaxed text-muted">
           AVAIA doesn&rsquo;t need you to disclose everything to participate. You decide what
           comes into this conversation. Whatever you choose to bring is listened to carefully
-          and carried forward with you — it&rsquo;s never something you have to hand over just
+          and carried forward with you, it&rsquo;s never something you have to hand over just
           to be allowed to continue.
         </p>
       </section>
@@ -77,7 +77,7 @@ export default function IapJourneyPage() {
       <div className="rule-t mt-14 border-t border-rule pt-8">
         <p className="text-lg leading-relaxed text-ink">
           What becomes visible here doesn&rsquo;t disappear once the conversation ends. It goes
-          with you — into Conversations Across Time, where it starts to be understood.
+          with you, into Conversations Across Time, where it starts to be understood.
         </p>
         <Link
           href="/journey/cat"

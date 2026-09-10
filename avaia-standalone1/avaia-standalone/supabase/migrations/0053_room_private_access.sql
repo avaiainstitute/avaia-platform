@@ -1,4 +1,4 @@
--- Shared Room Guide-privacy boundary — Dorian's institutional decision
+-- Shared Room Guide-privacy boundary, Dorian's institutional decision
 -- (2026-09-04): private processing inside a Shared Room must be private
 -- from every other person, including the facilitating Guide, unless the
 -- Host explicitly chooses to share something back.

@@ -1,6 +1,6 @@
 import ContactForm from "@/components/ContactForm";
 
-export const metadata = { title: "Contact — AVAIA" };
+export const metadata = { title: "Contact, AVAIA" };
 
 export default function ContactPage() {
   return (
@@ -14,7 +14,7 @@ export default function ContactPage() {
       </p>
       <p className="mt-4 text-muted">
         You can reach out about a General Inquiry, One-on-One Guiding, Workshops &amp; Groups,
-        Schools &amp; Organizations, Certification, or anything else on your mind — just let us
+        Schools &amp; Organizations, Certification, or anything else on your mind, just let us
         know below.
       </p>
       <ContactForm />

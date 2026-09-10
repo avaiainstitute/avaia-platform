@@ -1,4 +1,4 @@
--- Certified AVAIA Guide — candidate evidence index (Phase C.4, first
+-- Certified AVAIA Guide, candidate evidence index (Phase C.4, first
 -- implementation slice). Purely additive: one new table, zero alter
 -- statements on any existing table, zero application code changes
 -- required to register it.

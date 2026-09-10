@@ -8,24 +8,24 @@ import { setPostSignInRedirect, peekPostSignInRedirect } from "@/lib/post-signin
 /**
  * Three sign-in modes, one page:
  *
- * "password" (default) -- ordinary email+password, for a returning member
+ * "password" (default), ordinary email+password, for a returning member
  * who has already set one (see /account). Supabase's email provider
  * (external_email_enabled, confirmed live in the project config) supports
- * password and OTP against the exact same account -- this isn't a second
+ * password and OTP against the exact same account, this isn't a second
  * auth system, just a second way in for the same Host identity.
  *
- * "code" -- the original, unchanged passwordless flow: an 8-digit code
+ * "code", the original, unchanged passwordless flow: an 8-digit code
  * emailed and verified in the same tab. Still the way a brand-new Host
  * gets in the door (shouldCreateUser: true below), and stays available
- * indefinitely for anyone who prefers it or hasn't set a password yet --
+ * indefinitely for anyone who prefers it or hasn't set a password yet,
  * this is not being removed, only no longer the sole option.
  *
- * "forgot" -- sends a Supabase-native recovery link (resetPasswordForEmail),
+ * "forgot", sends a Supabase-native recovery link (resetPasswordForEmail),
  * landing on /auth/callback (type=recovery) and forwarding to
  * /reset-password. No custom token/storage of any kind.
  *
  * signInWithPassword() failing is deliberately never distinguished from
- * "no password set yet" vs. "wrong password" in the UI -- Supabase itself
+ * "no password set yet" vs. "wrong password" in the UI, Supabase itself
  * doesn't distinguish them (both return the same generic invalid-credentials
  * error), and telling them apart here would mean guessing at whether an
  * email has an account, the exact enumeration risk resetPasswordForEmail's
@@ -48,7 +48,7 @@ export default function SignInPage() {
 
   // Captures ?from=/defying-grief (or similar) the moment this page loads,
   // so it survives all the way through to verify()/signInWithPassword() or
-  // /auth/callback's finish() below -- see lib/post-signin-redirect.ts for
+  // /auth/callback's finish() below, see lib/post-signin-redirect.ts for
   // why this uses sessionStorage rather than threading it through the
   // Supabase-facing URL.
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function SignInPage() {
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        // ?flow=recovery is AVAIA's own signal, not Supabase's -- see the
+        // ?flow=recovery is AVAIA's own signal, not Supabase's, see the
         // matching comment in app/auth/callback/page.tsx on why: the
         // actual recovery email link is a PKCE ?code= link with no type=
         // param at all (confirmed live against a real production email),
@@ -118,7 +118,7 @@ export default function SignInPage() {
         options: {
           shouldCreateUser: true,
           // Without this, Supabase falls back to the dashboard's Site URL
-          // for the emailed link's redirect target — which has drifted
+          // for the emailed link's redirect target, which has drifted
           // before (see the earlier Supabase-project mix-up) and, when it
           // doesn't point at /auth/callback, silently strands the session
           // tokens in a URL hash no page ever reads. Making the destination
@@ -162,7 +162,7 @@ export default function SignInPage() {
       {mode === "password" && (
         <>
           <p className="mt-4 text-lg text-muted">
-            AVAIA guides one continuous, virtue-centered conversation — carried across time and
+            AVAIA guides one continuous, virtue-centered conversation, carried across time and
             saved to your own Workbook. Sign in with your email and password.
           </p>
           <form onSubmit={signInPassword} className="mt-10 space-y-4">
@@ -258,7 +258,7 @@ export default function SignInPage() {
         step === "email" ? (
           <>
             <p className="mt-4 text-lg text-muted">
-              Enter your email and we&rsquo;ll send you a sign-in code. No password — the code is
+              Enter your email and we&rsquo;ll send you a sign-in code. No password, the code is
               all you need.
             </p>
             <form onSubmit={sendCode} className="mt-10 space-y-4">

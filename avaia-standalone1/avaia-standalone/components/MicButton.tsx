@@ -3,38 +3,38 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Voice-to-text via the browser's built-in Web Speech API — no server, no cost.
+ * Voice-to-text via the browser's built-in Web Speech API, no server, no cost.
  * Tap to speak; words appear live in the input; tap again to stop. Renders
  * nothing where speech recognition isn't available (mobile keyboards have their
  * own dictation mic as a fallback). Appends to whatever is already typed.
  *
  * Transcription quality: every word AND every punctuation mark this
  * component initially receives (r[0].transcript on each result) is already
- * final -- produced entirely by the browser/OS speech-recognition service
+ * final, produced entirely by the browser/OS speech-recognition service
  * before any of this code runs. In `continuous` mode that service decides
  * on its own, per detected pause, where one `isFinal` result ends and the
  * next begins, each arriving with whatever terminal punctuation the
- * recognizer itself chose -- with no exposed confidence score, pause
+ * recognizer itself chose, with no exposed confidence score, pause
  * duration, or alternate segmentation for this component to re-derive that
  * decision from itself. That's the actual source of dictation reading as
  * unnaturally short, over-punctuated fragments. Two things happen about it:
- * (1) below, purely mechanically -- capitalizing the very first letter of a
+ * (1) below, purely mechanically, capitalizing the very first letter of a
  * fresh dictation (an unambiguous position, unlike any internal sentence
  * boundary) and never leaving the live preview missing a space at a
  * segment join; (2) once dictation ends, the raw transcript is shown
- * immediately, then handed to /api/transcript-cleanup -- a narrow,
+ * immediately, then handed to /api/transcript-cleanup, a narrow,
  * separate model call whose only job is fixing wrongly-placed punctuation,
  * restoring sentence/paragraph boundaries, capitalization, and obvious
  * unambiguous homophones (see that route's system prompt for the exact,
- * tightly-scoped instructions and its own word-count safety check) -- and
+ * tightly-scoped instructions and its own word-count safety check), and
  * swapped in if it returns before the Host has already edited or re-spoken
  * (see cleanup() below). Any failure there just leaves the raw transcript
  * exactly as already shown.
  */
-/** Uppercases only the first letter found in a string -- every other
+/** Uppercases only the first letter found in a string, every other
  *  character, word, and punctuation mark is untouched. Used once, at the
  *  very start of a fresh dictation (see start() below), never mid-utterance
- *  -- capitalizing there would require guessing at a sentence boundary,
+ * , capitalizing there would require guessing at a sentence boundary,
  *  exactly the judgment call this file's top comment explains why we don't
  *  make. */
 function capitalizeFirst(s: string): string {
@@ -64,7 +64,7 @@ export default function MicButton({
   const recRef = useRef<any>(null);
   const baseRef = useRef("");
   const finalRef = useRef("");
-  // When true, ignore any late recognition events — otherwise speech that
+  // When true, ignore any late recognition events, otherwise speech that
   // finalizes after send would re-populate the input the Host just cleared.
   const discardRef = useRef(false);
   const valueRef = useRef(value);
@@ -87,7 +87,7 @@ export default function MicButton({
     };
   }, []);
 
-  // External reset — stop listening and drop whatever was dictated so it can't
+  // External reset, stop listening and drop whatever was dictated so it can't
   // be written back into the box after the message was sent.
   useEffect(() => {
     if (stopSignal === undefined) return;
@@ -102,14 +102,14 @@ export default function MicButton({
     setListening(false);
   }, [stopSignal]);
 
-  /** Sends the text dictated in this turn only (not the whole box -- `base`
+  /** Sends the text dictated in this turn only (not the whole box, `base`
    *  is whatever was already there before this dictation started) to
    *  /api/transcript-cleanup for punctuation/capitalization/obvious-
    *  homophone correction only (see that route's system prompt). Applies
    *  the result only if nothing has invalidated it since: a newer
    *  dictation started (`id` mismatch), the box was reset (`discardRef`),
    *  or the Host already edited the box themselves (`valueRef` no longer
-   *  matches what was handed off) -- in any of those cases this silently
+   *  matches what was handed off), in any of those cases this silently
    *  does nothing rather than clobber something newer. Any fetch failure
    *  just leaves the raw dictated text exactly as already shown. */
   async function cleanup(id: number, dictated: string, base: string, rawFullValue: string) {
@@ -160,7 +160,7 @@ export default function MicButton({
           const needsSpace = finalRef.current.length > 0 && !/\s$/.test(finalRef.current);
           let chunk = r[0].transcript;
           // Only the very first finalized chunk of a dictation that started
-          // in an empty input -- see this file's top comment for why this
+          // in an empty input, see this file's top comment for why this
           // is the one position safe to touch.
           if (!baseRef.current && !finalRef.current) chunk = capitalizeFirst(chunk);
           finalRef.current += (needsSpace ? " " : "") + chunk;

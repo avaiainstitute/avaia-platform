@@ -3,12 +3,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { VIRTUES, VIRTUE_FAMILIES, type VirtueFamilyKey } from "@/lib/virtues";
 
 // The entry point the standalone Unsung Heroes GPT's Action calls, mirroring
-// app/api/gpt-actions/iap-referral/route.ts's OAuth pattern exactly -- same
+// app/api/gpt-actions/iap-referral/route.ts's OAuth pattern exactly, same
 // shared Client ID/Secret, same bearer-token-identifies-the-Host model. This
 // is a separate, simpler endpoint (not folded into iap-referral) because
 // Unsung Heroes has no "active conversation" or "next stage" concept: the
 // conversation happens entirely inside the GPT itself, and this call is a
-// single, self-contained submission straight into the recognitions table --
+// single, self-contained submission straight into the recognitions table,
 // same table the website's own in-page chat writes to
 // (app/api/unsung-heroes/recognition/route.ts), so a recognition made in the
 // standalone GPT shows up in the Host's workbook exactly like one made on
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   const authHeader = request.headers.get("authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    debugLog("1_request_received", { result: "FAILED — no Bearer token present" });
+    debugLog("1_request_received", { result: "FAILED, no Bearer token present" });
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const accessToken = authHeader.slice("Bearer ".length);
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     typeof contextType !== "string" ||
     !CONTEXT_TYPES.includes(contextType as (typeof CONTEXT_TYPES)[number])
   ) {
-    debugLog("2_validation", { result: "FAILED — missing or invalid required field" });
+    debugLog("2_validation", { result: "FAILED, missing or invalid required field" });
     return NextResponse.json({ error: "Missing or invalid required field." }, { status: 400 });
   }
 
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     hostId: tokenRow?.host_id ?? null,
     revokedAt: tokenRow?.revoked_at ?? null,
     lookupError: tokenLookupError?.message ?? null,
-    result: tokenLookupError || !tokenRow ? "FAILED — unknown access token" : "OK",
+    result: tokenLookupError || !tokenRow ? "FAILED, unknown access token" : "OK",
   });
 
   if (tokenLookupError || !tokenRow) {

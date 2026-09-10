@@ -7,17 +7,17 @@ import { PrintButton } from "@/components/DefyingGriefPrintControls";
 
 export const dynamic = "force-dynamic";
 
-/** Printable Participant Packet for the Defying Grief Master Curriculum --
+/** Printable Participant Packet for the Defying Grief Master Curriculum,
  *  workshop material a Guide hands to a participant, distinct from the
  *  persistent AVAIA digital Workbook. Uses only material the Master
  *  Curriculum already authored (participant_guide + take_home
  *  experience_sections rows): the private "Your Own Ripple" worksheet and
  *  the Take-Home Record. Nothing here requires disclosure to the Guide or
- *  anyone else -- both source rows are written as private, second-person
+ *  anyone else, both source rows are written as private, second-person
  *  reflection, and this page only adds writing space, it never collects
  *  or transmits what a participant writes. Sits inside /toolkit, so
  *  app/toolkit/layout.tsx's own Toolkit authorization gate already
- *  applies -- only an authorized Guide can reach this to print copies for
+ *  applies, only an authorized Guide can reach this to print copies for
  *  a session; there is no public route to this material. */
 export default async function DefyingGriefParticipantPrintPage({
   params,
@@ -38,7 +38,7 @@ export default async function DefyingGriefParticipantPrintPage({
   if (!experienceRow) notFound();
   const experience = experienceRow as Experience;
 
-  // Same program-aware heading fix as the Facilitator print route -- this
+  // Same program-aware heading fix as the Facilitator print route, this
   // was hardcoded to "Defying Grief" regardless of which experience was
   // actually being printed.
   const isDefyingGrief = experience.components.includes("defying-grief");
@@ -102,7 +102,7 @@ export default async function DefyingGriefParticipantPrintPage({
       <h1>{packetHeading}</h1>
       <p className="meta">Participant Materials · {experience.title}</p>
       <p className="intro">
-        This packet is yours. Nothing on it has to be shown to anyone — not your Guide, not the
+        This packet is yours. Nothing on it has to be shown to anyone, not your Guide, not the
         group, not AVAIA. Write only what is true for you, and leave blank whatever doesn&rsquo;t
         fit.
       </p>

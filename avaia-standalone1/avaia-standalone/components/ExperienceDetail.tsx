@@ -11,7 +11,7 @@ import type { ToolKey, ToolStatus } from "@/lib/toolkit";
  *  admin-only draft-preview route; the eventual Guide-facing
  *  `/toolkit/experiences/[experienceId]` route is meant to render the
  *  exact same component against published-only data, so "preview"
- *  genuinely means "preview what a Guide will eventually see" — not a
+ *  genuinely means "preview what a Guide will eventually see", not a
  *  separate UI that has to be rebuilt later. No section is invented
  *  for a category the Experience's own source doesn't support; a
  *  group with zero rows simply doesn't render. */
@@ -36,7 +36,7 @@ type ExperienceDetailProps = {
   relatedClasses: RelatedClass[];
 };
 
-/** Presentation order, not document order — grouped by what the
+/** Presentation order, not document order, grouped by what the
  *  Guide is trying to do, per the approved Experience Detail design.
  *  A heading naming several section_types (e.g. "Before You
  *  Facilitate") is a single filtered view over the same underlying
@@ -68,7 +68,7 @@ export default function ExperienceDetail({
     <div>
       <p className="label mb-3">
         Full AVAIA Experience
-        {experience.status !== "published" ? " — DRAFT PREVIEW" : ""}
+        {experience.status !== "published" ? ", DRAFT PREVIEW" : ""}
       </p>
       <h1 className="font-serif text-4xl text-ink">{experience.title}</h1>
       {experience.summary && <p className="mt-4 text-lg text-muted">{experience.summary}</p>}
@@ -88,23 +88,18 @@ export default function ExperienceDetail({
                 key={c.key}
                 className="rounded-md border border-rule px-3 py-1 text-sm text-ink"
               >
-                {c.label} — {c.statusLabel}
+                {c.label}, {c.statusLabel}
               </span>
             ))}
           </div>
         </section>
       )}
 
-      {relatedClasses.length > 0 && (
-        <section className="mt-10">
-          <p className="label mb-3 text-muted">Related Classes</p>
-          <ul className="list-disc pl-5 text-ink">
-            {relatedClasses.map((c) => (
-              <li key={c.id}>{c.title}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* Related Classes section intentionally not rendered, Dorian does
+          not want the Class Library catalog presented on the website right
+          now. relatedClasses is still received and typed (see RelatedClass
+          below) so this can come back with a one-line change once that's
+          decided; nothing is deleted, just not surfaced. */}
 
       {LAYOUT_GROUPS.map(({ heading, types }) => {
         const rows = types.flatMap((t) => grouped[t] ?? []);

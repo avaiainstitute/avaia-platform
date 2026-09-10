@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 
-/** The interactive Preparation workspace -- built to close the gap between
+/** The interactive Preparation workspace, built to close the gap between
  *  PreparationSnapshot.tsx (a single generated summary) and what the
  *  original Preparation capability was meant to support: the Guide
  *  actually asking Preparation things. Turn by turn, bounded calls (see
  *  generatePreparationChatReply's own comment for why), never a streamed
- *  live conversation, never persisted -- this is Guide-only scratch work
+ *  live conversation, never persisted, this is Guide-only scratch work
  *  for preparing the next Host conversation, not itself part of any
  *  continuity record. Sits below PreparationSnapshot on the same page. */
 
@@ -57,7 +57,7 @@ export default function PreparationChat({ participantId }: { participantId: stri
     <section className="mt-6 rounded-lg border border-rule bg-white/[0.04] p-5">
       <p className="label text-muted">Ask Preparation</p>
       <p className="mt-1 text-sm text-muted">
-        This is for you, not the Host — nothing here reaches their conversation or Workbook.
+        This is for you, not the Host, nothing here reaches their conversation or Workbook.
         Preparation only reasons from what&rsquo;s already, legitimately on record above.
       </p>
 

@@ -7,11 +7,11 @@ export function anthropic() {
 }
 
 /**
- * Crisis safety net — a conservative keyword pre-check on the Host's message.
+ * Crisis safety net, a conservative keyword pre-check on the Host's message.
  * This is a backstop that logs the event for oversight and lets the UI surface
  * resources; the AI's own system prompt (SHARED_GUARDRAILS) is instructed to
  * step out of the method and provide 988/911/741741 when it detects risk. We
- * favor recall here — a false positive just shows a calm resource note.
+ * favor recall here, a false positive just shows a calm resource note.
  */
 const CRISIS_PATTERNS: RegExp[] = [
   /\bkill(?:ing)?\s+my\s?self\b/i,

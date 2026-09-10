@@ -13,12 +13,12 @@ import {
 } from "@/lib/experience-sections";
 import type { ComponentAvailabilityItem, RelatedClass } from "@/components/ExperienceDetail";
 
-/** Delivery interface for the Defying Grief Master Curriculum -- rendered
+/** Delivery interface for the Defying Grief Master Curriculum, rendered
  *  by both the Guide-facing (app/toolkit/experiences/[experienceId]) and
  *  admin draft-preview routes in place of the generic ExperienceDetail,
  *  whenever an Experience's own `components` tags include "defying-grief"
  *  (see lib/experiences.ts / migration 0030). Reads only `experiences`
- *  and `experience_sections` -- the same rows ExperienceDetail already
+ *  and `experience_sections`, the same rows ExperienceDetail already
  *  reads, grouped and navigated differently. No new content, no new
  *  table, no Host/participant data of any kind. */
 
@@ -112,19 +112,19 @@ export default function DefyingGriefCurriculum({
   return (
     <div>
       <p className="label mb-3">
-        Defying Grief — A Sacred Rebellion
-        {experience.status !== "published" ? " — DRAFT PREVIEW" : ""}
+        Defying Grief, A Sacred Rebellion
+        {experience.status !== "published" ? ", DRAFT PREVIEW" : ""}
       </p>
       <h1 className="font-serif text-4xl text-ink">Master Curriculum</h1>
       <p className="mt-3 text-sm text-muted">
-        Content foundation: <span className="text-ink">{experience.title}</span> — one component
+        Content foundation: <span className="text-ink">{experience.title}</span>, one component
         inside Defying Grief, not the entire program.
       </p>
       <p className="mt-4 text-lg text-muted">Awareness → Understanding → Agency</p>
 
       <div className="mt-6 rounded-lg border border-rule bg-white/[0.04] px-5 py-4">
         <p className="text-sm text-muted">
-          This is the curriculum content foundation — teaching sequence, activities, and delivery
+          This is the curriculum content foundation, teaching sequence, activities, and delivery
           formats for facilitating Defying Grief to a room or an individual. To start a live,
           one-on-one facilitated Defying Grief conversation with a participant instead, use{" "}
           <Link
@@ -182,23 +182,18 @@ export default function DefyingGriefCurriculum({
                     key={c.key}
                     className="rounded-md border border-rule px-3 py-1 text-sm text-ink"
                   >
-                    {c.label} — {c.statusLabel}
+                    {c.label}, {c.statusLabel}
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          {relatedClasses.length > 0 && (
-            <div className="mt-8">
-              <p className="label mb-3 text-muted">Related Classes</p>
-              <ul className="list-disc pl-5 text-ink">
-                {relatedClasses.map((c) => (
-                  <li key={c.id}>{c.title}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Related Classes section intentionally not rendered, Dorian
+              does not want the Class Library catalog presented on the
+              website right now. relatedClasses is still received and typed
+              so this can come back with a one-line change once that's
+              decided; nothing is deleted, just not surfaced. */}
 
           <div className="mt-8 space-y-4">
             {overviewRows.map((s) => (
@@ -267,8 +262,8 @@ export default function DefyingGriefCurriculum({
       {activeTab === "formats" && (
         <section className="mt-10">
           <p className="text-sm text-muted">
-            Every format selects or compresses modules from the same eleven-module sequence above
-            — none introduce a different sequence. Select a format to read what it includes, in
+            Every format selects or compresses modules from the same eleven-module sequence above,
+            none introduce a different sequence. Select a format to read what it includes, in
             what order, and what is omitted or compressed.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -294,7 +289,7 @@ export default function DefyingGriefCurriculum({
               <p className="font-serif text-lg text-ink">{selectedFormat.title}</p>
               {isYouth(selectedFormat) && (
                 <p className="mt-2 rounded-md border border-rule px-3 py-2 text-xs text-muted">
-                  Safeguarded / deferred — Youth delivery requires the separate AVAIA youth
+                  Safeguarded / deferred, Youth delivery requires the separate AVAIA youth
                   safeguards and guardian-consent architecture. Not operational through this
                   interface.
                 </p>
@@ -327,7 +322,7 @@ export default function DefyingGriefCurriculum({
       {activeTab === "participant" && (
         <section className="mt-10">
           <div className="rounded-md border border-rule px-4 py-3 text-xs text-muted">
-            PARTICIPANT MATERIAL — previewed here for your preparation only, exactly as a
+            PARTICIPANT MATERIAL, previewed here for your preparation only, exactly as a
             participant would see it. Nothing a participant writes here becomes visible to you.
           </div>
           <div className="mt-5 space-y-4">
@@ -344,7 +339,7 @@ export default function DefyingGriefCurriculum({
       {activeTab === "facilitator" && (
         <section className="mt-10">
           <div className="rounded-md border border-rule px-4 py-3 text-xs text-muted">
-            FACILITATOR MATERIAL — preparation and delivery guidance, not shown to participants.
+            FACILITATOR MATERIAL, preparation and delivery guidance, not shown to participants.
           </div>
           <div className="mt-5 space-y-4">
             {guidePreparation.map((g) => (

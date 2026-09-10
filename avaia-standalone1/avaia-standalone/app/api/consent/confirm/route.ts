@@ -4,12 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** The guardian's own confirming action -- no login required, matching
+/** The guardian's own confirming action, no login required, matching
  *  app/consent/[token]/page.tsx (a guardian never has an AVAIA account).
  *  Calls the narrow SECURITY DEFINER function confirm_pending_consent
  *  (migration 0043), which can only ever flip one specific pending row to
  *  active; nothing else in the schema is reachable through this route.
- *  Captures a best-effort IP as part of the consent record -- evidence,
+ *  Captures a best-effort IP as part of the consent record, evidence,
  *  not verification; this route makes no identity claim about who
  *  actually clicked. */
 export async function POST(request: Request) {

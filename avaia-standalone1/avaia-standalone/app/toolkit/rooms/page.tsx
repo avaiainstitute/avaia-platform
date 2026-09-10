@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listRooms, createRoom } from "@/lib/engine/room";
 import type { DbRoom } from "@/lib/engine/room";
 
-export const metadata = { title: "Shared Rooms — Guide Toolkit — AVAIA" };
+export const metadata = { title: "Shared Rooms, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
 
 async function startRoom(formData: FormData) {
@@ -48,9 +48,11 @@ export default async function RoomsListPage() {
       <p className="label mb-3">Shared Rooms</p>
       <h1 className="font-serif text-4xl text-ink">More than one person, one Table.</h1>
       <p className="mt-4 text-lg text-muted">
-        A Room is not the people in it — it is what the shared conversation becomes. Every
-        participant keeps ownership of their own story; nothing moves from private into shared
-        without their own choice.
+        A Room is not who the people are in it. A room is where the shared conversation is
+        allowed to develop into whatever it needs to be. In a Shared Room, every participant
+        keeps ownership of their own voice and story. When a person decides they need a private
+        conversation, nothing moves from that conversation back into the Shared Room without the
+        choice and permission of the person having that private conversation.
       </p>
 
       <section className="rule-t mt-14 border-t border-rule pt-8">

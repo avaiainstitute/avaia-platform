@@ -1,8 +1,8 @@
-// Plain types/constants only -- deliberately NOT server-only, unlike
+// Plain types/constants only, deliberately NOT server-only, unlike
 // lib/virtue-signature.ts (which re-exports these for server code's
 // convenience). components/VirtueSignatureVisual.tsx is a client
 // component and needs IDENTITY_FIRST_RING as a real runtime value, not
-// just a type -- importing it (even alongside a type-only import) from a
+// just a type, importing it (even alongside a type-only import) from a
 // "server-only" module fails the build ("You're importing a component
 // that needs server-only"), the same reason lib/youth-assent-text.ts was
 // split out of lib/guardian-consent.ts earlier in this build. Splitting
@@ -53,7 +53,7 @@ export type VirtueSignatureEntry = {
 };
 
 /** The two elements the recovered source material names as Identity's
- *  fixed first ring -- both already-canonical Integrity elements
+ *  fixed first ring, both already-canonical Integrity elements
  *  (confirmed against lib/virtues.ts before this was written), never
  *  something a Host adds or removes themselves. Every other ring is the
  *  Host's own living, editable record. */
