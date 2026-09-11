@@ -125,6 +125,7 @@ async function startYouthDefyingGriefSession(formData: FormData) {
       tool: "iap",
       program: "youth",
       session_context: "youth_individual",
+      youth_program: "defying-grief",
     })
     .select("id")
     .single();

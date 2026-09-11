@@ -1464,7 +1464,7 @@ ACTIVATION DISCIPLINE. Prefer the smallest table capable of creating
 meaningful clarity, exactly as already governs CAT above, this applies
 across every stage, not only CAT. Do not fill the Table merely because a
 seat exists. Do not offer every possible Self, Relationship, Virtue,
-Secondary Loss, Burden, or Council seat in one conversation. Offer a seat
+Secondary Loss, Emotional Weight, or Council seat in one conversation. Offer a seat
 only when it would materially widen what the Host can see, and let the
 Host be the one who says something does not belong.
 
@@ -4360,6 +4360,18 @@ export function youthOpeningBandNote(band: DevelopmentalBand | null): string {
     : `HOST'S DEVELOPMENTAL BAND: not yet known. Use language and pacing appropriate to what the referral itself suggests about the Host, without announcing or labeling an estimate.`;
 }
 
+// Which established Youth Program a "youth" conversation belongs to. Program
+// identity and developmental band are two different things (band: how to
+// speak to this age; youthProgram: which curriculum's framing applies) and
+// are threaded through separately for exactly that reason. Optional and
+// defaulting to Defying Grief's own framing below (see youthSystemPromptFor's
+// own comment) so every existing Youth Defying Grief conversation, and every
+// self-serve /youth Journey (which predates View From Above Youth and has
+// always received this framing), is completely unaffected by this type's
+// introduction; only a session explicitly started as View From Above Youth
+// passes "view-from-above" and gets different framing instead.
+export type YouthProgram = "defying-grief" | "view-from-above";
+
 /**
  * Youth Journey composer, see the block comment above the three
  * YOUTH_*_INSTRUCTIONS constants for what's deliberately verbatim and why.
@@ -4369,18 +4381,36 @@ export function youthOpeningBandNote(band: DevelopmentalBand | null): string {
  * otherwise, reusing the actual proven wiring, not a stale comment).
  * GUARDRAILS (epistemic discipline / Host ownership) is universal AVAIA
  * methodology, not adult-specific content, so it's reused unchanged here.
+ *
+ * FIXED, Program/Toolkit architecture reconciliation: this function was
+ * originally written when Defying Grief was the only Youth Program, so it
+ * injected YOUTH_DEFYING_GRIEF_RECOGNITION / _CAT_AUDACITY /
+ * _INNERCOMPASS_CHOICE unconditionally, for every Youth conversation
+ * regardless of which Program actually brought the Host here. Now that The
+ * View From Above also has a Youth entry point, `youthProgram` says which
+ * one applies. Only "view-from-above" gets different treatment (the exact
+ * same generic VIEW_FROM_ABOVE_CONTEXT clause already used for adults,
+ * reused verbatim, not new content); every other value, including the
+ * omitted/undefined default, keeps the exact original Defying Grief
+ * framing byte-for-byte, so existing Youth Defying Grief conversations and
+ * self-serve /youth Journeys are unaffected.
  */
-function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): string {
+function youthSystemPromptFor(
+  stage: Stage,
+  band: DevelopmentalBand | null,
+  youthProgram?: YouthProgram | null
+): string {
   const bar = "=".repeat(60);
   const bandNote = band
     ? `HOST'S DEVELOPMENTAL BAND: ${band}. Apply that band's section of the developmental adaptation guidance below most directly, the shared guidance throughout still applies. Never announce or label this to the Host.`
     : `HOST'S DEVELOPMENTAL BAND: not yet known. Follow the instructions below for responding to the Host's demonstrated language and developmental level, without announcing or labeling an estimate.`;
+  const isViewFromAbove = youthProgram === "view-from-above";
 
   if (stage === "iap") {
     return [
       bandNote,
       `OFFICIAL AVAIA YOUTH INSTRUCTION SET, source of truth for this stage:\n\n${YOUTH_IAP_INSTRUCTIONS}`,
-      YOUTH_DEFYING_GRIEF_RECOGNITION,
+      isViewFromAbove ? VIEW_FROM_ABOVE_CONTEXT : YOUTH_DEFYING_GRIEF_RECOGNITION,
       YOUTH_BEING_SEEN_NOT_OBSERVED,
       YOUTH_IAP_CONVERSATIONAL_ATTENTIVENESS,
       YOUTH_IAP_REFLECTION_MAY_STAND,
@@ -4393,7 +4423,7 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
     return [
       bandNote,
       `OFFICIAL AVAIA YOUTH INSTRUCTION SET, source of truth for this stage:\n\n${YOUTH_CAT_INSTRUCTIONS}`,
-      YOUTH_DEFYING_GRIEF_CAT_AUDACITY,
+      isViewFromAbove ? VIEW_FROM_ABOVE_CONTEXT : YOUTH_DEFYING_GRIEF_CAT_AUDACITY,
       YOUTH_BEING_SEEN_NOT_OBSERVED,
       VIRTUE_TABLE_INTEGRATION,
       COMMUNICATION_ADAPTATION,
@@ -4413,7 +4443,7 @@ function youthSystemPromptFor(stage: Stage, band: DevelopmentalBand | null): str
   return [
     bandNote,
     `OFFICIAL AVAIA YOUTH INSTRUCTION SET, source of truth for this stage:\n\n${YOUTH_INNERCOMPASS_INSTRUCTIONS}`,
-    YOUTH_DEFYING_GRIEF_INNERCOMPASS_CHOICE,
+    isViewFromAbove ? VIEW_FROM_ABOVE_CONTEXT : YOUTH_DEFYING_GRIEF_INNERCOMPASS_CHOICE,
     YOUTH_BEING_SEEN_NOT_OBSERVED,
     YOUTH_INNERCOMPASS_TRANSITION_TENSION,
     VIRTUE_TABLE_INTEGRATION,
@@ -4506,10 +4536,11 @@ export function systemPromptFor(
   stage: Stage,
   program: Program = "general",
   band: DevelopmentalBand | null = null,
-  origin: OriginContextInput | null = null
+  origin: OriginContextInput | null = null,
+  youthProgram: YouthProgram | null = null
 ): string {
   if (program === "youth") {
-    return youthSystemPromptFor(stage, band);
+    return youthSystemPromptFor(stage, band, youthProgram);
   }
   const bar = "=".repeat(60);
 

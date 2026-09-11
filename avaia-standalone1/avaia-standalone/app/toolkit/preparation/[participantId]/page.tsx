@@ -10,6 +10,7 @@ import PreparationSnapshot from "@/components/PreparationSnapshot";
 import PreparationChat from "@/components/PreparationChat";
 import { listSignatureEntriesForParticipant } from "@/lib/virtue-signature";
 import { VirtueLink } from "@/components/VirtueLink";
+import { getViewFromAboveClass } from "@/lib/view-from-above";
 
 export const metadata = { title: "Preparation, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -17,10 +18,27 @@ export const dynamic = "force-dynamic";
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
+/** class_context's own stated purpose (migration 0058's comment) is
+ *  "display/continuity only (Preparation, Guide's Record)" — until now
+ *  nothing actually surfaced it here. This fulfills that already-
+ *  established purpose for the first time, it does not invent a new one.
+ *  For Youth (program === "youth"), youth_program (migration 0066) says
+ *  which established Program the session belongs to, since program itself
+ *  only ever says "youth" for all of them. */
 function sessionTitle(record: ParticipantSessionRecord): string {
   const base = toolLabel(record.session.tool);
   if (record.session.program === "defying-grief") return `${base}, Defying Grief`;
-  if (record.session.program === "youth") return `${base}, Youth`;
+  if (record.session.program === "view-from-above") {
+    const cls = record.session.class_context ? getViewFromAboveClass(record.session.class_context) : undefined;
+    return cls ? `${base}, The View from Above, ${cls.title}` : `${base}, The View from Above`;
+  }
+  if (record.session.program === "youth") {
+    if (record.session.youth_program === "view-from-above") {
+      const cls = record.session.class_context ? getViewFromAboveClass(record.session.class_context) : undefined;
+      return cls ? `${base}, Youth, The View from Above, ${cls.title}` : `${base}, Youth, The View from Above`;
+    }
+    return `${base}, Youth, Defying Grief`;
+  }
   return base;
 }
 
@@ -176,13 +194,22 @@ export default async function PreparationPage({
   const active = sessions.filter((r) => effectiveStatus(r) !== "complete");
   const complete = sessions.filter((r) => effectiveStatus(r) === "complete");
 
-  // Distinct (tool, program) combinations this participant has used,
-  // display only, drawn straight from session.tool/program.
+  // Distinct (tool, program, youth_program) combinations this participant
+  // has used, display only, drawn straight from session.tool/program/
+  // youth_program.
   const toolsUsed = [
     ...new Map(
       sessions.map((r) => [
-        `${r.session.tool}:${r.session.program}`,
-        r.session.program === "defying-grief" ? `${toolLabel(r.session.tool)}, Defying Grief` : toolLabel(r.session.tool),
+        `${r.session.tool}:${r.session.program}:${r.session.youth_program ?? ""}`,
+        r.session.program === "defying-grief"
+          ? `${toolLabel(r.session.tool)}, Defying Grief`
+          : r.session.program === "view-from-above"
+          ? `${toolLabel(r.session.tool)}, The View from Above`
+          : r.session.program === "youth"
+          ? r.session.youth_program === "view-from-above"
+            ? `${toolLabel(r.session.tool)}, Youth, The View from Above`
+            : `${toolLabel(r.session.tool)}, Youth, Defying Grief`
+          : toolLabel(r.session.tool),
       ])
     ).values(),
   ];

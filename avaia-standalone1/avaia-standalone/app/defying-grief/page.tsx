@@ -88,12 +88,12 @@ function ThresholdContent({
       <div className="mt-8">
         {cta.kind === "link" ? (
           <Link href={cta.href} className={CTA_CLASSES}>
-            I&rsquo;m Still Here
+            Begin Your Individual Awareness Profile
           </Link>
         ) : (
           <form action={cta.action}>
             <button type="submit" className={CTA_CLASSES}>
-              I&rsquo;m Still Here
+              Begin Your Individual Awareness Profile
             </button>
           </form>
         )}

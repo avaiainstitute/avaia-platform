@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { type Program, type Stage, type DevelopmentalBand } from "@/lib/engine/prompts";
+import { type Program, type Stage, type DevelopmentalBand, type YouthProgram } from "@/lib/engine/prompts";
 import { isMember } from "@/lib/membership";
 import { isAuthorizedGuideConversation, resolveDevelopmentalBand } from "@/lib/guide";
 import { generateReferral } from "@/lib/engine/referral-generation";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status, program, journey_id")
+    .select("id, stage, status, program, youth_program, journey_id")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -30,6 +30,7 @@ export async function POST(request: Request) {
   }
   const stage = convo.stage as Stage;
   const program = convo.program as Program;
+  const youthProgram = convo.youth_program as YouthProgram | null;
   const journeyId = convo.journey_id as string | null;
 
   // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
     program,
     journeyId,
     developmentalBand,
+    youthProgram,
   });
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });

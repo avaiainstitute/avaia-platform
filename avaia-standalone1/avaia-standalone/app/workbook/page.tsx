@@ -18,6 +18,12 @@ import {
   VIRTUE_FIELD_KEYS,
 } from "@/lib/engine/referral-provenance";
 import { VirtueLink } from "@/components/VirtueLink";
+import {
+  listSignatureEntriesForHost,
+  groupByLayer,
+  SIGNATURE_LAYER_LABEL,
+  SIGNATURE_LAYER_ORDER,
+} from "@/lib/virtue-signature";
 
 export const metadata = { title: "Your Workbook, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -306,6 +312,12 @@ export default async function WorkbookPage({
       })
   );
 
+  // Real Virtue Signature data, not just a link to it, the six-layer
+  // Signature this Host has actually accumulated (lib/virtue-signature.ts,
+  // already the established data-access layer, categories unchanged).
+  const signatureEntries = await listSignatureEntriesForHost(supabase, user.id);
+  const signatureByLayer = groupByLayer(signatureEntries);
+
   const transcripts = await Promise.all(
     conversations.map((c) => loadMessages(supabase, c.id))
   );
@@ -474,14 +486,52 @@ export default async function WorkbookPage({
         referrals that carried you forward. Open any journey below to read, save, or print it.
         It&rsquo;s yours, and only yours.
       </p>
-      <div className="mt-4">
-        <Link
-          href="/signature"
-          className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
-        >
-          View your Virtue Signature →
-        </Link>
-      </div>
+      {signatureEntries.length > 0 && (
+        <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label text-seal">The Chemistry of Virtue</p>
+          <h2 className="mt-1 font-serif text-2xl text-ink">Your Virtue Signature</h2>
+          <p className="mt-1 text-sm text-muted">
+            What has actually accumulated in your Signature, across all six layers.
+          </p>
+          <div className="mt-5 space-y-4">
+            {SIGNATURE_LAYER_ORDER.filter((layer) => signatureByLayer[layer].length > 0).map((layer) => (
+              <div key={layer}>
+                <p className="label text-muted">{SIGNATURE_LAYER_LABEL[layer]}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {signatureByLayer[layer].map((entry) => (
+                    <VirtueLink
+                      key={entry.id}
+                      family={entry.family}
+                      virtue={entry.element}
+                      className="rounded-full border border-rule px-3 py-1 text-sm text-ink transition-colors hover:border-seal"
+                    >
+                      {entry.element ? `${entry.family}, ${entry.element}` : entry.family}
+                    </VirtueLink>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5">
+            <Link
+              href="/signature"
+              className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
+            >
+              View your full Virtue Signature →
+            </Link>
+          </div>
+        </section>
+      )}
+      {signatureEntries.length === 0 && (
+        <div className="mt-4">
+          <Link
+            href="/signature"
+            className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
+          >
+            View your Virtue Signature →
+          </Link>
+        </div>
+      )}
 
       {searchParams?.guideAccessGranted === "1" && (
         <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
@@ -532,6 +582,17 @@ export default async function WorkbookPage({
       <p className="mt-2 text-sm">
         <Link href="/library" className="text-muted hover:text-seal">
           Explore the AVAIA Library →
+        </Link>
+      </p>
+
+      {/* Established Dorian source material (institution/source/19_UnsungHeroes.md,
+          "Explicitly Not Yet Built"): "Unsung Heroes does not enter the core
+          AVAIA Workbook; its own continuity record lives at
+          /unsung-heroes/dashboard." A plain link there, not a data pull, is
+          the correct connection, not an oversight. */}
+      <p className="mt-2 text-sm">
+        <Link href="/unsung-heroes/dashboard" prefetch={false} className="text-muted hover:text-seal">
+          Looking for who you&rsquo;ve recognized through Unsung Heroes? →
         </Link>
       </p>
 
@@ -768,6 +829,11 @@ export default async function WorkbookPage({
                 {j.convos[0]?.convo.program === "defying-grief" && (
                   <span className="ml-2 align-middle font-sans text-[0.65rem] font-medium uppercase tracking-wide text-[#c1502e]">
                     Defying Grief
+                  </span>
+                )}
+                {j.convos[0]?.convo.program === "view-from-above" && (
+                  <span className="ml-2 align-middle font-sans text-[0.65rem] font-medium uppercase tracking-wide text-[#c1502e]">
+                    The View from Above
                   </span>
                 )}
               </p>

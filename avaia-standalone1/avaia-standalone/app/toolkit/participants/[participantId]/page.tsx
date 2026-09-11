@@ -11,6 +11,7 @@ import {
 } from "@/lib/engine/referral-provenance";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import { VirtueLink } from "@/components/VirtueLink";
+import { getViewFromAboveClass } from "@/lib/view-from-above";
 
 export const metadata = { title: "Participant Record, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -18,15 +19,27 @@ export const dynamic = "force-dynamic";
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
-/** One session card's title, the tool it ran, with the Defying Grief or
- *  Youth framing folded in when that's the program (neither is its own
- *  `tool`; they're iap/cat/innercompass with session.program ===
- *  'defying-grief' or 'youth', so this is the only place that distinction
- *  needs to be surfaced for display). */
+/** One session card's title, the tool it ran, with the Program framing
+ *  folded in (neither Defying Grief nor View From Above is its own `tool`;
+ *  they're iap/cat/innercompass with session.program identifying which).
+ *  For Youth, session.youth_program (migration 0066) says which established
+ *  Program the session belongs to, since program itself only ever says
+ *  "youth" for all of them; see lib/engine/prompts.ts's youthSystemPromptFor
+ *  for why the default (no youth_program recorded) means Defying Grief. */
 function sessionTitle(record: ParticipantSessionRecord): string {
   const base = toolLabel(record.session.tool);
   if (record.session.program === "defying-grief") return `${base}, Defying Grief`;
-  if (record.session.program === "youth") return `${base}, Youth`;
+  if (record.session.program === "view-from-above") {
+    const cls = record.session.class_context ? getViewFromAboveClass(record.session.class_context) : undefined;
+    return cls ? `${base}, The View from Above, ${cls.title}` : `${base}, The View from Above`;
+  }
+  if (record.session.program === "youth") {
+    if (record.session.youth_program === "view-from-above") {
+      const cls = record.session.class_context ? getViewFromAboveClass(record.session.class_context) : undefined;
+      return cls ? `${base}, Youth, The View from Above, ${cls.title}` : `${base}, Youth, The View from Above`;
+    }
+    return `${base}, Youth, Defying Grief`;
+  }
   return base;
 }
 

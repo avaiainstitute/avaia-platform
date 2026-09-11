@@ -60,7 +60,7 @@ export default async function ToolkitIapSessionPage({
     // conversation opens the same way regardless of entry path.
     const origin =
       session.program === "view-from-above" ? resolveOriginContext("view-from-above", session.class_context ?? undefined) : null;
-    const journeyId = await createJourney(supabase, user.id, session.program);
+    const journeyId = await createJourney(supabase, user.id, session.program, session.youth_program);
     const originOpening = origin ? await generateIapOriginOpening(origin, user.id, null) : undefined;
     const convo = await createConversation(
       supabase,
@@ -69,7 +69,8 @@ export default async function ToolkitIapSessionPage({
       originOpening,
       session.program,
       journeyId,
-      origin
+      origin,
+      session.youth_program
     );
     conversationId = convo.id;
     await setGuideSessionConversation(supabase, session.id, conversationId);
@@ -98,6 +99,7 @@ export default async function ToolkitIapSessionPage({
         stage: "iap",
         program: convo.program,
         journeyId: convo.journey_id,
+        youthProgram: convo.youth_program,
       });
       if (healed) {
         catConvo = await findConversationByJourneyStage(supabase, convo.journey_id!, "cat");
@@ -113,7 +115,9 @@ export default async function ToolkitIapSessionPage({
         "cat",
         catConvo.id,
         session.program,
-        session.session_context
+        session.session_context,
+        session.class_context,
+        session.youth_program
       );
       continueHref = `/toolkit/cat/${catSessionId}`;
     }

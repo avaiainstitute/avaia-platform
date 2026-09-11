@@ -115,6 +115,12 @@ export type GuideSession = {
   program: Program;
   session_context: SessionContext;
   class_context: string | null;
+  // Which established Youth Program this session belongs to (0066_youth_
+  // program_identity.sql), meaningful only when program === "youth". Null
+  // for every adult session and for a Youth session predating this column
+  // (see lib/engine/prompts.ts's youthSystemPromptFor for the deliberate
+  // backward-compatible default null resolves to).
+  youth_program: "defying-grief" | "view-from-above" | null;
   status: "active" | "complete";
   created_at: string;
 };
@@ -298,7 +304,16 @@ export async function findOrCreateGuideSessionForConversation(
   tool: ToolKey,
   conversationId: string,
   program: Program = "general",
-  sessionContext: SessionContext = "adult_individual"
+  sessionContext: SessionContext = "adult_individual",
+  // Carried forward from the prior stage's own guide_sessions row so a
+  // CAT/InnerCompass session tile keeps showing the same Program identity
+  // (Youth curriculum, or which View From Above class) as its IAP session
+  // did, rather than losing it at the handoff. Previously neither field was
+  // threaded through here at all, so even the established adult class_
+  // context display gap (Preparation never showing which class past IAP)
+  // is fixed by this same change, not only the new Youth case.
+  classContext?: string | null,
+  youthProgram?: "defying-grief" | "view-from-above" | null
 ): Promise<string> {
   const { data: existing } = await supabase
     .from("guide_sessions")
@@ -318,6 +333,8 @@ export async function findOrCreateGuideSessionForConversation(
       conversation_id: conversationId,
       program,
       session_context: sessionContext,
+      class_context: classContext ?? null,
+      youth_program: youthProgram ?? null,
     })
     .select("id")
     .single();

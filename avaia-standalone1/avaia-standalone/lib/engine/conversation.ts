@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Anthropic from "@anthropic-ai/sdk";
-import type { Program, Stage } from "./prompts";
+import type { Program, Stage, YouthProgram } from "./prompts";
 
 export const STAGE_ORDER: Stage[] = ["iap", "cat", "innercompass"];
 
@@ -32,6 +32,11 @@ export type DbConversation = {
   stage: Stage;
   status: "active" | "complete";
   program: Program;
+  // Which established Youth Program this conversation belongs to (0066_
+  // youth_program_identity.sql), meaningful only when program === "youth".
+  // See lib/engine/prompts.ts's youthSystemPromptFor for how null is
+  // handled (backward-compatible default, not "no program").
+  youth_program: YouthProgram | null;
   // Explicit Journey this conversation belongs to (see public.journeys).
   // Null means the Journey couldn't be confidently determined, for
   // historical rows only; every conversation created from this point
@@ -66,11 +71,12 @@ export async function getActiveConversation(
 export async function createJourney(
   supabase: SupabaseClient,
   hostId: string,
-  program: Program = "general"
+  program: Program = "general",
+  youthProgram?: YouthProgram | null
 ): Promise<string> {
   const { data, error } = await supabase
     .from("journeys")
-    .insert({ host_id: hostId, program })
+    .insert({ host_id: hostId, program, youth_program: youthProgram ?? null })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -91,7 +97,8 @@ export async function createConversation(
   opening?: string,
   program: Program = "general",
   journeyId?: string | null,
-  originContext?: { source: string; label: string; family: string; definition: string } | null
+  originContext?: { source: string; label: string; family: string; definition: string } | null,
+  youthProgram?: YouthProgram | null
 ): Promise<DbConversation> {
   const { data, error } = await supabase
     .from("conversations")
@@ -101,6 +108,7 @@ export async function createConversation(
       program,
       journey_id: journeyId ?? null,
       origin_context: originContext ?? null,
+      youth_program: youthProgram ?? null,
     })
     .select("*")
     .single();

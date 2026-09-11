@@ -465,7 +465,7 @@ export default async function ToolkitDashboardPage() {
           all). Same TOOL_REGISTRY data, same cards, just grouped by key,
           not a redesign of the Toolkit itself. */}
       {(() => {
-        const YOUTH_KEYS = new Set(["youth-defying-grief", "youth-group"]);
+        const YOUTH_KEYS = new Set(["youth-defying-grief", "youth-group", "youth-view-from-above"]);
         const youthTools = TOOL_REGISTRY.filter((t) => YOUTH_KEYS.has(t.key));
         const adultTools = TOOL_REGISTRY.filter((t) => !YOUTH_KEYS.has(t.key));
         const renderCard = (tool: (typeof TOOL_REGISTRY)[number]) => (

@@ -15,6 +15,7 @@ import {
   type Program,
   type Stage,
   type DevelopmentalBand,
+  type YouthProgram,
 } from "@/lib/engine/prompts";
 import {
   STAGE_ORDER,
@@ -350,9 +351,12 @@ export async function generateGuidesRecord(
     program: Program;
     /** Youth Journey, Phase 1 only, ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
+    /** Which established Youth Program, ignored for every non-Youth
+     *  conversation. See lib/engine/prompts.ts's youthSystemPromptFor. */
+    youthProgram?: YouthProgram | null;
   }
 ): Promise<GenerateGuidesRecordResult> {
-  const { id: conversationId, stage, program, developmentalBand } = conversation;
+  const { id: conversationId, stage, program, developmentalBand, youthProgram } = conversation;
 
   // Generate the AVAIA Standard Referral as structured data.
   const history = toAnthropicMessages(await loadMessages(supabase, conversationId));
@@ -366,7 +370,7 @@ export async function generateGuidesRecord(
   // Carry the incoming referral (if any) into context, so fields meant to persist
   // across stages, like the conversation's title, can be reused or consciously
   // revised instead of generated fresh with no awareness of what came before.
-  let system = `${systemPromptFor(stage, program, developmentalBand ?? null)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
+  let system = `${systemPromptFor(stage, program, developmentalBand ?? null, null, youthProgram ?? null)}\n\n${"=".repeat(60)}\n\n${REFERRAL_FORMAT}`;
   const { data: incoming } = await supabase
     .from("referrals")
     .select("content")
@@ -553,24 +557,31 @@ export async function advanceToNextStage(
     journeyId: string | null;
     /** Youth Journey, Phase 1 only, ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
+    /** Which established Youth Program, ignored for every non-Youth
+     *  conversation. See lib/engine/prompts.ts's youthSystemPromptFor. */
+    youthProgram?: YouthProgram | null;
   },
   content: Record<string, unknown>
 ): Promise<{ nextStage: Stage } | { nextStage: null }> {
-  const { id: conversationId, stage, program, journeyId, developmentalBand } = conversation;
+  const { id: conversationId, stage, program, journeyId, developmentalBand, youthProgram } = conversation;
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
   if (!nextStage) return { nextStage: null };
 
-  // Carry the program tag (and, for Youth, the developmental band) forward
-  // so IAP(defying-grief) -> CAT(defying-grief) doesn't silently fall back
-  // to 'general' on the next stage, and so a Youth opening is generated
-  // with the same developmental awareness as the rest of that Journey.
+  // Carry the program tag (and, for Youth, the developmental band and which
+  // established Youth Program) forward so IAP(defying-grief) ->
+  // CAT(defying-grief) doesn't silently fall back to 'general' on the next
+  // stage, so a Youth opening is generated with the same developmental
+  // awareness as the rest of that Journey, and so CAT/InnerCompass keep the
+  // same Program-specific framing IAP started with (Defying Grief vs. The
+  // View From Above), rather than reverting to the backward-compatible
+  // default at the very next stage.
   const opening =
     nextStage === "cat"
       ? await generateCatOpening(content, hostId, conversationId, program, developmentalBand)
       : nextStage === "innercompass"
         ? await generateInnerCompassOpening(content, hostId, conversationId, program, developmentalBand)
         : undefined;
-  await createConversation(supabase, hostId, nextStage, opening, program, journeyId);
+  await createConversation(supabase, hostId, nextStage, opening, program, journeyId, null, youthProgram);
   return { nextStage };
 }
 
@@ -597,7 +608,7 @@ export async function advanceToNextStage(
 export async function ensureNextStageConversation(
   supabase: SupabaseClient,
   hostId: string,
-  convo: { id: string; stage: Stage; program: Program; journeyId: string | null }
+  convo: { id: string; stage: Stage; program: Program; journeyId: string | null; youthProgram?: YouthProgram | null }
 ): Promise<{ id: string; stage: Stage } | null> {
   if (!convo.journeyId) return null;
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(convo.stage) + 1] ?? null;
@@ -626,7 +637,7 @@ export async function ensureNextStageConversation(
   await advanceToNextStage(
     supabase,
     hostId,
-    { id: convo.id, stage: convo.stage, program: convo.program, journeyId: convo.journeyId },
+    { id: convo.id, stage: convo.stage, program: convo.program, journeyId: convo.journeyId, youthProgram: convo.youthProgram },
     referralRow.content as Record<string, unknown>
   );
   return findNext();
@@ -647,6 +658,9 @@ export async function generateReferral(
     journeyId: string | null;
     /** Youth Journey, Phase 1 only, ignored for every other program. */
     developmentalBand?: DevelopmentalBand | null;
+    /** Which established Youth Program, ignored for every non-Youth
+     *  conversation. See lib/engine/prompts.ts's youthSystemPromptFor. */
+    youthProgram?: YouthProgram | null;
   }
 ): Promise<GenerateReferralResult> {
   const record = await generateGuidesRecord(supabase, hostId, conversation);

@@ -7,8 +7,11 @@ import Link from "next/link";
  * Secondary Losses, GIVE, Guide/Host/Witness, or institutional explanation
  *, those stay one click away via /about and the existing Nav, exactly as
  * they already are. The "What Still Needs to Be Said" block below is a
- * deliberately quiet second doorway, visually secondary to the primary
- * invitation and IAP entry point above it.
+ * second doorway, still secondary to the primary invitation and IAP entry
+ * point above it, given a bordered card and moved closer to that primary
+ * CTA (rather than sitting after both long body paragraphs) so it's
+ * genuinely discoverable without turning the homepage into an architecture
+ * diagram. Copy is unchanged from what was already approved for this block.
  */
 export default function HomeContent() {
   return (
@@ -70,13 +73,15 @@ export default function HomeContent() {
       <p className="mt-3 text-sm text-muted">It&rsquo;s free to begin.</p>
 
       {/* ---------------------------------------------------------------
-          Second doorway, quiet, secondary. No further explanation beyond
-          the approved description; the feature explains itself once someone
-          arrives.
+          Second doorway, still secondary to the primary CTA above, but
+          given a card and placed immediately after it (rather than after
+          a further stretch of border/padding, far down the page) so it is
+          genuinely discoverable. Copy is the same, already-approved
+          description, unchanged.
       --------------------------------------------------------------- */}
-      <section className="mt-24 border-t border-rule pt-12">
+      <section className="mt-14 rounded-lg border border-rule bg-white/[0.04] p-6 backdrop-blur-sm">
         <h2 className="font-serif text-xl text-ink">What Still Needs to Be Said</h2>
-        <p className="mt-4 text-muted">
+        <p className="mt-3 text-muted">
           Sometimes there are words you still need to say to someone you cannot have the
           conversation with. Someone who died. Someone who is no longer part of your life.
           Someone you cannot speak to right now. This is a private place to say what has remained

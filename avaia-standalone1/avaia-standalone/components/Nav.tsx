@@ -35,18 +35,24 @@ const PUBLIC_LINKS: NavLink[] = [
 ];
 
 // Signed-in Host navigation, split into two visual tiers rather than one
-// flat list of equal weight. Primary = continuity/participation (what the
-// returning-member reconciliation was about); secondary = the same public/
-// program destinations as before, still one click away, just no longer
-// competing visually with Home/Journey/Workbook/Library. Both tiers still
-// render as ordinary flex-wrap lists, the same responsive mechanism the
-// Nav already used, not a new dropdown/menu component. Shared with Me isn't
-// here, it's reachable from Workbook instead (where the sharing feature
-// itself lives), not as a top-level destination.
+// flat list of equal weight. Primary = continuity/participation; secondary
+// = the same public/program destinations as before, still one click away.
+// Both tiers still render as ordinary flex-wrap lists, the same responsive
+// mechanism the Nav already used, not a new dropdown/menu component. Shared
+// with Me isn't here, it's reachable from Workbook instead (where the
+// sharing feature itself lives), not as a top-level destination.
+//
+// Architecture reconciliation: Journey and Workbook are AVAIA tools, not
+// destinations a Host needs to understand or navigate to on their own
+// before they can participate. Both are removed from top navigation and
+// reached naturally through the Programs that use them instead: Home's
+// primary CTA already opens/resumes the Journey (plain /journey resumes
+// an active conversation rather than always starting over), and Defying
+// Grief already links to Workbook directly from within the program (see
+// app/defying-grief/page.tsx). JourneyIntro's own closing InnerCompass
+// screen, which already names the Workbook by name, now links there too.
 const HOST_PRIMARY_LINKS: NavLink[] = [
   { href: "/", label: "Home", prefetch: true },
-  { href: "/journey", label: "Journey", prefetch: false },
-  { href: "/workbook", label: "Workbook", prefetch: false },
   { href: "/library", label: "Library", prefetch: false },
 ];
 

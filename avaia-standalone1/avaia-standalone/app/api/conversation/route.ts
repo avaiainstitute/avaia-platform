@@ -8,6 +8,7 @@ import {
   type Program,
   type Stage,
   type DevelopmentalBand,
+  type YouthProgram,
 } from "@/lib/engine/prompts";
 import {
   formatCatReferralForInnerCompass,
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
   // Load the conversation (RLS guarantees it's the Host's own) and confirm it's active.
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status, program, journey_id, origin_context")
+    .select("id, stage, status, program, youth_program, journey_id, origin_context")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
   }
   const stage = convo.stage as Stage;
   const program = convo.program as Program;
+  const youthProgram = convo.youth_program as YouthProgram | null;
   const journeyId = convo.journey_id as string | null;
 
   // Youth Journey: the developmental band lives on the Host's own profile
@@ -120,6 +122,7 @@ export async function POST(request: Request) {
       program,
       journeyId,
       developmentalBand,
+      youthProgram,
     });
     if (!result.ok) {
       return NextResponse.json(
@@ -145,7 +148,7 @@ export async function POST(request: Request) {
   // comment on why, CAT/InnerCompass carry forward whatever became visible
   // via the referral instead), so it's only read for that stage.
   const originContext = stage === "iap" ? convo?.origin_context ?? null : null;
-  let system = `${systemPromptFor(stage, program, developmentalBand, originContext)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
+  let system = `${systemPromptFor(stage, program, developmentalBand, originContext, youthProgram)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
   const { data: referral } = await supabase
     .from("referrals")
     .select("content")

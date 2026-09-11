@@ -180,9 +180,12 @@ export default function JourneyIntro({
       <div className="mt-8 rounded-lg border border-rule bg-white/[0.04] px-5 py-5 backdrop-blur-sm">
         <p className="leading-relaxed text-ink">
           You don&rsquo;t have to begin again. What became visible and understood during the
-          Journey can be carried forward through the Workbook, future conversations can build
-          from what has already become visible, rather than requiring you to reconstruct your
-          story every time.
+          Journey can be carried forward through the{" "}
+          <Link href="/workbook" prefetch={false} className="underline decoration-rule underline-offset-2 hover:text-seal">
+            Workbook
+          </Link>
+          , future conversations can build from what has already become visible, rather than
+          requiring you to reconstruct your story every time.
         </p>
       </div>
 

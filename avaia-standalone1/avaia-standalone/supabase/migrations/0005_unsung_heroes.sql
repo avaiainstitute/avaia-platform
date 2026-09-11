@@ -82,10 +82,10 @@ create table if not exists public.recognitions (
   primary_virtue        text,
   supporting_virtues    text[] not null default '{}',
   virtue_elements       text[] not null default '{}',
-  reflection            text not null, , why this mattered / why it was noticed, core, not optional
-  personal_insight      text not null, , what the observer recognized about themselves
-  community_impact      text not null, , how this moment affected people beyond the two involved
-  next_practice         text,          , what kind of person/community this points toward
+  reflection            text not null, -- why this mattered / why it was noticed, core, not optional
+  personal_insight      text not null, -- what the observer recognized about themselves
+  community_impact      text not null, -- how this moment affected people beyond the two involved
+  next_practice         text,          -- what kind of person/community this points toward
   questions_to_revisit  text[] not null default '{}',
   conversation_path     text not null check (conversation_path in (
                             'i_saw_someone', 'someone_recognized_me',

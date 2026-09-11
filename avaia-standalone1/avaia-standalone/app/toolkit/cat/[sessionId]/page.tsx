@@ -74,6 +74,7 @@ export default async function ToolkitCatSessionPage({
         stage: "cat",
         program: convo.program,
         journeyId: convo.journey_id,
+        youthProgram: convo.youth_program,
       });
       if (healed) {
         innerConvo = await findConversationByJourneyStage(supabase, convo.journey_id!, "innercompass");
@@ -89,7 +90,9 @@ export default async function ToolkitCatSessionPage({
         "innercompass",
         innerConvo.id,
         session.program,
-        session.session_context
+        session.session_context,
+        session.class_context,
+        session.youth_program
       );
       continueHref = `/toolkit/innercompass/${innerSessionId}`;
     }

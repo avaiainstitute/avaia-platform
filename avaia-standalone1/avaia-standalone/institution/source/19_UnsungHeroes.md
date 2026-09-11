@@ -72,13 +72,13 @@ the conversation as a grief program.
 ## Scope Currently Implemented
 
 Individual, self-guided Host conversations (adult and Youth). Guide-
-facilitated sessions for adult participants through the Guide Toolkit.
+facilitated sessions for adult and Youth participants through the Guide
+Toolkit (Youth gated by the same guardian-consent architecture as Youth
+Defying Grief).
 
 ## Explicitly Not Yet Built
 
-Guide-facilitated Youth Unsung Heroes remains deferred, matching the
-platform-wide Guide-facilitated Youth decision. Group, classroom, school,
-family-group, organization, and workplace delivery formats do not exist,
-only unused schema placeholders reference them. Unsung Heroes does not
-enter the core AVAIA Workbook; its own continuity record lives at
-`/unsung-heroes/dashboard`.
+Group, classroom, school, family-group, organization, and workplace
+delivery formats do not exist, only unused schema placeholders reference
+them. Unsung Heroes does not enter the core AVAIA Workbook; its own
+continuity record lives at `/unsung-heroes/dashboard`.

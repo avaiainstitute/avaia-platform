@@ -26,7 +26,8 @@ export type ToolKey =
   | "library"
   | "youth-defying-grief"
   | "youth-group"
-  | "view-from-above";
+  | "view-from-above"
+  | "youth-view-from-above";
 
 export type ToolStatus = "installed" | "specified-not-installed" | "not-yet-specified";
 
@@ -90,7 +91,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "table-formation",
     label: "Table Formation Engine",
-    description: "The structural framework for AVAIA conversations, Host, Guide, Witness, Council, and Self/Relationship/Virtue/Secondary Loss/Burden seats. Live inside every adult IAP, CAT, and InnerCompass conversation: seats are recognized and offered conversationally, never configured. See TABLE_FORMATION_INSTRUCTIONS in lib/engine/prompts.ts.",
+    description: "The structural framework for AVAIA conversations, Host, Guide, Witness, Council, and Self/Relationship/Virtue/Secondary Loss/Emotional Weight seats. Live inside every adult IAP, CAT, and InnerCompass conversation: seats are recognized and offered conversationally, never configured. See TABLE_FORMATION_INSTRUCTIONS in lib/engine/prompts.ts.",
     status: "installed",
     href: "/toolkit/table-formation",
   },
@@ -149,6 +150,13 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     description: "Ten classes built from the lessons that became visible on Bailand's Hike, Meaning, Reality, Dreams/Opportunities, Self-Trust, Decision-Making/Boundaries, Life's Vision, Connection, Control, Identity, and Attachment/Support, each paired with a Virtue Family. Facilitate here; a member can also take any class self-directed at /view-from-above.",
     status: "installed",
     href: "/toolkit/view-from-above",
+  },
+  {
+    key: "youth-view-from-above",
+    label: "Youth, The View from Above",
+    description: "Guide-facilitated Youth Individual Awareness Profile for a young participant after you've taught one of the ten classes live. Same canonical Youth engine as Youth Defying Grief, adapted by developmental band (8-11 / 12-14 / 15-17) and correctly threaded with The View From Above's own framing (not Defying Grief's), with the same guardian consent requirement. The specific class is recorded for continuity.",
+    status: "installed",
+    href: "/toolkit/youth-view-from-above",
   },
 ];
 
