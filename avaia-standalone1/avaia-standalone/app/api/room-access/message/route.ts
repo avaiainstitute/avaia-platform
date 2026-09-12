@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   // unlike the admin-client paths elsewhere in the Room feature.
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status, program, journey_id")
+    .select("id, stage, status, program, journey_id, origin_context")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
