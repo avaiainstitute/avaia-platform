@@ -156,7 +156,7 @@ export const VIRTUES: Virtue[] = [
   { symbol: "Pv", name: "Perseverance", family: "hard-work", definition: "Continued effort to do or achieve something   despite difficulties, failure, or opposition" },
   { symbol: "Pt", name: "Persistence", family: "hard-work", definition: "Having determination, being relentless and never-ceasing" },
   { symbol: "Sr", name: "Self-reliance", family: "hard-work", definition: "Reliance on one's own powers and resources rather than those of others." },
-  { symbol: "Tc", name: "Tenacity", family: "hard-work", definition: "Being persistent in maintaining, adhering to, or seeking something valued or desired THANKFUL Being conscious of benefit received" },
+  { symbol: "Tc", name: "Tenacity", family: "hard-work", definition: "Being persistent in maintaining, adhering to, or seeking something valued or desired" },
   { symbol: "Th", name: "Thrift", family: "hard-work", definition: "The careful use of money or other goods; being frugal" },
   { symbol: "Ti", name: "Time", family: "hard-work", definition: "the indefinite continued progress of existence and events in the past, present, and future regarded as a whole." },
   // Integrity
@@ -175,7 +175,7 @@ export const VIRTUES: Virtue[] = [
   { symbol: "Vu", name: "Vulnerability", family: "integrity", definition: "Being completely open and exposed physically, mentally, or emotionally to the possibility of anything that can happen" },
   // Gratitude
   { symbol: "Ap", name: "Appreciation", family: "gratitude", definition: "Showing gratitude or recognition of the good qualities of someone or something" },
-  { symbol: "Gt", name: "Gratefulness", family: "gratitude", definition: "warmly or deeply appreciative of kindness or benefits received; thankful: expressing deep felt gratitude HAPPINESS A mental or emotional state of well-being characterized by positive or pleasant emotions ranging from contentment to intense joy" },
+  { symbol: "Gt", name: "Gratefulness", family: "gratitude", definition: "warmly or deeply appreciative of kindness or benefits received; thankful: expressing deep felt gratitude" },
   { symbol: "Tf", name: "Thankfulness", family: "gratitude", definition: "Being conscious of benefit received." },
   // Humility
   { symbol: "Mk", name: "Meekness", family: "humility", definition: "The feeling of patience, being humble and submissive; having a disposition to be patient and long suffering" },
