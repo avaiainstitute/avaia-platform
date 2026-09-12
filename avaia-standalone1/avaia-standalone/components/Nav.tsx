@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isToolkitAuthorized } from "@/lib/guide";
+import { findActiveRoomForHost } from "@/lib/engine/room";
 import SignOutButton from "@/components/SignOutButton";
+import NavDropdown from "@/components/NavDropdown";
 
 // /journey, /defying-grief, /workbook, and /unsung-heroes all render
 // completely differently signed in vs signed out. Next prefetches links by
@@ -10,63 +12,29 @@ import SignOutButton from "@/components/SignOutButton";
 // Router Cache before the Host ever signs in, and later navigation to them
 // (even once actually signed in) can serve that stale anonymous snapshot
 // instead of refetching. prefetch={false} keeps every visit a real request.
-type NavLink = { href: string; label: string; prefetch: boolean };
+type NavLink = { href: string; label: string };
 
-// Signed-out visitors only need enough to understand AVAIA, understand
-// Defying Grief, and begin, not the full signed-in toolset (Workbook,
-// Shared with Me) sitting in front of them before they've done anything.
-// Unsung Heroes belongs here now that its signed-out page (see
-// UnsungHeroesIntro.tsx) actually explains what it is, instead of being a
-// bare "sign in to begin" stub. That distinction is the whole point of
-// this Nav being auth-aware instead of one static list. Left completely
-// unchanged by the role-based navigation pass below.
-const PUBLIC_LINKS: NavLink[] = [
-  { href: "/", label: "Home", prefetch: true },
-  { href: "/about", label: "About", prefetch: true },
-  { href: "/defying-grief", label: "Defying Grief", prefetch: false },
-  { href: "/chemistry", label: "The Chemistry of Virtue", prefetch: true },
-  { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
-  { href: "/still-needs-to-be-said", label: "What Still Needs to Be Said", prefetch: false },
-  { href: "/view-from-above", label: "The View from Above", prefetch: false },
-  { href: "/shared-room", label: "Shared Room", prefetch: true },
-  { href: "/membership", label: "Membership", prefetch: true },
-  { href: "/contact", label: "Contact", prefetch: true },
-  { href: "/sign-in", label: "Sign in", prefetch: true },
+// The 3 Programs, per the AVAIA architecture reconciliation: Defying Grief,
+// Unsung Heroes, and The View From Above are what a Host actually joins and
+// experiences. Everything else (Chemistry, Virtue Signature, What Still
+// Needs to Be Said, Workbook, Library, Shared Room) is an AVAIA Toolkit
+// tool a Program uses, not a destination in its own right, so it never
+// appears inside this same grouping.
+const PROGRAMS: NavLink[] = [
+  { href: "/defying-grief", label: "Defying Grief" },
+  { href: "/unsung-heroes", label: "Unsung Heroes" },
+  { href: "/view-from-above", label: "The View from Above" },
 ];
 
-// Signed-in Host navigation, split into two visual tiers rather than one
-// flat list of equal weight. Primary = continuity/participation; secondary
-// = the same public/program destinations as before, still one click away.
-// Both tiers still render as ordinary flex-wrap lists, the same responsive
-// mechanism the Nav already used, not a new dropdown/menu component. Shared
-// with Me isn't here, it's reachable from Workbook instead (where the
-// sharing feature itself lives), not as a top-level destination.
-//
-// Architecture reconciliation: Journey and Workbook are AVAIA tools, not
-// destinations a Host needs to understand or navigate to on their own
-// before they can participate. Both are removed from top navigation and
-// reached naturally through the Programs that use them instead: Home's
-// primary CTA already opens/resumes the Journey (plain /journey resumes
-// an active conversation rather than always starting over), and Defying
-// Grief already links to Workbook directly from within the program (see
-// app/defying-grief/page.tsx). JourneyIntro's own closing InnerCompass
-// screen, which already names the Workbook by name, now links there too.
-const HOST_PRIMARY_LINKS: NavLink[] = [
-  { href: "/", label: "Home", prefetch: true },
-  { href: "/library", label: "Library", prefetch: false },
-];
-
-const HOST_SECONDARY_LINKS: NavLink[] = [
-  { href: "/defying-grief", label: "Defying Grief", prefetch: false },
-  { href: "/chemistry", label: "The Chemistry of Virtue", prefetch: true },
-  { href: "/signature", label: "Virtue Signature", prefetch: false },
-  { href: "/unsung-heroes", label: "Unsung Heroes", prefetch: false },
-  { href: "/still-needs-to-be-said", label: "What Still Needs to Be Said", prefetch: false },
-  { href: "/view-from-above", label: "The View from Above", prefetch: false },
-  { href: "/shared-room", label: "Shared Room", prefetch: true },
-  { href: "/membership", label: "Membership", prefetch: true },
-  { href: "/contact", label: "Contact", prefetch: true },
-  { href: "/account", label: "Account", prefetch: false },
+// Everything a signed-in Host might reach outside the Programs themselves,
+// grouped under one menu rather than each sitting at the top level. See
+// this file's own history: a flat list of 8-10 equally-weighted links was
+// the exact "giant list" problem the role-based navigation pass replaced.
+const HOST_TOOLKIT_LINKS: NavLink[] = [
+  { href: "/workbook", label: "Workbook" },
+  { href: "/signature", label: "Virtue Signature" },
+  { href: "/still-needs-to-be-said", label: "What Still Needs to Be Said" },
+  { href: "/journey", label: "Continue Your Journey" },
 ];
 
 export default async function Nav() {
@@ -83,6 +51,7 @@ export default async function Nav() {
   let toolkitAuthorized = false;
   let isAdmin = false;
   let isOrgAdmin = false;
+  let activeRoomJoinPath: string | null = null;
   if (user) {
     toolkitAuthorized = await isToolkitAuthorized(supabase, user.id);
     // Same purely-for-discoverability posture as toolkitAuthorized above,
@@ -103,6 +72,12 @@ export default async function Nav() {
       .limit(1)
       .maybeSingle();
     isOrgAdmin = !!orgAdminRow;
+    // Shared Room, Part 2: a Host is sometimes also a seated participant in
+    // someone else's Room (guide_participants.linked_host_id, an existing
+    // mechanism, see lib/guide.ts). Only shown when that's actually true
+    // right now, see findActiveRoomForHost's own comment.
+    const activeRoom = await findActiveRoomForHost(user.id);
+    activeRoomJoinPath = activeRoom?.joinPath ?? null;
   }
 
   return (
@@ -118,30 +93,46 @@ export default async function Nav() {
         {user ? (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
             <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
-              {HOST_PRIMARY_LINKS.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    prefetch={l.prefetch}
-                    className="label text-ink hover:text-seal transition-colors"
-                  >
-                    {l.label}
+              <li>
+                <Link href="/" prefetch className="label text-ink hover:text-seal transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/library" prefetch={false} className="label text-ink hover:text-seal transition-colors">
+                  Library
+                </Link>
+              </li>
+              <li>
+                <NavDropdown label="Programs" links={PROGRAMS} />
+              </li>
+              <li>
+                <NavDropdown label="My AVAIA" links={HOST_TOOLKIT_LINKS} />
+              </li>
+              {activeRoomJoinPath && (
+                <li>
+                  <Link href={activeRoomJoinPath} className="label text-ink hover:text-seal transition-colors">
+                    Shared Room
                   </Link>
                 </li>
-              ))}
+              )}
             </ul>
             <ul className="flex flex-wrap items-center gap-x-5 gap-y-1 border-l border-rule pl-6">
-              {HOST_SECONDARY_LINKS.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    prefetch={l.prefetch}
-                    className="label hover:text-seal transition-colors"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/membership" prefetch className="label hover:text-seal transition-colors">
+                  Membership
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" prefetch className="label hover:text-seal transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/account" prefetch={false} className="label hover:text-seal transition-colors">
+                  Account
+                </Link>
+              </li>
               {toolkitAuthorized && (
                 <li>
                   <Link
@@ -149,7 +140,7 @@ export default async function Nav() {
                     prefetch={false}
                     className="label text-seal hover:opacity-80 transition-opacity"
                   >
-                    Guide
+                    Guide Toolkit
                   </Link>
                 </li>
               )}
@@ -182,17 +173,34 @@ export default async function Nav() {
           </div>
         ) : (
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
-            {PUBLIC_LINKS.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  prefetch={l.prefetch}
-                  className="label hover:text-seal transition-colors"
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link href="/" prefetch className="label hover:text-seal transition-colors">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="/about" prefetch className="label hover:text-seal transition-colors">
+                About
+              </Link>
+            </li>
+            <li>
+              <NavDropdown label="Programs" labelClassName="text-muted" links={PROGRAMS} />
+            </li>
+            <li>
+              <Link href="/chemistry" prefetch className="label hover:text-seal transition-colors">
+                The Chemistry of Virtue
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" prefetch className="label hover:text-seal transition-colors">
+                Contact
+              </Link>
+            </li>
+            <li>
+              <Link href="/sign-in" prefetch className="label hover:text-seal transition-colors">
+                Sign in
+              </Link>
+            </li>
           </ul>
         )}
       </nav>

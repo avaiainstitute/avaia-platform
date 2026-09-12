@@ -7,6 +7,7 @@ import {
   listRoomParticipants,
   loadRoomMessages,
   getRoomReferral,
+  listPendingTurnRequests,
 } from "@/lib/engine/room";
 import RoomView from "@/components/RoomView";
 
@@ -23,11 +24,12 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
   const room = await getRoom(supabase, params.roomId);
   if (!room || room.guide_id !== user.id) notFound();
 
-  const [participants, messages, roster, referral] = await Promise.all([
+  const [participants, messages, roster, referral, pendingTurnRequests] = await Promise.all([
     listRoomParticipants(supabase, room.id),
     loadRoomMessages(supabase, room.id),
     listGuideParticipants(supabase, user.id),
-    room.status === "complete" ? getRoomReferral(supabase, room.id) : Promise.resolve(null),
+    room.status === "complete" || room.status === "archived" ? getRoomReferral(supabase, room.id) : Promise.resolve(null),
+    listPendingTurnRequests(supabase, room.id),
   ]);
 
   return (
@@ -42,11 +44,18 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
 
       <div className="mt-8">
         <RoomView
-          room={{ id: room.id, title: room.title, status: room.status, program: room.program }}
+          room={{
+            id: room.id,
+            title: room.title,
+            status: room.status,
+            program: room.program,
+            floor_participant_id: room.floor_participant_id,
+          }}
           initialParticipants={participants}
           initialMessages={messages}
           roster={roster.map((r) => ({ id: r.id, name: r.name }))}
           initialReferral={referral as any}
+          initialPendingTurnRequests={pendingTurnRequests}
         />
       </div>
     </div>

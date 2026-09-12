@@ -6,6 +6,7 @@ import {
   loadRoomMessages,
   listActivePrivateSessions,
   getRoomReferral,
+  listPendingTurnRequests,
 } from "@/lib/engine/room";
 
 export const runtime = "nodejs";
@@ -27,12 +28,13 @@ export async function GET(request: Request, { params }: { params: { roomId: stri
     return NextResponse.json({ error: "Room not found." }, { status: 404 });
   }
 
-  const [participants, messages, activePrivateSessions, referral] = await Promise.all([
+  const [participants, messages, activePrivateSessions, referral, pendingTurnRequests] = await Promise.all([
     listRoomParticipants(supabase, room.id),
     loadRoomMessages(supabase, room.id),
     listActivePrivateSessions(supabase, room.id),
-    room.status === "complete" ? getRoomReferral(supabase, room.id) : Promise.resolve(null),
+    room.status === "complete" || room.status === "archived" ? getRoomReferral(supabase, room.id) : Promise.resolve(null),
+    listPendingTurnRequests(supabase, room.id),
   ]);
 
-  return NextResponse.json({ room, participants, messages, activePrivateSessions, referral });
+  return NextResponse.json({ room, participants, messages, activePrivateSessions, referral, pendingTurnRequests });
 }

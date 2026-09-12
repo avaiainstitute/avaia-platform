@@ -4492,9 +4492,41 @@ every other AVAIA conversation.`;
 // it. This is an entry point into the ordinary IAP, not a different
 // conversation type, everything else about IAP (safety core,
 // conversational freedom, GUARDRAILS) is completely unaffected.
-export type OriginContextInput = { source: string; label: string; family: string; definition: string };
+export type OriginContextInput =
+  | { source: "chemistry" | "view-from-above"; label: string; family: string; definition: string }
+  // Shared Room -> private conversation, see lib/engine/room.ts's
+  // buildRoomOriginContext. `items` is exactly what the participant
+  // themselves selected (their own contributions, one or several specific
+  // statements, a stretch of the conversation, or the whole thing), never
+  // gathered automatically, and never anything from anyone else's private
+  // conversation, room_messages is the shared thread only. Same jsonb
+  // origin_context column and same composition point as the other source
+  // above, no new mechanism, per the established discipline that this
+  // clause strengthens the stage instructions without replacing them.
+  | { source: "shared-room"; roomTitle: string | null; items: { speakerName: string; content: string }[] };
 
 export function originContextClause(origin: OriginContextInput): string {
+  if (origin.source === "shared-room") {
+    const roomLabel = origin.roomTitle ? `the Shared Room, "${origin.roomTitle}"` : "a Shared Room conversation";
+    const material = origin.items.map((it) => `${it.speakerName}: "${it.content}"`).join("\n\n");
+    return `ORIGIN CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+This Host just stepped out of ${roomLabel} into this private conversation, and chose,
+themselves, to bring the following material forward as context, exactly as it was said in
+the Room:
+
+${material}
+
+This is reference material only, for your own context, never to be recited back verbatim
+unless the Host asks. Do not assume why the Host brought this forward, or that it is the
+reason they stepped out at all, they may want to react to it, disagree with it, go
+somewhere it only loosely reminded them of, or something entirely different. Ask what's on
+their mind, or an equivalent open question in your own words, and follow wherever they
+actually take it, exactly as you would in any other IAP conversation. Do not treat the
+Room, or anyone else who was in it, as a topic to analyze on this Host's behalf, this
+conversation belongs to this Host alone, and nothing about it is owed back to the Room
+unless this Host separately chooses that later.`;
+  }
   const sourceLabel = origin.source === "chemistry" ? "the Chemistry of Virtue table" : "a class from The View from Above";
   return `ORIGIN CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
 

@@ -22,11 +22,20 @@ type RoomMessage = {
 type Room = {
   id: string;
   title: string | null;
-  status: "active" | "complete";
+  status: "active" | "paused" | "complete" | "archived";
   program: string;
+  floor_participant_id: string | null;
 };
 
 type RosterEntry = { id: string; name: string };
+
+type TurnRequest = {
+  id: string;
+  participant_id: string;
+  name: string;
+  status: "pending" | "recognized" | "withdrawn";
+  requested_at: string;
+};
 
 type RoomReferral = {
   roomTitle: string | null;
@@ -46,12 +55,14 @@ export default function RoomView({
   initialMessages,
   roster,
   initialReferral,
+  initialPendingTurnRequests,
 }: {
   room: Room;
   initialParticipants: Participant[];
   initialMessages: RoomMessage[];
   roster: RosterEntry[];
   initialReferral: RoomReferral | null;
+  initialPendingTurnRequests: TurnRequest[];
 }) {
   const router = useRouter();
   const [participants, setParticipants] = useState(initialParticipants);
@@ -66,6 +77,11 @@ export default function RoomView({
   const [closing, setClosing] = useState(false);
   const [referral, setReferral] = useState(initialReferral);
   const [error, setError] = useState("");
+  const [floorParticipantId, setFloorParticipantId] = useState(room.floor_participant_id);
+  const [pendingTurnRequests, setPendingTurnRequests] = useState(initialPendingTurnRequests);
+  const [inviteLinks, setInviteLinks] = useState<Record<string, string>>({});
+  const [copiedInviteFor, setCopiedInviteFor] = useState<string | null>(null);
+  const [statusBusy, setStatusBusy] = useState(false);
 
   const notSeated = roster.filter((r) => !participants.some((p) => p.participant_id === r.id));
 
@@ -173,11 +189,84 @@ export default function RoomView({
       if (res.ok) {
         setMessages(data.messages ?? messages);
         setParticipants(data.participants ?? participants);
+        setPendingTurnRequests(data.pendingTurnRequests ?? pendingTurnRequests);
+        setFloorParticipantId(data.room?.floor_participant_id ?? floorParticipantId);
         const stillPending = new Set((data.activePrivateSessions ?? []).map((s: { participant_id: string }) => s.participant_id));
         setPendingPrivate((p) => p.filter((x) => stillPending.has(x.participantId)));
       }
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  /** Generates (or reuses) this participant's durable Room-join link, the
+   *  "normal flow" invitation from Part A. Unlike startPrivate's one-time
+   *  link, this one keeps working for repeat visits until revoked. */
+  async function getInvite(participantId: string) {
+    setError("");
+    const res = await fetch(`/api/room/${room.id}/invite`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ participantId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error || "Could not create an invitation.");
+      return;
+    }
+    setInviteLinks((links) => ({ ...links, [participantId]: data.inviteUrl }));
+  }
+
+  async function copyInvite(url: string, participantId: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedInviteFor(participantId);
+      setTimeout(() => setCopiedInviteFor(null), 2000);
+    } catch {
+      /* clipboard unavailable, link is still shown on screen to copy manually */
+    }
+  }
+
+  /** Recognizes one raised hand, setting the visible floor. Not a lock,
+   *  see lib/engine/room.ts's recognizeTurn: every seated participant can
+   *  still post, this only changes who the Room sees as speaking. */
+  async function recognize(requestId: string, participantId: string) {
+    const res = await fetch(`/api/room/${room.id}/turn`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requestId }),
+    });
+    if (res.ok) {
+      setPendingTurnRequests((r) => r.filter((x) => x.id !== requestId));
+      setFloorParticipantId(participantId);
+    }
+  }
+
+  async function clearFloorNow() {
+    const res = await fetch(`/api/room/${room.id}/turn`, { method: "DELETE" });
+    if (res.ok) setFloorParticipantId(null);
+  }
+
+  /** Pause/reopen/archive/unarchive, all reversible. Uses router.refresh()
+   *  the same way closeRoom already does, so this component's status-
+   *  dependent rendering (which reads the room prop directly, same as
+   *  before this Part 1 change) picks up the new status from the server. */
+  async function changeStatus(action: "pause" | "reopen" | "archive" | "unarchive") {
+    setStatusBusy(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/room/${room.id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not change this Room's status.");
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setStatusBusy(false);
     }
   }
 
@@ -210,6 +299,9 @@ export default function RoomView({
             >
               {p.name}
               {p.developmental_band && <span className="text-xs text-muted">({p.developmental_band})</span>}
+              {floorParticipantId === p.participant_id && (
+                <span className="text-xs text-seal" title="Has the floor">●</span>
+              )}
               {room.status === "active" && (
                 <button
                   onClick={() => removeParticipant(p.participant_id)}
@@ -222,6 +314,60 @@ export default function RoomView({
             </span>
           ))}
         </div>
+
+        {/* Each seated participant's own way into the Room, from their own
+            device, no screen-sharing, no Guide typing for them. Durable,
+            not one-time, see getOrCreateRoomInvitation. */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {participants.map((p) => (
+            <div key={p.participant_id} className="flex items-center gap-2">
+              {!inviteLinks[p.participant_id] ? (
+                <button
+                  onClick={() => getInvite(p.participant_id)}
+                  className="rounded-md border border-rule px-3 py-1.5 text-xs font-medium text-muted hover:border-seal hover:text-ink"
+                >
+                  Get {p.name}&rsquo;s invitation to the Room
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 rounded-md border border-rule bg-white/[0.04] px-2 py-1">
+                  <code className="max-w-[16rem] truncate text-xs text-ink">{inviteLinks[p.participant_id]}</code>
+                  <button
+                    onClick={() => copyInvite(inviteLinks[p.participant_id], p.participant_id)}
+                    className="text-xs font-medium text-muted hover:text-seal"
+                  >
+                    {copiedInviteFor === p.participant_id ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {pendingTurnRequests.length > 0 && (
+          <div className="mt-4 rounded-md border border-seal/40 bg-seal/[0.06] p-3">
+            <p className="label mb-2 text-muted">Waiting to Speak</p>
+            <div className="flex flex-wrap gap-2">
+              {pendingTurnRequests.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => recognize(r.id, r.participant_id)}
+                  className="rounded-full border border-rule bg-white/[0.04] px-3 py-1 text-xs text-ink hover:border-seal"
+                >
+                  Recognize {r.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {floorParticipantId && (
+          <p className="mt-3 text-xs text-muted">
+            The floor is with {participants.find((p) => p.participant_id === floorParticipantId)?.name ?? "a participant"}.{" "}
+            <button onClick={clearFloorNow} className="underline hover:text-seal">
+              Clear
+            </button>
+          </p>
+        )}
+
         {room.status === "active" && notSeated.length > 0 && (
           <div className="mt-3 flex gap-2">
             <select
@@ -345,14 +491,38 @@ export default function RoomView({
             <p className="label mb-3 text-muted">Close This Room</p>
             <p className="text-muted">
               Generates the Room&rsquo;s own closing record from the shared conversation above.
-              Nothing any participant kept private is included.
+              Nothing any participant kept private is included. Closing isn&rsquo;t final, this
+              Room can be reopened later with its full history intact.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={closeRoom}
+                disabled={closing || messages.length === 0}
+                className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink hover:border-seal disabled:opacity-50"
+              >
+                {closing ? "Closing…" : "Close Room"}
+              </button>
+              <button
+                onClick={() => changeStatus("pause")}
+                disabled={statusBusy}
+                className="rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-muted hover:border-seal hover:text-ink disabled:opacity-50"
+              >
+                Pause Room
+              </button>
+            </div>
+          </>
+        ) : room.status === "paused" ? (
+          <>
+            <p className="label mb-3 text-muted">This Room Is Paused</p>
+            <p className="text-muted">
+              Still here to reread. No one can add new turns until it&rsquo;s reopened.
             </p>
             <button
-              onClick={closeRoom}
-              disabled={closing || messages.length === 0}
+              onClick={() => changeStatus("reopen")}
+              disabled={statusBusy}
               className="mt-3 rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink hover:border-seal disabled:opacity-50"
             >
-              {closing ? "Closing…" : "Close Room"}
+              Reopen Room
             </button>
           </>
         ) : referral ? (
@@ -409,11 +579,63 @@ export default function RoomView({
                 </div>
               )}
             </div>
+            <RoomLifecycleControls status={room.status} busy={statusBusy} onChange={changeStatus} />
           </>
         ) : (
-          <p className="text-muted">This Room is closed.</p>
+          <>
+            <p className="text-muted">
+              {room.status === "archived" ? "This Room is archived, but its history is still here." : "This Room is closed."}
+            </p>
+            <RoomLifecycleControls status={room.status} busy={statusBusy} onChange={changeStatus} />
+          </>
         )}
       </section>
+    </div>
+  );
+}
+
+/** The reversible half of a Room's lifecycle: a completed or archived
+ *  Room's history is never gone, only its current status changes. Kept as
+ *  a small helper since it's rendered from three different branches above
+ *  (with referral, without one, and could apply to either status). */
+function RoomLifecycleControls({
+  status,
+  busy,
+  onChange,
+}: {
+  status: "active" | "paused" | "complete" | "archived";
+  busy: boolean;
+  onChange: (action: "pause" | "reopen" | "archive" | "unarchive") => void;
+}) {
+  return (
+    <div className="mt-6 flex flex-wrap gap-2 border-t border-rule pt-6">
+      {status === "complete" && (
+        <>
+          <button
+            onClick={() => onChange("reopen")}
+            disabled={busy}
+            className="rounded-md border border-rule px-4 py-2 text-sm font-medium text-ink hover:border-seal disabled:opacity-50"
+          >
+            Reopen Room
+          </button>
+          <button
+            onClick={() => onChange("archive")}
+            disabled={busy}
+            className="rounded-md border border-rule px-4 py-2 text-sm font-medium text-muted hover:border-seal hover:text-ink disabled:opacity-50"
+          >
+            Archive Room
+          </button>
+        </>
+      )}
+      {status === "archived" && (
+        <button
+          onClick={() => onChange("unarchive")}
+          disabled={busy}
+          className="rounded-md border border-rule px-4 py-2 text-sm font-medium text-ink hover:border-seal disabled:opacity-50"
+        >
+          Unarchive Room
+        </button>
+      )}
     </div>
   );
 }

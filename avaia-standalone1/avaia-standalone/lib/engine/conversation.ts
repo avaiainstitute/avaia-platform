@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Anthropic from "@anthropic-ai/sdk";
-import type { Program, Stage, YouthProgram } from "./prompts";
+import type { Program, Stage, YouthProgram, OriginContextInput } from "./prompts";
 
 export const STAGE_ORDER: Stage[] = ["iap", "cat", "innercompass"];
 
@@ -97,7 +97,7 @@ export async function createConversation(
   opening?: string,
   program: Program = "general",
   journeyId?: string | null,
-  originContext?: { source: string; label: string; family: string; definition: string } | null,
+  originContext?: OriginContextInput | null,
   youthProgram?: YouthProgram | null
 ): Promise<DbConversation> {
   const { data, error } = await supabase

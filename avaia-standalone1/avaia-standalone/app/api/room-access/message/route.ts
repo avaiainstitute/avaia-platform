@@ -1,13 +1,46 @@
 import { NextResponse } from "next/server";
 import { authenticateBearer } from "@/lib/supabase/bearer";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
-import { AVAIA_MODEL, systemPromptFor, REFERRAL_HANDLED_BY_SITE, type Stage, type Program } from "@/lib/engine/prompts";
+import {
+  AVAIA_MODEL,
+  systemPromptFor,
+  REFERRAL_HANDLED_BY_SITE,
+  type Stage,
+  type Program,
+  type DevelopmentalBand,
+} from "@/lib/engine/prompts";
 import { loadMessages, toAnthropicMessages } from "@/lib/engine/conversation";
 import { extractFocus } from "@/lib/virtue-focus";
 import { recordAiUsage } from "@/lib/engine/ai-usage";
+import { isFinishIntent } from "@/lib/engine/finish-intent";
+import { generateReferral } from "@/lib/engine/referral-generation";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Youth band for a Room-originated private conversation lives on
+ *  guide_participants.developmental_band, found via room_private_sessions,
+ *  never via guide_sessions (there is none, by design, see room.ts) or
+ *  profiles (this participant's auto-provisioned account has none set).
+ *  Uses the admin client for this one narrow, read-only lookup, the
+ *  caller has already proven ownership of conversationId via their own
+ *  RLS-scoped fetch before this is ever called. */
+async function resolveRoomParticipantBand(conversationId: string): Promise<DevelopmentalBand | null> {
+  const admin = createAdminClient();
+  const { data: rps } = await admin
+    .from("room_private_sessions")
+    .select("participant_id")
+    .eq("conversation_id", conversationId)
+    .maybeSingle();
+  if (!rps) return null;
+  const { data: participant } = await admin
+    .from("guide_participants")
+    .select("developmental_band")
+    .eq("id", rps.participant_id as string)
+    .maybeSingle();
+  return (participant?.developmental_band as DevelopmentalBand | null) ?? null;
+}
 
 /** The private-processing equivalent of /api/conversation, same engine
  *  (systemPromptFor, GUARDRAILS, the real IAP instruction set), deliberately
@@ -17,12 +50,17 @@ export const dynamic = "force-dynamic";
  *  Guide's signed-in browser, there is no cookie session to read here,
  *  and there must never be one for this route to work correctly.
  *
- *  Non-streaming (unlike /api/conversation), a deliberate scope choice
- *  for this first pass, not a capability gap: private processing here is a
- *  reflective detour inside a Room, not a full completable IAP/CAT/
- *  InnerCompass Journey with its own referral handoff. If that changes,
- *  this route is the place to add finish-intent/generateReferral, reusing
- *  the exact same functions /api/conversation already does. */
+ *  FINISHED (Shared Room completion, Part E): this is now a genuinely
+ *  completable IAP/CAT/InnerCompass Journey, not a substitute. The same
+ *  isFinishIntent/generateReferral this conversation would get through
+ *  the ordinary /api/conversation route is reused verbatim here, so a
+ *  participant who says "I'm ready to move forward" (or the button-driven
+ *  equivalent, once the participant UI offers one) advances exactly the
+ *  same way, and the resulting CAT/InnerCompass conversation is created
+ *  under this same participant's own auth.uid() by createConversation,
+ *  same as it always would be, still with no guide_sessions row (nothing
+ *  about advancing stages creates one), so the Guide never gains any new
+ *  visibility into it by continuing. */
 export async function POST(request: Request) {
   const auth = await authenticateBearer(request);
   if (!auth) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
@@ -40,7 +78,7 @@ export async function POST(request: Request) {
   // unlike the admin-client paths elsewhere in the Room feature.
   const { data: convo } = await supabase
     .from("conversations")
-    .select("id, stage, status, program")
+    .select("id, stage, status, program, journey_id")
     .eq("id", conversationId)
     .maybeSingle();
   if (!convo) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
@@ -49,6 +87,8 @@ export async function POST(request: Request) {
   }
   const stage = convo.stage as Stage;
   const program = convo.program as Program;
+  const journeyId = convo.journey_id as string | null;
+  const developmentalBand = program === "youth" ? await resolveRoomParticipantBand(conversationId) : null;
 
   const crisis = detectCrisis(message);
   if (crisis) {
@@ -66,7 +106,59 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Your message couldn't be saved. Please try again." }, { status: 500 });
   }
 
-  let system = `${systemPromptFor(stage, program, null)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
+  // Same convergence /api/conversation already applies: the participant
+  // may type completion in ordinary language instead of a dedicated
+  // button. Reuses generateReferral/advanceToNextStage exactly as-is.
+  if (isFinishIntent(message)) {
+    const result = await generateReferral(supabase, userId, {
+      id: conversationId,
+      stage,
+      program,
+      journeyId,
+      developmentalBand,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+    if (result.done) {
+      return NextResponse.json(
+        { finished: true, done: true, summary: result.summary },
+        { headers: { "x-avaia-finished": "1", "x-avaia-crisis": crisis ? "1" : "0" } }
+      );
+    }
+    // Advancing to CAT/InnerCompass: the new stage's conversation already
+    // exists (advanceToNextStage created it), resolve it here under this
+    // same bearer-scoped, RLS-respecting client (auth.uid() = host_id
+    // already guarantees this is this participant's own), so the private-
+    // processing UI can continue chatting in the next stage without a
+    // second round trip or any cookie-session page redirect, which this
+    // isolated client has no equivalent of.
+    const { data: nextConvo } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("journey_id", journeyId)
+      .eq("stage", result.nextStage as string)
+      .maybeSingle();
+    let nextOpening: string | null = null;
+    if (nextConvo?.id) {
+      const nextMessages = await loadMessages(supabase, nextConvo.id as string);
+      nextOpening = nextMessages[0]?.content ?? null;
+    }
+    return NextResponse.json(
+      {
+        finished: true,
+        done: false,
+        nextStage: result.nextStage,
+        nextConversationId: nextConvo?.id ?? null,
+        nextOpening,
+        summary: result.summary,
+      },
+      { headers: { "x-avaia-finished": "1", "x-avaia-crisis": crisis ? "1" : "0" } }
+    );
+  }
+
+  const originContext = stage === "iap" ? convo?.origin_context ?? null : null;
+  let system = `${systemPromptFor(stage, program, developmentalBand, originContext)}\n\n${"=".repeat(60)}\n\n${REFERRAL_HANDLED_BY_SITE}`;
   const dbMessages = await loadMessages(supabase, conversationId);
   let convoMessages = dbMessages;
   if (dbMessages[0]?.role === "guide") {

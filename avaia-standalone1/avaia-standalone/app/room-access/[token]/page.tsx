@@ -34,6 +34,12 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
   const [returning, setReturning] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [suggestError, setSuggestError] = useState("");
+  // Which stage's conversation this chat is currently talking to, only
+  // ever advances forward (IAP -> CAT -> InnerCompass) via the same
+  // finish-intent convergence the ordinary Journey uses, see
+  // app/api/room-access/message/route.ts's own comment on why this is now
+  // a real, completable Journey rather than a substitute.
+  const [journeyDone, setJourneyDone] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -86,6 +92,28 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      if (data.finished) {
+        if (data.done) {
+          // InnerCompass just completed, the whole Journey is done. This
+          // stays exactly as private as every message before it, nothing
+          // here is shown to the Guide or the Room.
+          setJourneyDone(true);
+          setMessages((m) => [
+            ...m,
+            {
+              role: "guide",
+              content:
+                "You've completed this part of your Journey. What became visible here stays yours, the same as everything else in this private conversation.",
+            },
+          ]);
+        } else if (data.nextConversationId) {
+          // Advancing IAP -> CAT or CAT -> InnerCompass, same Journey,
+          // same participant, just the next stage's own conversation row.
+          setConversationId(data.nextConversationId);
+          setMessages((m) => [...m, { role: "guide", content: data.nextOpening ?? "Let's continue." }]);
+        }
+        return;
+      }
       setMessages((m) => [...m, { role: "guide", content: data.reply }]);
     } catch (e) {
       setMessages((m) => [
@@ -186,23 +214,25 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
 
       {phase === "chatting" && (
         <>
-          <div className="mt-4 flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              disabled={sending}
-              placeholder="Type here..."
-              className="flex-1 rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink outline-none focus:border-seal"
-            />
-            <button
-              onClick={send}
-              disabled={sending}
-              className="rounded-md bg-seal px-4 py-2 font-sans text-sm font-semibold text-[#05060b] disabled:opacity-50"
-            >
-              Send
-            </button>
-          </div>
+          {!journeyDone && (
+            <div className="mt-4 flex gap-2">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && send()}
+                disabled={sending}
+                placeholder="Type here..."
+                className="flex-1 rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink outline-none focus:border-seal"
+              />
+              <button
+                onClick={send}
+                disabled={sending}
+                className="rounded-md bg-seal px-4 py-2 font-sans text-sm font-semibold text-[#05060b] disabled:opacity-50"
+              >
+                Send
+              </button>
+            </div>
+          )}
           <button
             onClick={() => setPhase("choosing-return")}
             className="mt-4 text-sm text-muted underline hover:text-seal"
