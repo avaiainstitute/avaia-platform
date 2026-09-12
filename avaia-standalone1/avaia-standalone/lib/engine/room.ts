@@ -400,7 +400,14 @@ export type RoomContextSelection =
   | { mode: "none" }
   | { mode: "own"; participantId: string }
   | { mode: "messageIds"; messageIds: string[] }
-  | { mode: "all" };
+  | { mode: "all" }
+  // Lets a participant carry Shared Workbook items (not raw shared-thread
+  // messages) into a new private conversation, the one place the Shared
+  // Room Workbook connects to a participant's OWN personal Workbook: once
+  // that private IAP exists, it's an ordinary conversation and already
+  // shows up in /workbook like any other, no separate "personal saved
+  // items" concept invented for this. See buildRoomOriginContext below.
+  | { mode: "workbookItemIds"; itemIds: string[] };
 
 /** Resolves a participant's own Room-material choice into origin context
  *  for their private conversation. Reads only room_messages (the shared
@@ -414,6 +421,22 @@ export async function buildRoomOriginContext(
   selection: RoomContextSelection
 ): Promise<OriginContextInput | null> {
   if (selection.mode === "none") return null;
+
+  if (selection.mode === "workbookItemIds") {
+    const { data: rows } = await supabase
+      .from("room_workbook_items")
+      .select("content, speaker_name")
+      .eq("room_id", roomId)
+      .in("id", selection.itemIds);
+    const items = ((rows as { content: string; speaker_name: string | null }[]) ?? []).map((r) => ({
+      speakerName: r.speaker_name ?? "The Room",
+      content: r.content,
+    }));
+    if (items.length === 0) return null;
+    const room = await getRoom(supabase, roomId);
+    return { source: "shared-room", roomTitle: room?.title ?? null, items };
+  }
+
   const room = await getRoom(supabase, roomId);
   const allMessages = await loadRoomMessages(supabase, roomId);
 
@@ -1214,4 +1237,227 @@ export async function findActiveRoomForHost(hostId: string): Promise<{ joinPath:
   const result = await getOrCreateRoomInvitation(admin, match.room_id, match.guide_participant_id, "");
   if ("error" in result) return null;
   return { joinPath: result.inviteUrl };
+}
+
+// ===========================================================================
+// SHARED ROOM WORKBOOK ("OURS"), never merged with a Host's own private
+// Workbook, which stays exactly what it already is: a derived view over
+// that Host's own conversations/referrals/Virtue Signature, see
+// app/workbook/page.tsx. This Room-owned equivalent is a curated list of
+// what the Table intentionally chose to KEEP, not a copy of the full
+// conversation (room_messages already IS that complete record, and stays
+// completely unread by anything in this section except the one explicit
+// "save this message" action below).
+//
+// Two sources are unioned into one Workbook feed:
+//   - room_workbook_items (migration 0068): a saved shared-thread message,
+//     or a freeform note, either added by the Guide or by a seated
+//     participant.
+//   - room_shared_items (migration 0051, untouched): private material a
+//     participant already explicitly chose to bring forward via the
+//     existing, already-tested private step-out "brought forward" flow.
+//     Reading it here does not change what that flow does.
+//
+// Same ownership posture as every other Room table: guide-owner RLS for
+// the Guide's own cookie-scoped client, admin-client-plus-
+// resolveSeatedParticipant for a participant, exactly like every other
+// participant-facing function above. Room authorization is the only gate;
+// nothing here checks any OTHER AVAIA role.
+// ===========================================================================
+
+export type RoomWorkbookItem = {
+  id: string;
+  content: string;
+  /** Whose words this is, when that's meaningful; null for a Room-level
+   *  note or a saved AVAIA/Witness turn. */
+  speakerName: string | null;
+  source: "room_message" | "note" | "private_share";
+  /** Who performed the save/share action, distinct from speakerName. */
+  addedByName: string;
+  createdAt: string;
+  /** Which room_messages row this came from, when source='room_message';
+   *  lets the shared-thread UI show "Saved" instead of a duplicate save
+   *  button for a message already kept. */
+  sourceRoomMessageId: string | null;
+};
+
+export async function listRoomWorkbookItems(
+  supabase: SupabaseClient,
+  roomId: string
+): Promise<RoomWorkbookItem[]> {
+  const [{ data: items }, { data: shared }] = await Promise.all([
+    supabase
+      .from("room_workbook_items")
+      .select("id, content, speaker_name, source, added_by_name, created_at, source_room_message_id")
+      .eq("room_id", roomId),
+    supabase
+      .from("room_shared_items")
+      .select("id, participant_id, content, created_at")
+      .eq("room_id", roomId),
+  ]);
+
+  const sharedRows =
+    (shared as { id: string; participant_id: string; content: string; created_at: string }[]) ?? [];
+  let namesById = new Map<string, string>();
+  if (sharedRows.length > 0) {
+    const { data: people } = await supabase
+      .from("guide_participants")
+      .select("id, name")
+      .in("id", sharedRows.map((r) => r.participant_id));
+    namesById = new Map(((people as { id: string; name: string }[]) ?? []).map((p) => [p.id, p.name]));
+  }
+
+  const fromWorkbook: RoomWorkbookItem[] = (
+    (items as {
+      id: string;
+      content: string;
+      speaker_name: string | null;
+      source: "room_message" | "note";
+      added_by_name: string;
+      created_at: string;
+      source_room_message_id: string | null;
+    }[]) ?? []
+  ).map((r) => ({
+    id: r.id,
+    content: r.content,
+    speakerName: r.speaker_name,
+    source: r.source,
+    addedByName: r.added_by_name,
+    createdAt: r.created_at,
+    sourceRoomMessageId: r.source_room_message_id,
+  }));
+
+  const fromShared: RoomWorkbookItem[] = sharedRows.map((r) => {
+    const name = namesById.get(r.participant_id) ?? "Participant";
+    return {
+      id: r.id,
+      content: r.content,
+      speakerName: name,
+      source: "private_share" as const,
+      addedByName: name,
+      createdAt: r.created_at,
+      sourceRoomMessageId: null,
+    };
+  });
+
+  return [...fromWorkbook, ...fromShared].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Guide-side ownership check + fetch, mirrors the pattern every
+ *  app/api/room/[roomId]/* route already uses (getRoom, compare guide_id
+ *  to the signed-in user, 404 rather than 403 on mismatch). */
+export async function getRoomWorkbookForGuide(
+  supabase: SupabaseClient,
+  roomId: string
+): Promise<RoomWorkbookItem[]> {
+  return listRoomWorkbookItems(supabase, roomId);
+}
+
+export async function getRoomWorkbookForParticipant(
+  roomId: string,
+  bearerUserId: string
+): Promise<{ items: RoomWorkbookItem[] } | { error: string }> {
+  const admin = createAdminClient();
+  const seated = await resolveSeatedParticipant(admin, roomId, bearerUserId);
+  if (!seated) return { error: "You aren't currently seated in this Room." };
+  const items = await listRoomWorkbookItems(admin, roomId);
+  return { items };
+}
+
+async function insertWorkbookItemFromMessage(
+  client: SupabaseClient,
+  roomId: string,
+  messageId: string,
+  addedBy: { participantId: string | null; name: string }
+): Promise<{ ok: true } | { error: string }> {
+  const { data: message } = await client
+    .from("room_messages")
+    .select("id, speaker_participant_id, content")
+    .eq("id", messageId)
+    .eq("room_id", roomId)
+    .maybeSingle();
+  if (!message) return { error: "That message could not be found." };
+
+  let speakerName: string | null = null;
+  if (message.speaker_participant_id) {
+    const { data: person } = await client
+      .from("guide_participants")
+      .select("name")
+      .eq("id", message.speaker_participant_id as string)
+      .maybeSingle();
+    speakerName = (person?.name as string | undefined) ?? null;
+  }
+
+  const { error } = await client.from("room_workbook_items").insert({
+    room_id: roomId,
+    content: message.content,
+    speaker_name: speakerName,
+    source: "room_message",
+    source_room_message_id: message.id,
+    added_by_participant_id: addedBy.participantId,
+    added_by_name: addedBy.name,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function saveRoomMessageToWorkbookAsGuide(
+  supabase: SupabaseClient,
+  roomId: string,
+  messageId: string
+): Promise<{ ok: true } | { error: string }> {
+  return insertWorkbookItemFromMessage(supabase, roomId, messageId, { participantId: null, name: "Your Guide" });
+}
+
+export async function saveRoomMessageToWorkbookAsParticipant(
+  roomId: string,
+  bearerUserId: string,
+  messageId: string
+): Promise<{ ok: true } | { error: string }> {
+  const admin = createAdminClient();
+  const seated = await resolveSeatedParticipant(admin, roomId, bearerUserId);
+  if (!seated) return { error: "You aren't currently seated in this Room." };
+  return insertWorkbookItemFromMessage(admin, roomId, messageId, {
+    participantId: seated.participantId,
+    name: seated.name,
+  });
+}
+
+async function insertWorkbookNote(
+  client: SupabaseClient,
+  roomId: string,
+  content: string,
+  addedBy: { participantId: string | null; name: string }
+): Promise<{ ok: true } | { error: string }> {
+  const trimmed = content.trim();
+  if (!trimmed) return { error: "Nothing to save." };
+  const { error } = await client.from("room_workbook_items").insert({
+    room_id: roomId,
+    content: trimmed,
+    speaker_name: null,
+    source: "note",
+    added_by_participant_id: addedBy.participantId,
+    added_by_name: addedBy.name,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+export async function addRoomWorkbookNoteAsGuide(
+  supabase: SupabaseClient,
+  roomId: string,
+  content: string
+): Promise<{ ok: true } | { error: string }> {
+  return insertWorkbookNote(supabase, roomId, content, { participantId: null, name: "Your Guide" });
+}
+
+export async function addRoomWorkbookNoteAsParticipant(
+  roomId: string,
+  bearerUserId: string,
+  content: string
+): Promise<{ ok: true } | { error: string }> {
+  const admin = createAdminClient();
+  const seated = await resolveSeatedParticipant(admin, roomId, bearerUserId);
+  if (!seated) return { error: "You aren't currently seated in this Room." };
+  return insertWorkbookNote(admin, roomId, content, { participantId: seated.participantId, name: seated.name });
 }

@@ -8,6 +8,7 @@ import {
   loadRoomMessages,
   getRoomReferral,
   listPendingTurnRequests,
+  getRoomWorkbookForGuide,
 } from "@/lib/engine/room";
 import RoomView from "@/components/RoomView";
 
@@ -24,12 +25,13 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
   const room = await getRoom(supabase, params.roomId);
   if (!room || room.guide_id !== user.id) notFound();
 
-  const [participants, messages, roster, referral, pendingTurnRequests] = await Promise.all([
+  const [participants, messages, roster, referral, pendingTurnRequests, workbookItems] = await Promise.all([
     listRoomParticipants(supabase, room.id),
     loadRoomMessages(supabase, room.id),
     listGuideParticipants(supabase, user.id),
     room.status === "complete" || room.status === "archived" ? getRoomReferral(supabase, room.id) : Promise.resolve(null),
     listPendingTurnRequests(supabase, room.id),
+    getRoomWorkbookForGuide(supabase, room.id),
   ]);
 
   return (
@@ -56,6 +58,7 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
           roster={roster.map((r) => ({ id: r.id, name: r.name }))}
           initialReferral={referral as any}
           initialPendingTurnRequests={pendingTurnRequests}
+          initialWorkbookItems={workbookItems}
         />
       </div>
     </div>

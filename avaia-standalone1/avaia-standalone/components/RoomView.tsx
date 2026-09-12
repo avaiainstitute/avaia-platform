@@ -37,6 +37,19 @@ type TurnRequest = {
   requested_at: string;
 };
 
+// The Room's own curated Shared Workbook, "OURS", not the Guide's or any
+// Host's personal Workbook (which lives entirely at /workbook and is
+// untouched by anything here). See lib/engine/room.ts's own comment.
+type WorkbookItem = {
+  id: string;
+  content: string;
+  speakerName: string | null;
+  source: "room_message" | "note" | "private_share";
+  addedByName: string;
+  createdAt: string;
+  sourceRoomMessageId: string | null;
+};
+
 type RoomReferral = {
   roomTitle: string | null;
   whatWeWereLookingAt: string;
@@ -56,6 +69,7 @@ export default function RoomView({
   roster,
   initialReferral,
   initialPendingTurnRequests,
+  initialWorkbookItems,
 }: {
   room: Room;
   initialParticipants: Participant[];
@@ -63,6 +77,7 @@ export default function RoomView({
   roster: RosterEntry[];
   initialReferral: RoomReferral | null;
   initialPendingTurnRequests: TurnRequest[];
+  initialWorkbookItems: WorkbookItem[];
 }) {
   const router = useRouter();
   const [participants, setParticipants] = useState(initialParticipants);
@@ -82,8 +97,15 @@ export default function RoomView({
   const [inviteLinks, setInviteLinks] = useState<Record<string, string>>({});
   const [copiedInviteFor, setCopiedInviteFor] = useState<string | null>(null);
   const [statusBusy, setStatusBusy] = useState(false);
+  const [workbookItems, setWorkbookItems] = useState(initialWorkbookItems);
+  const [savingMessageId, setSavingMessageId] = useState<string | null>(null);
+  const [noteInput, setNoteInput] = useState("");
+  const [addingNote, setAddingNote] = useState(false);
 
   const notSeated = roster.filter((r) => !participants.some((p) => p.participant_id === r.id));
+  const savedMessageIds = new Set(
+    workbookItems.map((w) => w.sourceRoomMessageId).filter((id): id is string => !!id)
+  );
 
   async function addParticipant() {
     if (!addPick) return;
@@ -194,6 +216,7 @@ export default function RoomView({
         const stillPending = new Set((data.activePrivateSessions ?? []).map((s: { participant_id: string }) => s.participant_id));
         setPendingPrivate((p) => p.filter((x) => stillPending.has(x.participantId)));
       }
+      await refreshWorkbook();
     } finally {
       setRefreshing(false);
     }
@@ -245,6 +268,56 @@ export default function RoomView({
   async function clearFloorNow() {
     const res = await fetch(`/api/room/${room.id}/turn`, { method: "DELETE" });
     if (res.ok) setFloorParticipantId(null);
+  }
+
+  /** Explicitly keeps one shared-thread message in the Room's own Shared
+   *  Workbook. Never automatic, see this file's own Shared Workbook
+   *  section comment. */
+  async function saveMessageToWorkbook(messageId: string) {
+    setSavingMessageId(messageId);
+    setError("");
+    try {
+      const res = await fetch(`/api/room/${room.id}/workbook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save_message", messageId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not save that to the Shared Workbook.");
+      await refreshWorkbook();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setSavingMessageId(null);
+    }
+  }
+
+  async function addNote() {
+    const content = noteInput.trim();
+    if (!content) return;
+    setAddingNote(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/room/${room.id}/workbook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_note", content }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not add that note.");
+      setNoteInput("");
+      await refreshWorkbook();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setAddingNote(false);
+    }
+  }
+
+  async function refreshWorkbook() {
+    const res = await fetch(`/api/room/${room.id}/workbook`);
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) setWorkbookItems(data.items ?? workbookItems);
   }
 
   /** Pause/reopen/archive/unarchive, all reversible. Uses router.refresh()
@@ -405,12 +478,28 @@ export default function RoomView({
         </div>
         <div className="mt-3 space-y-4 rounded-lg border border-rule bg-white/[0.03] p-5">
           {messages.length === 0 && <p className="text-muted">Nothing has been said in this Room yet.</p>}
-          {messages.map((m) => (
-            <div key={m.id}>
-              <p className="label mb-1 text-muted">{m.role === "guide" ? "AVAIA" : m.speaker_name ?? "Participant"}</p>
-              <p className="whitespace-pre-wrap text-ink">{m.content}</p>
-            </div>
-          ))}
+          {messages.map((m) => {
+            const saved = savedMessageIds.has(m.id);
+            return (
+              <div key={m.id}>
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="label mb-1 text-muted">{m.role === "guide" ? "AVAIA" : m.speaker_name ?? "Participant"}</p>
+                  {saved ? (
+                    <span className="text-xs text-seal">Saved to Shared Workbook</span>
+                  ) : (
+                    <button
+                      onClick={() => saveMessageToWorkbook(m.id)}
+                      disabled={savingMessageId === m.id}
+                      className="text-xs text-muted underline hover:text-seal disabled:opacity-50"
+                    >
+                      {savingMessageId === m.id ? "Saving…" : "Save to Shared Workbook"}
+                    </button>
+                  )}
+                </div>
+                <p className="whitespace-pre-wrap text-ink">{m.content}</p>
+              </div>
+            );
+          })}
         </div>
 
         {room.status === "active" && participants.length > 0 && (
@@ -482,6 +571,54 @@ export default function RoomView({
             </div>
           </div>
         ))}
+      </section>
+
+      {/* Shared Room Workbook, "OURS" -- what the Table intentionally chose
+          to keep, never the full conversation above (that's what "The
+          Room" section already is) and never anyone's personal Workbook. */}
+      <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+        <p className="label text-seal">Shared Room Workbook</p>
+        <h2 className="mt-1 font-serif text-xl text-ink">What This Table Is Carrying Forward</h2>
+        <p className="mt-1 text-sm text-muted">
+          Not the full conversation, only what was intentionally saved. Visible to everyone
+          currently seated at this Table.
+        </p>
+
+        <div className="mt-5 space-y-4">
+          {workbookItems.length === 0 && (
+            <p className="text-sm text-muted">Nothing has been saved to this Room&rsquo;s Workbook yet.</p>
+          )}
+          {workbookItems.map((w) => (
+            <div key={w.id} className="rounded-md border border-rule bg-white/[0.03] p-4">
+              <p className="whitespace-pre-wrap text-ink">{w.content}</p>
+              <p className="mt-2 text-xs text-muted">
+                {w.speakerName ? `${w.speakerName} · ` : ""}
+                {w.source === "private_share" ? "shared from a private conversation" : w.source === "note" ? "added as a note" : "saved from the Room"}
+                {w.addedByName && w.source !== "private_share" ? ` · saved by ${w.addedByName}` : ""}
+                {" · "}
+                {new Date(w.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {room.status === "active" && (
+          <div className="mt-5 flex gap-2">
+            <input
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              placeholder="Add a note the Table wants to remember…"
+              className="flex-1 rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink outline-none focus:border-seal"
+            />
+            <button
+              onClick={addNote}
+              disabled={addingNote || !noteInput.trim()}
+              className="rounded-md border border-rule px-4 py-2 text-sm font-medium text-ink hover:border-seal disabled:opacity-50"
+            >
+              {addingNote ? "Adding…" : "Add note"}
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Close / continuity */}

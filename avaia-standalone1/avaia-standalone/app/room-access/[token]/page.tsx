@@ -246,7 +246,9 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
         <div className="mt-4 rounded-lg border border-seal/40 bg-seal/[0.06] p-4">
           <p className="label mb-2">What comes back to the Room?</p>
           <p className="mb-3 text-sm text-muted">
-            Nothing here returns automatically. Leave this blank to keep it all private.
+            Nothing here returns automatically. Leave this blank to keep it all private. What you
+            write becomes shared Room material, visible to the Table and kept in the Room&rsquo;s
+            own Shared Workbook.
           </p>
           <textarea
             value={bringForward}

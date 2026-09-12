@@ -46,5 +46,9 @@ function isValidSelection(value: unknown): value is RoomContextSelection {
     const ids = (value as { messageIds?: unknown }).messageIds;
     return Array.isArray(ids) && ids.every((id) => typeof id === "string");
   }
+  if (mode === "workbookItemIds") {
+    const ids = (value as { itemIds?: unknown }).itemIds;
+    return Array.isArray(ids) && ids.every((id) => typeof id === "string");
+  }
   return false;
 }
