@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Participant = {
   room_participant_id: string;
@@ -582,6 +583,11 @@ export default function RoomView({
         <p className="mt-1 text-sm text-muted">
           Not the full conversation, only what was intentionally saved. Visible to everyone
           currently seated at this Table.
+        </p>
+        <p className="mt-2">
+          <Link href="/library" className="text-xs text-muted underline hover:text-seal">
+            Explore the AVAIA Library →
+          </Link>
         </p>
 
         <div className="mt-5 space-y-4">

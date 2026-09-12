@@ -191,6 +191,35 @@ export async function getConceptsForQuestion(
     .map((r) => ({ concept: byId.get(r.concept_id)!, note: r.note }));
 }
 
+/** Resolves a concept by its exact published name (case-insensitive),
+ *  for an AVAIA experience that has a name in hand (e.g. Defying Grief
+ *  linking to the "Grief" concept) rather than an id. Null when no
+ *  published concept has that name, the caller's own honest "nothing to
+ *  link to yet" case, never a fabricated one. */
+export async function getConceptByName(supabase: SupabaseClient, name: string): Promise<LibraryConcept | null> {
+  const { data } = await supabase
+    .from("library_concepts")
+    .select("*")
+    .eq("status", "published")
+    .ilike("name", name)
+    .maybeSingle();
+  return (data as LibraryConcept) ?? null;
+}
+
+/** Every published concept, alphabetical, for the Library's own concept
+ *  index (Phase 2 of the Library completion work: before this, a
+ *  concept was reachable only by accident, through an entry's "Related
+ *  ideas" or another concept's own relations, never by simply browsing
+ *  what concepts exist). */
+export async function listPublishedConcepts(supabase: SupabaseClient): Promise<LibraryConcept[]> {
+  const { data } = await supabase
+    .from("library_concepts")
+    .select("*")
+    .eq("status", "published")
+    .order("name", { ascending: true });
+  return (data as LibraryConcept[]) ?? [];
+}
+
 /** A single published concept by id, or null if it doesn't exist or
  *  isn't published, the same "not found or not yours to see" shape
  *  every other Library detail lookup already uses (e.g. the entry detail

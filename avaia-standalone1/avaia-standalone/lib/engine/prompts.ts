@@ -4493,7 +4493,7 @@ every other AVAIA conversation.`;
 // conversation type, everything else about IAP (safety core,
 // conversational freedom, GUARDRAILS) is completely unaffected.
 export type OriginContextInput =
-  | { source: "chemistry" | "view-from-above"; label: string; family: string; definition: string }
+  | { source: "chemistry" | "view-from-above" | "library"; label: string; family: string; definition: string }
   // Shared Room -> private conversation, see lib/engine/room.ts's
   // buildRoomOriginContext. `items` is exactly what the participant
   // themselves selected (their own contributions, one or several specific
@@ -4527,21 +4527,32 @@ Room, or anyone else who was in it, as a topic to analyze on this Host's behalf,
 conversation belongs to this Host alone, and nothing about it is owed back to the Room
 unless this Host separately chooses that later.`;
   }
-  const sourceLabel = origin.source === "chemistry" ? "the Chemistry of Virtue table" : "a class from The View from Above";
+  const sourceLabel =
+    origin.source === "chemistry"
+      ? "the Chemistry of Virtue table"
+      : origin.source === "view-from-above"
+      ? "a class from The View from Above"
+      : "the AVAIA Library";
+  // Library origin reads slightly differently below: a Host arrives having
+  // just READ something, not selected an element/class from a fixed set,
+  // so "what caught their attention" still fits but "selected" would be an
+  // inaccurate description of clicking "Bring Into My Conversation" on an
+  // entry or concept they were reading.
+  const arrival = origin.source === "library" ? "having just read" : "having just selected";
   return `ORIGIN CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
 
-This Host arrived at this conversation having just selected "${origin.label}" (${origin.family}) from
+This Host arrived at this conversation ${arrival} "${origin.label}" (${origin.family}) from
 ${sourceLabel}. Canonical reference, for your own context only, never to be recited back
 as a definition unless the Host asks: "${origin.definition}"
 
-Do not assume why the Host selected this. They may recognize it in themselves, recognize
+Do not assume why the Host brought this. They may recognize it in themselves, recognize
 it in someone else, feel curious about it, be thinking of something that just happened,
 disagree with something about it, want to understand it better, or have a reason not
 listed here. Ask what caught their attention, or an equivalent open question in your own
 words, and then follow wherever they actually take it, exactly as you would in any other
 IAP conversation. Do not teach, define, or explain "${origin.label}" back to them, do not
-turn this into a lesson about that element or class, and do not treat their arrival from
-this source as itself a topic to analyze.`;
+turn this into a lesson about it, and do not treat their arrival from this source as
+itself a topic to analyze.`;
 }
 
 // One-shot generation, not part of the ongoing IAP stack, never composed

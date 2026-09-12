@@ -7,6 +7,7 @@ import type { LibraryEntry } from "@/lib/library";
 import { familyOf } from "@/lib/virtues";
 import { getConceptsForEntry, getQuestionsForEntry } from "@/lib/library-concepts";
 import { isMember } from "@/lib/membership";
+import { isToolkitAuthorized } from "@/lib/guide";
 
 export const dynamic = "force-dynamic";
 
@@ -85,6 +86,26 @@ async function saveLibraryNote(formData: FormData) {
   redirect(`/library/${entryId}`);
 }
 
+/** A genuine removal, not the Save/Not-for-me toggle-back-to-null that
+ *  setLibraryState already does. Deletes the library_host_entries row
+ *  outright (save state, note, and explored_at all go with it), the
+ *  "remove a saved item" capability the Library completion work order
+ *  asked for by name, distinct from just hiding it from /library/mine. */
+async function removeLibraryHostEntry(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/library");
+
+  const entryId = String(formData.get("entryId") ?? "");
+  if (!entryId) redirect("/library");
+
+  await supabase.from("library_host_entries").delete().eq("host_id", user.id).eq("library_entry_id", entryId);
+  redirect(`/library/${entryId}`);
+}
+
 export default async function LibraryEntryPage({ params }: { params: { entryId: string } }) {
   const supabase = createClient();
   const {
@@ -124,7 +145,14 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
   // be inaccurate shown against a Library entry, so this reuses the same
   // underlying MembershipCheckoutButton with Library-appropriate copy
   // instead of that wrapper.
-  if (entry.visibility === "member" && !(await isMember(supabase, user.id))) {
+  // A Guide's own "library entries guide read" RLS policy already lets
+  // them read every published entry regardless of visibility (Living
+  // Library audit, Section D); this page-level gate has to agree with
+  // that, or an authorized Guide researching a member-only entry would
+  // be shown a membership paywall for content their own account can
+  // already query directly. isMember and isToolkitAuthorized are
+  // independent facts about this account, either one is sufficient here.
+  if (entry.visibility === "member" && !(await isMember(supabase, user.id)) && !(await isToolkitAuthorized(supabase, user.id))) {
     return (
       <div className="mx-auto max-w-prose px-5 py-16">
         <p className="mb-6">
@@ -171,10 +199,10 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
   const isNotForMe = hostEntry?.state === "not_for_me";
   const spokenText = [entry.overview, entry.body].filter(Boolean).join("\n\n");
 
-  // No concept/question content is published yet, these resolve to
-  // empty arrays today, and the section below renders nothing until real,
-  // editorially reviewed connections exist. Wired in now so nothing else
-  // needs to change when they do.
+  // Published concept/question content exists now (Library completion
+  // audit, Phase 2); this renders real connections wherever an editor has
+  // actually reviewed and published one, and nothing when there isn't
+  // one yet for THIS entry specifically, same as it always would.
   const [relatedConcepts, relatedQuestions] = await Promise.all([
     getConceptsForEntry(supabase, entry.id),
     getQuestionsForEntry(supabase, entry.id),
@@ -325,6 +353,30 @@ export default async function LibraryEntryPage({ params }: { params: { entryId: 
             Save note
           </button>
         </form>
+
+        {(isSaved || isNotForMe || hostEntry?.note) && (
+          <form action={removeLibraryHostEntry} className="mt-4">
+            <input type="hidden" name="entryId" value={entry.id} />
+            <button type="submit" className="text-xs text-muted underline hover:text-seal">
+              Remove from My Library
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className="mt-8 rounded-md border border-rule bg-white/[0.03] px-4 py-4">
+        <p className="font-serif text-base text-ink">Want to bring this into a conversation?</p>
+        <p className="mt-1 text-sm text-muted">
+          Take {entry.title} into a private AVAIA conversation, explore what it brought to mind,
+          where you&rsquo;ve seen it, or why it matters to you.
+        </p>
+        <Link
+          href={`/journey?origin=library&key=${encodeURIComponent(`entry:${entry.id}`)}`}
+          prefetch={false}
+          className="mt-3 inline-block rounded-md bg-seal px-4 py-2 font-sans text-xs font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Bring Into My Conversation →
+        </Link>
       </div>
 
       <p className="mt-6">

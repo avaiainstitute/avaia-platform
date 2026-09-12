@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VIEW_FROM_ABOVE_CLASSES, getViewFromAboveClass } from "@/lib/view-from-above";
+import { VIRTUE_FAMILIES } from "@/lib/virtues";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,13 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
 export default function ViewFromAboveClassPage({ params }: { params: { slug: string } }) {
   const cls = getViewFromAboveClass(params.slug);
   if (!cls) notFound();
+
+  // Phase 6 of the Library completion work: this class already carries a
+  // real Virtue Family (display name, e.g. "Positive Attitude"); resolved
+  // to the Chemistry of Virtue's own key here so the Library link uses
+  // the same param Chemistry's own Library link already does, rather
+  // than inventing a second virtue-family representation.
+  const familyKey = VIRTUE_FAMILIES.find((f) => f.name === cls.virtueFamily)?.key ?? null;
 
   const index = VIEW_FROM_ABOVE_CLASSES.findIndex((c) => c.slug === params.slug);
   const prev = index > 0 ? VIEW_FROM_ABOVE_CLASSES[index - 1] : null;
@@ -80,6 +88,16 @@ export default function ViewFromAboveClassPage({ params }: { params: { slug: str
             <li key={i}>{v}</li>
           ))}
         </ul>
+        {familyKey && (
+          <p className="mt-4">
+            <Link
+              href={`/library?virtue_family=${encodeURIComponent(familyKey)}`}
+              className="text-sm text-muted underline hover:text-seal"
+            >
+              Explore {cls.virtueFamily} in the Library →
+            </Link>
+          </p>
+        )}
       </section>
 
       <section className="rule-t mt-10 border-t border-rule pt-10">

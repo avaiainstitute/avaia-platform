@@ -12,6 +12,7 @@ import {
 } from "@/lib/library-concepts";
 import { getPassagesForConcept, type HistoricalPassage } from "@/lib/library-passages";
 import { isMember } from "@/lib/membership";
+import { isToolkitAuthorized } from "@/lib/guide";
 
 export const dynamic = "force-dynamic";
 
@@ -126,7 +127,12 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
   const concept = await getConcept(supabase, params.conceptId);
   if (!concept) notFound();
 
-  const viewerIsMember = await isMember(supabase, user.id);
+  // Same reasoning as app/library/[entryId]/page.tsx's own member-gate:
+  // an authorized Guide's RLS already lets them read every published
+  // entry, so this page's own visibility filter has to agree, or a
+  // Guide would see a thinner "Library entries" list here than their
+  // account is actually entitled to read.
+  const viewerIsMember = (await isMember(supabase, user.id)) || (await isToolkitAuthorized(supabase, user.id));
 
   const [questions, entries, related, historicalPassages] = await Promise.all([
     getQuestionsForConcept(supabase, concept.id),
@@ -229,6 +235,21 @@ export default async function ConceptPage({ params }: { params: { conceptId: str
           </div>
         </div>
       )}
+
+      <div className="mt-10 rounded-md border border-rule bg-white/[0.03] px-4 py-4">
+        <p className="font-serif text-base text-ink">Want to bring this into a conversation?</p>
+        <p className="mt-1 text-sm text-muted">
+          Take {concept.name} into a private AVAIA conversation and explore what it brings up
+          for you.
+        </p>
+        <Link
+          href={`/journey?origin=library&key=${encodeURIComponent(`concept:${concept.id}`)}`}
+          prefetch={false}
+          className="mt-3 inline-block rounded-md bg-seal px-4 py-2 font-sans text-xs font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+        >
+          Bring Into My Conversation →
+        </Link>
+      </div>
     </div>
   );
 }

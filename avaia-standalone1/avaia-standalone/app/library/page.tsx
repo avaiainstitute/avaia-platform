@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getLibraryEntriesForHost, formatReason } from "@/lib/library-retrieval";
-import { searchLibraryEntries } from "@/lib/library-search";
+import { getLibraryEntriesForHost, getLibraryEntriesForVirtue, formatReason } from "@/lib/library-retrieval";
+import { searchLibrary, type LibrarySearchResult } from "@/lib/library-search";
 import { getOrientationForSecondaryLoss } from "@/lib/library-orientation";
 import { SECONDARY_LOSSES, isValidSecondaryLoss } from "@/lib/institution";
 import { isMember } from "@/lib/membership";
+import { VIRTUE_FAMILIES } from "@/lib/virtues";
 import type { LibraryEntry } from "@/lib/library";
 
 export const metadata = { title: "Library, AVAIA" };
@@ -68,10 +69,39 @@ export function EntryCard({ entry, reasons }: { entry: LibraryEntry; reasons?: s
   );
 }
 
+/** One search result, clearly labeled by kind (Phase 2: search now
+ *  reaches concepts and questions too, and a Host needs to know which
+ *  is which before clicking through). */
+export function SearchResultCard({ result }: { result: LibrarySearchResult }) {
+  if (result.kind === "entry") {
+    return <EntryCard entry={result.entry} />;
+  }
+  if (result.kind === "concept") {
+    return (
+      <Link
+        href={`/library/concepts/${result.concept.id}`}
+        className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-colors hover:border-seal"
+      >
+        <span className="label text-seal">Concept</span>
+        <p className="mt-1 font-serif text-lg text-ink">{result.concept.name}</p>
+        {result.concept.description && (
+          <p className="mt-1 text-sm text-muted">{result.concept.description}</p>
+        )}
+      </Link>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+      <span className="label text-seal">Question</span>
+      <p className="mt-1 italic text-ink">&ldquo;{result.question.question}&rdquo;</p>
+    </div>
+  );
+}
+
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams?: { journey?: string; q?: string; secondary_loss?: string };
+  searchParams?: { journey?: string; q?: string; secondary_loss?: string; virtue_family?: string; virtue_element?: string };
 }) {
   const supabase = createClient();
   const {
@@ -93,7 +123,7 @@ export default async function LibraryPage({
   const viewerIsMember = await isMember(supabase, user.id);
 
   const query = searchParams?.q?.trim() ?? "";
-  const searchResults = query ? await searchLibraryEntries(supabase, query, viewerIsMember) : null;
+  const searchResults = query ? await searchLibrary(supabase, query, viewerIsMember) : null;
 
   const lossParam = searchParams?.secondary_loss?.trim() ?? "";
   const orientation =
@@ -108,11 +138,26 @@ export default async function LibraryPage({
     redirect(`/library/concepts/${orientation.concept.id}`);
   }
 
-  // Search, then a chosen Secondary Loss, then Journey/broad retrieval,
-  // each active mode fully owns the results area so none silently blends
-  // with or gets overridden by a stale param left on the same URL.
+  // Phase 6 of the Library completion work: a virtue Chemistry (or
+  // Virtue Signature) already has in hand can ground a Library link the
+  // same way a Secondary Loss does, reusing getLibraryEntriesForVirtue
+  // rather than inventing a second retrieval path. family is validated
+  // against VIRTUE_FAMILIES, an unrecognized key is simply ignored
+  // (falls through to broad retrieval) rather than erroring.
+  const familyParam = searchParams?.virtue_family?.trim() ?? "";
+  const virtueFamily = VIRTUE_FAMILIES.find((f) => f.key === familyParam) ?? null;
+  const virtueElement = searchParams?.virtue_element?.trim() || null;
+  const virtueEntries =
+    !searchResults && !orientation && virtueFamily
+      ? await getLibraryEntriesForVirtue(supabase, virtueFamily.key, virtueElement, viewerIsMember)
+      : null;
+
+  // Search, then a chosen Secondary Loss, then a chosen Virtue, then
+  // Journey/broad retrieval, each active mode fully owns the results
+  // area so none silently blends with or gets overridden by a stale
+  // param left on the same URL.
   const result =
-    searchResults || orientation
+    searchResults || orientation || virtueEntries
       ? null
       : await getLibraryEntriesForHost(supabase, user.id, searchParams?.journey ?? null, viewerIsMember);
 
@@ -192,6 +237,19 @@ export default async function LibraryPage({
             </Link>
           </p>
         </>
+      ) : virtueEntries ? (
+        <>
+          <p className="mt-6 text-sm text-muted">
+            {virtueEntries.length === 0
+              ? `Nothing published yet for ${virtueFamily?.name}.`
+              : `Entries touching ${virtueFamily?.name}${virtueElement ? `, ${virtueElement}` : ""}.`}
+          </p>
+          <p className="mt-2">
+            <Link href="/library" className="text-sm text-muted hover:text-seal">
+              ← Back to the Library
+            </Link>
+          </p>
+        </>
       ) : result?.mode === "personalized" ? (
         <p className="mt-4 text-lg text-muted">
           Because of what became visible in your Journey, these are worth a look.
@@ -212,12 +270,17 @@ export default async function LibraryPage({
           My Library →
         </Link>
       </p>
+      <p className="mt-2">
+        <Link href="/library/concepts" className="text-sm text-muted hover:text-seal">
+          Browse all Concepts →
+        </Link>
+      </p>
 
       {searchResults ? (
         searchResults.length > 0 && (
           <div className="mt-10 space-y-3">
-            {searchResults.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} />
+            {searchResults.map((r, i) => (
+              <SearchResultCard key={`${r.kind}-${i}`} result={r} />
             ))}
           </div>
         )
@@ -225,6 +288,14 @@ export default async function LibraryPage({
         orientation.entries.length > 0 && (
           <div className="mt-10 space-y-3">
             {orientation.entries.map((entry) => (
+              <EntryCard key={entry.id} entry={entry} />
+            ))}
+          </div>
+        )
+      ) : virtueEntries ? (
+        virtueEntries.length > 0 && (
+          <div className="mt-10 space-y-3">
+            {virtueEntries.map((entry) => (
               <EntryCard key={entry.id} entry={entry} />
             ))}
           </div>

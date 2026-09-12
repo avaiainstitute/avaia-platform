@@ -121,9 +121,12 @@ export default async function AdminLibraryPage({
       <p className="label mb-3">AVAIA Admin</p>
       <h1 className="font-serif text-4xl text-ink">Library</h1>
       <p className="mt-4 text-lg text-muted">
-        Every entry currently in production was added by direct SQL, outside version control. This
-        is the smallest safe surface to create and edit entries without that, it does not manage
-        Concepts, Provenance, or any other Library table.
+        Create, edit, and publish Library entries.
+      </p>
+      <p className="mt-4 flex flex-wrap gap-4 text-sm">
+        <Link href="/admin/library/concepts" className="text-seal hover:opacity-80">Concepts →</Link>
+        <Link href="/admin/library/questions" className="text-seal hover:opacity-80">Questions →</Link>
+        <Link href="/admin/library/people" className="text-seal hover:opacity-80">People &amp; Works →</Link>
       </p>
 
       {createError && (

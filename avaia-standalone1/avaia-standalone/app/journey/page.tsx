@@ -230,7 +230,7 @@ export default async function JourneyPage({
       // 'defying-grief' below, same as every other brand-new adult Host)
       // and never touches the membership gate, origin context only
       // affects what IAP says, not what a Host is entitled to do.
-      const origin = resolveOriginContext(searchParams?.origin, searchParams?.key);
+      const origin = await resolveOriginContext(searchParams?.origin, searchParams?.key, supabase, user.id);
       const firstJourneyId = await createJourney(supabase, user.id, "defying-grief");
       const originOpening = origin
         ? await generateIapOriginOpening(origin, user.id, null)

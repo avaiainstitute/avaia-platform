@@ -59,7 +59,9 @@ export default async function ToolkitIapSessionPage({
     // gets from the public page, so the Guide-facilitated private
     // conversation opens the same way regardless of entry path.
     const origin =
-      session.program === "view-from-above" ? resolveOriginContext("view-from-above", session.class_context ?? undefined) : null;
+      session.program === "view-from-above"
+        ? await resolveOriginContext("view-from-above", session.class_context ?? undefined)
+        : null;
     const journeyId = await createJourney(supabase, user.id, session.program, session.youth_program);
     const originOpening = origin ? await generateIapOriginOpening(origin, user.id, null) : undefined;
     const convo = await createConversation(

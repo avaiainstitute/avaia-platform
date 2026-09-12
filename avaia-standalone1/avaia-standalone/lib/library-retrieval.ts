@@ -211,6 +211,25 @@ export async function getLibraryEntriesForHost(
   return { mode, entries, journeyId: validJourneyId };
 }
 
+/** Published entries tagged with a given virtue family (optionally
+ *  narrowed to one specific element within it). Shared by the Guide
+ *  research browse view (Phase 3) and by whichever AVAIA experience
+ *  legitimately has a virtue in hand and wants to surface related
+ *  Library material (Phase 6 -- Chemistry of Virtue, Virtue Signature),
+ *  rather than each rewriting the same filter over library_entries.virtues. */
+export async function getLibraryEntriesForVirtue(
+  supabase: SupabaseClient,
+  family: VirtueFamilyKey,
+  element: string | null,
+  viewerIsMember: boolean
+): Promise<LibraryEntry[]> {
+  const { data } = await supabase.from("library_entries").select("*").eq("status", "published").limit(500);
+  const published = ((data as LibraryEntry[]) ?? []).filter((e) => viewerIsMember || e.visibility === "public");
+  return published.filter((entry) =>
+    entry.virtues.some((v) => v.family === family && (!element || v.element === element))
+  );
+}
+
 /** Plain-language rendering of one reason, traceable directly back to the
  *  persisted signal it came from, never a fabricated explanation. */
 export function formatReason(reason: RetrievalReason): string {

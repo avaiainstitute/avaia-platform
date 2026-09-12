@@ -148,6 +148,14 @@ export default async function VirtueSignaturePage({
                       {e.element ? `${e.family}, ${e.element}` : e.family}
                     </VirtueLink>
                     {e.note && <p className="mt-1 text-sm text-muted">{e.note}</p>}
+                    <p className="mt-1">
+                      <Link
+                        href={`/library?virtue_family=${encodeURIComponent(e.family)}${e.element ? `&virtue_element=${encodeURIComponent(e.element)}` : ""}`}
+                        className="text-xs text-muted underline hover:text-seal"
+                      >
+                        Explore in the Library →
+                      </Link>
+                    </p>
                   </div>
                   <form action={removeEntry}>
                     <input type="hidden" name="entryId" value={e.id} />

@@ -137,6 +137,84 @@ async function updateLibraryEntry(formData: FormData) {
   redirect(`/admin/library/${entryId}?updated=1`);
 }
 
+/** Same relationship library_entry_concepts already manages from the
+ *  concept's own admin page (app/admin/library/concepts/[conceptId]);
+ *  this is the entry-side mirror, so an editor doesn't have to leave the
+ *  entry they're already working on to connect it to a concept. */
+async function addConceptLink(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/library");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const conceptId = String(formData.get("conceptId") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
+  if (!entryId || !conceptId) redirect(`/admin/library/${entryId}`);
+
+  await supabase.from("library_entry_concepts").insert({
+    library_entry_id: entryId,
+    concept_id: conceptId,
+    note: note || null,
+    proposed_by: "editor",
+    status: "published",
+  });
+  redirect(`/admin/library/${entryId}?updated=1`);
+}
+
+async function removeConceptLink(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/library");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const linkId = String(formData.get("linkId") ?? "");
+  if (linkId) await supabase.from("library_entry_concepts").delete().eq("id", linkId);
+  redirect(`/admin/library/${entryId}?updated=1`);
+}
+
+async function addQuestionLink(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/library");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const questionId = String(formData.get("questionId") ?? "");
+  const note = String(formData.get("note") ?? "").trim();
+  if (!entryId || !questionId) redirect(`/admin/library/${entryId}`);
+
+  await supabase.from("library_entry_questions").insert({
+    library_entry_id: entryId,
+    question_id: questionId,
+    note: note || null,
+    proposed_by: "editor",
+    status: "published",
+  });
+  redirect(`/admin/library/${entryId}?updated=1`);
+}
+
+async function removeQuestionLink(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/library");
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const entryId = String(formData.get("entryId") ?? "");
+  const linkId = String(formData.get("linkId") ?? "");
+  if (linkId) await supabase.from("library_entry_questions").delete().eq("id", linkId);
+  redirect(`/admin/library/${entryId}?updated=1`);
+}
+
 const selectClass =
   "w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal";
 const inputClass = selectClass;
@@ -169,6 +247,19 @@ export default async function AdminLibraryEntryPage({
     .maybeSingle();
   if (!entryData) notFound();
   const entry = entryData as LibraryEntry;
+
+  const [conceptsRes, questionsRes, entryConceptLinks, entryQuestionLinks] = await Promise.all([
+    supabase.from("library_concepts").select("id, name").order("name"),
+    supabase.from("library_questions").select("id, question").order("question"),
+    supabase.from("library_entry_concepts").select("id, concept_id, note, status").eq("library_entry_id", entry.id),
+    supabase.from("library_entry_questions").select("id, question_id, note, status").eq("library_entry_id", entry.id),
+  ]);
+  const conceptOptions = (conceptsRes.data as { id: string; name: string }[]) ?? [];
+  const questionOptions = (questionsRes.data as { id: string; question: string }[]) ?? [];
+  const conceptNameById = new Map(conceptOptions.map((c) => [c.id, c.name]));
+  const questionTextById = new Map(questionOptions.map((q) => [q.id, q.question]));
+  const conceptLinkRows = (entryConceptLinks.data as { id: string; concept_id: string; note: string | null; status: string }[]) ?? [];
+  const questionLinkRows = (entryQuestionLinks.data as { id: string; question_id: string; note: string | null; status: string }[]) ?? [];
 
   const editError = searchParams?.editError ? EDIT_ERROR_MESSAGE[searchParams.editError] : null;
   const showSuccess = searchParams?.updated === "1" || searchParams?.created === "1";
@@ -373,6 +464,60 @@ export default async function AdminLibraryEntryPage({
           Save
         </button>
       </form>
+
+      <section className="rule-t mt-10 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Concepts</p>
+        <div className="space-y-2">
+          {conceptLinkRows.map((l) => (
+            <div key={l.id} className="flex items-center justify-between gap-3 rounded-md border border-rule bg-white/[0.04] px-4 py-2.5">
+              <p className="text-sm text-ink">{conceptNameById.get(l.concept_id) ?? l.concept_id} <span className="text-muted">({l.status})</span></p>
+              <form action={removeConceptLink}>
+                <input type="hidden" name="entryId" value={entry.id} />
+                <input type="hidden" name="linkId" value={l.id} />
+                <button type="submit" className="text-xs text-muted underline hover:text-seal">Remove</button>
+              </form>
+            </div>
+          ))}
+        </div>
+        <form action={addConceptLink} className="mt-4 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="entryId" value={entry.id} />
+          <select name="conceptId" required className={selectClass}>
+            <option value="" className={optionClass}>Choose a concept…</option>
+            {conceptOptions.map((c) => (
+              <option key={c.id} value={c.id} className={optionClass}>{c.name}</option>
+            ))}
+          </select>
+          <input name="note" type="text" placeholder="Why (optional)" className={inputClass} />
+          <button type="submit" className="shrink-0 rounded-md border border-rule px-4 py-2.5 text-sm font-medium text-ink hover:border-seal">Link</button>
+        </form>
+      </section>
+
+      <section className="rule-t mt-10 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">Questions</p>
+        <div className="space-y-2">
+          {questionLinkRows.map((l) => (
+            <div key={l.id} className="flex items-center justify-between gap-3 rounded-md border border-rule bg-white/[0.04] px-4 py-2.5">
+              <p className="text-sm text-ink">&ldquo;{questionTextById.get(l.question_id) ?? l.question_id}&rdquo; <span className="text-muted">({l.status})</span></p>
+              <form action={removeQuestionLink}>
+                <input type="hidden" name="entryId" value={entry.id} />
+                <input type="hidden" name="linkId" value={l.id} />
+                <button type="submit" className="text-xs text-muted underline hover:text-seal">Remove</button>
+              </form>
+            </div>
+          ))}
+        </div>
+        <form action={addQuestionLink} className="mt-4 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="entryId" value={entry.id} />
+          <select name="questionId" required className={selectClass}>
+            <option value="" className={optionClass}>Choose a question…</option>
+            {questionOptions.map((q) => (
+              <option key={q.id} value={q.id} className={optionClass}>{q.question}</option>
+            ))}
+          </select>
+          <input name="note" type="text" placeholder="Why (optional)" className={inputClass} />
+          <button type="submit" className="shrink-0 rounded-md border border-rule px-4 py-2.5 text-sm font-medium text-ink hover:border-seal">Link</button>
+        </form>
+      </section>
     </div>
   );
 }

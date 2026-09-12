@@ -184,6 +184,13 @@ export default function ChemistryPage() {
               >
                 Have a private conversation about {selected.name} →
               </Link>
+              <Link
+                href={`/library?virtue_family=${encodeURIComponent(selected.family)}&virtue_element=${encodeURIComponent(selected.name)}`}
+                prefetch={false}
+                className="mt-3 ml-2 inline-block rounded-md border border-rule px-4 py-2 font-sans text-xs font-medium text-ink transition-colors hover:border-seal"
+              >
+                Explore {selected.name} in the Library →
+              </Link>
             </div>
           </div>
           <button

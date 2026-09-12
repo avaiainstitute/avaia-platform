@@ -11,6 +11,7 @@ import {
   DEFYING_GRIEF_STAGE_LABEL,
 } from "@/lib/defying-grief";
 import { isMember as checkIsMember } from "@/lib/membership";
+import { getConceptByName } from "@/lib/library-concepts";
 
 export const metadata = { title: `${DEFYING_GRIEF_PROGRAM_NAME}, AVAIA` };
 export const dynamic = "force-dynamic";
@@ -417,12 +418,29 @@ export default async function DefyingGriefPage({
 
   const isMember = await checkIsMember(supabase, user.id);
 
+  // Phase 6 of the Library completion work: Defying Grief's own legitimate
+  // signal is simply that it's about grief, so this links to the Library's
+  // own "Grief" concept when one is published, rather than inventing a
+  // deeper signal that doesn't exist. Resolved by name, not a hardcoded
+  // id, so this stays correct if the concept is ever recreated. Null (no
+  // published "Grief" concept) means this link is honestly absent, not
+  // pointed at something invented.
+  const griefConcept = await getConceptByName(supabase, "Grief");
+
   const header = (
     <div className="flex items-baseline justify-between">
       <Link href="/" className="font-serif text-xl tracking-[0.16em] text-ink">
         AVAIA
       </Link>
       <div className="flex items-center gap-4">
+        {griefConcept && (
+          <Link
+            href={`/library/concepts/${griefConcept.id}`}
+            className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"
+          >
+            Library
+          </Link>
+        )}
         <Link
           href="/workbook"
           className="font-sans text-xs uppercase tracking-wide text-muted transition-colors hover:text-seal"

@@ -102,6 +102,16 @@ export default async function UnsungHeroesDashboardPage() {
                   <span className="text-ink">{r.who_became_visible}</span>, recognized for it
                 </p>
                 <p className="mt-2 line-clamp-2 text-sm text-muted">{r.story}</p>
+                {r.primary_virtue && (
+                  <p className="mt-2">
+                    <Link
+                      href={`/library?virtue_family=${encodeURIComponent(r.virtue_family)}&virtue_element=${encodeURIComponent(r.primary_virtue)}`}
+                      className="text-xs text-muted underline hover:text-seal"
+                    >
+                      Explore {r.primary_virtue} in the Library →
+                    </Link>
+                  </p>
+                )}
               </div>
             ))}
           </div>
