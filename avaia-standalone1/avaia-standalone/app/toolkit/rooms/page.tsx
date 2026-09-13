@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listRooms, createRoom } from "@/lib/engine/room";
 import type { DbRoom } from "@/lib/engine/room";
+import { isAuthorizedGuideRoom } from "@/lib/guide";
 
 export const metadata = { title: "Shared Rooms, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -15,6 +16,16 @@ async function startRoom(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/toolkit/rooms");
+
+  // Room creation itself has to enforce the same certification + Toolkit
+  // authorization check every Room mutation route already enforces
+  // (see lib/guide.ts's isAuthorizedGuideRoom); createRoom() is a plain
+  // data-layer insert with no authorization check of its own, and this
+  // server action is a second caller of it that bypasses /api/room's own
+  // POST check entirely, so the check has to live here too.
+  if (!(await isAuthorizedGuideRoom(supabase, user.id))) {
+    redirect(`/toolkit/rooms?error=${encodeURIComponent("Active certification and Toolkit authorization are required to open a Room.")}`);
+  }
 
   const programRaw = String(formData.get("program") ?? "general");
   const program = (["general", "defying-grief", "youth"] as const).includes(programRaw as any)
@@ -29,7 +40,11 @@ function statusLabel(room: DbRoom) {
   return room.status === "complete" ? "Closed" : "Active";
 }
 
-export default async function RoomsListPage() {
+export default async function RoomsListPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -47,6 +62,11 @@ export default async function RoomsListPage() {
       </p>
       <p className="label mb-3">Shared Rooms</p>
       <h1 className="font-serif text-4xl text-ink">More than one person, one Table.</h1>
+      {searchParams.error && (
+        <p className="mt-4 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Couldn&rsquo;t open a Room: {searchParams.error}
+        </p>
+      )}
       <p className="mt-4 text-lg text-muted">
         A Room is not who the people are in it. A room is where the shared conversation is
         allowed to develop into whatever it needs to be. In a Shared Room, every participant
