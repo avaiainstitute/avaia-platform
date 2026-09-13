@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRoom, addParticipantToRoom, removeParticipantFromRoom } from "@/lib/engine/room";
+import { isAuthorizedGuideRoom } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function assertOwnRoom(supabase: ReturnType<typeof createClient>, userId: string, roomId: string) {
   const room = await getRoom(supabase, roomId);
-  return room && room.guide_id === userId ? room : null;
+  if (!room || room.guide_id !== userId) return null;
+  if (!(await isAuthorizedGuideRoom(supabase, userId))) return null;
+  return room;
 }
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {

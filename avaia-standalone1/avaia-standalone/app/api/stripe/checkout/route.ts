@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   // Where to land after Stripe redirects back, validated against a fixed
   // allowlist rather than trusted as-is, since this becomes part of a URL
   // handed to Stripe. Falls back to /journey for anything unrecognized.
-  const ALLOWED_RETURN_PATHS = ["/journey", "/defying-grief"];
+  const ALLOWED_RETURN_PATHS = ["/journey", "/defying-grief", "/unsung-heroes"];
   // A Library entry's return path is per-entry (its id), so it can't live
   // in the fixed array above, validated by shape instead of membership,
   // same defensive posture: never trust the client value as-is. Strict

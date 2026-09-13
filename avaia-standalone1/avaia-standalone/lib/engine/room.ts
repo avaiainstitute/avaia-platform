@@ -655,8 +655,9 @@ export async function returnToRoomAsParticipant(
   bearerUserId: string,
   roomPrivateSessionId: string,
   choice: "keep_private" | "brought_forward",
-  content?: string
-): Promise<{ reply: string | null } | { error: string }> {
+  content: string | undefined,
+  origin: string
+): Promise<{ reply: string | null; roomJoinUrl: string | null } | { error: string }> {
   const admin = createAdminClient();
   const { data: rps } = await admin
     .from("room_private_sessions")
@@ -680,8 +681,24 @@ export async function returnToRoomAsParticipant(
     .update({ returned_at: new Date().toISOString(), return_choice: choice })
     .eq("id", roomPrivateSessionId);
 
+  // Hands the participant a way back into the live Room regardless of
+  // which choice they made, reusing their own durable Room-join invitation
+  // (the same one the Guide would otherwise have to hand them again), not
+  // a new credential and not the Guide's own session. getOrCreateRoomInvitation
+  // is called with the admin client here (this function's own established
+  // posture throughout), safe because rps.participant_id has already been
+  // strictly resolved from this exact private session, itself already
+  // confirmed to belong to bearerUserId above.
+  const invitation = await getOrCreateRoomInvitation(
+    admin,
+    rps.room_id as string,
+    rps.participant_id as string,
+    origin
+  );
+  const roomJoinUrl = "inviteUrl" in invitation ? invitation.inviteUrl : null;
+
   if (choice === "keep_private" || !content?.trim()) {
-    return { reply: null };
+    return { reply: null, roomJoinUrl };
   }
 
   const { data: room } = await admin.from("rooms").select("guide_id").eq("id", rps.room_id as string).maybeSingle();
@@ -701,7 +718,7 @@ export async function returnToRoomAsParticipant(
     rps.participant_id as string,
     content.trim()
   );
-  return { reply };
+  return { reply, roomJoinUrl };
 }
 
 /** Generates the Room's own closing record and marks the Room complete.

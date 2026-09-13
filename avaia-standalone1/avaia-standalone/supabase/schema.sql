@@ -7,6 +7,19 @@
 --
 -- Auth is Supabase magic-link (email). auth.users is managed by Supabase; we
 -- keep an app-level profile keyed to it.
+--
+-- Reconciliation note: this file had drifted from the actual migration
+-- history in three specific, verified places -- the 'view-from-above'
+-- program value (added by 0058_view_from_above_guide_delivery.sql),
+-- conversations.origin_context (added by 0059_conversation_origin_context.sql),
+-- and youth_program (added by 0066_youth_program_identity.sql). Those three
+-- are corrected below, at every table each migration actually touched.
+-- The migrations themselves, not this file, remain the source of truth for
+-- what exists in a live database; this reconciliation changes only this
+-- reference file's text, never production behavior. Other, older drift in
+-- this file (e.g. guide_sessions.tool's list of installed tools,
+-- profiles.membership_status vs. the real entitlements table) is out of
+-- scope here and left untouched.
 
 -- ---------------------------------------------------------------------------
 -- profiles, one row per Host, with consent + eligibility record
@@ -88,7 +101,11 @@ create trigger on_auth_user_created
 create table if not exists public.journeys (
   id            uuid primary key default gen_random_uuid(),
   host_id       uuid not null references auth.users (id) on delete cascade,
-  program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth')),
+  program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth', 'view-from-above')),
+  -- Which established Youth Program's curriculum framing applies, meaningful
+  -- only when program = 'youth'; null means no established Program was
+  -- identified (see 0066_youth_program_identity.sql).
+  youth_program text check (youth_program in ('defying-grief', 'view-from-above')),
   started_at    timestamptz not null default now(),
   completed_at  timestamptz
 );
@@ -112,7 +129,17 @@ create table if not exists public.conversations (
   -- (e.g. Defying Grief's dashboard), not a continuity mechanism, Room
   -- Identity/referral content/completion state all still live entirely in
   -- this table and referrals, keyed by conversation_id as they always have.
-  program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth')),
+  program       text not null default 'general' check (program in ('general', 'defying-grief', 'youth', 'view-from-above')),
+  -- Which established Youth Program's curriculum framing applies, meaningful
+  -- only when program = 'youth'; null means no established Program was
+  -- identified (see 0066_youth_program_identity.sql).
+  youth_program text check (youth_program in ('defying-grief', 'view-from-above')),
+  -- Structured origin context (Chemistry element, or a View From Above
+  -- class) carried into a brand-new IAP conversation, resolved server-side
+  -- from canonical data, never client-supplied free text. Read-only
+  -- display/prompt context, never used for authorization (see
+  -- 0059_conversation_origin_context.sql).
+  origin_context jsonb,
   -- Explicit Journey this conversation belongs to, see journeys above.
   journey_id    uuid references public.journeys (id) on delete set null,
   created_at    timestamptz not null default now(),
@@ -615,7 +642,11 @@ create table if not exists public.guide_sessions (
   -- Only meaningful for 'iap' sessions -- which program to create the
   -- conversation under. CAT/InnerCompass sessions are always a handoff
   -- from an existing conversation, which already carries its own program.
-  program          text not null default 'general' check (program in ('general', 'defying-grief')),
+  program          text not null default 'general' check (program in ('general', 'defying-grief', 'youth', 'view-from-above')),
+  -- Which established Youth Program's curriculum framing applies, meaningful
+  -- only when program = 'youth'; null means no established Program was
+  -- identified (see 0066_youth_program_identity.sql).
+  youth_program    text check (youth_program in ('defying-grief', 'view-from-above')),
   -- Infrastructure only -- see 0013_guide_toolkit_participant_record.sql's
   -- comment. Every currently-installed tool only ever runs as an adult
   -- individual session, so this reads 'adult_individual' everywhere until a

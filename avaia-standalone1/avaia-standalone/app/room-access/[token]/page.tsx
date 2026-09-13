@@ -32,6 +32,7 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
   const [sending, setSending] = useState(false);
   const [bringForward, setBringForward] = useState("");
   const [returning, setReturning] = useState(false);
+  const [roomJoinUrl, setRoomJoinUrl] = useState<string | null>(null);
   const [suggesting, setSuggesting] = useState(false);
   const [suggestError, setSuggestError] = useState("");
   // Which stage's conversation this chat is currently talking to, only
@@ -147,7 +148,7 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
   async function submitReturn(choice: "keep_private" | "brought_forward") {
     setReturning(true);
     try {
-      await fetch("/api/room-access/return", {
+      const res = await fetch("/api/room-access/return", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({
@@ -156,6 +157,8 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
           content: choice === "brought_forward" ? bringForward.trim() : undefined,
         }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.roomJoinUrl) setRoomJoinUrl(data.roomJoinUrl);
       setPhase("done");
     } catch {
       setError("Could not return to the Room. You can try again, or tell your Guide directly.");
@@ -187,9 +190,23 @@ export default function RoomAccessPage({ params }: { params: { token: string } }
       <div className="mx-auto max-w-prose px-5 py-24 text-center">
         <h1 className="font-serif text-2xl text-ink">You&rsquo;re all set.</h1>
         <p className="mt-4 text-muted">
-          You can close this tab now and return to your Guide. Only what you chose to bring forward,
-          if anything, is visible in the Room.
+          Only what you chose to bring forward, if anything, is visible in the Room.
         </p>
+        {roomJoinUrl ? (
+          <>
+            <p className="mt-4 text-muted">You can return to the Room now, or close this tab.</p>
+            <a
+              href={roomJoinUrl}
+              className="mt-6 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Return to the Room
+            </a>
+          </>
+        ) : (
+          <p className="mt-4 text-muted">
+            You can close this tab now and return to your Guide.
+          </p>
+        )}
       </div>
     );
   }

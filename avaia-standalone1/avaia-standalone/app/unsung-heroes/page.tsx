@@ -61,7 +61,7 @@ export default async function UnsungHeroesPage({
         </p>
         <div className="mt-8">
           <Link
-            href="/membership"
+            href="/membership?returnTo=%2Funsung-heroes"
             className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
             Continue to Membership

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isToolkitAuthorized } from "@/lib/guide";
+import { isAuthorizedGuideRoom } from "@/lib/guide";
 import { createRoom, listRooms } from "@/lib/engine/room";
 import type { Program } from "@/lib/engine/prompts";
 
@@ -24,8 +24,11 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  if (!(await isToolkitAuthorized(supabase, user.id))) {
-    return NextResponse.json({ error: "Toolkit authorization required to create a Room." }, { status: 403 });
+  if (!(await isAuthorizedGuideRoom(supabase, user.id))) {
+    return NextResponse.json(
+      { error: "Active certification and Toolkit authorization are required to create a Room." },
+      { status: 403 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));

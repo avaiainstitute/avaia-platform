@@ -255,6 +255,26 @@ export async function isAuthorizedGuideConversation(
   return certified && toolkitAuthorized && !!session.data;
 }
 
+/** True if this Guide currently holds both an active certification and a
+ *  live Toolkit authorization, the same two account-level facts
+ *  isAuthorizedGuideConversation() requires for IAP/CAT/InnerCompass. A
+ *  Room has no guide_sessions row to check as a third factor, its own
+ *  rooms.guide_id column, verified separately by each Room route's
+ *  existing ownership check, plays that role instead. Used to backstop
+ *  Room creation and every Room-facilitation action a Guide takes, so a
+ *  Guide whose certification or Toolkit authorization is later revoked
+ *  loses the ability to keep running a Room by calling its API directly,
+ *  not just loses the /toolkit route to it, matching how
+ *  isAuthorizedGuideConversation already closes this same gap for the
+ *  frozen IAP/CAT/InnerCompass engine. */
+export async function isAuthorizedGuideRoom(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const [certified, toolkitAuthorized] = await Promise.all([
+    isActivelyCertified(supabase, userId),
+    isToolkitAuthorized(supabase, userId),
+  ]);
+  return certified && toolkitAuthorized;
+}
+
 /** Finds the conversation for a given stage within a Journey, used after
  *  a stage's conversation reaches status: "complete" to find the next-stage
  *  conversation the frozen engine's own generateReferral() already created

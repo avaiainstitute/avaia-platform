@@ -25,7 +25,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Choose the exact wording to bring into the Room." }, { status: 400 });
   }
 
-  const result = await returnToRoomAsParticipant(auth.userId, roomPrivateSessionId, choice, content);
+  const origin = new URL(request.url).origin;
+  const result = await returnToRoomAsParticipant(auth.userId, roomPrivateSessionId, choice, content, origin);
   if ("error" in result) return NextResponse.json({ error: result.error }, { status: 409 });
   return NextResponse.json(result);
 }

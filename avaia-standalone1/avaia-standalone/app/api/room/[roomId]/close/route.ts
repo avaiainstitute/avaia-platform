@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getRoom, closeRoom } from "@/lib/engine/room";
+import { isAuthorizedGuideRoom } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,9 @@ export async function POST(request: Request, { params }: { params: { roomId: str
 
   const room = await getRoom(supabase, params.roomId);
   if (!room || room.guide_id !== user.id) {
+    return NextResponse.json({ error: "Room not found." }, { status: 404 });
+  }
+  if (!(await isAuthorizedGuideRoom(supabase, user.id))) {
     return NextResponse.json({ error: "Room not found." }, { status: 404 });
   }
   if (room.status === "complete") {

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createConversation, STAGE_ORDER, type DbConversation } from "@/lib/engine/conversation";
 import type { Stage } from "@/lib/engine/prompts";
 import { generateCatOpening } from "@/lib/engine/openings";
+import { isMember } from "@/lib/membership";
 
 // The entry point every real custom GPT's Action calls, IAP, Conversations
 // Across Time, and InnerCompass all point here. (The path still says
@@ -128,6 +129,19 @@ export async function POST(request: Request) {
   }
 
   const fromStage = activeConvo.stage as Stage;
+
+  // CAT and InnerCompass are an AVAIA Membership feature; IAP stays free and
+  // untouched. Mirrors app/api/referral/route.ts's own rule exactly, so a
+  // non-member can't complete CAT or InnerCompass through the GPT Action
+  // path when the website's own /journey route would have blocked it.
+  if (fromStage !== "iap" && !(await isMember(admin, hostId))) {
+    debugLog("3b_membership_check", { hostId, fromStage, result: "FAILED, membership required" });
+    return NextResponse.json(
+      { error: "membership_required", error_description: "This conversation requires AVAIA Membership." },
+      { status: 403 }
+    );
+  }
+
   const currentIdx = STAGE_ORDER.indexOf(fromStage);
   const nextStage: Stage | null = STAGE_ORDER[currentIdx + 1] ?? null;
 
