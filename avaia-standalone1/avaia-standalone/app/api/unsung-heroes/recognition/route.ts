@@ -38,6 +38,13 @@ const RECOGNITION_SCHEMA = {
     personalInsight: { type: "string" },
     communityImpact: { type: "string" },
     nextPractice: { type: "string" },
+    // Recognition Cycle's Acknowledge and Contribute stages (see
+    // lib/engine/prompts.ts's cross-reference comment above
+    // UNSUNG_HEROES_INSTRUCTIONS). Both required-but-emptyable, same
+    // convention as nextPractice: the model must use "" rather than
+    // inventing a moment that didn't happen in the conversation.
+    acknowledgment: { type: "string" },
+    contribution: { type: "string" },
     questionsToRevisit: { type: "array", items: { type: "string" } },
   },
   required: [
@@ -51,6 +58,8 @@ const RECOGNITION_SCHEMA = {
     "personalInsight",
     "communityImpact",
     "nextPractice",
+    "acknowledgment",
+    "contribution",
     "questionsToRevisit",
   ],
   additionalProperties: false,
@@ -125,12 +134,16 @@ export async function POST(request: Request) {
     content:
       "I'm ready. Using everything in this conversation, produce the workbook entry now as " +
       "structured data. Do not address me, output only the fields. whoBecameVisible, story, " +
-      "reflection, personalInsight, and communityImpact must stay close to the Host's own words " +
-      "and only include what they actually said, never invent detail. reflection specifically " +
-      "must capture why this mattered, not just what happened; personalInsight must capture what " +
-      "the Host recognized about themselves, not a restatement of the story. If the conversation " +
-      "never surfaced a genuine answer for nextPractice or questionsToRevisit, use an empty string " +
-      "or empty array rather than inventing one.",
+      "reflection, personalInsight, communityImpact, acknowledgment, and contribution must stay " +
+      "close to the Host's own words and only include what they actually said, never invent " +
+      "detail. reflection specifically must capture why this mattered, not just what happened; " +
+      "personalInsight must capture what the Host recognized about themselves, not a restatement " +
+      "of the story. acknowledgment is the virtue you named back to the Host and how they " +
+      "received it (most often on Path Two), not a restatement of who recognized them. " +
+      "contribution is whether and how the Host plans to carry this forward, telling the person " +
+      "directly or otherwise, not a repeat of nextPractice. If the conversation never surfaced a " +
+      "genuine answer for nextPractice, acknowledgment, contribution, or questionsToRevisit, use " +
+      "an empty string or empty array rather than inventing one.",
   });
 
   let content: {
@@ -144,6 +157,8 @@ export async function POST(request: Request) {
     personalInsight: string;
     communityImpact: string;
     nextPractice: string;
+    acknowledgment: string;
+    contribution: string;
     questionsToRevisit: string[];
   };
   try {
@@ -211,6 +226,8 @@ export async function POST(request: Request) {
       personal_insight: content.personalInsight,
       community_impact: content.communityImpact,
       next_practice: content.nextPractice || null,
+      acknowledgment: content.acknowledgment || null,
+      contribution: content.contribution || null,
       questions_to_revisit: content.questionsToRevisit,
       conversation_path: path,
       context_type: contextType,

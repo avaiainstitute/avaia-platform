@@ -60,6 +60,8 @@ export default function UnsungHeroesChat({
     primaryVirtue: string | null;
     virtueElements: string[];
     personalInsight: string | null;
+    acknowledgment: string | null;
+    contribution: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -176,6 +178,8 @@ export default function UnsungHeroesChat({
         primaryVirtue: data.recognition.primary_virtue,
         virtueElements: Array.isArray(data.recognition.virtue_elements) ? data.recognition.virtue_elements : [],
         personalInsight: data.recognition.personal_insight || null,
+        acknowledgment: data.recognition.acknowledgment || null,
+        contribution: data.recognition.contribution || null,
       });
       setShowCardForm(false);
       // Same avaia:focus sessionStorage key JourneyChat already uses so the
@@ -232,6 +236,22 @@ export default function UnsungHeroesChat({
             Shown as-is; AVAIA never adds its own conclusion on top of it. */}
         {saved.personalInsight && (
           <p className="mt-3 text-sm italic text-ink/90">&ldquo;{saved.personalInsight}&rdquo;</p>
+        )}
+
+        {/* Recognition Cycle's Acknowledge and Contribute stages, shown only
+            when the conversation actually produced them, exactly as-is,
+            never summarized or interpreted further. */}
+        {saved.acknowledgment && (
+          <p className="mt-3 text-sm text-ink/90">
+            <span className="label mr-2 text-seal">Acknowledged</span>
+            {saved.acknowledgment}
+          </p>
+        )}
+        {saved.contribution && (
+          <p className="mt-3 text-sm text-ink/90">
+            <span className="label mr-2 text-seal">Carrying forward</span>
+            {saved.contribution}
+          </p>
         )}
 
         {elementNames.length > 0 && (

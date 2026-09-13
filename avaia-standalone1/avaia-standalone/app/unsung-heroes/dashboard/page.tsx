@@ -17,6 +17,8 @@ type Recognition = {
   story: string;
   virtue_family: string;
   primary_virtue: string | null;
+  acknowledgment: string | null;
+  contribution: string | null;
   created_at: string;
 };
 
@@ -40,7 +42,7 @@ export default async function UnsungHeroesDashboardPage() {
   // grant visibility into. No extra filtering needed here for that reason.
   const { data } = await supabase
     .from("recognitions")
-    .select("id, observer_id, observed_user_id, title, who_became_visible, story, virtue_family, primary_virtue, created_at")
+    .select("id, observer_id, observed_user_id, title, who_became_visible, story, virtue_family, primary_virtue, acknowledgment, contribution, created_at")
     .order("created_at", { ascending: false });
   const recognitions = (data as Recognition[]) ?? [];
 
@@ -102,6 +104,18 @@ export default async function UnsungHeroesDashboardPage() {
                   <span className="text-ink">{r.who_became_visible}</span>, recognized for it
                 </p>
                 <p className="mt-2 line-clamp-2 text-sm text-muted">{r.story}</p>
+                {r.acknowledgment && (
+                  <p className="mt-2 text-sm text-muted">
+                    <span className="label mr-2 text-ink">Acknowledged</span>
+                    {r.acknowledgment}
+                  </p>
+                )}
+                {r.contribution && (
+                  <p className="mt-2 text-sm text-muted">
+                    <span className="label mr-2 text-ink">Carrying forward</span>
+                    {r.contribution}
+                  </p>
+                )}
                 {r.primary_virtue && (
                   <p className="mt-2">
                     <Link

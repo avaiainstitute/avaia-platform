@@ -4746,24 +4746,29 @@ You are speaking with an adult Host who has agreed to the disclaimer.`;
 // - Observe:     the Path One opening turn ("Tell me what you saw...") and
 //                the first workbook question below (what happened / who
 //                became visible).
-// - Acknowledge: NOT YET REPRESENTED. Path Two processes an acknowledgment
-//                that already happened outside this conversation (someone
-//                else recognized the Host earlier); no prompt here has the
-//                Guide itself name a virtue back to the Host and invite them
-//                to receive it. Missing piece: an authored moment/field for
-//                that exchange, not present in RECOGNITION_SCHEMA today.
+// - Acknowledge: the Guide's own in-the-moment acknowledgment on Path Two
+//                (see UNSUNG_HEROES_PATH_GUIDANCE.someone_recognized_me and
+//                its Youth counterpart), the Guide now names the virtue
+//                back to the Host directly, rather than only processing an
+//                acknowledgment that already happened outside the
+//                conversation. Captured in the `acknowledgment` column on
+//                recognitions (0069_recognition_cycle_completion.sql) when
+//                the conversation produces a workbook entry.
 // - Reflect:     the `reflection` field and the mirror-back question below
 //                ("Is [virtue] something you recognize in yourself?"),
 //                closest existing analogue to 49_recognition_lane.md's
 //                Reflection Mirror prompt, though worded differently.
 // - Practice:    the optional `next_practice` field and Path Four.
-// - Contribute:  NOT YET REPRESENTED beyond `community_impact` (which
-//                describes the original moment's effect on others, not an
-//                act of the Host contributing anything onward). The
-//                "Unsung Heroes bridge" into the Library (49_recognition_
-//                lane.md) has no schema or code anywhere in this codebase,
-//                missing piece: a consent/publish field or table linking a
-//                recognitions row to the Library, not fabricated here.
+// - Contribute:  the Host's own outward act, telling the person, or
+//                otherwise carrying the recognition forward, distinct from
+//                `next_practice` (practicing the virtue themselves) and from
+//                `community_impact` (the original moment's effect on
+//                others). See the Workbook Entry sequence's own
+//                "contribution" question below. Captured in the
+//                `contribution` column (0069_recognition_cycle_completion.
+//                sql). This is deliberately NOT a Library bridge: no
+//                consent/publish flow or Library link is built here, per
+//                the standing instruction to pause Library expansion.
 export const UNSUNG_HEROES_INSTRUCTIONS = `UNSUNG HEROES
 
 Institutional Context
@@ -4852,6 +4857,12 @@ the Host naturally offers them, not as a checklist read aloud:
   family, the school, the community it happened in?
 - What would practicing that same virtue look like for the Host? Optional,
   capture it only if it genuinely surfaces, never invent it.
+- Will the Host actually carry this forward, telling the person directly,
+  or passing it on some other way? This is the Host's own act of
+  contribution, separate from practicing the virtue themselves. Ask only if
+  it fits naturally, never as a required step, and capture it in their own
+  words as the contribution field. Leave it empty if it doesn't genuinely
+  surface, never invent one.
 
 An entry is ready when what happened, the virtue, why it mattered, and the
 Host's own reflection are genuinely present. Tell the Host plainly when it
@@ -4903,6 +4914,16 @@ what did the person say or do, and what did it land like? Let the Host stay
 with what that felt like before moving anywhere else, being recognized can
 surface surprise, discomfort, or emotion worth a moment's space, not a rush
 past it.
+
+Once the Host has described what the other person said or did, and a virtue
+is genuinely identifiable in it, name that virtue back to the Host yourself,
+directly and warmly, as your own act of acknowledgment in this moment, not
+only a recap of one that already happened: "It sounds like she was naming
+your patience." Invite them to sit with it in their own words, "Does that
+feel true to you?", never asserting it as settled on their behalf. A "no,"
+"I'm not sure," or a different word than the one you offered are all
+complete answers. Whatever the Host says here belongs in the acknowledgment
+field if this becomes a workbook entry.
 
 If, as the conversation unfolds, the Host recognizes something about the
 person who recognized them, care they hadn't noticed, courage it took for
@@ -5132,7 +5153,12 @@ what may have been visible through that action: "What stood out to you
 about that?" or "What does that say about them?" Offer a virtue tentatively
 only once the moment is described. Never force every question, follow
 whatever order the Host naturally offers, and let the conversation end
-without a full entry if that's where it naturally lands.`,
+without a full entry if that's where it naturally lands.
+
+If it fits naturally, you may also ask whether the Host actually plans to
+tell this person what they noticed, or pass it on some other way. This is
+the Host's own choice to make, never something to push for; capture it in
+the contribution field only if it genuinely comes up.`,
 
   someone_recognized_me: `YOUTH PATH TWO GUIDANCE, "Someone recognized me"
 
@@ -5141,7 +5167,13 @@ Explore: What did they notice? What happened that led them to say it? How
 did it feel to hear? Does the Host recognize any of it in themselves? The
 Host never has to agree with the recognition, if it didn't quite land, or
 doesn't feel true to them, that's a complete and real answer too. Never turn
-someone else's compliment into an AVAIA verdict about who the Host is.`,
+someone else's compliment into an AVAIA verdict about who the Host is.
+
+Once a virtue is genuinely identifiable in what the Host described, you may
+also name it back to them yourself, in your own words, age-appropriately:
+"It sounds like they were noticing your patience." Ask if that feels true,
+never as something they're expected to agree with. Whatever they say belongs
+in the acknowledgment field if this becomes a workbook entry.`,
 
   something_difficult: `YOUTH PATH THREE GUIDANCE, "Something difficult happened"
 

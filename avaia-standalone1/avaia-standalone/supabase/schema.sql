@@ -434,6 +434,15 @@ create policy "recognitions self delete"
   on public.recognitions for delete
   using (auth.uid() = observer_id);
 
+-- The guardian-role branch that used to sit here (contact_role = 'guardian',
+-- matched by guardian_of_user_id or a free-text guardian_of_name) was
+-- retired in 0070_retire_community_contacts_guardian_rls.sql: unverified
+-- name-matching, no live insert path anywhere in the app, and dormant risk
+-- rather than a functioning access grant. The remaining branches below are
+-- a different mechanism (teacher/school_admin, business_contact,
+-- community_leader) and were not in scope for that change. Guardian access
+-- to a youth participant's private content is never granted by
+-- guardian_consents, or by this table, regardless of consent or payment.
 create policy "recognitions visible to observer, observed, and community contacts"
   on public.recognitions for select
   using (
@@ -445,17 +454,6 @@ create policy "recognitions visible to observer, observed, and community contact
         where cc.user_id = auth.uid()
           and cc.contact_role in ('teacher', 'school_admin')
           and cc.school = recognitions.context_school
-      )
-    )
-    or (
-      context_type = 'school' and exists (
-        select 1 from public.community_contacts cc
-        where cc.user_id = auth.uid()
-          and cc.contact_role = 'guardian'
-          and (
-            cc.guardian_of_user_id = recognitions.observed_user_id
-            or cc.guardian_of_name = recognitions.who_became_visible
-          )
       )
     )
     or (
@@ -578,6 +576,15 @@ alter table public.recognitions
 
 create index if not exists recognitions_conversation_idx
   on public.recognitions (conversation_id);
+
+-- Recognition Cycle completion (Observe -> Acknowledge -> Reflect ->
+-- Practice -> Contribute) -- added in
+-- 0069_recognition_cycle_completion.sql, as an alter for the same reason as
+-- conversation_id above. See that migration's comment for what each column
+-- captures; neither is a Library link.
+alter table public.recognitions
+  add column if not exists acknowledgment text,
+  add column if not exists contribution text;
 
 -- ---------------------------------------------------------------------------
 -- contact_submissions, the public, unauthenticated form at /contact

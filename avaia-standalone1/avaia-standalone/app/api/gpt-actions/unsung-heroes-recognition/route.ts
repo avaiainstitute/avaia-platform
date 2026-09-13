@@ -72,6 +72,14 @@ export async function POST(request: Request) {
     personalInsight,
     communityImpact,
     nextPractice,
+    // Recognition Cycle's Acknowledge/Contribute fields (see
+    // supabase/migrations/0069_recognition_cycle_completion.sql). Optional
+    // here rather than required: this standalone GPT's own instructions live
+    // in its external builder, outside this repo, so its existing behavior
+    // must keep working unchanged whether or not it's ever updated to send
+    // these.
+    acknowledgment,
+    contribution,
     questionsToRevisit,
     conversationPath,
     contextType,
@@ -156,6 +164,8 @@ export async function POST(request: Request) {
       personal_insight: personalInsight,
       community_impact: communityImpact,
       next_practice: typeof nextPractice === "string" && nextPractice ? nextPractice : null,
+      acknowledgment: typeof acknowledgment === "string" && acknowledgment ? acknowledgment : null,
+      contribution: typeof contribution === "string" && contribution ? contribution : null,
       questions_to_revisit: Array.isArray(questionsToRevisit)
         ? questionsToRevisit.filter((q): q is string => typeof q === "string")
         : [],
