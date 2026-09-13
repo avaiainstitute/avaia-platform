@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/cron/host-onboarding", "schedule": "0 12 * * *" },
+    { "path": "/api/cron/guide-operations", "schedule": "10 12 * * *" },
+    { "path": "/api/cron/founder-digest", "schedule": "30 12 * * *" }
+  ]
+}
