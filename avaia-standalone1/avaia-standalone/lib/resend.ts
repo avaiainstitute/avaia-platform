@@ -2,10 +2,7 @@ import "server-only";
 
 /**
  * Server-only Resend sender. Calls the REST API directly with fetch rather
- * than pulling in the `resend` SDK, the SDK carries transitive dependencies
- * (postal-mime, standardwebhooks) that would need a real `npm install` to
- * lock correctly, which isn't available in this environment; a single POST
- * doesn't need the SDK.
+ * than pulling in the `resend` SDK.
  */
 export async function sendEmail({
   to,
@@ -35,9 +32,6 @@ export async function sendEmail({
   }
 }
 
-/** The Workbook-sharing invite email, sent when a Host shares with an email
- *  that has no AVAIA account yet. Access is granted automatically the moment
- *  that email signs up (see handle_new_user() in supabase/schema.sql). */
 export function inviteEmailHtml({
   ownerLabel,
   scopeLabel,
@@ -56,11 +50,7 @@ export function inviteEmailHtml({
   `.trim();
 }
 
-/** Unlike ownerLabel/scopeLabel/signUpUrl above (all server-controlled
- *  strings), the contact form below interpolates raw Host-typed text into
- *  HTML for the first time in this file, escape it so a name or message
- *  containing HTML can't inject markup into the notification email. */
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -69,15 +59,6 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** The AVAIA Member Welcome email, sent once, from the Stripe webhook,
- *  at the exact moment a new active entitlement is actually granted (never
- *  on a webhook redelivery for an already-active member, see
- *  grantEntitlement's own idempotency check in
- *  app/api/stripe/webhook/route.ts, which is what this reuses to decide
- *  whether to send). Transactional, triggered by the Host's own payment,
- *  not a scheduled/marketing send, so no unsubscribe mechanism is needed
- *  for it. journeyUrl is server-constructed (never Host-typed), so unlike
- *  contactSubmissionEmailHtml below it doesn't need escaping. */
 export function memberWelcomeEmailHtml({ journeyUrl }: { journeyUrl: string }): string {
   return `
     <p>You started with a conversation.</p>
@@ -93,10 +74,6 @@ export function memberWelcomeEmailHtml({ journeyUrl }: { journeyUrl: string }): 
   `.trim();
 }
 
-/** The /contact form's notification email, sent to
- *  CONTACT_NOTIFICATION_EMAIL (if configured) whenever someone submits the
- *  public form. The submission itself is always saved to
- *  contact_submissions regardless of whether this send succeeds. */
 export function contactSubmissionEmailHtml({
   name,
   email,
