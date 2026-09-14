@@ -7,6 +7,10 @@ import { EXPERIENCE_TYPES } from "@/lib/experiences-agent";
 
 // Outbound-research capability for Agents 3 (Partnership), 4 (Donor &
 // Sponsor), and 8 (Programs & Experiences), Automation Blueprint Round 3.
+// Round 4 adds a fourth vertical, "speaking" -- the Opportunity Finder's
+// one genuine gap versus these three: it finds actual EVENTS (a conference
+// call-for-speakers, a podcast) rather than organizations to build an
+// ongoing relationship with. Same engine, same dedup/review posture.
 //
 // This is a genuinely new pattern for this codebase: every existing
 // Anthropic call here drives a Host-facing conversation or extracts
@@ -35,7 +39,7 @@ import { EXPERIENCE_TYPES } from "@/lib/experiences-agent";
 //    and the model is instructed to describe a prospect's plausible fit
 //    in its own words, not to assert a relationship that hasn't happened.
 
-export type ProspectVertical = "partnership" | "donor" | "program";
+export type ProspectVertical = "partnership" | "donor" | "program" | "speaking";
 
 export type ProspectCandidate = {
   organizationName: string;
@@ -49,6 +53,7 @@ export type ProspectCandidate = {
   relevance: "pink" | "avaia" | "both" | null;
   relevantExperience: string | null;
   researchNotes: string | null;
+  applicationDeadline: string | null;
 };
 
 const PARTNERSHIP_ORG_TYPES = [
@@ -62,6 +67,10 @@ const DONOR_ORG_TYPES = [
 
 const PROGRAM_ORG_TYPES = [
   "school", "conference", "business", "faith_community", "community_organization", "other",
+] as const;
+
+const SPEAKING_ORG_TYPES = [
+  "conference", "workshop_series", "podcast_media", "community_event", "other",
 ] as const;
 
 // Reuses Agent 8's own established Experience list (lib/experiences-agent.ts)
@@ -88,7 +97,8 @@ matching this shape:
   "contactEmail": string | null (only a real, publicly-listed general/organizational email -- never a guess),
   "contactPhone": string | null,
   "whyRelevant": string (one or two sentences, your own words, on why this organization may be a good fit),
-  "researchNotes": string | null (anything else useful: what you found, sources, uncertainty)
+  "researchNotes": string | null (anything else useful: what you found, sources, uncertainty),
+  "applicationDeadline": string | null (an ISO date YYYY-MM-DD, ONLY if a genuine, verifiable application/proposal/submission deadline was found -- otherwise null, never guessed)
 }
 Return an empty array [] if you cannot find genuinely good, verifiable candidates -- never pad the list with weak or invented matches.`;
 
@@ -134,7 +144,8 @@ loss, mental health, or community support.
 organizationType must be one of: ${DONOR_ORG_TYPES.join(", ")}.`;
   }
 
-  return `${shared}
+  if (vertical === "program") {
+    return `${shared}
 
 Also include "relevantExperience": one of ${EXPERIENCE_VALUES.join(", ")} on
 each object, whichever established AVAIA offering seems like the best fit:
@@ -153,6 +164,36 @@ business's employee-wellness program. Do not invent a package or price;
 you are only identifying a plausible setting.
 
 organizationType must be one of: ${PROGRAM_ORG_TYPES.join(", ")}.`;
+  }
+
+  // vertical === "speaking": distinct from "partnership" and "program" --
+  // those find ORGANIZATIONS to build a relationship with; this finds
+  // actual upcoming EVENTS (a conference with a call for speakers, a
+  // podcast, a community event series) where Dorian himself could speak
+  // or present about grief, loss, or AVAIA's established work.
+  return `${shared}
+
+Also include "relevance": "pink" | "avaia" | "both" on each object.
+
+Find real, currently-open (or soon-to-open) speaking, presenting, or
+media opportunities relevant to:
+
+The Pink Shoelace Foundation -- a grief-support nonprofit ("People walking
+with people. Different losses. Different grief.").
+
+AVAIA -- a grief education and restoration institute whose founder speaks
+and presents on grief, loss, and restoration (Workshops & Speaking is an
+established form of AVAIA's outreach).
+
+Look specifically for: conferences with an open or upcoming call for
+speakers/proposals in grief, loss, bereavement, hospice/palliative care,
+mental health, or nonprofit leadership; relevant podcasts that host guest
+speakers on these topics; and community event series seeking presenters.
+Only include something as a candidate if you can verify it is a real,
+current opportunity (not a past event) -- if you cannot verify it is
+still open, leave it out rather than guessing.
+
+organizationType must be one of: ${SPEAKING_ORG_TYPES.join(", ")}.`;
 }
 
 async function callResearch(
@@ -226,6 +267,10 @@ async function callResearch(
           ? p.relevantExperience
           : null,
         researchNotes: p.researchNotes ? String(p.researchNotes).trim().slice(0, 3000) : null,
+        applicationDeadline:
+          typeof p.applicationDeadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(p.applicationDeadline)
+            ? p.applicationDeadline
+            : null,
       }));
   } catch (e) {
     console.error(`Prospect research (${vertical}): failed to parse model output as JSON:`, e);
@@ -236,7 +281,7 @@ async function callResearch(
 type InsertResult = { inserted: number; skipped: number };
 
 async function insertCandidates(
-  table: "pink_partnership_prospects" | "pink_donor_prospects" | "avaia_experience_prospects",
+  table: "pink_partnership_prospects" | "pink_donor_prospects" | "avaia_experience_prospects" | "avaia_speaking_opportunities",
   vertical: ProspectVertical,
   candidates: ProspectCandidate[]
 ): Promise<InsertResult> {
@@ -261,8 +306,9 @@ async function insertCandidates(
       research_notes: c.researchNotes,
       discovered_via: "outbound_research",
     };
-    if (vertical === "partnership") row.relevance = c.relevance ?? "both";
+    if (vertical === "partnership" || vertical === "speaking") row.relevance = c.relevance ?? "both";
     if (vertical === "program") row.relevant_experience = c.relevantExperience;
+    if (vertical === "speaking") row.application_deadline = c.applicationDeadline;
 
     const { error } = await admin.from(table).insert(row);
     if (error) {
@@ -299,7 +345,9 @@ export async function runProspectResearch(
       ? "pink_partnership_prospects"
       : vertical === "donor"
         ? "pink_donor_prospects"
-        : "avaia_experience_prospects";
+        : vertical === "program"
+          ? "avaia_experience_prospects"
+          : "avaia_speaking_opportunities";
 
   const { data: existing } = await admin.from(table).select("organization_name").limit(500);
   const excludeNames = (existing ?? []).map((r: { organization_name: string }) => r.organization_name);
