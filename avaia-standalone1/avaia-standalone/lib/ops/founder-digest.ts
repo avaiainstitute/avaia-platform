@@ -193,6 +193,18 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     .then((s) => s.waitingItems.filter((i) => i.sinceDays >= 8))
     .catch(() => []);
 
+  // Audit finding #1.2: count only -- every caller already logs its own
+  // context via console.error too, this is just the one place that count
+  // becomes visible without needing to go looking in Vercel's own logs.
+  const { count: emailFailureCount } = await admin
+    .from("email_send_failures")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", since)
+    .then(
+      (r) => r,
+      () => ({ count: 0 })
+    );
+
   const whatHappened: string[] = [
     `${avaiaContactCount ?? 0} new AVAIA contact form submission(s) in the last 24 hours.`,
     `${pinkContactCount ?? 0} new Pink Shoelace contact form submission(s) in the last 24 hours.`,
@@ -297,6 +309,11 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   if ((crisisEventCount ?? 0) > 0) {
     needsDorian.push(
       `${crisisEventCount} crisis-safety flag(s) fired across AVAIA's conversation surfaces in the last 24 hours (count only -- no content or identity is included here; AVAIA's own in-conversation safety response already ran automatically).`
+    );
+  }
+  if ((emailFailureCount ?? 0) > 0) {
+    needsDorian.push(
+      `${emailFailureCount} email send(s) failed in the last 24 hours -- check the email_send_failures table for which ones.`
     );
   }
   for (const c of needsDorianAvaiaContacts ?? []) {

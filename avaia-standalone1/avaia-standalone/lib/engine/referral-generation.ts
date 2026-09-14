@@ -565,7 +565,21 @@ export async function advanceToNextStage(
 ): Promise<{ nextStage: Stage } | { nextStage: null }> {
   const { id: conversationId, stage, program, journeyId, developmentalBand, youthProgram } = conversation;
   const nextStage = STAGE_ORDER[STAGE_ORDER.indexOf(stage) + 1] ?? null;
-  if (!nextStage) return { nextStage: null };
+  if (!nextStage) {
+    // Automation audit finding #5.5: journeys.completed_at existed
+    // specifically to make "is this Journey actually finished" an explicit
+    // stored fact, but nothing ever set it. Guarded with .is("completed_at",
+    // null) so this stays a no-op if ever reached twice for the same
+    // Journey, rather than overwriting a real completion timestamp.
+    if (journeyId) {
+      await supabase
+        .from("journeys")
+        .update({ completed_at: new Date().toISOString() })
+        .eq("id", journeyId)
+        .is("completed_at", null);
+    }
+    return { nextStage: null };
+  }
 
   // Carry the program tag (and, for Youth, the developmental band and which
   // established Youth Program) forward so IAP(defying-grief) ->

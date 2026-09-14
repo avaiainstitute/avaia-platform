@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail, contactSubmissionEmailHtml } from "@/lib/resend";
+import { sendEmail, contactSubmissionEmailHtml, contactAcknowledgmentEmailHtml } from "@/lib/resend";
 import { detectCrisis } from "@/lib/engine/anthropic";
 
 export const runtime = "nodejs";
@@ -70,6 +70,18 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("AVAIA contact notification email failed:", e);
     }
+  }
+
+  // Best-effort, never blocks or fails the submission itself -- the row
+  // above is already saved regardless of whether this send succeeds.
+  try {
+    await sendEmail({
+      to: email,
+      subject: "We received your message",
+      html: contactAcknowledgmentEmailHtml({ name }),
+    });
+  } catch (e) {
+    console.error("AVAIA contact acknowledgment email failed:", e);
   }
 
   return NextResponse.json({ ok: true });

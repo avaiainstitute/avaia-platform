@@ -1,4 +1,21 @@
 import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+// Automation audit finding #1.2: every caller of sendEmail already wraps
+// it in its own try/catch and swallows failures (a genuinely consistent
+// "never block the user" pattern) -- but every failure's only trace was a
+// console.error line in Vercel's ephemeral logs. Recorded here once,
+// centrally, since this is the one chokepoint every caller already goes
+// through, rather than teaching each call site to log separately.
+async function recordEmailSendFailure(context: string | undefined, error: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    await admin.from("email_send_failures").insert({ context: context ?? null, error });
+  } catch {
+    // Logging the failure must never itself throw -- the caller already
+    // has the original error from sendEmail's own rejection.
+  }
+}
 
 /**
  * Server-only Resend sender. Calls the REST API directly with fetch rather
@@ -8,13 +25,22 @@ export async function sendEmail({
   to,
   subject,
   html,
+  context,
 }: {
   to: string;
   subject: string;
   html: string;
+  /** Short caller-supplied label (e.g. "host_onboarding_reminder",
+   *  "contact_notification"), recorded only if this send fails, so a
+   *  failure has a queryable trace beyond Vercel's own ephemeral logs.
+   *  Optional -- omitting it just means a failure's trace has no label. */
+  context?: string;
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY is not set in this deployment.");
+  if (!apiKey) {
+    await recordEmailSendFailure(context, "RESEND_API_KEY is not set in this deployment.");
+    throw new Error("RESEND_API_KEY is not set in this deployment.");
+  }
   const from = process.env.RESEND_FROM_EMAIL || "AVAIA <noreply@avaiainstitute.com>";
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -28,6 +54,7 @@ export async function sendEmail({
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
+    await recordEmailSendFailure(context, `Resend send failed (${res.status}): ${detail}`);
     throw new Error(`Resend send failed (${res.status}): ${detail}`);
   }
 }
@@ -106,6 +133,19 @@ export function experienceInquiryEmailHtml({
     ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
     <p><strong>Interested in:</strong> ${escapeHtml(experienceLabel)}</p>
     ${requestDetails ? `<p><strong>Details:</strong></p><p style="white-space:pre-wrap">${escapeHtml(requestDetails)}</p>` : ""}
+  `.trim();
+}
+
+/** Automation audit finding #4.5: the AVAIA /contact form saved and
+ *  notified Dorian but never confirmed anything to the person who actually
+ *  submitted it, unlike the matching Pink Shoelace form (lib/pink/emails.ts's
+ *  pinkContactAcknowledgmentEmailHtml, the pattern this mirrors). */
+export function contactAcknowledgmentEmailHtml({ name }: { name: string }): string {
+  return `
+    <p>Hi ${escapeHtml(name)},</p>
+    <p>Thank you for reaching out to AVAIA. Your message has been received, and Dorian will
+    follow up personally as soon as he can.</p>
+    <p style="color:#888">— AVAIA</p>
   `.trim();
 }
 

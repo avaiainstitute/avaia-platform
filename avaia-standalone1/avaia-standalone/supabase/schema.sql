@@ -1365,3 +1365,23 @@ create policy "guardian consent reminders admin all"
   on public.guardian_consent_reminders for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- email_send_failures -- added in 0078_email_send_failures.sql. Written
+-- only by lib/resend.ts's sendEmail on a failed send.
+-- ---------------------------------------------------------------------------
+create table if not exists public.email_send_failures (
+  id          uuid primary key default gen_random_uuid(),
+  context     text,
+  error       text not null,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists email_send_failures_created_idx
+  on public.email_send_failures (created_at desc);
+
+alter table public.email_send_failures enable row level security;
+
+create policy "email send failures admin read"
+  on public.email_send_failures for select
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));

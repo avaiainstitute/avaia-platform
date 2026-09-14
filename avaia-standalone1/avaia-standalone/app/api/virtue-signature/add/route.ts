@@ -6,6 +6,7 @@ import {
   type SignatureLayer,
   type SignatureSourceType,
 } from "@/lib/virtue-signature";
+import { isAuthorizedGuideRoom } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +60,13 @@ export async function POST(request: Request) {
       .eq("id", participantId)
       .maybeSingle();
     if (!participant || participant.guide_id !== user.id) {
+      return NextResponse.json({ error: "Not authorized for this participant." }, { status: 403 });
+    }
+    // Automation audit finding #3.8: ownership alone isn't enough -- a
+    // Guide whose certification or Toolkit authorization has since been
+    // revoked must lose this write too, the same live re-check
+    // isAuthorizedGuideRoom already enforces for Room actions.
+    if (!(await isAuthorizedGuideRoom(supabase, user.id))) {
       return NextResponse.json({ error: "Not authorized for this participant." }, { status: 403 });
     }
     const { error } = await addSignatureEntryForParticipant(
