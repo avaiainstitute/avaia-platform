@@ -19,3 +19,22 @@ export async function isMember(supabase: SupabaseClient, userId: string): Promis
     .maybeSingle();
   return data !== null;
 }
+
+/** Revokes this Host's active entitlement -- the exact same rule the Stripe
+ *  webhook's own subscription-ended handling already applies (moved here,
+ *  not duplicated, so both the webhook and the entitlement-reconciliation
+ *  job call one shared implementation). No source filter, matching the
+ *  original: only ever called for a Host whose event wasn't tagged
+ *  tier='family' in the first place. `admin` must be the service-role
+ *  client -- this crosses into another Host's own row. */
+export async function revokeIndividualEntitlement(
+  admin: SupabaseClient,
+  hostId: string
+): Promise<{ error: string | null }> {
+  const { error } = await admin
+    .from("entitlements")
+    .update({ status: "revoked", updated_at: new Date().toISOString() })
+    .eq("host_id", hostId)
+    .eq("status", "active");
+  return { error: error?.message ?? null };
+}

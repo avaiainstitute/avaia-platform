@@ -10,6 +10,14 @@ export function stripe() {
 
 export type MembershipPlan = "monthly" | "annual";
 
+/** Subscription statuses that mean the Host is no longer a paying member,
+ *  deliberately excludes 'past_due' (Stripe's own retry/grace period; not
+ *  yet a real end of access) and 'trialing'/'incomplete'/'paused', which
+ *  aren't a prior active paid state ending. Shared by the Stripe webhook's
+ *  own subscription-ended handling and the entitlement-reconciliation job,
+ *  so both apply the exact same rule about what "no longer paying" means. */
+export const REVOKING_SUBSCRIPTION_STATUSES = new Set(["canceled", "unpaid", "incomplete_expired"]);
+
 /** AVAIA Membership Price IDs, one per billing interval. Swap the values
  *  in Vercel env vars whenever a price changes; nothing else needs to change. */
 const MEMBERSHIP_PRICE_IDS: Record<MembershipPlan, string | undefined> = {

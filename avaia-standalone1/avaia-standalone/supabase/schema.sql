@@ -1318,8 +1318,11 @@ create policy "guide certification payments admin all"
 -- ---------------------------------------------------------------------------
 create table if not exists public.cron_runs (
   id           uuid primary key default gen_random_uuid(),
+  -- Widened in 0076_entitlement_reconciliation_and_guardian_reminder.sql
+  -- to add the two newer scheduled jobs.
   cron_name    text not null check (cron_name in (
-                 'host-onboarding', 'guide-operations', 'founder-digest'
+                 'host-onboarding', 'guide-operations', 'founder-digest',
+                 'entitlement-reconciliation', 'guardian-consent-reminder'
                )),
   started_at   timestamptz not null,
   finished_at  timestamptz not null default now(),
@@ -1336,3 +1339,29 @@ alter table public.cron_runs enable row level security;
 create policy "cron runs admin read"
   on public.cron_runs for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- guardian_consent_reminders -- added in
+-- 0076_entitlement_reconciliation_and_guardian_reminder.sql. Same
+-- idempotency-tracking shape as host_onboarding_reminders/
+-- guide_candidate_reminders (0064). Metadata only, no Youth content.
+-- ---------------------------------------------------------------------------
+create table if not exists public.guardian_consent_reminders (
+  id                    uuid primary key default gen_random_uuid(),
+  guide_participant_id  uuid not null references public.guide_participants (id) on delete cascade,
+  guide_id              uuid not null references auth.users (id) on delete cascade,
+  reminder_type         text not null check (reminder_type in (
+                          'consent_pending', 'assent_not_confirmed'
+                        )),
+  sent_at               timestamptz not null default now()
+);
+
+create index if not exists guardian_consent_reminders_participant_idx
+  on public.guardian_consent_reminders (guide_participant_id, reminder_type, sent_at desc);
+
+alter table public.guardian_consent_reminders enable row level security;
+
+create policy "guardian consent reminders admin all"
+  on public.guardian_consent_reminders for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));

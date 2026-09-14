@@ -1,9 +1,20 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export type CronName = "host-onboarding" | "guide-operations" | "founder-digest";
+export type CronName =
+  | "host-onboarding"
+  | "guide-operations"
+  | "founder-digest"
+  | "entitlement-reconciliation"
+  | "guardian-consent-reminder";
 
-const EXPECTED_CRONS: CronName[] = ["host-onboarding", "guide-operations", "founder-digest"];
+const EXPECTED_CRONS: CronName[] = [
+  "host-onboarding",
+  "guide-operations",
+  "founder-digest",
+  "entitlement-reconciliation",
+  "guardian-consent-reminder",
+];
 
 /** Records one cron invocation's outcome. Never throws -- a failure to
  *  record must not take down a cron whose actual work already succeeded;

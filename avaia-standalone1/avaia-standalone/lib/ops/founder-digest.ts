@@ -5,6 +5,8 @@ import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
 import { getPinkAvaiaConnections } from "@/lib/ops/pink-avaia-connection";
 import { getLatestCheckProblems } from "@/lib/ops/system-checks";
 import { getCronHealthIssues } from "@/lib/ops/cron-runs";
+import { getUnresolvedReconciliationFindings } from "@/lib/ops/entitlement-reconciliation";
+import { getGuardianConsentSnapshot } from "@/lib/ops/guardian-consent-reminders";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 const ONE_DAY_MS = 86_400_000;
@@ -174,6 +176,23 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   // shouldn't take down the rest of the digest.
   const cronHealthIssues = await getCronHealthIssues().catch(() => [] as string[]);
 
+  // Audit finding #2.4: Stripe subscription state that still doesn't match
+  // the local entitlement record after reconciliation ran -- either an
+  // uncorrected "should have access" case (never auto-granted, see that
+  // module's own comment for why) or a correction that itself failed.
+  // Never re-runs Stripe calls here; reads the most recent cron's own
+  // recorded result.
+  const reconciliationFindings = await getUnresolvedReconciliationFindings().catch(() => []);
+
+  // Audit finding #5.3: guardian consents stalled long enough that a
+  // reminder already went to the owning Guide -- surfaced to Dorian only
+  // when they've been stalled long enough to matter at the founder level
+  // too (double the normal stall window), not on the same schedule as the
+  // Guide's own first notice.
+  const guardianConsentWaiting = await getGuardianConsentSnapshot()
+    .then((s) => s.waitingItems.filter((i) => i.sinceDays >= 8))
+    .catch(() => []);
+
   const whatHappened: string[] = [
     `${avaiaContactCount ?? 0} new AVAIA contact form submission(s) in the last 24 hours.`,
     `${pinkContactCount ?? 0} new Pink Shoelace contact form submission(s) in the last 24 hours.`,
@@ -189,6 +208,8 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     "Pink Shoelace contact messages that read as a partnership or volunteer/donate inquiry automatically open a trackable follow-up record.",
     "Partnership, donor/sponsor, Programs & Experiences, and speaking/conference prospects are researched automatically once a week -- never contacted automatically, only discovered and described for your review.",
     "Website, Journey, and Shared Room operational health is checked automatically on a schedule -- you only hear about it here when something needs your attention.",
+    "Stripe subscription state is checked against AVAIA's own access records daily -- an entitlement that should have ended is revoked automatically; anything else is only ever surfaced, never auto-granted.",
+    "Guardian consents that stall are reminded to the owning Guide automatically, rate-limited so nobody is chased more than once every two weeks.",
   ];
 
   const opportunities: string[] = [];
@@ -259,6 +280,20 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
 
   const needsDorian: string[] = [...cronHealthIssues];
+  for (const f of reconciliationFindings) {
+    needsDorian.push(
+      f.type === "stripe_active_no_local_entitlement"
+        ? `Stripe shows an active ${f.tier} subscription with no matching AVAIA entitlement (Host ${f.hostId}, Stripe subscription ${f.stripeSubscriptionId}) -- not auto-granted, review and grant manually if this is legitimate.`
+        : `Reconciliation tried to revoke a ${f.tier} entitlement whose Stripe subscription ended, but the correction itself failed (Host ${f.hostId}${f.correctionError ? `: ${f.correctionError}` : ""}) -- needs a manual look.`
+    );
+  }
+  for (const item of guardianConsentWaiting) {
+    needsDorian.push(
+      item.type === "consent_pending"
+        ? `Guardian consent for ${item.participantName} has been pending ${item.sinceDays} day(s) -- the Guide has already been reminded.`
+        : `Youth assent for ${item.participantName} hasn't been confirmed in ${item.sinceDays} day(s) -- the Guide has already been reminded.`
+    );
+  }
   if ((crisisEventCount ?? 0) > 0) {
     needsDorian.push(
       `${crisisEventCount} crisis-safety flag(s) fired across AVAIA's conversation surfaces in the last 24 hours (count only -- no content or identity is included here; AVAIA's own in-conversation safety response already ran automatically).`

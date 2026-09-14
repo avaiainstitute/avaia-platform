@@ -62,6 +62,30 @@ export function guideOperationsWaitingNotificationEmailHtml({
   `.trim();
 }
 
+export function guardianConsentReminderEmailHtml({
+  type,
+  participantName,
+  sinceDays,
+}: {
+  type: "consent_pending" | "assent_not_confirmed";
+  participantName: string;
+  sinceDays: number;
+}): string {
+  const heading =
+    type === "consent_pending" ? "Guardian consent still pending" : "Youth assent not yet confirmed";
+  const body =
+    type === "consent_pending"
+      ? `The guardian consent link for ${escapeHtml(participantName)} was sent ${sinceDays} day(s) ago and hasn't been confirmed yet. This participant can't be cleared to start until the guardian confirms.`
+      : `Guardian consent for ${escapeHtml(participantName)} has been active for ${sinceDays} day(s), but Youth assent hasn't been confirmed on their record yet. This participant can't be cleared to start until that's confirmed.`;
+  return `
+    <h2>${heading}</h2>
+    <p>${body}</p>
+    <p style="color:#888">This is a scheduling notice only -- no consent, disclosure, or Youth
+    content is included here. Review this participant's record directly to decide whether to
+    follow up with the guardian.</p>
+  `.trim();
+}
+
 export function founderDigestEmailHtml({
   dateLabel,
   whatHappened,

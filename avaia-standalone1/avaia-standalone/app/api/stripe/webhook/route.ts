@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
+import { stripe, REVOKING_SUBSCRIPTION_STATUSES } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, memberWelcomeEmailHtml } from "@/lib/resend";
 import { createFamilyMembership, cancelFamilyMembership } from "@/lib/family-membership";
+import { revokeIndividualEntitlement } from "@/lib/membership";
 import { alertOps } from "@/lib/ops/alerts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** Subscription statuses that mean the Host is no longer a paying member,
- *  deliberately excludes 'past_due' (Stripe's own retry/grace period; not
- *  yet a real end of access) and 'trialing'/'incomplete'/'paused', which
- *  aren't a prior active paid state ending. */
-const REVOKING_STATUSES = new Set(["canceled", "unpaid", "incomplete_expired"]);
+const REVOKING_STATUSES = REVOKING_SUBSCRIPTION_STATUSES;
 
 /** Records a completed Certified AVAIA Guide Program payment, then opens
  *  the candidacy gate (see ensureGuideCandidacyFromPayment's own comment
@@ -189,12 +186,7 @@ async function revokeEntitlement(hostId: string | null | undefined) {
     console.error("AVAIA Stripe webhook: no supabase_user_id on the subscription event, skipping.");
     return;
   }
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("entitlements")
-    .update({ status: "revoked", updated_at: new Date().toISOString() })
-    .eq("host_id", hostId)
-    .eq("status", "active");
+  const { error } = await revokeIndividualEntitlement(createAdminClient(), hostId);
   if (error) console.error("AVAIA Stripe webhook: failed to revoke entitlement:", error);
 }
 

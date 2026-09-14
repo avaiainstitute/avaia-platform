@@ -4,6 +4,8 @@
     { "path": "/api/cron/system-checks", "schedule": "0 */6 * * *" },
     { "path": "/api/cron/host-onboarding", "schedule": "0 12 * * *" },
     { "path": "/api/cron/guide-operations", "schedule": "10 12 * * *" },
+    { "path": "/api/cron/entitlement-reconciliation", "schedule": "15 12 * * *" },
+    { "path": "/api/cron/guardian-consent-reminder", "schedule": "20 12 * * *" },
     { "path": "/api/cron/founder-digest", "schedule": "30 12 * * *" }
   ]
 }
