@@ -4,6 +4,7 @@ import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, memberWelcomeEmailHtml } from "@/lib/resend";
 import { createFamilyMembership, cancelFamilyMembership } from "@/lib/family-membership";
+import { alertOps } from "@/lib/ops/alerts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,24 @@ async function recordGuideCertificationPayment(
   });
   if (error && error.code !== "23505") {
     console.error("AVAIA Stripe webhook: failed to record guide certification payment:", error);
+    await alertOps("Certification payment received but failed to record", [
+      `Host ID: ${hostId}`,
+      `Stripe checkout session: ${session.id}`,
+      `Error: ${error.message}`,
+      "This payment succeeded in Stripe but the local record failed to save -- check Stripe directly and reconcile manually.",
+    ]);
+    return;
+  }
+  if (!error) {
+    // Immediate notice (audit finding #3.3) -- the existing stall reminder
+    // only ever surfaces this 4+ days later, if a decision still hasn't
+    // been recorded by then. This is a one-time "a sale just happened,"
+    // not a substitute for that reminder.
+    await alertOps("Certification payment received", [
+      `Host ID: ${hostId}`,
+      `Amount: ${((session.amount_total ?? 0) / 100).toFixed(2)} ${(session.currency ?? "usd").toUpperCase()}`,
+      "No decision has been recorded yet. Review the candidate's record to decide next steps.",
+    ]);
   }
 }
 
@@ -68,6 +87,15 @@ async function grantEntitlement(hostId: string | null | undefined, origin: strin
     .insert({ host_id: hostId, status: "active", source: "individual" });
   if (error) {
     console.error("AVAIA Stripe webhook: failed to grant entitlement:", error);
+    // Audit finding #4: this is the exact "paid but no access" gap -- Stripe
+    // already has the Host's money and thinks this succeeded; without this,
+    // the only way anyone finds out is the Host discovering they have no
+    // access and emailing in.
+    await alertOps("Payment succeeded but entitlement grant failed", [
+      `Host ID: ${hostId}`,
+      `Error: ${error.message}`,
+      "This Host paid but does not currently have active access. Check Stripe and the entitlements table, and grant access manually once confirmed.",
+    ]);
     return;
   }
   await sendMemberWelcomeEmail(admin, hostId, origin);
@@ -148,12 +176,27 @@ async function grantFamilyMembership(
   } catch (e) {
     console.error("AVAIA Family webhook: failed to retrieve subscription:", e);
   }
-  if (!baseItemId) return;
+  if (!baseItemId) {
+    await alertOps("Family Membership payment succeeded but plan creation failed", [
+      `Host ID: ${hostId}`,
+      `Stripe subscription: ${subscriptionId}`,
+      "Could not retrieve the subscription's line item from Stripe, so no Family plan was created. This Host paid but has no Family plan or access. Check Stripe and set this up manually.",
+    ]);
+    return;
+  }
 
   const { data: authUser } = await admin.auth.admin.getUserById(hostId);
   const ownerEmail = authUser?.user?.email ?? null;
 
   const created = await createFamilyMembership(admin, hostId, ownerEmail, customerId, subscriptionId, baseItemId, plan);
+  if (!created) {
+    await alertOps("Family Membership payment succeeded but plan creation failed", [
+      `Host ID: ${hostId}`,
+      `Stripe subscription: ${subscriptionId}`,
+      "createFamilyMembership failed to save the plan (see server logs for the database error). This Host paid but has no Family plan or access. Check Stripe and set this up manually.",
+    ]);
+    return;
+  }
   if (created && ownerEmail) {
     try {
       await sendEmail({

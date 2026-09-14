@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { stripe, familyExtraSeatPriceId, FAMILY_INCLUDED_SEATS, type MembershipPlan } from "@/lib/stripe";
+import { alertOps } from "@/lib/ops/alerts";
 
 // AVAIA Family Membership. Governing rule: "Family Membership is shared
 // payment/access, not shared ownership of stories." Payment gives
@@ -125,12 +126,24 @@ async function grantFamilyEntitlement(
     .eq("status", "active")
     .maybeSingle();
   if (existing) return;
-  await admin.from("entitlements").insert({
+  const { error } = await admin.from("entitlements").insert({
     host_id: hostId,
     status: "active",
     source: "family",
     family_membership_id: familyMembershipId,
   });
+  if (error) {
+    // Previously discarded entirely (audit finding #2.1a) -- a Family
+    // invite could be "accepted" successfully in the UI while this insert
+    // silently never happened, leaving the member with no actual access.
+    console.error("AVAIA Family Membership: failed to grant family entitlement:", error);
+    await alertOps("Family Membership seat accepted but entitlement grant failed", [
+      `Host ID: ${hostId}`,
+      `Family membership ID: ${familyMembershipId}`,
+      `Error: ${error.message}`,
+      "This member does not currently have active access. Check the entitlements table and grant access manually once confirmed.",
+    ]);
+  }
 }
 
 /** Revokes ONLY this host's family-sourced entitlement from this specific

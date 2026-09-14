@@ -1039,6 +1039,19 @@ export async function postRoomMessageAsParticipant(
 
   const result = await postRoomMessage(admin, room.guide_id, roomId, seated.participantId, content);
 
+  if (result.crisis) {
+    // Same oversight-only logging as every other conversation surface (see
+    // the matching comment in app/api/room/[roomId]/message/route.ts for
+    // the Guide-relayed side of this same gap). Here the participant has
+    // their own real auth.users identity (bearerUserId, see
+    // ensureParticipantAuthUser's own comment above), so this is the
+    // participant's own event, not the Guide's. Uses the admin client
+    // already in scope, so crisis_events' self-only RLS insert policy
+    // (auth.uid() = host_id) doesn't need to apply here. No message
+    // content is stored.
+    await admin.from("crisis_events").insert({ host_id: bearerUserId, conversation_id: null });
+  }
+
   if (room.floor_participant_id === seated.participantId) {
     await admin.from("rooms").update({ floor_participant_id: null }).eq("id", roomId);
   }

@@ -1306,3 +1306,33 @@ create policy "guide certification payments admin all"
   on public.guide_certification_payments for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- cron_runs -- added in 0071_cron_runs.sql. Records each of the three
+-- scheduled /api/cron/* routes' own outcome (success/partial/error) so a
+-- silent failure has at least one place to be noticed, read by the founder
+-- digest itself. Note: schema.sql is not fully reconciled with every
+-- migration between 0062 and this one (0063-0068 are not yet reflected
+-- here) -- out of scope for this change, flagged rather than silently
+-- left inconsistent.
+-- ---------------------------------------------------------------------------
+create table if not exists public.cron_runs (
+  id           uuid primary key default gen_random_uuid(),
+  cron_name    text not null check (cron_name in (
+                 'host-onboarding', 'guide-operations', 'founder-digest'
+               )),
+  started_at   timestamptz not null,
+  finished_at  timestamptz not null default now(),
+  status       text not null check (status in ('success', 'partial', 'error')),
+  detail       jsonb,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists cron_runs_name_started_idx
+  on public.cron_runs (cron_name, started_at desc);
+
+alter table public.cron_runs enable row level security;
+
+create policy "cron runs admin read"
+  on public.cron_runs for select
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));

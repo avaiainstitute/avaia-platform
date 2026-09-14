@@ -33,6 +33,19 @@ export async function POST(request: Request, { params }: { params: { roomId: str
 
   try {
     const { reply, crisis } = await postRoomMessage(supabase, user.id, params.roomId, speakerParticipantId, message);
+    if (crisis) {
+      // Same oversight-only logging every other conversation surface
+      // already does (app/api/conversation/route.ts, app/api/unsaid/
+      // message/route.ts, app/api/unsung-heroes/message/route.ts,
+      // app/api/room-access/message/route.ts) -- Rooms were the one gap.
+      // conversation_id is null, a Room has no conversations row; host_id
+      // is the Guide's own account, the same attribution the rest of the
+      // Guide-facilitated architecture already uses when a participant has
+      // no auth.users identity of their own to attribute to (this route is
+      // a Guide relaying a participant's turn, RLS on crisis_events only
+      // permits auth.uid() = host_id). No message content is stored here.
+      await supabase.from("crisis_events").insert({ host_id: user.id, conversation_id: null });
+    }
     return NextResponse.json({ reply, crisis });
   } catch (e) {
     console.error("AVAIA room message error:", e);

@@ -20,9 +20,17 @@ export type HostOnboardingState =
 
 type ConversationRow = { host_id: string; stage: "iap" | "cat" | "innercompass"; status: "active" | "complete"; created_at: string };
 
+type ReminderType = "iap_stalled" | "cat_eligible_no_start" | "cat_stalled" | "innercompass_stalled";
+
+const STAGE_TO_REMINDER: Record<"iap" | "cat" | "innercompass", ReminderType> = {
+  iap: "iap_stalled",
+  cat: "cat_stalled",
+  innercompass: "innercompass_stalled",
+};
+
 export async function getHostOnboardingSnapshot(): Promise<{
   stateCounts: Record<HostOnboardingState, number>;
-  stalledHosts: { hostId: string; stage: "iap" | "cat" | "innercompass"; sinceDays: number }[];
+  stalledHosts: { hostId: string; reminderType: ReminderType; sinceDays: number }[];
 }> {
   const admin = createAdminClient();
 
@@ -51,7 +59,7 @@ export async function getHostOnboardingSnapshot(): Promise<{
     journey_completed: 0,
   };
 
-  const stalledHosts: { hostId: string; stage: "iap" | "cat" | "innercompass"; sinceDays: number }[] = [];
+  const stalledHosts: { hostId: string; reminderType: ReminderType; sinceDays: number }[] = [];
   const now = Date.now();
 
   for (const profile of profileRows ?? []) {
@@ -72,7 +80,22 @@ export async function getHostOnboardingSnapshot(): Promise<{
     if (mostRecent && mostRecent.status === "active") {
       const ageDays = (now - new Date(mostRecent.created_at).getTime()) / 86_400_000;
       if (ageDays >= STALL_DAYS) {
-        stalledHosts.push({ hostId: profile.id, stage: mostRecent.stage, sinceDays: Math.floor(ageDays) });
+        stalledHosts.push({ hostId: profile.id, reminderType: STAGE_TO_REMINDER[mostRecent.stage], sinceDays: Math.floor(ageDays) });
+      }
+    } else if (state === "cat_eligible") {
+      // The Host finished IAP and has no CAT conversation at all -- there is
+      // no "active" conversation row to key off, which is exactly why this
+      // population was previously invisible to the loop above (it only ever
+      // matched hosts mid-conversation). Sitting here is either the free/paid
+      // paywall (a non-member) or simply not having continued yet (an
+      // existing member); the same generic reminder copy already covers
+      // both, since it just links back to /journey.
+      const iapRow = rows.find((r) => r.stage === "iap");
+      if (iapRow) {
+        const ageDays = (now - new Date(iapRow.created_at).getTime()) / 86_400_000;
+        if (ageDays >= STALL_DAYS) {
+          stalledHosts.push({ hostId: profile.id, reminderType: "cat_eligible_no_start", sinceDays: Math.floor(ageDays) });
+        }
       }
     }
   }
@@ -80,26 +103,17 @@ export async function getHostOnboardingSnapshot(): Promise<{
   return { stateCounts, stalledHosts };
 }
 
-type ReminderType = "iap_stalled" | "cat_eligible_no_start" | "cat_stalled" | "innercompass_stalled";
-
-const STAGE_TO_REMINDER: Record<"iap" | "cat" | "innercompass", ReminderType> = {
-  iap: "iap_stalled",
-  cat: "cat_stalled",
-  innercompass: "innercompass_stalled",
-};
-
 export async function sendStalledOnboardingReminders(
-  sendFn: (hostId: string, reminderType: ReminderType, stage: string) => Promise<void>
-): Promise<{ sent: number; skippedCooldown: number }> {
+  sendFn: (hostId: string, reminderType: ReminderType) => Promise<void>
+): Promise<{ sent: number; skippedCooldown: number; failed: number }> {
   const admin = createAdminClient();
   const { stalledHosts } = await getHostOnboardingSnapshot();
 
   let sent = 0;
   let skippedCooldown = 0;
+  let failed = 0;
 
-  for (const { hostId, stage } of stalledHosts) {
-    const reminderType = STAGE_TO_REMINDER[stage];
-
+  for (const { hostId, reminderType } of stalledHosts) {
     const { data: lastReminder } = await admin
       .from("host_onboarding_reminders")
       .select("sent_at")
@@ -117,10 +131,25 @@ export async function sendStalledOnboardingReminders(
       }
     }
 
-    await sendFn(hostId, reminderType, stage);
+    // Same rule as guide-operations' identical loop: only a send that
+    // actually succeeds gets recorded and starts the cooldown. sendFn is
+    // expected to throw (missing email on file, Resend failure) rather than
+    // silently no-op, so a real failure is retried on the next run instead
+    // of being locked out for 14 days.
+    try {
+      await sendFn(hostId, reminderType);
+    } catch (err) {
+      failed += 1;
+      console.error("[host-onboarding] reminder send failed", {
+        hostId,
+        reminderType,
+        error: err instanceof Error ? err.message : err,
+      });
+      continue;
+    }
     await admin.from("host_onboarding_reminders").insert({ host_id: hostId, reminder_type: reminderType });
     sent += 1;
   }
 
-  return { sent, skippedCooldown };
+  return { sent, skippedCooldown, failed };
 }
