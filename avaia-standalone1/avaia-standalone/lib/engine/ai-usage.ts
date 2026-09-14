@@ -21,7 +21,9 @@ export type AiUsageFeature =
   | "room_conversation"
   | "room_referral"
   | "room_bring_forward_suggestion"
-  | "unsaid_conversation";
+  | "unsaid_conversation"
+  | "prospect_research"
+  | "founder_note_extraction";
 
 /** The subset of an Anthropic Message's `usage` field this records, same
  *  shape whether it came from `messages.create()` directly or from
@@ -65,8 +67,8 @@ export async function recordAiUsage(params: {
       cache_creation_input_tokens: params.usage.cache_creation_input_tokens ?? 0,
       cache_read_input_tokens: params.usage.cache_read_input_tokens ?? 0,
     });
-    if (error) console.error("AVAIA AI usage recording failed:", error.message);
+    if (error) console.error("recordAiUsage: insert failed:", error.message);
   } catch (e) {
-    console.error("AVAIA AI usage recording failed:", e);
+    console.error("recordAiUsage: unexpected error:", e);
   }
 }
