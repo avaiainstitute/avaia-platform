@@ -15,6 +15,21 @@ type AdminSection = { href: string; label: string; description: string };
 // makes this page itself reachable.
 const ADMIN_SECTIONS: AdminSection[] = [
   {
+    href: "/admin/opportunities",
+    label: "Opportunities",
+    description: "Partnership, donor/sponsor, and Programs & Experiences prospects found by outbound research.",
+  },
+  {
+    href: "/admin/programs",
+    label: "Programs & Experiences Inquiries",
+    description: "Inbound requests to bring an established AVAIA Experience to a group.",
+  },
+  {
+    href: "/admin/content",
+    label: "Communications & Content",
+    description: "Plan social posts, announcements, and PR/media opportunities.",
+  },
+  {
     href: "/admin/guide-candidates",
     label: "Guide Candidates",
     description: "Review and admit Guide candidates.",
