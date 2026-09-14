@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
 import { getPinkAvaiaConnections } from "@/lib/ops/pink-avaia-connection";
+import { getLatestCheckProblems } from "@/lib/ops/system-checks";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 const ONE_DAY_MS = 86_400_000;
@@ -44,6 +45,11 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     { count: reviewProgramProspectCount },
     { count: draftContentCount },
     { count: approvedContentCount },
+    { data: newSpeakingOpportunities },
+    { count: reviewSpeakingOpportunityCount },
+    { data: dueFounderFollowUps },
+    { data: readyForReviewCandidates },
+    checkProblems,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -117,6 +123,36 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     // Agent 9 (Communications & Content)
     admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "draft"),
     admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "approved"),
+    // Round 4: Opportunity Finder's "speaking" vertical.
+    admin
+      .from("avaia_speaking_opportunities")
+      .select("organization_name")
+      .gte("created_at", since)
+      .order("created_at", { ascending: true }),
+    admin.from("avaia_speaking_opportunities").select("id", { count: "exact", head: true }).eq("status", "new"),
+    // Round 4: Follow-up Memory / After-Meeting Capture -- due today or
+    // overdue, still open. Round 4: Decision Keeper/Idea Catcher entries
+    // never appear here by design (see lib/ops/founder-notes.ts's own
+    // comment) -- only follow-ups and meeting-note next actions are
+    // time-bound waiting items.
+    admin
+      .from("founder_notes")
+      .select("kind, title, person_name, organization_name, follow_up_date, next_action")
+      .in("kind", ["follow_up", "meeting_note"])
+      .eq("status", "open")
+      .not("follow_up_date", "is", null)
+      .lte("follow_up_date", now.slice(0, 10))
+      .order("follow_up_date", { ascending: true }),
+    // Round 4: Guide Certification Operations extension -- candidates
+    // Dorian himself has marked ready for his certification review.
+    admin
+      .from("guide_candidates")
+      .select("host_id, ready_for_review_notes")
+      .eq("ready_for_review", true)
+      .in("status", ["admitted", "in_training", "development_required", "paused", "hold"]),
+    // Round 4: Website/Journey/Shared Room Watchers + Testing/QC -- only
+    // the most recent run's non-pass results, never the full pass list.
+    getLatestCheckProblems(),
   ]);
 
   const whatHappened: string[] = [
@@ -131,7 +167,8 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     "Routine submissions (no flagged review needed) receive an automatic reply -- nothing further is required.",
     "Hosts who stall mid-conversation receive a gentle, rate-limited reminder automatically (no more than one per stage per reminder window).",
     "Pink Shoelace contact messages that read as a partnership or volunteer/donate inquiry automatically open a trackable follow-up record.",
-    "Partnership, donor/sponsor, and Programs & Experiences prospects are researched automatically once a week -- never contacted automatically, only discovered and described for your review.",
+    "Partnership, donor/sponsor, Programs & Experiences, and speaking/conference prospects are researched automatically once a week -- never contacted automatically, only discovered and described for your review.",
+    "Website, Journey, and Shared Room operational health is checked automatically on a schedule -- you only hear about it here when something needs your attention.",
   ];
 
   const opportunities: string[] = [];
@@ -143,6 +180,9 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
   for (const e of newProgramProspects ?? []) {
     opportunities.push(`New Programs & Experiences prospect: ${e.organization_name}.`);
+  }
+  for (const s of newSpeakingOpportunities ?? []) {
+    opportunities.push(`New speaking/conference opportunity: ${s.organization_name}.`);
   }
 
   const waiting: string[] = [];
@@ -184,6 +224,9 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   if ((reviewProgramProspectCount ?? 0) > 0) {
     waiting.push(`Programs & Experiences prospect(s) awaiting your first review: ${reviewProgramProspectCount}.`);
   }
+  if ((reviewSpeakingOpportunityCount ?? 0) > 0) {
+    waiting.push(`Speaking/conference opportunity(ies) awaiting your first review: ${reviewSpeakingOpportunityCount}.`);
+  }
   if ((draftContentCount ?? 0) > 0) {
     waiting.push(`${draftContentCount} content item(s) in draft awaiting your review/approval.`);
   }
@@ -208,11 +251,33 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       `AVAIA Programs & Experiences inquiry -- ${e.name} (${e.experience_interest}), ${daysAgo(e.created_at)} day(s) ago.`
     );
   }
+  // Round 4: Follow-up Memory / After-Meeting Capture, due today or overdue.
+  for (const f of dueFounderFollowUps ?? []) {
+    const who = [f.person_name, f.organization_name].filter(Boolean).join(", ");
+    needsDorian.push(
+      `${f.kind === "meeting_note" ? "Follow-up from a meeting" : "Follow-up"} due${who ? ` -- ${who}` : ""}: ${f.next_action || f.title}.`
+    );
+  }
+  // Round 4: Guide Certification Operations -- candidates Dorian marked
+  // ready for his own review. Never a system-generated readiness claim.
+  for (const c of readyForReviewCandidates ?? []) {
+    needsDorian.push(
+      `Guide candidate ready for certification review (Host ${c.host_id})${c.ready_for_review_notes ? ` -- ${c.ready_for_review_notes}` : "."}`
+    );
+  }
+  // Round 4: Website/Journey/Shared Room Watchers + Testing/QC.
+  for (const p of checkProblems) {
+    needsDorian.push(`${p.label}${p.detail ? ` -- ${p.detail}` : ""} (${p.category.replace(/_/g, " ")}).`);
+  }
 
   const priorityCandidates = [
     ...needsDorian,
     ...waiting.filter(
-      (w) => w.startsWith("Partnership") || w.startsWith("Donor/sponsor") || w.startsWith("Programs & Experiences")
+      (w) =>
+        w.startsWith("Partnership") ||
+        w.startsWith("Donor/sponsor") ||
+        w.startsWith("Programs & Experiences") ||
+        w.startsWith("Speaking")
     ),
   ];
   const priorities = priorityCandidates.slice(0, 5);
