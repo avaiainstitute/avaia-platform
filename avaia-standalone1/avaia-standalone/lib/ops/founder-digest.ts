@@ -7,6 +7,7 @@ import { getLatestCheckProblems } from "@/lib/ops/system-checks";
 import { getCronHealthIssues } from "@/lib/ops/cron-runs";
 import { getUnresolvedReconciliationFindings } from "@/lib/ops/entitlement-reconciliation";
 import { getGuardianConsentSnapshot } from "@/lib/ops/guardian-consent-reminders";
+import { getStalledFamilyInvites } from "@/lib/ops/family-invite-reminders";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 const ONE_DAY_MS = 86_400_000;
@@ -193,6 +194,13 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     .then((s) => s.waitingItems.filter((i) => i.sinceDays >= 8))
     .catch(() => []);
 
+  // Audit finding #2.5: visibility only, same posture as the stalled-Host
+  // count below -- reminders are already being sent automatically to the
+  // invitee, Dorian doesn't need to act on this, just see it exists.
+  const stalledFamilyInvites = await getStalledFamilyInvites()
+    .then((r) => r.stalled)
+    .catch(() => []);
+
   // Audit finding #1.2: count only -- every caller already logs its own
   // context via console.error too, this is just the one place that count
   // becomes visible without needing to go looking in Vercel's own logs.
@@ -222,6 +230,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     "Website, Journey, and Shared Room operational health is checked automatically on a schedule -- you only hear about it here when something needs your attention.",
     "Stripe subscription state is checked against AVAIA's own access records daily -- an entitlement that should have ended is revoked automatically; anything else is only ever surfaced, never auto-granted.",
     "Guardian consents that stall are reminded to the owning Guide automatically, rate-limited so nobody is chased more than once every two weeks.",
+    "An unaccepted Family Membership invitation is reminded directly to the invited person automatically, rate-limited the same way.",
   ];
 
   const opportunities: string[] = [];
@@ -254,6 +263,12 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   if (hostOnboarding.stalledHosts.length) {
     waiting.push(
       `${hostOnboarding.stalledHosts.length} Host(s) currently stalled mid-conversation (reminders are being sent automatically; listed here for visibility only).`
+    );
+  }
+  if (stalledFamilyInvites.length) {
+    const extraSeatCount = stalledFamilyInvites.filter((i) => i.isExtraSeat).length;
+    waiting.push(
+      `${stalledFamilyInvites.length} Family Membership invite(s) still unaccepted past the normal window${extraSeatCount ? ` (${extraSeatCount} billed as extra seat(s))` : ""} -- reminders are being sent automatically to the invitee; listed here for visibility only.`
     );
   }
   for (const item of guideOperations.waitingItems) {

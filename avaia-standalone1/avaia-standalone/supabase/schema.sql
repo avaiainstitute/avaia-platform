@@ -1319,10 +1319,11 @@ create policy "guide certification payments admin all"
 create table if not exists public.cron_runs (
   id           uuid primary key default gen_random_uuid(),
   -- Widened in 0076_entitlement_reconciliation_and_guardian_reminder.sql
-  -- to add the two newer scheduled jobs.
+  -- and 0079_family_invite_reminders.sql to add the newer scheduled jobs.
   cron_name    text not null check (cron_name in (
                  'host-onboarding', 'guide-operations', 'founder-digest',
-                 'entitlement-reconciliation', 'guardian-consent-reminder'
+                 'entitlement-reconciliation', 'guardian-consent-reminder',
+                 'family-invite-reminder'
                )),
   started_at   timestamptz not null,
   finished_at  timestamptz not null default now(),
@@ -1385,3 +1386,24 @@ alter table public.email_send_failures enable row level security;
 create policy "email send failures admin read"
   on public.email_send_failures for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- family_invite_reminders -- added in 0079_family_invite_reminders.sql.
+-- Same idempotency-tracking shape as host_onboarding_reminders/
+-- guide_candidate_reminders/guardian_consent_reminders.
+-- ---------------------------------------------------------------------------
+create table if not exists public.family_invite_reminders (
+  id                uuid primary key default gen_random_uuid(),
+  family_member_id  uuid not null references public.family_members (id) on delete cascade,
+  sent_at           timestamptz not null default now()
+);
+
+create index if not exists family_invite_reminders_member_idx
+  on public.family_invite_reminders (family_member_id, sent_at desc);
+
+alter table public.family_invite_reminders enable row level security;
+
+create policy "family invite reminders admin all"
+  on public.family_invite_reminders for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));

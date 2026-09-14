@@ -6,6 +6,7 @@
     { "path": "/api/cron/guide-operations", "schedule": "10 12 * * *" },
     { "path": "/api/cron/entitlement-reconciliation", "schedule": "15 12 * * *" },
     { "path": "/api/cron/guardian-consent-reminder", "schedule": "20 12 * * *" },
+    { "path": "/api/cron/family-invite-reminder", "schedule": "25 12 * * *" },
     { "path": "/api/cron/founder-digest", "schedule": "30 12 * * *" }
   ]
 }

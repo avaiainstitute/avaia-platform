@@ -6,7 +6,8 @@ export type CronName =
   | "guide-operations"
   | "founder-digest"
   | "entitlement-reconciliation"
-  | "guardian-consent-reminder";
+  | "guardian-consent-reminder"
+  | "family-invite-reminder";
 
 const EXPECTED_CRONS: CronName[] = [
   "host-onboarding",
@@ -14,6 +15,7 @@ const EXPECTED_CRONS: CronName[] = [
   "founder-digest",
   "entitlement-reconciliation",
   "guardian-consent-reminder",
+  "family-invite-reminder",
 ];
 
 /** Records one cron invocation's outcome. Never throws -- a failure to

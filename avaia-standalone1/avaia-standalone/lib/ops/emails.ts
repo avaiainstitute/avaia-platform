@@ -62,6 +62,21 @@ export function guideOperationsWaitingNotificationEmailHtml({
   `.trim();
 }
 
+/** Mirrors the original invite email's own copy and accept-link shape
+ *  (app/api/family/invite/route.ts) -- same destination, same tone, just
+ *  a reminder rather than the first ask. */
+export function familyInviteReminderEmailHtml({ acceptUrl }: { acceptUrl: string }): string {
+  return `
+    <p>You were invited to join a Family AVAIA Membership a little while ago, and the invitation
+    is still open.</p>
+    <p>Each person keeps their own private AVAIA account, Journey, and Workbook, joining a Family
+    plan only shares payment, never your private conversations.</p>
+    <p><a href="${acceptUrl}">Accept the invitation</a></p>
+    <p style="color:#888">If you'd rather not join, you can safely ignore this -- we won't send
+    another reminder about this for a while.</p>
+  `.trim();
+}
+
 export function guardianConsentReminderEmailHtml({
   type,
   participantName,
