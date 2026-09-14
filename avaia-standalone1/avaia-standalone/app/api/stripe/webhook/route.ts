@@ -15,14 +15,13 @@ export const dynamic = "force-dynamic";
  *  aren't a prior active paid state ending. */
 const REVOKING_STATUSES = new Set(["canceled", "unpaid", "incomplete_expired"]);
 
-/** Records a completed Certified AVAIA Guide Program payment. A payment
- *  fact only, deliberately does NOT create a guide_candidates row or any
- *  other candidacy/certification fact; whether a completed payment should
- *  automatically admit someone as a candidate is an explicit owner
- *  decision (see the Certified Guide audit's Final Report), not assumed
- *  here. Idempotent via stripe_checkout_session_id's unique constraint,
- *  a redelivered event's duplicate insert is caught and ignored rather
- *  than treated as an error. */
+/** Records a completed Certified AVAIA Guide Program payment, then opens
+ *  the candidacy gate (see ensureGuideCandidacyFromPayment's own comment
+ *  for the owner decision behind that). Idempotent via
+ *  stripe_checkout_session_id's unique constraint: a redelivered event's
+ *  duplicate insert is caught (23505) and ignored, and enrollment/the
+ *  immediate notice below only ever run on the FIRST time a given payment
+ *  is recorded -- never on a redelivery of one already processed. */
 async function recordGuideCertificationPayment(
   hostId: string | null | undefined,
   session: Stripe.Checkout.Session
@@ -40,27 +39,82 @@ async function recordGuideCertificationPayment(
     amount_cents: session.amount_total ?? 0,
     currency: session.currency ?? "usd",
   });
-  if (error && error.code !== "23505") {
-    console.error("AVAIA Stripe webhook: failed to record guide certification payment:", error);
-    await alertOps("Certification payment received but failed to record", [
-      `Host ID: ${hostId}`,
-      `Stripe checkout session: ${session.id}`,
-      `Error: ${error.message}`,
-      "This payment succeeded in Stripe but the local record failed to save -- check Stripe directly and reconcile manually.",
-    ]);
+  if (error) {
+    if (error.code !== "23505") {
+      console.error("AVAIA Stripe webhook: failed to record guide certification payment:", error);
+      await alertOps("Certification payment received but failed to record", [
+        `Host ID: ${hostId}`,
+        `Stripe checkout session: ${session.id}`,
+        `Error: ${error.message}`,
+        "This payment succeeded in Stripe but the local record failed to save -- check Stripe directly and reconcile manually.",
+      ]);
+    }
+    // Either a real failure, or a redelivered event for a payment already
+    // on file -- either way, do not re-run enrollment or the immediate
+    // notice below.
     return;
   }
-  if (!error) {
-    // Immediate notice (audit finding #3.3) -- the existing stall reminder
-    // only ever surfaces this 4+ days later, if a decision still hasn't
-    // been recorded by then. This is a one-time "a sale just happened,"
-    // not a substitute for that reminder.
-    await alertOps("Certification payment received", [
-      `Host ID: ${hostId}`,
-      `Amount: ${((session.amount_total ?? 0) / 100).toFixed(2)} ${(session.currency ?? "usd").toUpperCase()}`,
-      "No decision has been recorded yet. Review the candidate's record to decide next steps.",
-    ]);
+  await ensureGuideCandidacyFromPayment(hostId);
+  // Immediate notice (audit finding #3.3) -- the existing stall reminder
+  // only ever surfaces this 4+ days later, if a decision still hasn't been
+  // recorded by then. This is a one-time "a sale just happened, and
+  // enrollment already opened automatically," not a substitute for that
+  // reminder.
+  await alertOps("Certification payment received", [
+    `Host ID: ${hostId}`,
+    `Amount: ${((session.amount_total ?? 0) / 100).toFixed(2)} ${(session.currency ?? "usd").toUpperCase()}`,
+    "Enrollment opened automatically (payment = enrollment). No certification decision has been recorded yet.",
+  ]);
+}
+
+/** Opens the gate for the Host to begin working toward certification, the
+ *  moment their program payment is recorded -- owner decision (2026-09-14):
+ *  "Payment = enrollment. It opens the gate for them to begin the Guide
+ *  certification process. It does not mean they are certified, guaranteed
+ *  certification, or have passed anything. Paid -> enrolled -> can begin
+ *  working toward certification." This function only ever creates the
+ *  candidacy's initial 'admitted' row -- certification itself stays a
+ *  separate, later, human decision through guide_certification_decisions /
+ *  guide_certifications, untouched here.
+ *
+ *  Idempotent two ways: (1) only ever called from a genuinely-new payment
+ *  insert above, never a redelivery, and (2) never opens a second OPEN
+ *  candidacy for a Host who already has one -- guide_candidates_one_open_
+ *  per_host enforces this at the database level too, so a 23505 here is
+ *  caught and ignored. A Host whose most recent candidacy previously closed
+ *  (withdrawn / not_certified) gets a new row on a fresh payment, matching
+ *  the schema's own "candidacy history can accumulate over time" design. */
+async function ensureGuideCandidacyFromPayment(hostId: string) {
+  const admin = createAdminClient();
+  const { data: openCandidacy } = await admin
+    .from("guide_candidates")
+    .select("id")
+    .eq("host_id", hostId)
+    .not("status", "in", "(withdrawn,not_certified)")
+    .maybeSingle();
+  if (openCandidacy) return;
+
+  const { data: created, error } = await admin
+    .from("guide_candidates")
+    .insert({
+      host_id: hostId,
+      status: "admitted",
+      notes: "Auto-enrolled: completed Certified AVAIA Guide Program payment.",
+    })
+    .select("id")
+    .single();
+  if (error) {
+    if (error.code !== "23505") {
+      console.error("AVAIA Stripe webhook: failed to auto-enroll guide candidacy:", error);
+    }
+    return;
   }
+
+  await admin.from("guide_candidate_history").insert({
+    candidate_id: created.id,
+    entry_type: "status_change",
+    body: "Candidacy opened automatically: Certified AVAIA Guide Program payment completed. Enrollment only -- certification remains a separate, later decision.",
+  });
 }
 
 /** Grants this Host an active Individual entitlement. Idempotent, Stripe

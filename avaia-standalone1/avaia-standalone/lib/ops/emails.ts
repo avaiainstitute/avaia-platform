@@ -69,6 +69,7 @@ export function founderDigestEmailHtml({
   waiting,
   needsDorian,
   priorities,
+  opportunities,
 }: {
   dateLabel: string;
   whatHappened: string[];
@@ -76,6 +77,10 @@ export function founderDigestEmailHtml({
   waiting: string[];
   needsDorian: string[];
   priorities: string[];
+  /** New outbound-research prospects (Agents 3/4/8), optional and additive
+   *  -- default [] keeps every pre-existing call site correct with no
+   *  change required at its own call site. */
+  opportunities?: string[];
 }): string {
   const section = (title: string, lines: string[], emptyLabel: string) => `
     <h2 style="margin-bottom:4px">${escapeHtml(title)}</h2>
@@ -91,6 +96,7 @@ export function founderDigestEmailHtml({
     <p style="color:#888">${escapeHtml(dateLabel)}</p>
     ${section("WHAT HAPPENED", whatHappened, "Nothing new since the last summary.")}
     ${section("WHAT IS BEING HANDLED AUTOMATICALLY", automatic, "Nothing currently in automated handling.")}
+    ${section("OPPORTUNITIES", opportunities ?? [], "No new research-found opportunities today.")}
     ${section("WHAT IS WAITING", waiting, "Nothing waiting.")}
     ${section("WHAT NEEDS DORIAN", needsDorian, "Nothing needs your attention today.")}
     ${section("TODAY'S PRIORITIES", priorities, "No specific priorities surfaced today.")}
