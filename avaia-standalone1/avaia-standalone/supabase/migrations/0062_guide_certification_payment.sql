@@ -1,10 +1,13 @@
 -- Certified AVAIA Guide -- $4,500 program payment record. A payment fact
--- ONLY: it does not create, and must never be read as, a guide_candidates
--- row or any other candidacy/certification fact. Whether a completed
--- payment should automatically admit someone as a candidate is an explicit
--- owner decision, not assumed here -- see the Final Report. Pay-in-full
--- only; no installment schedule is built, per explicit instruction not to
--- invent one.
+-- only: this table itself never becomes, and must never be read as, a
+-- certification decision or certification standing. Owner decision
+-- (2026-09-14): a completed payment DOES automatically open a
+-- guide_candidates candidacy (status 'admitted') -- "payment = enrollment,
+-- not certification" -- implemented in app/api/stripe/webhook/route.ts's
+-- ensureGuideCandidacyFromPayment(), not in this migration; no schema
+-- change was needed since 'admitted' already existed as guide_candidates'
+-- default status. Pay-in-full only; no installment schedule is built, per
+-- explicit instruction not to invent one.
 create table if not exists public.guide_certification_payments (
   id                          uuid primary key default gen_random_uuid(),
   host_id                     uuid not null references auth.users (id) on delete cascade,
