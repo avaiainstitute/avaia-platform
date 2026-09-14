@@ -124,11 +124,6 @@ export default async function Nav() {
                 </Link>
               </li>
               <li>
-                <Link href="/experiences" prefetch={false} className="label hover:text-seal transition-colors">
-                  Bring a Program
-                </Link>
-              </li>
-              <li>
                 <Link href="/contact" prefetch className="label hover:text-seal transition-colors">
                   Contact
                 </Link>
@@ -194,11 +189,6 @@ export default async function Nav() {
             <li>
               <Link href="/chemistry" prefetch className="label hover:text-seal transition-colors">
                 The Chemistry of Virtue
-              </Link>
-            </li>
-            <li>
-              <Link href="/experiences" prefetch={false} className="label hover:text-seal transition-colors">
-                Bring a Program
               </Link>
             </li>
             <li>

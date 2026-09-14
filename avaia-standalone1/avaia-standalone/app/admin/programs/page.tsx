@@ -8,11 +8,13 @@ export const metadata = { title: "Programs & Experiences Inquiries, AVAIA Admin"
 export const dynamic = "force-dynamic";
 
 // Agent 8 (Programs & Experiences) inbound: everyone who has asked to
-// bring an established AVAIA offering to their group via
-// avaiainstitute.com/experiences (see app/experiences/page.tsx). Same
-// admin-role-gated-then-service-role posture as app/admin/opportunities,
-// for the same reason: avaia_experience_inquiries carries zero RLS
-// policies for any signed-in role.
+// bring an established AVAIA offering to their group via /contact's
+// "Bring a Program/Experience to My Group" reason (components/
+// ContactForm.tsx, posting to app/api/experiences/inquiry -- the former
+// standalone /experiences page now redirects there, consolidated into the
+// site's single Contact doorway). Same admin-role-gated-then-service-role
+// posture as app/admin/opportunities, for the same reason:
+// avaia_experience_inquiries carries zero RLS policies for any signed-in role.
 
 const STATUSES = ["new", "acknowledged", "in_progress", "scheduled", "completed", "not_a_fit"] as const;
 
@@ -79,11 +81,11 @@ export default async function AdminProgramsPage({
       <h1 className="font-serif text-4xl text-ink">Programs & Experiences Inquiries</h1>
       <p className="mt-4 text-lg text-muted">
         Inbound requests to bring an established AVAIA Program or Experience to a group,
-        submitted at{" "}
-        <Link href="/experiences" className="underline">
-          /experiences
-        </Link>
-        .
+        submitted through{" "}
+        <Link href="/contact" className="underline">
+          /contact
+        </Link>{" "}
+        (reason: &ldquo;Bring a Program/Experience to My Group&rdquo;).
       </p>
 
       {searchParams?.error && (

@@ -6,9 +6,10 @@ import { EXPERIENCE_TYPES, EXPERIENCE_LABEL, GROUP_TYPES, GROUP_TYPE_LABEL, type
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Agent 8 (Programs & Experiences), inbound. Same-origin AVAIA page (see
-// app/experiences/page.tsx), so no CORS handling is needed here -- unlike
-// the Pink Shoelace routes, which accept submissions from a separate site.
+// Agent 8 (Programs & Experiences), inbound. Same-origin AVAIA page (the
+// "Bring a Program/Experience to My Group" reason on /contact, components/
+// ContactForm.tsx), so no CORS handling is needed here -- unlike the Pink
+// Shoelace routes, which accept submissions from a separate site.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_TEXT_LENGTH = 3000;
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
     location,
     experience_interest: experienceInterest,
     request_details: requestDetails,
-    source: "avaiainstitute.com/experiences",
+    source: "avaiainstitute.com/contact",
   });
   if (dbError) {
     console.error("AVAIA experience inquiry failed to save:", dbError.message);
