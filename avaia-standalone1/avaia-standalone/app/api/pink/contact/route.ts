@@ -3,27 +3,22 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/resend";
 import { pinkContactAcknowledgmentEmailHtml, pinkContactNotificationEmailHtml } from "@/lib/pink/emails";
 import { classifyPinkContact } from "@/lib/pink/classify";
+import { ensurePartnershipFromContact, ensureDonorSponsorRecordFromContact } from "@/lib/pink/linking";
+import { pinkCorsHeaders } from "@/lib/pink/cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ALLOWED_ORIGIN = process.env.PINK_SITE_ORIGIN || "https://thepinkshoelace.org";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_NAME_LENGTH = 200;
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, { status: 204, headers: pinkCorsHeaders(request) });
 }
 
 export async function POST(request: Request) {
+  const CORS_HEADERS = pinkCorsHeaders(request);
   const body = await request.json().catch(() => ({}));
   const name = (body?.name ?? "").toString().trim().slice(0, MAX_NAME_LENGTH);
   const email = (body?.email ?? "").toString().trim();
@@ -46,15 +41,19 @@ export async function POST(request: Request) {
   const { category, needsDorian, followUpNeeded } = classifyPinkContact(message);
 
   const admin = createAdminClient();
-  const { error: dbError } = await admin.from("pink_contact_submissions").insert({
-    name,
-    email,
-    message,
-    category,
-    needs_dorian: needsDorian,
-    follow_up_needed: followUpNeeded,
-    source,
-  });
+  const { data: insertedContact, error: dbError } = await admin
+    .from("pink_contact_submissions")
+    .insert({
+      name,
+      email,
+      message,
+      category,
+      needs_dorian: needsDorian,
+      follow_up_needed: followUpNeeded,
+      source,
+    })
+    .select("id")
+    .single();
   if (dbError) {
     console.error("Pink Shoelace contact submission failed to save:", dbError.message);
     return NextResponse.json(
@@ -83,6 +82,26 @@ export async function POST(request: Request) {
       });
     } catch (e) {
       console.error("Pink Shoelace contact notification email failed:", e);
+    }
+  }
+
+  // Agents 3 & 4 (Partnership, Donor & Sponsor): open the matching
+  // downstream tracking record automatically. Best-effort, same posture as
+  // the emails above -- the submitter's own successful response above never
+  // depends on this succeeding.
+  if (insertedContact?.id) {
+    if (category === "partnership") {
+      try {
+        await ensurePartnershipFromContact(insertedContact.id, { name, email, message });
+      } catch (e) {
+        console.error("Pink Shoelace: partnership auto-link failed:", e);
+      }
+    } else if (category === "volunteer_or_donate") {
+      try {
+        await ensureDonorSponsorRecordFromContact(insertedContact.id, { name, email, message });
+      } catch (e) {
+        console.error("Pink Shoelace: donor/sponsor auto-link failed:", e);
+      }
     }
   }
 
