@@ -127,10 +127,51 @@ async function admitCandidate(formData: FormData) {
   redirect(`/admin/guide-candidates/${candidate.id}?admitted=1`);
 }
 
+/** Round 4 (Guide Certification Operations extension, Agent 7): lets Dorian
+ *  himself flag that he believes a candidate is ready for his own
+ *  certification-decision review. The system never sets this -- there is
+ *  no established competency rubric in this schema for automation to
+ *  evaluate against (see migration 0022's own comment on why certification
+ *  stays a human decision), so this is purely administrative bookkeeping
+ *  for a judgment only Dorian makes. Goes through the signed-in admin's own
+ *  RLS-bound client, matching every other guide_candidates write on this
+ *  page -- this table has its own "admin all" policy from 0022, unlike the
+ *  zero-RLS Round 3/4 tables. */
+async function setReadyForReview(formData: FormData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/admin/guide-candidates");
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "admin") redirect("/");
+
+  const candidateId = String(formData.get("candidateId") ?? "");
+  const readyForReview = formData.get("readyForReview") === "on";
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (!candidateId) redirect("/admin/guide-candidates?error=admit_failed");
+
+  const { error } = await supabase
+    .from("guide_candidates")
+    .update({
+      ready_for_review: readyForReview,
+      ready_for_review_notes: notes || null,
+      ready_for_review_marked_at: readyForReview ? new Date().toISOString() : null,
+      ready_for_review_marked_by: readyForReview ? user.id : null,
+    })
+    .eq("id", candidateId);
+  if (error) console.error("Guide candidates: ready-for-review update failed:", error.message);
+
+  redirect("/admin/guide-candidates?updated=1");
+}
+
 export default async function AdminGuideCandidatesPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: { error?: string; updated?: string };
 }) {
   const supabase = createClient();
   const {
@@ -147,7 +188,7 @@ export default async function AdminGuideCandidatesPage({
 
   const { data: candidateRows } = await supabase
     .from("guide_candidates")
-    .select("id, host_id, status, admitted_at")
+    .select("id, host_id, status, admitted_at, ready_for_review, ready_for_review_notes")
     .order("admitted_at", { ascending: false });
   const candidates = candidateRows ?? [];
 
@@ -169,6 +210,9 @@ export default async function AdminGuideCandidatesPage({
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
           {errorMessage}
         </p>
+      )}
+      {searchParams?.updated && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">Saved.</p>
       )}
 
       {/* Admit a candidate */}
@@ -219,19 +263,43 @@ export default async function AdminGuideCandidatesPage({
         ) : (
           <div className="space-y-2">
             {candidates.map((c) => (
-              <Link
+              <div
                 key={c.id}
-                href={`/admin/guide-candidates/${c.id}`}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rule bg-white/[0.04] px-4 py-3 transition-colors hover:border-seal"
+                className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3"
               >
-                <div>
-                  <p className="text-ink">{emailByHostId.get(c.host_id) ?? "Unknown account"}</p>
-                  <p className="text-xs text-muted">
-                    Admitted {new Date(c.admitted_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <span className="label text-seal">{c.status.replace(/_/g, " ")}</span>
-              </Link>
+                <Link
+                  href={`/admin/guide-candidates/${c.id}`}
+                  className="flex flex-wrap items-center justify-between gap-3 transition-colors hover:text-seal"
+                >
+                  <div>
+                    <p className="text-ink">{emailByHostId.get(c.host_id) ?? "Unknown account"}</p>
+                    <p className="text-xs text-muted">
+                      Admitted {new Date(c.admitted_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className="label text-seal">{c.status.replace(/_/g, " ")}</span>
+                </Link>
+                <form action={setReadyForReview} className="mt-3 flex flex-wrap items-center gap-3 border-t border-rule pt-3">
+                  <input type="hidden" name="candidateId" value={c.id} />
+                  <label className="flex items-center gap-2 text-sm text-ink">
+                    <input type="checkbox" name="readyForReview" defaultChecked={c.ready_for_review} />
+                    Ready for certification review
+                  </label>
+                  <input
+                    type="text"
+                    name="notes"
+                    defaultValue={c.ready_for_review_notes ?? ""}
+                    placeholder="Note for yourself (optional)"
+                    className="min-w-[180px] flex-1 rounded-md border border-rule bg-white/[0.04] px-3 py-1.5 text-sm text-ink"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-rule px-3 py-1.5 text-sm text-ink hover:border-seal"
+                  >
+                    Save
+                  </button>
+                </form>
+              </div>
             ))}
           </div>
         )}

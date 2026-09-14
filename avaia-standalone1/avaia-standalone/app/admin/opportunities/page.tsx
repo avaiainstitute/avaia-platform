@@ -25,14 +25,6 @@ const TABLE_BY_VERTICAL = {
   partnership: "pink_partnership_prospects",
   donor: "pink_donor_prospects",
   program: "avaia_experience_prospects",
-  // ProspectVertical (lib/research/prospect-research.ts) already includes
-  // "speaking" -- this entry was missing, which is what broke the build
-  // (TABLE_BY_VERTICAL[vertical] didn't type-check against the full
-  // union). This page doesn't render a speaking-opportunities section yet
-  // (see AdminOpportunitiesPage below, still only Partnership/Donor/
-  // Program), so this key is currently unreachable from this page's own
-  // forms -- added only to make the lookup total and fix the type error,
-  // not to add the missing UI section.
   speaking: "avaia_speaking_opportunities",
 } as const;
 
@@ -127,6 +119,7 @@ function ProspectSection({
     follow_up_notes: string | null;
     relevance?: string | null;
     relevant_experience?: string | null;
+    application_deadline?: string | null;
   }>;
 }) {
   return (
@@ -177,6 +170,9 @@ function ProspectSection({
                 {p.contact_phone && <p>Phone: {p.contact_phone}</p>}
                 {p.relevance && <p>Relevant to: {p.relevance}</p>}
                 {p.relevant_experience && <p>Best-fit Experience: {p.relevant_experience.replace(/_/g, " ")}</p>}
+                {p.application_deadline && (
+                  <p>Application/submission deadline: {new Date(p.application_deadline).toLocaleDateString()}</p>
+                )}
                 {p.why_relevant && <p>Why it may fit: {p.why_relevant}</p>}
                 {p.follow_up_notes && <p>Notes: {p.follow_up_notes}</p>}
                 {p.next_follow_up_at && (
@@ -252,7 +248,7 @@ export default async function AdminOpportunitiesPage({
   if (profile?.role !== "admin") redirect("/");
 
   const admin = createAdminClient();
-  const [{ data: partnerships }, { data: donors }, { data: programs }] = await Promise.all([
+  const [{ data: partnerships }, { data: donors }, { data: programs }, { data: speaking }] = await Promise.all([
     admin
       .from("pink_partnership_prospects")
       .select("*")
@@ -260,6 +256,7 @@ export default async function AdminOpportunitiesPage({
       .limit(100),
     admin.from("pink_donor_prospects").select("*").order("created_at", { ascending: false }).limit(100),
     admin.from("avaia_experience_prospects").select("*").order("created_at", { ascending: false }).limit(100),
+    admin.from("avaia_speaking_opportunities").select("*").order("created_at", { ascending: false }).limit(100),
   ]);
 
   return (
@@ -308,6 +305,12 @@ export default async function AdminOpportunitiesPage({
         vertical="program"
         description="Organizations, conferences, schools, businesses, and communities where an established AVAIA Program or Experience could fit."
         prospects={programs ?? []}
+      />
+      <ProspectSection
+        title="Speaking & Conference Opportunities (Opportunity Finder)"
+        vertical="speaking"
+        description="Real, currently-open speaking, presenting, or media opportunities for AVAIA and/or Pink Shoelace."
+        prospects={speaking ?? []}
       />
     </div>
   );

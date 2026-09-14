@@ -15,14 +15,19 @@ type AdminSection = { href: string; label: string; description: string };
 // makes this page itself reachable.
 const ADMIN_SECTIONS: AdminSection[] = [
   {
-    href: "/admin/opportunities",
-    label: "Opportunities",
-    description: "Partnership, donor/sponsor, and Programs & Experiences prospects found by outbound research.",
+    href: "/admin/today",
+    label: "What Needs Dorian Today",
+    description: "The primary operating view -- people, decisions, approvals, problems, and opportunities that genuinely need you.",
   },
   {
-    href: "/admin/inquiries",
-    label: "Inquiries",
-    description: "AVAIA and Pink Shoelace contact/participation submissions awaiting acknowledgment or resolution.",
+    href: "/admin/notes",
+    label: "Ideas, Decisions & Follow-ups",
+    description: "Capture an idea, a governing decision, or a follow-up before it's lost.",
+  },
+  {
+    href: "/admin/opportunities",
+    label: "Opportunities",
+    description: "Partnership, donor/sponsor, Programs & Experiences, and speaking/conference prospects found by outbound research.",
   },
   {
     href: "/admin/programs",
@@ -33,6 +38,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     href: "/admin/content",
     label: "Communications & Content",
     description: "Plan social posts, announcements, and PR/media opportunities.",
+  },
+  {
+    href: "/admin/system-checks",
+    label: "System Checks",
+    description: "Website, Journey, and Shared Room operational health, plus Testing/QC and Launch Readiness.",
   },
   {
     href: "/admin/guide-candidates",
