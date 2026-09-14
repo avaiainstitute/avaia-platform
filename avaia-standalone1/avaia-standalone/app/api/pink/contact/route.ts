@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/resend";
 import { pinkContactAcknowledgmentEmailHtml, pinkContactNotificationEmailHtml } from "@/lib/pink/emails";
 import { classifyPinkContact } from "@/lib/pink/classify";
+import { ensurePartnershipFromContact, ensureDonorSponsorRecordFromContact } from "@/lib/pink/linking";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,15 +47,19 @@ export async function POST(request: Request) {
   const { category, needsDorian, followUpNeeded } = classifyPinkContact(message);
 
   const admin = createAdminClient();
-  const { error: dbError } = await admin.from("pink_contact_submissions").insert({
-    name,
-    email,
-    message,
-    category,
-    needs_dorian: needsDorian,
-    follow_up_needed: followUpNeeded,
-    source,
-  });
+  const { data: insertedContact, error: dbError } = await admin
+    .from("pink_contact_submissions")
+    .insert({
+      name,
+      email,
+      message,
+      category,
+      needs_dorian: needsDorian,
+      follow_up_needed: followUpNeeded,
+      source,
+    })
+    .select("id")
+    .single();
   if (dbError) {
     console.error("Pink Shoelace contact submission failed to save:", dbError.message);
     return NextResponse.json(
@@ -83,6 +88,26 @@ export async function POST(request: Request) {
       });
     } catch (e) {
       console.error("Pink Shoelace contact notification email failed:", e);
+    }
+  }
+
+  // Agents 3 & 4 (Partnership, Donor & Sponsor): open the matching
+  // downstream tracking record automatically. Best-effort, same posture as
+  // the emails above -- the submitter's own successful response above never
+  // depends on this succeeding.
+  if (insertedContact?.id) {
+    if (category === "partnership") {
+      try {
+        await ensurePartnershipFromContact(insertedContact.id, { name, email, message });
+      } catch (e) {
+        console.error("Pink Shoelace: partnership auto-link failed:", e);
+      }
+    } else if (category === "volunteer_or_donate") {
+      try {
+        await ensureDonorSponsorRecordFromContact(insertedContact.id, { name, email, message });
+      } catch (e) {
+        console.error("Pink Shoelace: donor/sponsor auto-link failed:", e);
+      }
     }
   }
 

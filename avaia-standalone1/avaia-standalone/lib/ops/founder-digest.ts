@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
+import { getPinkAvaiaConnections } from "@/lib/ops/pink-avaia-connection";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 const ONE_DAY_MS = 86_400_000;
@@ -28,8 +29,11 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     { data: needsDorianPinkParticipation },
     { data: duePartnerships },
     { data: actionNeededPartnerships },
+    { data: dueDonorRecords },
+    { data: actionNeededDonorRecords },
     hostOnboarding,
     guideOperations,
+    pinkAvaiaConnections,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -62,8 +66,16 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       .not("next_follow_up_at", "is", null)
       .order("next_follow_up_at", { ascending: true }),
     admin.from("pink_partnerships").select("organization_name").eq("dorian_action_needed", true),
+    admin
+      .from("pink_donor_sponsor_records")
+      .select("donor_name, next_follow_up_at")
+      .lte("next_follow_up_at", now)
+      .not("next_follow_up_at", "is", null)
+      .order("next_follow_up_at", { ascending: true }),
+    admin.from("pink_donor_sponsor_records").select("donor_name").eq("dorian_action_needed", true),
     getHostOnboardingSnapshot(),
     getGuideOperationsSnapshot(),
+    getPinkAvaiaConnections(since),
   ]);
 
   const whatHappened: string[] = [
@@ -76,6 +88,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     "Every new AVAIA and Pink Shoelace form submission is saved and acknowledged automatically.",
     "Routine submissions (no flagged review needed) receive an automatic reply -- nothing further is required.",
     "Hosts who stall mid-conversation receive a gentle, rate-limited reminder automatically (no more than one per stage per reminder window).",
+    "Pink Shoelace contact messages that read as a partnership or volunteer/donate inquiry automatically open a trackable follow-up record.",
   ];
 
   const waiting: string[] = [];
@@ -84,6 +97,12 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
   for (const p of actionNeededPartnerships ?? []) {
     waiting.push(`Partnership flagged for action: ${p.organization_name}.`);
+  }
+  for (const d of dueDonorRecords ?? []) {
+    waiting.push(`Donor/sponsor follow-up due: ${d.donor_name}.`);
+  }
+  for (const d of actionNeededDonorRecords ?? []) {
+    waiting.push(`Donor/sponsor lead flagged for action: ${d.donor_name}.`);
   }
   if (hostOnboarding.stalledHosts.length) {
     waiting.push(
@@ -95,6 +114,11 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       item.type === "paid_awaiting_decision"
         ? `A certification payment has been waiting ${item.sinceDays} day(s) for a decision.`
         : `A guide candidacy (status: ${item.status}) has had no recorded activity in ${item.sinceDays} day(s).`
+    );
+  }
+  for (const c of pinkAvaiaConnections) {
+    waiting.push(
+      `Pink Shoelace <> AVAIA connection: ${c.pinkName} (${c.pinkEmail}) appears in both Pink Shoelace and AVAIA -- for visibility only, no automatic action taken.`
     );
   }
 
@@ -111,7 +135,10 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     );
   }
 
-  const priorityCandidates = [...needsDorian, ...waiting.filter((w) => w.startsWith("Partnership"))];
+  const priorityCandidates = [
+    ...needsDorian,
+    ...waiting.filter((w) => w.startsWith("Partnership") || w.startsWith("Donor/sponsor")),
+  ];
   const priorities = priorityCandidates.slice(0, 5);
 
   const dateLabel = new Date().toLocaleDateString("en-US", {

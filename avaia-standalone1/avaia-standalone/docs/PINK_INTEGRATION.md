@@ -37,6 +37,17 @@ Saves to `pink_contact_submissions`, sends the submitter an acknowledgment,
 and — only when the message reads as a partnership, media/press, or
 volunteer/donate inquiry, or asks a direct question — flags it for Dorian.
 
+As of Automation Blueprint Phase 4, a message that classifies as a
+**partnership** inquiry also automatically opens a tracking record in
+`pink_partnerships` (organization name defaults to the submitter's own
+name until Dorian corrects it), and a message that classifies as
+**volunteer/donate** interest automatically opens a tracking record in
+`pink_donor_sponsor_records` (donor type left unset for Dorian to set on
+review). Both records are then surfaced by the Founder Digest's existing
+follow-up-due and flagged-for-action lists — see `lib/pink/linking.ts`.
+Neither ever creates more than one such record per submission
+(`source_contact_id` is uniquely constrained per table, migration 0071).
+
 ## `POST https://<your-avaia-domain>/api/pink/participation`
 
 ```json
@@ -92,17 +103,24 @@ matches that specific form (a "Request a Shoelace" form always sends
 `wear_shoelace`, an "Honor Someone" form always sends `honor_someone`, etc.
 — never a value typed by the visitor).
 
+**This wiring step is still not done** — it requires editing
+thepinkshoelace.org's own source, which lives outside this repository (see
+"Who needs to do this" below). Everything on the AVAIA side described in
+this document, including the Phase 4 automation above, is already live and
+waiting for these two `fetch` calls to be added.
+
 # What is genuinely not active yet (do not wire these as if they are)
 
-- **Donations.** `pink_donor_sponsor_records` exists only as a structural
-  placeholder (Phase 4 of the build). It is not connected to Stripe or any
-  payment processor. thepinkshoelace.org itself currently says donations
-  are "coming soon" — that remains true after this build. Do not point a
-  donate button at these endpoints; there is nothing there yet to receive a
-  payment.
-- **In-person event registration.** Not built in this pass (Phase 4,
-  intentionally deferred pending a real decision on what an "Experience"
-  registration should look like).
+- **Donations.** `pink_donor_sponsor_records` now opens automatically as a
+  *tracking lead* when a contact message reads as volunteer/donate interest
+  (Phase 4), but it is still not connected to Stripe or any payment
+  processor, and no donation amount, tier, or pledge mechanism exists.
+  thepinkshoelace.org itself currently says donations are "coming soon" —
+  that remains true after this build. Do not point a donate button at
+  these endpoints; there is nothing there yet to receive a payment.
+- **In-person event registration.** Not built in this pass (deferred
+  pending a real decision on what an "Experience" registration should look
+  like — see the Automation Blueprint's Agent 8 notes).
 - **Automated public content posting.** Nothing here publishes to the site
   or to social channels automatically.
 
@@ -113,7 +131,8 @@ Already required by the rest of the app: `RESEND_API_KEY`,
 defaults: `PINK_SITE_ORIGIN` (default `https://thepinkshoelace.org`),
 `PINK_NOTIFICATION_EMAIL` (falls back to `CONTACT_NOTIFICATION_EMAIL` if
 unset — if neither is set, submissions still save, they just don't trigger
-an internal notification email).
+an internal notification email), `PINK_PARTNERSHIP_FOLLOWUP_DAYS` (default
+3), `PINK_DONOR_FOLLOWUP_DAYS` (default 5).
 
 # Who needs to do this
 
