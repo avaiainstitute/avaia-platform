@@ -134,12 +134,31 @@ school counseling department, a relevant conference).`;
 
 Find legitimate potential sponsors/supporters that appear genuinely
 aligned with The Pink Shoelace Foundation's mission: grief support and
-"people walking with people" through different kinds of loss. Do not
-suggest anyone already known to be a national grief-charity competitor in
-a way that would be an odd fit; prefer local/regional businesses,
-community foundations, employers with visible community-giving programs,
-and organizations whose own public material shows an interest in grief,
-loss, mental health, or community support.
+"people walking with people" through different kinds of loss.
+
+Do not suggest anyone already known to be a national grief-charity
+competitor in a way that would be an odd fit. Prefer local/regional
+businesses, community foundations, and employers with visible
+community-giving programs.
+
+Alignment is broader than only organizations whose public material
+explicitly mentions grief or loss. A prospect also qualifies if its own
+public material shows a genuine interest in one or more closely related
+areas: bereavement support; hospice or end-of-life care; funeral or
+memorial services; mental or emotional wellness; youth or family
+support; community well-being; employee support/wellness programs;
+charitable or community giving; cause-based sponsorship; remembrance or
+memorial causes; or an organization that publicly sponsors other
+aligned community or human-support initiatives.
+
+Every candidate still needs real, verifiable public evidence of that
+alignment -- a program, a giving history, a stated mission, a
+sponsorship you can point to -- never a guess or a generic "this
+business exists and could theoretically give." Write whyRelevant as the
+specific, concrete reason this organization plausibly fits, grounded in
+what your search actually found. This is still a quality bar, not a
+quantity target: return fewer candidates, or none, rather than include
+a weak or generic match.
 
 organizationType must be one of: ${DONOR_ORG_TYPES.join(", ")}.`;
   }
