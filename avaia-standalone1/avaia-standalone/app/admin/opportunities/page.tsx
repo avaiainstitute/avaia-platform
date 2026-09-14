@@ -25,6 +25,15 @@ const TABLE_BY_VERTICAL = {
   partnership: "pink_partnership_prospects",
   donor: "pink_donor_prospects",
   program: "avaia_experience_prospects",
+  // ProspectVertical (lib/research/prospect-research.ts) already includes
+  // "speaking" -- this entry was missing, which is what broke the build
+  // (TABLE_BY_VERTICAL[vertical] didn't type-check against the full
+  // union). This page doesn't render a speaking-opportunities section yet
+  // (see AdminOpportunitiesPage below, still only Partnership/Donor/
+  // Program), so this key is currently unreachable from this page's own
+  // forms -- added only to make the lookup total and fix the type error,
+  // not to add the missing UI section.
+  speaking: "avaia_speaking_opportunities",
 } as const;
 
 const STATUSES = [
