@@ -4,27 +4,21 @@ import { sendEmail } from "@/lib/resend";
 import { pinkContactAcknowledgmentEmailHtml, pinkContactNotificationEmailHtml } from "@/lib/pink/emails";
 import { classifyPinkContact } from "@/lib/pink/classify";
 import { ensurePartnershipFromContact, ensureDonorSponsorRecordFromContact } from "@/lib/pink/linking";
+import { pinkCorsHeaders } from "@/lib/pink/cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const ALLOWED_ORIGIN = process.env.PINK_SITE_ORIGIN || "https://thepinkshoelace.org";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_NAME_LENGTH = 200;
 
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, { status: 204, headers: pinkCorsHeaders(request) });
 }
 
 export async function POST(request: Request) {
+  const CORS_HEADERS = pinkCorsHeaders(request);
   const body = await request.json().catch(() => ({}));
   const name = (body?.name ?? "").toString().trim().slice(0, MAX_NAME_LENGTH);
   const email = (body?.email ?? "").toString().trim();
