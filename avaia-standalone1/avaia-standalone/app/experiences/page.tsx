@@ -2,11 +2,12 @@ import ExperienceInquiryForm from "@/components/ExperienceInquiryForm";
 
 export const metadata = { title: "Bring an AVAIA Experience, AVAIA" };
 
-// Agent 8 (Programs & Experiences) inbound public intake page -- this is
-// the shareable URL Dorian can use ("Bring AVAIA to your school, business,
-// or community") once he begins actively promoting AVAIA's Programs and
-// Experiences on social media. Same pattern as app/contact/page.tsx: a
-// server component wrapping a client form.
+// Agent 8 (Programs & Experiences) inbound public intake page -- the
+// shareable URL Dorian can use ("Bring AVAIA to your school, business, or
+// community") on social media. Linked in the main site nav as "Bring a
+// Program" (components/Nav.tsx) so it's reachable without already knowing
+// this exact URL. Same pattern as app/contact/page.tsx: a server component
+// wrapping a client form.
 export default function ExperiencesPage() {
   return (
     <div className="mx-auto max-w-prose px-5 py-16">

@@ -80,18 +80,15 @@ Neither ever creates more than one such record per submission
 `pink_participation_interest`, acknowledges the submitter, and flags
 `honor_someone`/`foundation_participation`/`other` for Dorian.
 
-**This endpoint has no form pointed at it yet, and that is correct as of
-this pass -- not a gap to close.** thepinkshoelace.org's own
-`get-involved.html` explicitly states these participation features
-("supporting someone directly, joining Foundation activities,
-volunteering, and donating") are "not yet available," and that "nothing
-here should be read as an offer to accept funds or register participation
-until they are built and announced." `partnerships.html` and
-`walk-with-someone.html` likewise route every inquiry to the general
-contact form rather than a dedicated form. The endpoint is built, tested,
-and ready; wiring it is a Dorian-driven site-content decision (what the
-participation forms should look like, when to announce them), not an
-engineering gap.
+**As of the Agent System completion pass, this endpoint is now wired.**
+`get-involved.html`'s "Let us know you're in" section posts here directly
+(name/email/interestType/honoreeName/note/source), matching
+`contact.html`'s own fetch-JSON pattern. It intentionally does NOT claim
+donation or formal-registration capability -- the form's own copy says so
+explicitly, since neither exists yet -- it only captures interest and
+tells the submitter a person will follow up. `partnerships.html` and
+`walk-with-someone.html` still route every inquiry to the general contact
+form rather than a dedicated form; that split is unchanged.
 
 # What was wired on thepinkshoelace.org's side
 

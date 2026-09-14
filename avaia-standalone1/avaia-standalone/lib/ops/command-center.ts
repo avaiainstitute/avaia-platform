@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
+import { getPinkAvaiaConnections } from "@/lib/ops/pink-avaia-connection";
 import { getLatestCheckProblems } from "@/lib/ops/system-checks";
 
 // "What Needs Dorian?" (Round 4, Group 1, item 1) -- built as an extension
@@ -30,9 +31,13 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+const ONE_DAY_MS = 86_400_000;
+
 export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot> {
   const admin = createAdminClient();
   const day = today();
+  const now = new Date().toISOString();
+  const since = new Date(Date.now() - ONE_DAY_MS).toISOString();
 
   const [
     { data: avaiaContacts },
@@ -40,13 +45,18 @@ export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot>
     { data: pinkParticipation },
     { data: experienceInquiries },
     { data: dueFollowUps },
+    { data: duePartnerships },
+    { data: actionNeededPartnerships },
+    { data: dueDonorRecords },
+    { data: actionNeededDonorRecords },
     guideOps,
     { data: readyCandidates },
-    { count: draftContent },
+    { count: approvalPendingContent },
     { count: newPartnerships },
     { count: newDonors },
     { count: newPrograms },
     { count: newSpeaking },
+    pinkAvaiaConnections,
     problems,
   ] = await Promise.all([
     admin.from("contact_submissions").select("name, reason, created_at").eq("needs_dorian", true).in("status", ["new", "acknowledged"]),
@@ -61,17 +71,45 @@ export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot>
       .not("follow_up_date", "is", null)
       .lte("follow_up_date", day)
       .order("follow_up_date", { ascending: true }),
+    // Agent 3 (Partnership) relationship-tracking follow-ups -- same
+    // pink_partnerships table and columns founder-digest.ts already reads,
+    // brought into the live view so Dorian isn't only told about these
+    // once a day by email.
+    admin
+      .from("pink_partnerships")
+      .select("organization_name, next_follow_up_at")
+      .lte("next_follow_up_at", now)
+      .not("next_follow_up_at", "is", null)
+      .order("next_follow_up_at", { ascending: true }),
+    admin.from("pink_partnerships").select("organization_name").eq("dorian_action_needed", true),
+    // Agent 4 (Donor & Sponsor), same pattern.
+    admin
+      .from("pink_donor_sponsor_records")
+      .select("donor_name, next_follow_up_at")
+      .lte("next_follow_up_at", now)
+      .not("next_follow_up_at", "is", null)
+      .order("next_follow_up_at", { ascending: true }),
+    admin.from("pink_donor_sponsor_records").select("donor_name").eq("dorian_action_needed", true),
     getGuideOperationsSnapshot(),
     admin
       .from("guide_candidates")
       .select("id, host_id, ready_for_review_notes")
       .eq("ready_for_review", true)
       .in("status", ["admitted", "in_training", "development_required", "paused", "hold"]),
-    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "draft"),
+    // Agent 9: items actually waiting on Dorian's go-ahead. 'draft' (still
+    // being written) and 'approved' (already decided, just needs
+    // scheduling) are deliberately NOT counted here -- only the explicit
+    // approval-gate status is, so this bucket never floods with routine
+    // in-progress work.
+    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "waiting_for_approval"),
     admin.from("pink_partnership_prospects").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("pink_donor_prospects").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("avaia_experience_prospects").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("avaia_speaking_opportunities").select("id", { count: "exact", head: true }).eq("status", "new"),
+    // Agent 5 (Pink <-> AVAIA Connection) -- read-only, for-visibility-only
+    // cross-reference, bounded to the same 24h freshness window as the
+    // daily digest so this never repeats the same connection twice.
+    getPinkAvaiaConnections(since),
     getLatestCheckProblems(),
   ]);
 
@@ -86,11 +124,21 @@ export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot>
       `${f.kind === "meeting_note" ? "Follow-up from a meeting" : "Follow-up"} due${who ? ` -- ${who}` : ""}: ${f.next_action || f.title}.`
     );
   }
+  for (const p of duePartnerships ?? []) peopleItems.push(`Partnership follow-up due -- ${p.organization_name}.`);
+  for (const p of actionNeededPartnerships ?? []) peopleItems.push(`Partnership flagged for action -- ${p.organization_name}.`);
+  for (const d of dueDonorRecords ?? []) peopleItems.push(`Donor/sponsor follow-up due -- ${d.donor_name}.`);
+  for (const d of actionNeededDonorRecords ?? []) peopleItems.push(`Donor/sponsor lead flagged for action -- ${d.donor_name}.`);
 
   const decisionItems: string[] = [];
   for (const item of guideOps.waitingItems) {
     if (item.type === "paid_awaiting_decision") {
       decisionItems.push(`Guide certification decision awaiting -- payment received ${item.sinceDays} day(s) ago, no decision recorded yet (Host ${item.hostId}).`);
+    } else if (item.type === "candidacy_stalled") {
+      decisionItems.push(`Guide candidacy (status: ${item.status}) has had no recorded activity in ${item.sinceDays} day(s).`);
+    } else if (item.type === "certified_awaiting_grant") {
+      decisionItems.push(`A 'certified' decision has been waiting ${item.sinceDays} day(s) for the certification grant.`);
+    } else if (item.type === "certified_awaiting_toolkit_auth") {
+      decisionItems.push(`An active certification has been waiting ${item.sinceDays} day(s) for Toolkit authorization.`);
     }
   }
   for (const c of readyCandidates ?? []) {
@@ -98,7 +146,7 @@ export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot>
   }
 
   const approvalItems: string[] = [];
-  if ((draftContent ?? 0) > 0) approvalItems.push(`${draftContent} content item(s) in draft awaiting your approval before they're scheduled.`);
+  if ((approvalPendingContent ?? 0) > 0) approvalItems.push(`${approvalPendingContent} content item(s) waiting for your approval.`);
 
   const problemItems = problems.map(
     (p) => `${p.label}${p.detail ? ` -- ${p.detail}` : ""} (${p.category.replace(/_/g, " ")}).`
@@ -109,6 +157,9 @@ export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot>
   if ((newDonors ?? 0) > 0) opportunityItems.push(`${newDonors} new donor/sponsor prospect(s) awaiting first review.`);
   if ((newPrograms ?? 0) > 0) opportunityItems.push(`${newPrograms} new Programs & Experiences prospect(s) awaiting first review.`);
   if ((newSpeaking ?? 0) > 0) opportunityItems.push(`${newSpeaking} new speaking/conference opportunity(ies) awaiting first review.`);
+  for (const c of pinkAvaiaConnections) {
+    opportunityItems.push(`Pink Shoelace <> AVAIA connection -- ${c.pinkName} (${c.pinkEmail}) appears in both, worth a look (no automatic action taken).`);
+  }
 
   const handledSummary = [
     "Every new AVAIA and Pink Shoelace form submission is saved and acknowledged automatically.",
