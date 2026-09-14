@@ -25,6 +25,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Capture an idea, a governing decision, or a follow-up before it's lost.",
   },
   {
+    href: "/admin/inquiries",
+    label: "Inquiries",
+    description: "Every open AVAIA and Pink Shoelace contact/participation submission -- acknowledge or resolve to stop the daily repeat.",
+  },
+  {
     href: "/admin/opportunities",
     label: "Opportunities",
     description: "Partnership, donor/sponsor, Programs & Experiences, and speaking/conference prospects found by outbound research.",

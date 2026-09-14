@@ -22,7 +22,7 @@ const RELATED_TO = [
   "defying_grief", "youth_defying_grief", "workshops_and_speaking", "chemistry_of_virtue",
   "unsung_heroes", "view_from_above", "pink_shoelace_general", "pink_participation", "other",
 ] as const;
-const STATUSES = ["idea", "draft", "approved", "scheduled", "published", "archived"] as const;
+const STATUSES = ["idea", "draft", "waiting_for_approval", "approved", "scheduled", "published", "archived"] as const;
 
 async function requireAdmin() {
   const supabase = createClient();
@@ -206,10 +206,10 @@ export default async function AdminContentPage({
         ) : (
           <div className="space-y-3">
             {items.map((it) => (
-              <details key={it.id} className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
+              <details key={it.id} id={it.id} className="rounded-lg border border-rule bg-white/[0.04] px-4 py-3">
                 <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3">
                   <span className="text-ink">{it.title}</span>
-                  <span className="label text-seal">{it.status}</span>
+                  <span className="label text-seal">{it.status.replace(/_/g, " ")}</span>
                 </summary>
                 <div className="mt-3 space-y-1 text-sm text-muted">
                   <p style={{ whiteSpace: "pre-wrap" }}>{it.summary}</p>
@@ -228,7 +228,7 @@ export default async function AdminContentPage({
                     <select name="status" defaultValue={it.status} className={fieldClass}>
                       {STATUSES.map((s) => (
                         <option key={s} value={s} className="bg-[#05060b] text-ink">
-                          {s}
+                          {s.replace(/_/g, " ")}
                         </option>
                       ))}
                     </select>

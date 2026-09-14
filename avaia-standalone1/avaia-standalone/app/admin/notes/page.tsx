@@ -95,10 +95,62 @@ async function updateNoteStatus(formData: FormData) {
   redirect("/admin/notes?updated=1");
 }
 
+/** Agent 9's one real trigger beyond blank manual entry: turns a Founder
+ *  Idea Catcher entry into an actual avaia_content_items row, in the
+ *  'idea' stage of that agent's own pipeline, so an idea captured here
+ *  doesn't have to be retyped there. Reuses the record rather than
+ *  duplicating it (source_reference stays free text, per that table's own
+ *  design -- never a link into anything private), and only ever promotes
+ *  into the 'idea' stage -- it never drafts, approves, schedules, or
+ *  publishes anything on Dorian's behalf. Only valid for kind='idea' notes
+ *  that haven't already been promoted (checked both client-side, by only
+ *  rendering the button, and here, since this is its own reachable
+ *  endpoint). */
+async function promoteIdeaToContent(formData: FormData) {
+  "use server";
+  await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) redirect("/admin/notes?error=invalid");
+
+  const admin = createAdminClient();
+  const { data: note, error: fetchError } = await admin
+    .from("founder_notes")
+    .select("id, kind, title, body, linked_content_item_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (fetchError || !note || note.kind !== "idea" || note.linked_content_item_id) {
+    redirect("/admin/notes?error=invalid");
+  }
+
+  const { data: contentItem, error: insertError } = await admin
+    .from("avaia_content_items")
+    .insert({
+      title: note.title,
+      summary: note.body,
+      content_type: "other",
+      status: "idea",
+      source_reference: `From the Idea Catcher, ${new Date().toLocaleDateString()}.`,
+    })
+    .select("id")
+    .single();
+  if (insertError || !contentItem) {
+    console.error("Founder notes: promote-to-content insert failed:", insertError?.message);
+    redirect("/admin/notes?error=promote_failed");
+  }
+
+  await admin
+    .from("founder_notes")
+    .update({ linked_content_item_id: contentItem.id, status: "in_progress", updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  redirect("/admin/notes?promoted=1");
+}
+
 export default async function AdminNotesPage({
   searchParams,
 }: {
-  searchParams: { error?: string; added?: string; updated?: string; kind?: string };
+  searchParams: { error?: string; added?: string; updated?: string; promoted?: string; kind?: string };
 }) {
   await requireAdmin();
 
@@ -132,6 +184,11 @@ export default async function AdminNotesPage({
       )}
       {(searchParams?.added || searchParams?.updated) && (
         <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">Saved.</p>
+      )}
+      {searchParams?.promoted && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">
+          Added to Communications &amp; Content as a new idea.
+        </p>
       )}
 
       <section className="rule-t mt-10 border-t border-rule pt-8">
@@ -186,8 +243,15 @@ export default async function AdminNotesPage({
                     <p>Implementation: {n.decision_implementation_status.replace(/_/g, " ")}</p>
                   )}
                   <p>Recorded {new Date(n.created_at).toLocaleString()}{n.source === "ai_assisted" ? " -- AI-assisted, reviewed by you" : ""}</p>
+                  {n.linked_content_item_id && (
+                    <p>
+                      <Link href={`/admin/content#${n.linked_content_item_id}`} className="underline hover:text-seal">
+                        View in Communications &amp; Content
+                      </Link>
+                    </p>
+                  )}
                 </div>
-                <form action={updateNoteStatus} className="mt-4 flex items-center gap-3">
+                <form action={updateNoteStatus} className="mt-4 flex flex-wrap items-center gap-3">
                   <input type="hidden" name="id" value={n.id} />
                   <select
                     name="status"
@@ -207,6 +271,17 @@ export default async function AdminNotesPage({
                     Save
                   </button>
                 </form>
+                {n.kind === "idea" && !n.linked_content_item_id && (
+                  <form action={promoteIdeaToContent} className="mt-2">
+                    <input type="hidden" name="id" value={n.id} />
+                    <button
+                      type="submit"
+                      className="rounded-md border border-rule px-3 py-1.5 text-xs text-ink hover:border-seal"
+                    >
+                      Add to Communications &amp; Content
+                    </button>
+                  </form>
+                )}
               </details>
             ))}
           </div>

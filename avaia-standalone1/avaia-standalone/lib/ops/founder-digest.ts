@@ -46,7 +46,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     { count: reviewDonorProspectCount },
     { data: newProgramProspects },
     { count: reviewProgramProspectCount },
-    { count: draftContentCount },
+    { count: approvalPendingContentCount },
     { count: approvedContentCount },
     { data: newSpeakingOpportunities },
     { count: reviewSpeakingOpportunityCount },
@@ -125,7 +125,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       .order("created_at", { ascending: true }),
     admin.from("avaia_experience_prospects").select("id", { count: "exact", head: true }).eq("status", "new"),
     // Agent 9 (Communications & Content)
-    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "draft"),
+    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "waiting_for_approval"),
     admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "approved"),
     // Round 4: Opportunity Finder's "speaking" vertical.
     admin
@@ -284,8 +284,8 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   if ((reviewSpeakingOpportunityCount ?? 0) > 0) {
     waiting.push(`Speaking/conference opportunity(ies) awaiting your first review: ${reviewSpeakingOpportunityCount}.`);
   }
-  if ((draftContentCount ?? 0) > 0) {
-    waiting.push(`${draftContentCount} content item(s) in draft awaiting your review/approval.`);
+  if ((approvalPendingContentCount ?? 0) > 0) {
+    waiting.push(`${approvalPendingContentCount} content item(s) waiting for your approval.`);
   }
   if ((approvedContentCount ?? 0) > 0) {
     waiting.push(`${approvedContentCount} approved content item(s) ready to schedule or publish.`);
