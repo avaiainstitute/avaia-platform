@@ -1308,7 +1308,7 @@ create policy "guide certification payments admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- cron_runs -- added in 0071_cron_runs.sql. Records each of the three
+-- cron_runs -- added in 0074_cron_runs.sql. Records each of the three
 -- scheduled /api/cron/* routes' own outcome (success/partial/error) so a
 -- silent failure has at least one place to be noticed, read by the founder
 -- digest itself. Note: schema.sql is not fully reconciled with every
