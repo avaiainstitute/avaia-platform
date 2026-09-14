@@ -74,6 +74,41 @@ export function memberWelcomeEmailHtml({ journeyUrl }: { journeyUrl: string }): 
   `.trim();
 }
 
+export function experienceInquiryEmailHtml({
+  name,
+  email,
+  phone,
+  organizationName,
+  groupTypeLabel,
+  approxGroupSize,
+  location,
+  experienceLabel,
+  requestDetails,
+}: {
+  name: string;
+  email: string;
+  phone: string | null;
+  organizationName: string | null;
+  groupTypeLabel: string;
+  approxGroupSize: string | null;
+  location: string | null;
+  experienceLabel: string;
+  requestDetails: string | null;
+}): string {
+  return `
+    <h2>New AVAIA Experience inquiry (Agent 8)</h2>
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    ${phone ? `<p><strong>Phone:</strong> ${escapeHtml(phone)}</p>` : ""}
+    ${organizationName ? `<p><strong>Organization/Group:</strong> ${escapeHtml(organizationName)}</p>` : ""}
+    <p><strong>Group type:</strong> ${escapeHtml(groupTypeLabel)}</p>
+    ${approxGroupSize ? `<p><strong>Approximate group size:</strong> ${escapeHtml(approxGroupSize)}</p>` : ""}
+    ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
+    <p><strong>Interested in:</strong> ${escapeHtml(experienceLabel)}</p>
+    ${requestDetails ? `<p><strong>Details:</strong></p><p style="white-space:pre-wrap">${escapeHtml(requestDetails)}</p>` : ""}
+  `.trim();
+}
+
 export function contactSubmissionEmailHtml({
   name,
   email,
