@@ -42,7 +42,7 @@ export async function getCommandCenterSnapshot(): Promise<CommandCenterSnapshot>
     { data: dueFollowUps },
     guideOps,
     { data: readyCandidates },
-    { data: draftContent },
+    { count: draftContent },
     { count: newPartnerships },
     { count: newDonors },
     { count: newPrograms },
