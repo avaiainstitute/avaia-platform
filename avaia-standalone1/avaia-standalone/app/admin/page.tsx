@@ -65,6 +65,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Move a Guide-facilitated participant to a different toolkit-authorized Guide, preserving their full record.",
   },
   {
+    href: "/admin/entitlements",
+    label: "Entitlements",
+    description: "Read-only: active Individual/Family Membership access and Certified AVAIA Guide Program payments.",
+  },
+  {
     href: "/admin/organization-admins",
     label: "Organization Administrators",
     description: "Grant or revoke Organization Administrator authorization for a specific organization.",
