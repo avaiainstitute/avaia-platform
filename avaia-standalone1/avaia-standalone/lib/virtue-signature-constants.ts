@@ -35,7 +35,12 @@ export const SIGNATURE_LAYER_ORDER: SignatureLayer[] = [
   "want_to_contribute",
 ];
 
-export type SignatureSourceType = "self" | "conversation_referral" | "unsung_heroes" | "observation_offered";
+export type SignatureSourceType =
+  | "self"
+  | "conversation_referral"
+  | "unsung_heroes"
+  | "observation_offered"
+  | "journal";
 
 export type VirtueSignatureEntry = {
   id: string;
