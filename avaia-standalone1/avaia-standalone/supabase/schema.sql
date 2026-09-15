@@ -1407,3 +1407,27 @@ create policy "family invite reminders admin all"
   on public.family_invite_reminders for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- journal_entries -- added in 0080_journal.sql. Self-only, no admin/shared
+-- access of any kind. NOTE: virtue_signature_entries itself (0044) is not
+-- yet reconciled into this file (a pre-existing gap, not introduced here),
+-- so this migration's widening of its source_type check to add 'journal'
+-- is not reflected below -- see 0080_journal.sql directly for that ALTER.
+-- ---------------------------------------------------------------------------
+create table if not exists public.journal_entries (
+  id            uuid primary key default gen_random_uuid(),
+  host_id       uuid not null references auth.users (id) on delete cascade,
+  content       text not null,
+  entry_method  text not null check (entry_method in ('write', 'talk')),
+  context       jsonb,
+  created_at    timestamptz not null default now()
+);
+
+create index if not exists journal_entries_host_idx on public.journal_entries (host_id, created_at desc);
+
+alter table public.journal_entries enable row level security;
+
+create policy "journal entries are self-only"
+  on public.journal_entries for all
+  using (auth.uid() = host_id) with check (auth.uid() = host_id);

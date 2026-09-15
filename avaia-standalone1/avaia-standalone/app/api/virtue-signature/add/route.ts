@@ -19,7 +19,13 @@ const VALID_LAYERS: SignatureLayer[] = [
   "want_to_practice",
   "want_to_contribute",
 ];
-const VALID_SOURCES: SignatureSourceType[] = ["self", "conversation_referral", "unsung_heroes", "observation_offered"];
+const VALID_SOURCES: SignatureSourceType[] = [
+  "self",
+  "conversation_referral",
+  "unsung_heroes",
+  "observation_offered",
+  "journal",
+];
 
 /** The "Consider for My Virtue Signature" action, components/
  *  WhatBecameVisible.tsx (Journey completion card, Unsung Heroes) posts
@@ -47,6 +53,12 @@ export async function POST(request: Request) {
   const sourceType = body?.sourceType;
   const sourceReference: string | null = body?.sourceReference ? body.sourceReference.toString() : null;
   const participantId: string | null = body?.participantId ? body.participantId.toString() : null;
+  // addSignatureEntryForHost/ForParticipant already accept a note (the
+  // Host's own words for why/how this became visible to them); this route
+  // just never read one from the request body before -- every existing
+  // caller (WhatBecameVisible.tsx) never sent one, so passing it through
+  // now changes nothing for them.
+  const note: string | null = body?.note ? body.note.toString().trim() || null : null;
 
   if (!VALID_LAYERS.includes(layer) || !family) {
     return NextResponse.json({ error: "Missing layer or family." }, { status: 400 });
@@ -75,7 +87,7 @@ export async function POST(request: Request) {
       layer,
       family,
       element,
-      null,
+      note,
       resolvedSource,
       sourceReference
     );
@@ -89,7 +101,7 @@ export async function POST(request: Request) {
     layer,
     family,
     element,
-    null,
+    note,
     resolvedSource,
     sourceReference
   );

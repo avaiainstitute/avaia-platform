@@ -4503,9 +4503,32 @@ export type OriginContextInput =
   // origin_context column and same composition point as the other source
   // above, no new mechanism, per the established discipline that this
   // clause strengthens the stage instructions without replacing them.
-  | { source: "shared-room"; roomTitle: string | null; items: { speakerName: string; content: string }[] };
+  | { source: "shared-room"; roomTitle: string | null; items: { speakerName: string; content: string }[] }
+  // Journal -> Conversation, see lib/engine/origin-context.ts's own
+  // comment on this source. Always the Host's own explicit "Bring to a
+  // Conversation" choice on one of their own entries -- Journal never
+  // sends anything into a conversation automatically.
+  | { source: "journal"; content: string; createdAt: string };
 
 export function originContextClause(origin: OriginContextInput): string {
+  if (origin.source === "journal") {
+    return `ORIGIN CONTEXT (STRENGTHENS THE ABOVE, DOES NOT REPLACE IT)
+
+This Host just chose, themselves, to bring one of their own Journal entries into this
+conversation. A Journal entry is never an AI conversation and nothing in it has ever been
+seen, read, or responded to by AVAIA before now, this is the first time. Written on
+${new Date(origin.createdAt).toLocaleDateString()}, in the Host's own words:
+
+"${origin.content}"
+
+This is reference material only, for your own context, never to be recited back verbatim
+unless the Host asks. Do not assume why the Host brought this, what it means, or what they
+want from bringing it, they may want to explore it further, may have new thoughts since
+writing it, may want to say more, or may want to go somewhere it only loosely reminded them
+of. Ask what's on their mind, or an equivalent open question in your own words, and follow
+wherever they actually take it, exactly as you would in any other IAP conversation. Do not
+summarize, interpret, or draw a conclusion about the entry on the Host's behalf.`;
+  }
   if (origin.source === "shared-room") {
     const roomLabel = origin.roomTitle ? `the Shared Room, "${origin.roomTitle}"` : "a Shared Room conversation";
     const material = origin.items.map((it) => `${it.speakerName}: "${it.content}"`).join("\n\n");

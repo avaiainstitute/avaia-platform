@@ -19,12 +19,21 @@ import { isMember } from "@/lib/membership";
 // inventing or passing through anything, fails closed, never fails
 // open into fabricated content.
 
-export type OriginContext = {
-  source: "chemistry" | "view-from-above" | "library";
-  label: string; // the element name, class title, or Library entry/concept title
-  family: string; // Virtue Family display name, or "Library"
-  definition: string; // canonical element definition, class human question, or Library excerpt
-};
+export type OriginContext =
+  | {
+      source: "chemistry" | "view-from-above" | "library";
+      label: string; // the element name, class title, or Library entry/concept title
+      family: string; // Virtue Family display name, or "Library"
+      definition: string; // canonical element definition, class human question, or Library excerpt
+    }
+  // A Host intentionally bringing one of their own Journal entries into a
+  // new IAP conversation ("Bring to a Conversation" on a journal entry --
+  // see app/workbook/journal/[entryId]/page.tsx). Deliberately a different
+  // shape than the three above: a journal entry has no canonical
+  // family/definition of its own, it's the Host's own words, in full. Only
+  // ever resolved through the Host's own RLS-scoped client below, so this
+  // can never resolve someone else's private entry.
+  | { source: "journal"; content: string; createdAt: string };
 
 /** `key` for source="library" is prefixed ("entry:<uuid>" or
  *  "concept:<uuid>") since a Host can bring either into a conversation
@@ -99,6 +108,21 @@ export async function resolveOriginContext(
       };
     }
     return null;
+  }
+
+  // Journal -> Conversation, entirely Host-initiated (an explicit "Bring
+  // to a Conversation" click on one of their own entries, never anything
+  // automatic). `key` is the journal entry's own id. Requires both
+  // supabase and viewerId, unlike chemistry/view-from-above's public
+  // canonical data -- there is nothing to resolve without an authenticated
+  // owner. RLS on journal_entries (self-only) already guarantees this
+  // query returns nothing for an entry that isn't viewerId's own; the
+  // explicit host_id check below is only a second, defensive guard, same
+  // style as the library branch above.
+  if (source === "journal" && supabase && viewerId) {
+    const { data } = await supabase.from("journal_entries").select("*").eq("id", key).maybeSingle();
+    if (!data || data.host_id !== viewerId) return null;
+    return { source: "journal", content: data.content as string, createdAt: data.created_at as string };
   }
 
   return null;

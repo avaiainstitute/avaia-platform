@@ -564,8 +564,21 @@ export default async function WorkbookPage({
         >
           {hasActive ? "Continue your journey" : "Begin a new journey"}
         </Link>
+        <Link
+          href="/workbook/journal"
+          className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
+        >
+          Open your Journal
+        </Link>
         {journeys.length > 0 && <ShareButton scope="workbook" label="Share entire Workbook" />}
       </div>
+      {/* Journal: what you want to capture along the way, distinct from a
+          Journey conversation. Lives inside the Workbook, not a separate
+          product -- see app/workbook/journal/page.tsx. */}
+      <p className="mt-4 text-sm text-muted">
+        Journal is a private place to capture a thought, a moment, or a realization whenever it
+        comes to you, no conversation, no response from AVAIA, nothing rewritten.
+      </p>
 
       {/* Shared with Me lives here rather than in top-level navigation,
           it's a receiving view for AVAIA's sharing feature, not a
