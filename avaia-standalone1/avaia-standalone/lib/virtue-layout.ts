@@ -22,35 +22,43 @@ export const VIRTUE_POS: Record<string, [number, number]> = {
   Discernment: [6, 1], Creativity: [6, 2], Objectivity: [6, 3], Capacity: [6, 4],
   Vision: [7, 1], Simplicity: [7, 2], Change: [7, 3], Priority: [7, 4],
 
-  // Justice, cols 6-9
+  // Justice, packed immediately after Wisdom, no reserved dead columns.
   Fairness: [4, 6], Honesty: [4, 7], Courtesy: [4, 8], Impartial: [4, 9],
   Respect: [5, 6], Tolerance: [5, 7], Benignity: [5, 8],
-  Dignity: [6, 6], Acceptance: [6, 7], Grace: [6, 8], Truth: [6, 9],
-  Civility: [7, 6], Chivalry: [7, 7], Honor: [7, 8], Equality: [7, 9],
+  Dignity: [6, 5], Acceptance: [6, 6], Grace: [6, 7], Truth: [6, 8],
+  Civility: [7, 5], Chivalry: [7, 6], Honor: [7, 7], Equality: [7, 8],
 
-  // Fortitude, cols 10-12
+  // Fortitude, packed immediately after Justice.
   Courage: [4, 10], Magnanimity: [4, 11],
-  Steadfast: [5, 10], Resilience: [5, 11], Assertive: [5, 12],
-  Confidence: [6, 10], Fearlessness: [6, 11], Independent: [6, 12],
-  Bravery: [7, 10], Valor: [7, 11],
+  Steadfast: [5, 9], Resilience: [5, 10], Assertive: [5, 11],
+  Confidence: [6, 9], Fearlessness: [6, 10], Independent: [6, 11],
+  Bravery: [7, 9], Valor: [7, 10],
 
-  // Self-Control, main cols 13-14 (+ extras in the top-right cluster)
-  Mindfulness: [4, 13], Patience: [4, 14],
-  Mercy: [5, 13], "Long-suffering": [5, 14],
-  Awareness: [6, 13], Fidelity: [6, 14],
-  Temperance: [7, 13], Moderation: [7, 14],
+  // Self-Control, main rows (+ extras in the top-right cluster). Packed
+  // immediately after Fortitude, not a fixed column pair, since Fortitude's
+  // own width varies 2-3 across these rows.
+  Mindfulness: [4, 12], Patience: [4, 13],
+  Mercy: [5, 12], "Long-suffering": [5, 13],
+  Awareness: [6, 12], Fidelity: [6, 13],
+  Temperance: [7, 11], Moderation: [7, 12],
 
-  // Love, main cols 15-18 (+ extras in the top-right cluster)
-  Kindness: [4, 15], Adoration: [4, 16], Forgiveness: [4, 17],
-  Sacrifice: [5, 15], Nurturing: [5, 16], Compassion: [5, 17],
-  Benevolence: [6, 15], Generosity: [6, 16], Hospitality: [6, 17],
-  Admiration: [7, 15], Helpfulness: [7, 16], Loyalty: [7, 17], Yearning: [7, 18],
+  // Love, main rows (+ extras in the top-right cluster). Packed immediately
+  // after Self-Control.
+  Kindness: [4, 14], Adoration: [4, 15], Forgiveness: [4, 16],
+  Sacrifice: [5, 14], Nurturing: [5, 15], Compassion: [5, 16],
+  Benevolence: [6, 14], Generosity: [6, 15], Hospitality: [6, 16],
+  Admiration: [7, 13], Helpfulness: [7, 14], Loyalty: [7, 15], Yearning: [7, 16],
 
-  // Positive Attitude, main cols 19-20 (+ extras in the top-right cluster)
-  Beauty: [4, 19], Serenity: [4, 20],
-  Adaptability: [5, 19], Humor: [5, 20],
-  Optimism: [6, 19], Flexibility: [6, 20],
-  Hope: [7, 19], Zeal: [7, 20],
+  // Positive Attitude, main rows (+ extras in the top-right cluster). Packed
+  // immediately after Love, so every row 4-7 ends flush with no trailing gap
+  // (see this file's own comment above on why: dense per-row packing in
+  // family order, not a fixed column reserved for every family in every
+  // row, removes the interior "holes" a fixed reservation scheme leaves
+  // wherever a family has fewer elements in one row than its widest row).
+  Beauty: [4, 17], Serenity: [4, 18],
+  Adaptability: [5, 17], Humor: [5, 18],
+  Optimism: [6, 17], Flexibility: [6, 18],
+  Hope: [7, 17], Zeal: [7, 18],
 
   // Top-right cluster (rows 2-3, cols 15-20), the "p-block"
   Purity: [2, 15], Peace: [2, 16], Charity: [2, 17], Thoughtfulness: [2, 18], Joy: [2, 19], Reverence: [2, 20],
