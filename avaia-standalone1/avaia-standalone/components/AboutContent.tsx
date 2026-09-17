@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GIVE_METHOD } from "@/lib/institution";
 
 /**
@@ -7,8 +8,9 @@ import { GIVE_METHOD } from "@/lib/institution";
  * (Journey architecture, Workbook, Living Library, Programs, Chemistry,
  * Virtue Signature, Host/Guide/Witness, the five Operating Principles, the
  * Institution/Constitution) but is no longer displayed here. It's reachable
- * through its own pages (e.g. /chemistry, /defying-grief) or, for
- * governance material, not exposed on the public site at all. The GIVE
+ * through its own pages (e.g. /chemistry, /defying-grief, or the one quiet
+ * reference line below linking to /institution, /reports, and
+ * /shared-room). The GIVE
  * Method section below is a deliberate, temporary exception, the Guide
  * Toolkit currently links here (lib/toolkit.ts's "give" entry, /about#give)
  * and that dependency is not being touched in this pass.
@@ -44,6 +46,28 @@ export default function AboutContent() {
         arranged. AVAIA is not therapy, counseling, or crisis care. Founded by Dorian Johnson,
         AVAIA is governed by a written Constitution, a defined Journey architecture, and
         professional standards for those certified to steward AVAIA conversations.
+      </p>
+
+      {/* Discoverability only, no new marketing copy: three existing pages
+          (Constitution/governance, how reports work, Shared Rooms) had no
+          link into them from anywhere in the app (found during the
+          navigation audit). One quiet reference line, styled like
+          /chemistry's own "Explore the Secondary Losses ->" links, kept
+          below the primary visitor journey rather than competing with it. */}
+      <p className="mt-6 text-sm text-muted">
+        Read AVAIA&rsquo;s full{" "}
+        <Link href="/institution" className="underline decoration-rule underline-offset-2 hover:text-seal">
+          Constitution and Operating Principles →
+        </Link>
+        , see{" "}
+        <Link href="/reports" className="underline decoration-rule underline-offset-2 hover:text-seal">
+          how AVAIA&rsquo;s reports work →
+        </Link>
+        , or learn about{" "}
+        <Link href="/shared-room" className="underline decoration-rule underline-offset-2 hover:text-seal">
+          Shared Rooms →
+        </Link>
+        , more than one person in the same AVAIA conversation.
       </p>
 
       {/* GIVE Method, left exactly in place; the Guide Toolkit links here

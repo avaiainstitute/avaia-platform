@@ -35,6 +35,13 @@ const HOST_TOOLKIT_LINKS: NavLink[] = [
   { href: "/signature", label: "Virtue Signature" },
   { href: "/still-needs-to-be-said", label: "What Still Needs to Be Said" },
   { href: "/journey", label: "Continue Your Journey" },
+  // Navigation audit finding: signed-in Hosts had no direct nav path to
+  // Chemistry at all (only indirect, via links inside Virtue Signature/
+  // Unsung Heroes/Defying Grief). It's an AVAIA Tool, same as everything
+  // else in this list, not a Program, so it belongs here, not in the
+  // Programs dropdown above. Signed-out visitors are unaffected, they
+  // still get it as its own top-level link below.
+  { href: "/chemistry", label: "The Chemistry of Virtue" },
 ];
 
 export default async function Nav() {
