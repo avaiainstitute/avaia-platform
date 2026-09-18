@@ -245,7 +245,7 @@ export default function ChemistryPage() {
                       setActive(v.family);
                     }}
                     title={`${v.name} · ${fam.name}`}
-                    className="flex aspect-square flex-col justify-between rounded-[3px] p-1 text-left text-white transition-all hover:z-10 hover:brightness-110"
+                    className="flex aspect-[4/3] flex-col justify-between rounded-[3px] p-1 text-left text-white transition-all hover:z-10 hover:brightness-110"
                     style={{
                       gridRow: isStrip ? pos[0] - STRIP_FIRST_ROW + 1 : pos[0],
                       gridColumn: pos[1],

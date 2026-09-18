@@ -9,7 +9,7 @@
 //
 // Keyed by virtue NAME (symbols repeat across families). [row, col], 1-indexed.
 
-export const GRID_COLS = 20;
+export const GRID_COLS = 18;
 // Rows 1-7 are the main structure. Rows 9-10 (STRIP_FIRST_ROW onward) are the
 // separate Humility/Gratitude/Integrity/Hard Work strip, rendered as its own
 // 17-column grid stretched to the same right edge as the main body's
@@ -69,9 +69,9 @@ export const VIRTUE_POS: Record<string, [number, number]> = {
   Optimism: [6, 17], Flexibility: [6, 18],
   Hope: [7, 17], Zeal: [7, 18],
 
-  // Top-right cluster (rows 2-3, cols 15-20), the "p-block"
-  Purity: [2, 15], Peace: [2, 16], Charity: [2, 17], Thoughtfulness: [2, 18], Joy: [2, 19], Reverence: [2, 20],
-  Obedience: [3, 15], Cherish: [3, 16], Sympathy: [3, 17], Devotion: [3, 18], Cheerfulness: [3, 19], Faith: [3, 20],
+  // Top-right cluster (rows 2-3, cols 13-18, flush with the body's right edge), the "p-block"
+  Purity: [2, 13], Peace: [2, 14], Charity: [2, 15], Thoughtfulness: [2, 16], Joy: [2, 17], Reverence: [2, 18],
+  Obedience: [3, 13], Cherish: [3, 14], Sympathy: [3, 15], Devotion: [3, 16], Cheerfulness: [3, 17], Faith: [3, 18],
 
   // Breakout strip, row 9 (Humility · Gratitude · Integrity · Hard Work),
   // separated from the main structure by the spacer row 8.

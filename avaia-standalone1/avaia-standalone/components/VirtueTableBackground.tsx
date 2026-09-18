@@ -89,7 +89,7 @@ export default function VirtueTableBackground() {
           return (
             <div
               key={v.name}
-              className="flex aspect-square flex-col justify-between overflow-hidden rounded-[3px] p-1 text-white transition-all duration-500"
+              className="flex aspect-[4/3] flex-col justify-between overflow-hidden rounded-[3px] p-1 text-white transition-all duration-500"
               style={{
                 gridRow: isStrip ? pos[0] - STRIP_FIRST_ROW + 1 : pos[0],
                 gridColumn: pos[1],
