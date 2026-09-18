@@ -10,11 +10,16 @@
 // Keyed by virtue NAME (symbols repeat across families). [row, col], 1-indexed.
 
 export const GRID_COLS = 20;
-// Rows 1-7 are the main structure, row 8 is a deliberate empty spacer, and
-// rows 9-10 are the separate Humility/Gratitude/Integrity/Hard Work strip,
-// matching the visual gap in Dorian's original artwork. Rows 1-7 stay
-// `auto` (square cells); only the spacer row is a fixed height.
-export const GRID_ROW_TEMPLATE = "repeat(7, auto) 14px repeat(2, auto)";
+// Rows 1-7 are the main structure. Rows 9-10 (STRIP_FIRST_ROW onward) are the
+// separate Humility/Gratitude/Integrity/Hard Work strip, rendered as its own
+// 17-column grid stretched to the same right edge as the main body's
+// BODY_COLS (18) columns, with a gap above it, matching Dorian's original
+// artwork (wider strip cells, same right edge as the body).
+export const MAIN_ROW_TEMPLATE = "repeat(7, auto)";
+export const STRIP_FIRST_ROW = 9;
+export const STRIP_COLS = 17;
+export const BODY_COLS = 18;
+export const STRIP_GAP_PX = 14;
 
 export const VIRTUE_POS: Record<string, [number, number]> = {
   // Wisdom, top-left tower + main region (cols 1-5)

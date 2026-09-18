@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { VIRTUES, familyOf } from "@/lib/virtues";
-import { VIRTUE_POS, GRID_COLS, GRID_ROW_TEMPLATE } from "@/lib/virtue-layout";
+import {
+  VIRTUE_POS,
+  GRID_COLS,
+  MAIN_ROW_TEMPLATE,
+  STRIP_FIRST_ROW,
+  STRIP_COLS,
+  BODY_COLS,
+  STRIP_GAP_PX,
+} from "@/lib/virtue-layout";
 import type { ResolvedFocus } from "@/lib/virtue-focus";
 
 /**
@@ -48,17 +56,29 @@ export default function VirtueTableBackground() {
       }}
     >
       <div
-        className="grid gap-[3px] transition-opacity duration-700"
-        style={{
-          width: "min(1240px, 96vw)",
-          gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
-          gridTemplateRows: GRID_ROW_TEMPLATE,
-          opacity: active ? 0.7 : 0.42,
-        }}
+        className="transition-opacity duration-700"
+        style={{ width: "min(1240px, 96vw)", opacity: active ? 0.7 : 0.42 }}
       >
+       {[false, true].map((isStrip) => (
+        <div
+          key={isStrip ? "strip" : "main"}
+          className="grid gap-[3px]"
+          style={
+            isStrip
+              ? {
+                  gridTemplateColumns: `repeat(${STRIP_COLS}, minmax(0, 1fr))`,
+                  width: `${(BODY_COLS / GRID_COLS) * 100}%`,
+                  marginTop: `${STRIP_GAP_PX}px`,
+                }
+              : {
+                  gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
+                  gridTemplateRows: MAIN_ROW_TEMPLATE,
+                }
+          }
+        >
         {VIRTUES.map((v) => {
           const pos = VIRTUE_POS[v.name];
-          if (!pos) return null;
+          if (!pos || (pos[0] >= STRIP_FIRST_ROW) !== isStrip) return null;
           const fam = familyOf(v.family);
 
           const inFamily = active && v.family === focus!.familyKey;
@@ -71,7 +91,7 @@ export default function VirtueTableBackground() {
               key={v.name}
               className="flex aspect-square flex-col justify-between overflow-hidden rounded-[3px] p-1 text-white transition-all duration-500"
               style={{
-                gridRow: pos[0],
+                gridRow: isStrip ? pos[0] - STRIP_FIRST_ROW + 1 : pos[0],
                 gridColumn: pos[1],
                 backgroundColor: fam.color,
                 opacity: tileOpacity,
@@ -95,6 +115,8 @@ export default function VirtueTableBackground() {
             </div>
           );
         })}
+        </div>
+       ))}
       </div>
     </div>
   );

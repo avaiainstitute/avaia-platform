@@ -11,7 +11,15 @@ import {
   type VirtueFamilyKey,
 } from "@/lib/virtues";
 import { resolveFocus } from "@/lib/virtue-focus";
-import { VIRTUE_POS, GRID_COLS, GRID_ROW_TEMPLATE } from "@/lib/virtue-layout";
+import {
+  VIRTUE_POS,
+  GRID_COLS,
+  MAIN_ROW_TEMPLATE,
+  STRIP_FIRST_ROW,
+  STRIP_COLS,
+  BODY_COLS,
+  STRIP_GAP_PX,
+} from "@/lib/virtue-layout";
 import { VIRTUE_FAMILY_LOOKS_LIKE } from "@/lib/virtue-looks-like";
 import VirtueFormulaGenerator from "@/components/VirtueFormulaGenerator";
 import VirtueNameAcronym from "@/components/VirtueNameAcronym";
@@ -205,47 +213,59 @@ export default function ChemistryPage() {
       {/* Periodic table, laid out to mirror the official artwork.
           Horizontally scrollable on narrow screens (like a real periodic table). */}
       <div className="mt-8 overflow-x-auto pb-2">
-        <div
-          className="grid gap-[3px]"
-          style={{
-            gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
-            gridTemplateRows: GRID_ROW_TEMPLATE,
-            minWidth: "880px",
-          }}
-        >
-          {VIRTUES.map((v) => {
-            const fam = familyOf(v.family);
-            const pos = VIRTUE_POS[v.name];
-            if (!pos) return null;
-            const dim = active !== null && active !== v.family;
-            const isSel = selected?.name === v.name;
-            return (
-              <button
-                key={v.name}
-                onClick={() => {
-                  setSelected(v);
-                  setActive(v.family);
-                }}
-                title={`${v.name} · ${fam.name}`}
-                className="flex aspect-square flex-col justify-between rounded-[3px] p-1 text-left text-white transition-all hover:z-10 hover:brightness-110"
-                style={{
-                  gridRow: pos[0],
-                  gridColumn: pos[1],
-                  backgroundColor: fam.color,
-                  opacity: dim ? 0.14 : 1,
-                  outline: isSel ? "2px solid #e9eef4" : "none",
-                  outlineOffset: "1px",
-                }}
-              >
-                <span className="font-sans text-[0.62rem] font-bold leading-none">
-                  {v.symbol}
-                </span>
-                <span className="font-sans text-[0.44rem] leading-[1.05] tracking-tight">
-                  {v.name}
-                </span>
-              </button>
-            );
-          })}
+        <div style={{ minWidth: "880px" }}>
+          {[false, true].map((isStrip) => (
+            <div
+              key={isStrip ? "strip" : "main"}
+              className="grid gap-[3px]"
+              style={
+                isStrip
+                  ? {
+                      gridTemplateColumns: `repeat(${STRIP_COLS}, minmax(0, 1fr))`,
+                      width: `${(BODY_COLS / GRID_COLS) * 100}%`,
+                      marginTop: `${STRIP_GAP_PX}px`,
+                    }
+                  : {
+                      gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
+                      gridTemplateRows: MAIN_ROW_TEMPLATE,
+                    }
+              }
+            >
+              {VIRTUES.map((v) => {
+                const fam = familyOf(v.family);
+                const pos = VIRTUE_POS[v.name];
+                if (!pos || (pos[0] >= STRIP_FIRST_ROW) !== isStrip) return null;
+                const dim = active !== null && active !== v.family;
+                const isSel = selected?.name === v.name;
+                return (
+                  <button
+                    key={v.name}
+                    onClick={() => {
+                      setSelected(v);
+                      setActive(v.family);
+                    }}
+                    title={`${v.name} · ${fam.name}`}
+                    className="flex aspect-square flex-col justify-between rounded-[3px] p-1 text-left text-white transition-all hover:z-10 hover:brightness-110"
+                    style={{
+                      gridRow: isStrip ? pos[0] - STRIP_FIRST_ROW + 1 : pos[0],
+                      gridColumn: pos[1],
+                      backgroundColor: fam.color,
+                      opacity: dim ? 0.14 : 1,
+                      outline: isSel ? "2px solid #e9eef4" : "none",
+                      outlineOffset: "1px",
+                    }}
+                  >
+                    <span className="font-sans text-[0.62rem] font-bold leading-none">
+                      {v.symbol}
+                    </span>
+                    <span className="font-sans text-[0.44rem] leading-[1.05] tracking-tight">
+                      {v.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
