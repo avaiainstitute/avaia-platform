@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { VIRTUES, familyOf } from "@/lib/virtues";
-import { VIRTUE_POS, GRID_COLS, GRID_ROWS } from "@/lib/virtue-layout";
+import { VIRTUE_POS, GRID_COLS, GRID_ROW_TEMPLATE } from "@/lib/virtue-layout";
 import type { ResolvedFocus } from "@/lib/virtue-focus";
 
 /**
@@ -52,7 +52,7 @@ export default function VirtueTableBackground() {
         style={{
           width: "min(1240px, 96vw)",
           gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${GRID_ROWS}, auto)`,
+          gridTemplateRows: GRID_ROW_TEMPLATE,
           opacity: active ? 0.7 : 0.42,
         }}
       >

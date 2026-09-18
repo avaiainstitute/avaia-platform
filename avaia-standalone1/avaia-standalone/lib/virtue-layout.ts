@@ -10,7 +10,11 @@
 // Keyed by virtue NAME (symbols repeat across families). [row, col], 1-indexed.
 
 export const GRID_COLS = 20;
-export const GRID_ROWS = 9;
+// Rows 1-7 are the main structure, row 8 is a deliberate empty spacer, and
+// rows 9-10 are the separate Humility/Gratitude/Integrity/Hard Work strip,
+// matching the visual gap in Dorian's original artwork. Rows 1-7 stay
+// `auto` (square cells); only the spacer row is a fixed height.
+export const GRID_ROW_TEMPLATE = "repeat(7, auto) 14px repeat(2, auto)";
 
 export const VIRTUE_POS: Record<string, [number, number]> = {
   // Wisdom, top-left tower + main region (cols 1-5)
@@ -64,15 +68,16 @@ export const VIRTUE_POS: Record<string, [number, number]> = {
   Purity: [2, 15], Peace: [2, 16], Charity: [2, 17], Thoughtfulness: [2, 18], Joy: [2, 19], Reverence: [2, 20],
   Obedience: [3, 15], Cherish: [3, 16], Sympathy: [3, 17], Devotion: [3, 18], Cheerfulness: [3, 19], Faith: [3, 20],
 
-  // Breakout strip, row 8 (Humility · Gratitude · Integrity · Hard Work)
-  Modesty: [8, 1], Unpretentious: [8, 2],
-  Appreciation: [8, 3], Gratefulness: [8, 4],
-  Genuineness: [8, 5], Reliability: [8, 6], Ethical: [8, 7], Innocence: [8, 8], Nobility: [8, 9], Probity: [8, 10],
-  Community: [8, 11], Persistence: [8, 12], Perseverance: [8, 13], Determination: [8, 14], Diligence: [8, 15], Thrift: [8, 16], Discipline: [8, 17],
+  // Breakout strip, row 9 (Humility · Gratitude · Integrity · Hard Work),
+  // separated from the main structure by the spacer row 8.
+  Modesty: [9, 1], Unpretentious: [9, 2],
+  Appreciation: [9, 3], Gratefulness: [9, 4],
+  Genuineness: [9, 5], Reliability: [9, 6], Ethical: [9, 7], Innocence: [9, 8], Nobility: [9, 9], Probity: [9, 10],
+  Community: [9, 11], Persistence: [9, 12], Perseverance: [9, 13], Determination: [9, 14], Diligence: [9, 15], Thrift: [9, 16], Discipline: [9, 17],
 
-  // Breakout strip, row 9
-  Meekness: [9, 1], Sincerity: [9, 2],
-  Thankfulness: [9, 3],
-  Vulnerability: [9, 4], Authenticity: [9, 5], Character: [9, 6], Excellence: [9, 7], Principles: [9, 8], Individuality: [9, 9], Morality: [9, 10],
-  Time: [9, 11], Passion: [9, 12], Endurance: [9, 13], Tenacity: [9, 14], Ambition: [9, 15], Dedication: [9, 16], "Self-reliance": [9, 17],
+  // Breakout strip, row 10
+  Meekness: [10, 1], Sincerity: [10, 2],
+  Thankfulness: [10, 3],
+  Vulnerability: [10, 4], Authenticity: [10, 5], Character: [10, 6], Excellence: [10, 7], Principles: [10, 8], Individuality: [10, 9], Morality: [10, 10],
+  Time: [10, 11], Passion: [10, 12], Endurance: [10, 13], Tenacity: [10, 14], Ambition: [10, 15], Dedication: [10, 16], "Self-reliance": [10, 17],
 };

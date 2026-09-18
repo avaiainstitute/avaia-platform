@@ -11,7 +11,7 @@ import {
   type VirtueFamilyKey,
 } from "@/lib/virtues";
 import { resolveFocus } from "@/lib/virtue-focus";
-import { VIRTUE_POS, GRID_COLS, GRID_ROWS } from "@/lib/virtue-layout";
+import { VIRTUE_POS, GRID_COLS, GRID_ROW_TEMPLATE } from "@/lib/virtue-layout";
 import { VIRTUE_FAMILY_LOOKS_LIKE } from "@/lib/virtue-looks-like";
 import VirtueFormulaGenerator from "@/components/VirtueFormulaGenerator";
 import VirtueNameAcronym from "@/components/VirtueNameAcronym";
@@ -209,7 +209,7 @@ export default function ChemistryPage() {
           className="grid gap-[3px]"
           style={{
             gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${GRID_ROWS}, auto)`,
+            gridTemplateRows: GRID_ROW_TEMPLATE,
             minWidth: "880px",
           }}
         >
