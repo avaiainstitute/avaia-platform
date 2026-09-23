@@ -9,40 +9,40 @@ export const dynamic = "force-dynamic";
 
 /**
  * TEMPORARY, admin-only testing utility. Not a general restart feature, not
- * linked from any page, and not something a Host can reach. Built for one
- * purpose: let Dorian retest InnerCompass's Defying Grief prompt layers
- * (commit 22d0d27) against an EXISTING, already-completed CAT referral,
- * without touching the original IAP, CAT, its one-per-conversation
- * referral row (referrals.conversation_id is unique, this never writes a
- * second one), or the original completed InnerCompass conversation.
+ * linked from any page. Built for one purpose: let Dorian retest
+ * InnerCompass's Defying Grief prompt layers (commit 22d0d27) against an
+ * EXISTING, already-completed CAT referral, without touching the original
+ * IAP, CAT, its one-per-conversation referral row (referrals.conversation_id
+ * is unique, this never writes a second one), or the original completed
+ * InnerCompass conversation.
  *
- * Does exactly what a normal CAT -> InnerCompass handoff already does
- * (calls the same advanceToNextStage used by every real Journey), just
- * replayed against a referral that already exists, under a brand-new,
- * throwaway journey_id so it can never collide with the real Journey's
- * records or with getActiveConversation's one-active-row-per-host
- * assumption. The new InnerCompass conversation is created with the
- * normal 'active' status, so it becomes the Host's active conversation
- * and is reachable at /journey exactly like any other in-progress one.
+ * A single GET, no input required: finds the most recent completed
+ * defying-grief CAT conversation for the signed-in admin's own account
+ * ("whichever the last one is"), then does exactly what a normal CAT ->
+ * InnerCompass handoff already does (the same advanceToNextStage every real
+ * Journey uses), replayed against that existing referral, under a
+ * brand-new, throwaway journey_id so it can never collide with the real
+ * Journey's records or with getActiveConversation's one-active-row-per-host
+ * assumption. The new InnerCompass conversation is created 'active', so
+ * visiting /journey shows it directly, same as any real in-progress one.
+ * On success this redirects straight there, no reading JSON required.
  *
  * Remove this route (and the throwaway journey/conversation/messages it
  * creates) once the test is done, per Dorian's own instruction; nothing
  * else references this file.
  */
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+  if (!user) {
+    return new NextResponse("Please sign in first, then click the link again.", { status: 401 });
+  }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profile?.role !== "admin") return NextResponse.json({ error: "Admin only." }, { status: 403 });
-
-  const body = await request.json().catch(() => ({}));
-  const catConversationId: string | undefined = body?.catConversationId;
-  if (!catConversationId) {
-    return NextResponse.json({ error: "Missing catConversationId." }, { status: 400 });
+  if (profile?.role !== "admin") {
+    return new NextResponse("Admin only.", { status: 403 });
   }
 
   const admin = createAdminClient();
@@ -50,26 +50,24 @@ export async function POST(request: Request) {
   const { data: convo } = await admin
     .from("conversations")
     .select("id, host_id, stage, status, program, youth_program")
-    .eq("id", catConversationId)
+    .eq("host_id", user.id)
+    .eq("stage", "cat")
+    .eq("status", "complete")
+    .eq("program", "defying-grief")
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
-  if (!convo) return NextResponse.json({ error: "CAT conversation not found." }, { status: 404 });
-  if (convo.stage !== "cat") {
-    return NextResponse.json({ error: `Conversation ${catConversationId} is stage '${convo.stage}', not 'cat'.` }, { status: 400 });
-  }
-  if (convo.status !== "complete") {
-    return NextResponse.json({ error: "That CAT conversation is not marked complete." }, { status: 400 });
-  }
-  if (convo.program !== "defying-grief") {
-    return NextResponse.json({ error: "This test tool is scoped to program 'defying-grief' only." }, { status: 400 });
+  if (!convo) {
+    return new NextResponse("No completed Defying Grief CAT conversation found on your account.", { status: 404 });
   }
 
   const { data: referralRow } = await admin
     .from("referrals")
     .select("content")
-    .eq("conversation_id", catConversationId)
+    .eq("conversation_id", convo.id)
     .maybeSingle();
   if (!referralRow?.content) {
-    return NextResponse.json({ error: "No referral found for that CAT conversation." }, { status: 404 });
+    return new NextResponse("That CAT conversation has no saved referral.", { status: 404 });
   }
 
   // A fresh, throwaway journey, never the original CAT/InnerCompass
@@ -89,21 +87,8 @@ export async function POST(request: Request) {
     referralRow.content as Record<string, unknown>
   );
   if (!advanced.nextStage) {
-    return NextResponse.json({ error: "advanceToNextStage did not produce a next stage." }, { status: 500 });
+    return new NextResponse("Something went wrong generating the test conversation. Nothing was changed.", { status: 500 });
   }
 
-  const { data: newConvo } = await admin
-    .from("conversations")
-    .select("id, status, created_at")
-    .eq("journey_id", testJourneyId)
-    .eq("stage", "innercompass")
-    .maybeSingle();
-
-  return NextResponse.json({
-    ok: true,
-    sourceCatConversationId: catConversationId,
-    testJourneyId,
-    newInnerCompassConversationId: newConvo?.id ?? null,
-    status: newConvo?.status ?? null,
-  });
+  return NextResponse.redirect(new URL("/journey", request.url));
 }
