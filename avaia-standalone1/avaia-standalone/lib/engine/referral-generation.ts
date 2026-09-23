@@ -12,6 +12,9 @@ import {
   INNERCOMPASS_OPENING_GENERATION,
   YOUTH_OPENING_ADAPTATION,
   youthOpeningBandNote,
+  DEFYING_GRIEF_INNERCOMPASS_CHOICE,
+  DEFYING_GRIEF_INNERCOMPASS_MYTH_LESSON,
+  DEFYING_GRIEF_OPENING_ADAPTATION,
   type Program,
   type Stage,
   type DevelopmentalBand,
@@ -277,10 +280,13 @@ async function generateInnerCompassOpening(
 ): Promise<string | undefined> {
   try {
     const client = anthropic();
+    const bar = "=".repeat(60);
     const system =
       program === "youth"
-        ? `${INNERCOMPASS_OPENING_GENERATION}\n\n${"=".repeat(60)}\n\n${youthOpeningBandNote(developmentalBand ?? null)}\n\n${YOUTH_OPENING_ADAPTATION}`
-        : INNERCOMPASS_OPENING_GENERATION;
+        ? `${INNERCOMPASS_OPENING_GENERATION}\n\n${bar}\n\n${youthOpeningBandNote(developmentalBand ?? null)}\n\n${YOUTH_OPENING_ADAPTATION}`
+        : program === "defying-grief"
+          ? `${INNERCOMPASS_OPENING_GENERATION}\n\n${bar}\n\n${DEFYING_GRIEF_INNERCOMPASS_CHOICE}\n\n${bar}\n\n${DEFYING_GRIEF_INNERCOMPASS_MYTH_LESSON}\n\n${bar}\n\n${DEFYING_GRIEF_OPENING_ADAPTATION}`
+          : INNERCOMPASS_OPENING_GENERATION;
     const resp: any = await client.messages.create({
       model: AVAIA_MODEL,
       max_tokens: 600,
