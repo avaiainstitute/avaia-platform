@@ -110,10 +110,20 @@ Also include "relevance": "pink" | "avaia" | "both" on each object.
 Find legitimate partnership/collaboration prospects for two related
 organizations:
 
-The Pink Shoelace Foundation -- a grief-support nonprofit ("People walking
-with people. Different losses. Different grief.") that supports people who
-are grieving and those who want to walk alongside them, including a
-"wear a pink shoelace" awareness effort.
+The Pink Shoelace Foundation -- a nonprofit that increases access to grief
+and loss support for individuals and families who could not otherwise
+afford it, and strengthens community capacity to walk alongside people
+experiencing loss in any form (not only death, but divorce, illness,
+estrangement, and other significant life transitions), through three core
+programs: Sponsored Access (funding participation in structured
+grief-support programs, with priority for underserved populations such as
+youth aging out of foster care, family members who are caregivers of
+elderly parents with Alzheimer's/Dementia, and parents who've experienced
+miscarriage, stillbirth, or infant loss), Community Connection
+(volunteer-based service pairing practical support with companionship for
+people actively navigating loss), and Public Awareness (educating
+communities and organizations on recognizing and responding to grief,
+through the pink shoelace symbol and public outreach).
 
 AVAIA -- a grief education and restoration institute whose flagship
 program is Defying Grief, with Workshops & Speaking as an established
@@ -133,8 +143,18 @@ school counseling department, a relevant conference).`;
     return `${shared}
 
 Find legitimate potential sponsors/supporters that appear genuinely
-aligned with The Pink Shoelace Foundation's mission: grief support and
-"people walking with people" through different kinds of loss.
+aligned with The Pink Shoelace Foundation's mission: increasing access to
+grief and loss support for individuals and families who could not
+otherwise afford it, and strengthening community capacity to walk
+alongside people experiencing loss in any form (not only death, but
+divorce, illness, estrangement, and other significant life transitions),
+through Sponsored Access, Community Connection, and Public Awareness.
+Sponsored Access gives priority to underserved populations such as youth
+aging out of foster care, family members who are caregivers of elderly
+parents with Alzheimer's/Dementia, and parents who've experienced
+miscarriage, stillbirth, or infant loss -- a prospect connected to any of
+those populations, or to volunteer/companionship service, or to public
+grief-awareness education, is worth surfacing.
 
 Do not suggest anyone already known to be a national grief-charity
 competitor in a way that would be an odd fit. Prefer local/regional
