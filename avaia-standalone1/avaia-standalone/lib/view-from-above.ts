@@ -15,16 +15,12 @@
 // Digital Chemistry Kit at /chemistry. Written once here originally;
 // factored out so both surfaces read the same array, not two.
 //
-// SOURCE DISCIPLINE: only the Prologue and the opening of Chapter 1 of
-// Dorian's memoir "The View From Above" were recovered as verbatim text
-// from the source archive, told in full on the collection page
-// (app/view-from-above/page.tsx). Chapters 2-10 exist in that archive
-// only as unreteanscribed audiobook and video files; their specific
-// chapter-by-chapter scenes could not be recovered or verified, and
-// nothing is invented here to fill that gap. Each class's `hikeLesson`
-// field below carries Dorian's own directly-supplied recognition and
-// lesson language, not further invented narrative, see the
-// `hikeLessonSourceNote` on every entry.
+// HIKE LESSON: each class's `hikeLesson` (and `hikeLessonSourceNote`)
+// is a placeholder that says the section has not been written yet, see
+// HIKE_SOURCE_NOTE below. The specific hike-lesson narrative for each
+// class does not exist yet and nothing is invented here to fill that
+// gap. `dorianLesson` (Dorian's own one-sentence lesson) is separate and
+// is real content.
 
 import { VIRTUE_FAMILY_LOOKS_LIKE } from "@/lib/virtue-looks-like";
 
@@ -48,8 +44,7 @@ export type ViewFromAboveClass = {
   experienceId?: string; // set at runtime by looking up the matching `experiences` row for the Guide-facilitated link
 };
 
-const HIKE_SOURCE_NOTE =
-  "Only the Prologue and the opening of Chapter 1 of “The View From Above” were recovered as the author's own written words, told in full on this page. This class's own place in the hike exists in the source archive only as an audiobook chapter and video, without a transcript, so it couldn't be independently recovered here. What follows is Dorian's own directly-supplied recognition and lesson for this class, in his own words, not further invented scene detail.";
+const HIKE_SOURCE_NOTE = "The hike lesson for this class has not been written yet.";
 
 export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
   {
