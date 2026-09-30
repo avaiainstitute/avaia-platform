@@ -17,10 +17,6 @@ import type { Stage } from "@/lib/engine/prompts";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function debugLog(step: string, fields: Record<string, unknown>) {
-  console.log("[gpt-incoming-referral debug]", { step, ts: new Date().toISOString(), ...fields });
-}
-
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -35,12 +31,6 @@ export async function GET(request: Request) {
     .select("id, host_id, revoked_at, expires_at")
     .eq("access_token", accessToken)
     .maybeSingle();
-
-  debugLog("1_oauth_token_validated", {
-    hostId: tokenRow?.host_id ?? null,
-    lookupError: tokenLookupError?.message ?? null,
-    result: tokenLookupError || !tokenRow ? "FAILED, unknown access token" : "OK",
-  });
 
   if (tokenLookupError || !tokenRow) {
     return NextResponse.json({ error: "invalid_token" }, { status: 401 });
@@ -68,14 +58,6 @@ export async function GET(request: Request) {
     .maybeSingle();
   const activeConvo = convo as DbConversation | null;
 
-  debugLog("2_active_conversation_lookup", {
-    hostId,
-    conversationId: activeConvo?.id ?? null,
-    stage: activeConvo?.stage ?? null,
-    program: activeConvo?.program ?? null,
-    result: convoError || !activeConvo ? "FAILED" : "OK",
-  });
-
   if (convoError || !activeConvo) {
     return NextResponse.json(
       { error: "no_active_conversation", error_description: "No active conversation found for this Host." },
@@ -87,7 +69,6 @@ export async function GET(request: Request) {
   const previousStage: Stage | null = currentIdx > 0 ? STAGE_ORDER[currentIdx - 1] : null;
 
   if (!previousStage) {
-    debugLog("3_no_previous_stage", { stage: activeConvo.stage });
     return NextResponse.json(
       { error: "no_incoming_referral", error_description: "This is the first stage; there is nothing to carry in." },
       { status: 404 }
@@ -104,13 +85,6 @@ export async function GET(request: Request) {
     .limit(1)
     .maybeSingle();
 
-  debugLog("4_previous_conversation_lookup", {
-    hostId,
-    previousStage,
-    previousConversationId: previousConvo?.id ?? null,
-    lookupError: previousConvoError?.message ?? null,
-  });
-
   if (previousConvoError || !previousConvo) {
     return NextResponse.json(
       { error: "no_incoming_referral", error_description: "No prior conversation found to carry a referral from." },
@@ -125,13 +99,6 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-
-  debugLog("5_referral_lookup", {
-    hostId,
-    previousConversationId: previousConvo.id,
-    found: !!referralRow,
-    lookupError: referralError?.message ?? null,
-  });
 
   if (referralError || !referralRow) {
     return NextResponse.json(

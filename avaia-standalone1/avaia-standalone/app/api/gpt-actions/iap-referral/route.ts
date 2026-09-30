@@ -31,20 +31,9 @@ import { isMember } from "@/lib/membership";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Kept from the earlier debugging round, this was the first real test of a
-// brand-new mechanism, and losing visibility again would mean starting from
-// zero if something regresses. Remove once this has run reliably for a
-// while in real use.
-function debugLog(step: string, fields: Record<string, unknown>) {
-  console.log("[gpt-referral debug]", { step, ts: new Date().toISOString(), ...fields });
-}
-
 export async function POST(request: Request) {
-  debugLog("1_request_received", {});
-
   const authHeader = request.headers.get("authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    debugLog("1_request_received", { result: "FAILED, no Bearer token present" });
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const accessToken = authHeader.slice("Bearer ".length);
@@ -58,15 +47,6 @@ export async function POST(request: Request) {
     }
   })();
   const referral: unknown = body?.referral;
-  debugLog("1_request_received", {
-    result: "has bearer token",
-    bodyKeys: body && typeof body === "object" ? Object.keys(body) : null,
-    referralType: typeof referral,
-    referralKeys:
-      referral && typeof referral === "object" && !Array.isArray(referral)
-        ? Object.keys(referral)
-        : null,
-  });
 
   if (!referral || typeof referral !== "object" || Array.isArray(referral)) {
     return NextResponse.json({ error: "Missing or invalid referral." }, { status: 400 });
@@ -79,13 +59,6 @@ export async function POST(request: Request) {
     .select("id, host_id, revoked_at, expires_at")
     .eq("access_token", accessToken)
     .maybeSingle();
-
-  debugLog("2_oauth_token_validated", {
-    hostId: tokenRow?.host_id ?? null,
-    revokedAt: tokenRow?.revoked_at ?? null,
-    lookupError: tokenLookupError?.message ?? null,
-    result: tokenLookupError || !tokenRow ? "FAILED, unknown access token" : "OK",
-  });
 
   if (tokenLookupError || !tokenRow) {
     return NextResponse.json({ error: "invalid_token" }, { status: 401 });
@@ -112,15 +85,6 @@ export async function POST(request: Request) {
     .maybeSingle();
   const activeConvo = convo as DbConversation | null;
 
-  debugLog("3_active_conversation_lookup", {
-    hostId,
-    conversationId: activeConvo?.id ?? null,
-    stage: activeConvo?.stage ?? null,
-    program: activeConvo?.program ?? null,
-    lookupError: convoError?.message ?? null,
-    result: convoError || !activeConvo ? "FAILED, no active conversation for this Host" : "OK",
-  });
-
   if (convoError || !activeConvo) {
     return NextResponse.json(
       { error: "no_active_conversation", error_description: "No active conversation found for this Host." },
@@ -135,7 +99,6 @@ export async function POST(request: Request) {
   // non-member can't complete CAT or InnerCompass through the GPT Action
   // path when the website's own /journey route would have blocked it.
   if (fromStage !== "iap" && !(await isMember(admin, hostId))) {
-    debugLog("3b_membership_check", { hostId, fromStage, result: "FAILED, membership required" });
     return NextResponse.json(
       { error: "membership_required", error_description: "This conversation requires AVAIA Membership." },
       { status: 403 }
@@ -155,32 +118,14 @@ export async function POST(request: Request) {
     conversation_id: activeConvo.id,
   });
 
-  debugLog("4_after_referral_insert", {
-    hostId,
-    conversationId: activeConvo.id,
-    fromStage,
-    nextStage,
-    result: insertError ? "FAILED" : "OK",
-    insertError: insertError
-      ? { message: insertError.message, details: insertError.details, hint: insertError.hint }
-      : null,
-  });
-
   if (insertError) {
     return NextResponse.json({ error: "Could not store the referral." }, { status: 500 });
   }
 
-  const { error: completeError } = await admin
+  await admin
     .from("conversations")
     .update({ status: "complete", completed_at: new Date().toISOString() })
     .eq("id", activeConvo.id);
-
-  debugLog("5_after_conversation_complete", {
-    hostId,
-    conversationId: activeConvo.id,
-    result: completeError ? "FAILED" : "OK",
-    completeError: completeError ? completeError.message : null,
-  });
 
   // Carry the program tag forward, without this, a referral coming home
   // from a Defying Grief workshop trip would silently land in a 'general'

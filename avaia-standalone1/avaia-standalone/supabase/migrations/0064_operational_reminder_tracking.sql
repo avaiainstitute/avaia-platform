@@ -1,3 +1,17 @@
+-- NUMBERING NOTE (documentation only, no executable effect): two migrations
+-- were independently given the prefix 0064 -- this file and
+-- 0064_ripple_effect_naming_correction.sql. Both are already applied in
+-- production. Neither is renamed here: this repo has no Supabase-CLI-tracked
+-- migration history (no supabase/config.toml, no CLI migration table in
+-- use, migrations are applied by hand in the SQL Editor), so a rename
+-- carries no known functional risk, but nothing confirms the live project
+-- has never used CLI tracking either, so renaming an already-applied file
+-- is avoided rather than assumed safe. Filenames are left exactly as they
+-- are; this note is the record of the collision. Numbers stay purely
+-- git-history bookkeeping here, not a uniqueness guarantee, and
+-- Postgres/Supabase applies files in filename-sort order regardless, so
+-- the collision has no bearing on what was actually run or in what order.
+--
 -- Idempotency tracking for the two scheduled reminder jobs (Automation
 -- Blueprint, Agents 6 and 7). Purely additive: two new tables, no alter
 -- statements.

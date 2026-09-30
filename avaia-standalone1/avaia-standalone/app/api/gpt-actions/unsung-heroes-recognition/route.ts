@@ -25,16 +25,9 @@ const CONVERSATION_PATHS = [
   "i_want_to_grow",
 ] as const;
 
-function debugLog(step: string, fields: Record<string, unknown>) {
-  console.log("[unsung-heroes-gpt debug]", { step, ts: new Date().toISOString(), ...fields });
-}
-
 export async function POST(request: Request) {
-  debugLog("1_request_received", {});
-
   const authHeader = request.headers.get("authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {
-    debugLog("1_request_received", { result: "FAILED, no Bearer token present" });
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const accessToken = authHeader.slice("Bearer ".length);
@@ -48,14 +41,6 @@ export async function POST(request: Request) {
     }
   })();
   const recognition = body?.recognition;
-  debugLog("1_request_received", {
-    result: "has bearer token",
-    bodyKeys: body && typeof body === "object" ? Object.keys(body) : null,
-    recognitionKeys:
-      recognition && typeof recognition === "object" && !Array.isArray(recognition)
-        ? Object.keys(recognition)
-        : null,
-  });
 
   if (!recognition || typeof recognition !== "object" || Array.isArray(recognition)) {
     return NextResponse.json({ error: "Missing or invalid recognition." }, { status: 400 });
@@ -101,7 +86,6 @@ export async function POST(request: Request) {
     typeof contextType !== "string" ||
     !CONTEXT_TYPES.includes(contextType as (typeof CONTEXT_TYPES)[number])
   ) {
-    debugLog("2_validation", { result: "FAILED, missing or invalid required field" });
     return NextResponse.json({ error: "Missing or invalid required field." }, { status: 400 });
   }
 
@@ -112,13 +96,6 @@ export async function POST(request: Request) {
     .select("id, host_id, revoked_at, expires_at")
     .eq("access_token", accessToken)
     .maybeSingle();
-
-  debugLog("3_oauth_token_validated", {
-    hostId: tokenRow?.host_id ?? null,
-    revokedAt: tokenRow?.revoked_at ?? null,
-    lookupError: tokenLookupError?.message ?? null,
-    result: tokenLookupError || !tokenRow ? "FAILED, unknown access token" : "OK",
-  });
 
   if (tokenLookupError || !tokenRow) {
     return NextResponse.json({ error: "invalid_token" }, { status: 401 });
@@ -148,7 +125,7 @@ export async function POST(request: Request) {
 
   const contextObj = context && typeof context === "object" ? (context as Record<string, unknown>) : {};
 
-  const { data: row, error: insertError } = await admin
+  const { error: insertError } = await admin
     .from("recognitions")
     .insert({
       observer_id: hostId,
@@ -180,15 +157,6 @@ export async function POST(request: Request) {
     })
     .select("id")
     .single();
-
-  debugLog("4_after_insert", {
-    hostId,
-    recognitionId: row?.id ?? null,
-    result: insertError ? "FAILED" : "OK",
-    insertError: insertError
-      ? { message: insertError.message, details: insertError.details, hint: insertError.hint }
-      : null,
-  });
 
   if (insertError) {
     return NextResponse.json({ error: "Could not save the workbook entry." }, { status: 500 });

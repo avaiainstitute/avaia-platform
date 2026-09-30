@@ -410,22 +410,31 @@ export async function generateGuidesRecord(
 
   // IAP and CAT only, InnerCompass's schema has no secondary-loss field.
   // See SECONDARY_LOSS_DISCIPLINE's own comment in lib/engine/prompts.ts.
+  // Applied unconditionally here, with no program check, the same
+  // program-neutral ten-item classifier already applied to every other
+  // program's (general/defying-grief/adult view-from-above) IAP and CAT
+  // referrals.
   //
   // RESTORED for program === "youth" (Youth Defying Grief individual
   // Journey pass). The prior safety pass excluded Youth here because at
-  // that time Youth's live conversation never taught the canonical taxonomy
-  //, classifying against it anyway was diagnosis-by-omission, not
-  // recognition. That premise no longer holds: youthSystemPromptFor now
-  // unconditionally layers YOUTH_DEFYING_GRIEF_RECOGNITION into every
-  // individual Youth IAP/CAT conversation, which holds the same ten-item
+  // that time Youth's live conversation never taught the canonical
+  // taxonomy, classifying against it anyway was diagnosis-by-omission, not
+  // recognition. That premise no longer holds for a Youth Defying Grief
+  // conversation specifically: youthSystemPromptFor layers
+  // YOUTH_DEFYING_GRIEF_RECOGNITION into it, which holds the same ten-item
   // taxonomy in the background for recognition (never a checklist, never
   // introduced to the Host) exactly as SECONDARY_LOSS_RECOGNITION does for
-  // adult 'defying-grief'. Since the conversation now actually establishes
-  // the framework, this referral step applies uniformly again, same as
-  // every other program, SECONDARY_LOSS_DISCIPLINE itself already
-  // instructs "never invent... if it doesn't genuinely fit any of the ten,
-  // it... is not a secondary loss classification," so a Youth referral
-  // still only ever names what the Host's own words actually support.
+  // adult 'defying-grief'. (A Youth View From Above conversation gets
+  // VIEW_FROM_ABOVE_CONTEXT there instead, not this recognition layer, the
+  // same live-conversation split adult view-from-above already has against
+  // adult defying-grief.) This referral-writing step itself was never
+  // program-gated to begin with, so restoring it for Youth just stops
+  // excluding that one program from the same uniform treatment every other
+  // program's referrals already receive; SECONDARY_LOSS_DISCIPLINE itself
+  // already instructs "never invent... if it doesn't genuinely fit any of
+  // the ten, it... is not a secondary loss classification," so a Youth
+  // referral still only ever names what the Host's own words actually
+  // support.
   if (stage === "iap" || stage === "cat") {
     system += `\n\n${"=".repeat(60)}\n\n${SECONDARY_LOSS_DISCIPLINE}`;
   }

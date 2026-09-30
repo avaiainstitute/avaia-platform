@@ -61,11 +61,11 @@ export default function ViewFromAbovePage() {
         </div>
         <p className="mt-6 text-sm text-muted">
           This is the only part of Dorian's memoir, <em>The View from Above</em>, told here
-          verbatim, his own written words, recovered directly from his manuscript. Chapters 2
-          through 10 exist as a full audiobook and video series, not as text here, so the specific
-          scene-by-scene story of the rest of the hike isn't retold on this page. What follows
-          instead are the ten real recognitions and lessons Dorian has directly named as coming out
-          of that mountain, in his own words, not further invented narrative.
+          verbatim, his own written words, recovered directly from his manuscript. The specific
+          scene-by-scene story of the rest of the hike, chapters 2 through 10, has not been written
+          yet, no recordings are waiting to be transcribed for it, so it isn't retold on this page.
+          What follows instead are the ten real recognitions and lessons Dorian has directly named
+          as coming out of that mountain, in his own words, not further invented narrative.
         </p>
 
         <div className="mt-10 grid gap-6 rounded-lg border border-rule bg-white/[0.04] p-6 sm:grid-cols-[180px_1fr] sm:items-center">

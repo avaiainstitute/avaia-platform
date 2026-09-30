@@ -9,17 +9,31 @@
 -- keep an app-level profile keyed to it.
 --
 -- Reconciliation note: this file had drifted from the actual migration
--- history in three specific, verified places -- the 'view-from-above'
+-- history in several specific, verified places -- the 'view-from-above'
 -- program value (added by 0058_view_from_above_guide_delivery.sql),
 -- conversations.origin_context (added by 0059_conversation_origin_context.sql),
--- and youth_program (added by 0066_youth_program_identity.sql). Those three
+-- youth_program (added by 0066_youth_program_identity.sql), and
+-- guide_sessions.session_context's own comment (see that table below),
+-- which claimed no youth or group tool existed yet -- Youth Defying Grief
+-- and Youth View From Above exist now and do set 'youth_individual'.
+-- (0013_guide_toolkit_participant_record.sql's own comment made the same
+-- now-outdated claim at the time it was written; an already-applied
+-- migration is a historical record and is intentionally left exactly as it
+-- was, only this reference file's copy of that claim is updated.) Those
 -- are corrected below, at every table each migration actually touched.
+-- Checked and confirmed NOT drifted: guide_sessions.tool's check
+-- constraint is still exactly the 13 values 0011_guide_toolkit.sql
+-- originally set -- Youth Defying Grief and Youth View From Above run as
+-- the existing 'iap'/'cat'/'innercompass' tool values with program='youth'
+-- and youth_program set, never as separate tool values of their own.
 -- The migrations themselves, not this file, remain the source of truth for
 -- what exists in a live database; this reconciliation changes only this
--- reference file's text, never production behavior. Other, older drift in
--- this file (e.g. guide_sessions.tool's list of installed tools,
--- profiles.membership_status vs. the real entitlements table) is out of
--- scope here and left untouched.
+-- reference file's text, never production behavior.
+--
+-- profiles.membership_status is not drift, it is an intentional, already-
+-- documented frozen legacy column (see its own comment further down,
+-- immediately above public.entitlements) -- kept in place on purpose, not
+-- something to reconcile away.
 
 -- ---------------------------------------------------------------------------
 -- profiles, one row per Host, with consent + eligibility record
@@ -654,10 +668,12 @@ create table if not exists public.guide_sessions (
   -- only when program = 'youth'; null means no established Program was
   -- identified (see 0066_youth_program_identity.sql).
   youth_program    text check (youth_program in ('defying-grief', 'view-from-above')),
-  -- Infrastructure only -- see 0013_guide_toolkit_participant_record.sql's
-  -- comment. Every currently-installed tool only ever runs as an adult
-  -- individual session, so this reads 'adult_individual' everywhere until a
-  -- youth or group tool actually exists to set it otherwise.
+  -- See 0013_guide_toolkit_participant_record.sql for the column's own
+  -- history. At the time that migration ran, no youth or group tool
+  -- existed yet, so every row read 'adult_individual'. That is no longer
+  -- true: Youth Defying Grief and Youth View From Above (app/toolkit/
+  -- youth-defying-grief, app/toolkit/youth-view-from-above) set this to
+  -- 'youth_individual' on their guide_sessions rows.
   session_context  text not null default 'adult_individual'
                      check (session_context in ('adult_individual', 'youth_individual', 'group')),
   status           text not null default 'active' check (status in ('active', 'complete')),

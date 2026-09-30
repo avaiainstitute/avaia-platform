@@ -195,22 +195,42 @@ export default async function JourneyPage({
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!mostRecentConvo) {
-      // A Host who self-identified as under 18 at /welcome (minor_with_
-      // guardian, written alongside consent_at in app/api/consent/route.ts)
-      // must never be silently defaulted into the adult Defying Grief
-      // engine below, route them into the existing Youth entry/band-
-      // selection pathway instead, before any Journey is created. This is
-      // self-attestation only, not verified guardian consent (see /youth's
-      // own migration and the Youth Production-Readiness Audit), it is
-      // used here only to prevent a known minor from entering the adult
-      // engine, never as a claim that guardian-consent architecture is
-      // complete. A Host who picked "18 or older," or a legacy account
-      // that predates this question, is unaffected and falls through to
-      // the existing default exactly as before.
-      if (profile?.minor_with_guardian) {
-        redirect("/youth");
-      }
+    // A Host who self-identified as under 18 at /welcome (minor_with_
+    // guardian, written alongside consent_at in app/api/consent/route.ts)
+    // must never be silently defaulted into the adult Defying Grief engine
+    // below, route them into the existing Youth entry/band-selection
+    // pathway instead, before any Journey is created. This is
+    // self-attestation only, not verified guardian consent (see /youth's
+    // own migration and the Youth Production-Readiness Audit), it is used
+    // here only to prevent a known minor from entering the adult engine,
+    // never as a claim that guardian-consent architecture is complete.
+    // Resolved once here (rather than nested only inside the brand-new-Host
+    // branch below) because the origin-context widening just below now
+    // needs this same guard for a returning Host too.
+    if (profile?.minor_with_guardian && !mostRecentConvo) {
+      redirect("/youth");
+    }
+
+    // Origin context (a Host clicked "bring this into a conversation" from
+    // a Chemistry element, a View From Above class, a Library entry or
+    // concept, or one of their own Journal entries) is resolved once here,
+    // before deciding whether to start a fresh IAP. Bug fix: this used to
+    // be resolved only inside the brand-new-Host branch further below, so a
+    // RETURNING Host whose most recent conversation had already completed
+    // saw the generic "Your journey is complete" screen with the origin/key
+    // query params silently discarded, the click did nothing. Resolving it
+    // here, for a non-minor, regardless of whether mostRecentConvo exists,
+    // fixes that without touching anything else: an unrecognized key still
+    // resolves null exactly as before (fails closed, no forced restart on a
+    // garbage/malformed link), and this whole block is still only reached
+    // when !convo, so a Host with an ACTIVE conversation (at any stage) is
+    // completely unaffected, their in-progress conversation is never
+    // interrupted or overridden by an origin click.
+    const origin = profile?.minor_with_guardian
+      ? null
+      : await resolveOriginContext(searchParams?.origin, searchParams?.key, supabase, user.id);
+
+    if (!mostRecentConvo || origin) {
       // Defying Grief is the current individual Host pathway (no separate
       // "General AVAIA Journey" is being positioned against it), a
       // genuinely brand-new Host's complimentary IAP is the beginning of
@@ -220,17 +240,12 @@ export default async function JourneyPage({
       // apply to them the same way they already do for a Host who arrived
       // through /defying-grief's own front door. See the matching adjustment
       // to the JourneyIntro condition below, which keeps this population's
-      // IAP orientation screen intact.
-      // A Host who clicked through from a specific Chemistry element or
-      // View From Above class carries that origin into this very first
-      // IAP conversation, resolved server-side against the canonical
-      // data (never trusting the query string's label/family/definition
-      // directly), so IAP can open naturally instead of with the generic
-      // static line. This never changes program (still unconditionally
-      // 'defying-grief' below, same as every other brand-new adult Host)
-      // and never touches the membership gate, origin context only
-      // affects what IAP says, not what a Host is entitled to do.
-      const origin = await resolveOriginContext(searchParams?.origin, searchParams?.key, supabase, user.id);
+      // IAP orientation screen intact. A returning Host who reaches this
+      // branch only because `origin` resolved to something real gets the
+      // exact same treatment, a fresh Defying Grief Journey, this never
+      // changes program and never touches the membership gate, origin
+      // context only affects what IAP says, not what a Host is entitled to
+      // do.
       const firstJourneyId = await createJourney(supabase, user.id, "defying-grief");
       const originOpening = origin
         ? await generateIapOriginOpening(origin, user.id, null)
