@@ -66,6 +66,26 @@ export default function AdminIndexPage() {
             enrollment, prerequisite, evidence, and evaluator review state.
           </p>
         </Link>
+        <Link
+          href="/admin/toolkit-stewardship"
+          className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-opacity hover:opacity-90"
+        >
+          <p className="font-serif text-lg text-ink">Toolkit Stewardship</p>
+          <p className="mt-1 text-sm text-muted">
+            Toolkit support items, registry health, and recurring Guide questions -- never approves
+            an adaptation or addition on its own.
+          </p>
+        </Link>
+        <Link
+          href="/admin/conversation-integrity"
+          className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-opacity hover:opacity-90"
+        >
+          <p className="font-serif text-lg text-ink">Conversation Integrity</p>
+          <p className="mt-1 text-sm text-muted">
+            Boundary Oversight flags for Guide/AI replies -- possible flags for human review, never
+            an automatic finding or a diagnosis of the Host.
+          </p>
+        </Link>
       </div>
     </div>
   );

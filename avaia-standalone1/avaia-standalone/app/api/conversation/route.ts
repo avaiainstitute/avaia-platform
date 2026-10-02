@@ -18,6 +18,7 @@ import { isMember } from "@/lib/membership";
 import { isAuthorizedGuideConversation } from "@/lib/guide";
 import { isFinishIntent } from "@/lib/engine/finish-intent";
 import { generateReferral } from "@/lib/engine/referral-generation";
+import { recordRealtimeIntegrityFlags } from "@/lib/ops/conversation-integrity";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -203,6 +204,25 @@ export async function POST(request: Request) {
             role: "guide",
             content: clean,
           });
+          // Conversation Integrity & Boundary Oversight Agent -- scans only
+          // this just-generated Guide/AI reply (never Host content), and
+          // separately correlates this same reply against the crisis
+          // prefilter above when it just fired. Insert-only-self RLS, same
+          // session client already used for crisis_events above -- never an
+          // admin client in this hot streaming path. Failure here must never
+          // break the Host's reply, so it is isolated and logged only.
+          try {
+            await recordRealtimeIntegrityFlags(supabase, {
+              hostId: user.id,
+              conversationId,
+              stage,
+              program,
+              replyText: clean,
+              crisisJustFired: crisis,
+            });
+          } catch (e) {
+            console.error("AVAIA conversation integrity scan error:", e);
+          }
         }
         controller.close();
       } catch (e) {
