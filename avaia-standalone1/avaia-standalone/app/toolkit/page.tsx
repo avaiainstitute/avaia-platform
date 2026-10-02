@@ -9,6 +9,7 @@ import {
   type GuideParticipant,
 } from "@/lib/guide";
 import { getGuideOperationsRecordForHost } from "@/lib/guide-operations";
+import { getGuideParticipantStatusesForGuide } from "@/lib/host-operations";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 
 export const metadata = { title: "Guide Toolkit — AVAIA" };
@@ -103,10 +104,11 @@ export default async function ToolkitDashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/toolkit");
 
-  const [participants, sessions, guideStatus] = await Promise.all([
+  const [participants, sessions, guideStatus, participantStatuses] = await Promise.all([
     listGuideParticipants(supabase, user.id),
     listGuideSessions(supabase, user.id),
     getGuideOperationsRecordForHost(supabase, user.id),
+    getGuideParticipantStatusesForGuide(supabase, user.id),
   ]);
 
   const participantById = new Map<string, GuideParticipant>(participants.map((p) => [p.id, p]));
@@ -207,6 +209,9 @@ export default async function ToolkitDashboardPage() {
                   <p className="text-xs text-muted">
                     {p.email ?? "No email on file"}
                     {p.linked_host_id ? " · Linked to an AVAIA account" : ""}
+                    {participantStatuses.get(p.id)?.state === "follow_up_available"
+                      ? " · Follow-up available -- the next stage is ready to continue"
+                      : ""}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">

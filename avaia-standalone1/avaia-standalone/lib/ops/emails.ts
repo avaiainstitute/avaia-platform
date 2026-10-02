@@ -250,3 +250,35 @@ export function guideAccessExceptionEmailHtml({
     in /admin/guide-operations to decide next steps.</p>
   `.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Host / Participant Operations Agent -- daily mismatch notification.
+// Internal to admin/ops only, same posture as guideAccessExceptionEmailHtml
+// above: a mechanical fact about existing records (never conversation
+// content), never a judgment, and never an automatic change to
+// membership_status, conversation/session status, or any access row.
+// ---------------------------------------------------------------------------
+export function hostParticipantOperationsExceptionEmailHtml({
+  subjectType,
+  category,
+  detail,
+  operationalState,
+  subjectId,
+}: {
+  subjectType: "host" | "guide_participant";
+  category: string;
+  detail: string;
+  operationalState: string;
+  subjectId: string;
+}): string {
+  const subjectLabel = subjectType === "host" ? "Host" : "Guide-facilitated participant";
+  return `
+    <h2>Host / Participant Operations: ${escapeHtml(category)}</h2>
+    <p>${escapeHtml(detail)}</p>
+    <p><strong>Operational state:</strong> ${escapeHtml(operationalState)}</p>
+    <p><strong>${escapeHtml(subjectLabel)} ID:</strong> ${escapeHtml(subjectId)}</p>
+    <p style="color:#888">This is a mechanical alignment notice only -- it does not interpret what
+    anyone meant, diagnose, prescribe, or decide institutional policy. Review the record directly
+    in /admin/host-participant-operations to decide next steps.</p>
+  `.trim();
+}

@@ -4,6 +4,7 @@ import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
 import { getCertificationOperationsSummary } from "@/lib/ops/certification-operations";
 import { getGuideOperationsSummary } from "@/lib/ops/guide-access-operations";
+import { getHostParticipantOperationsSummary } from "@/lib/ops/host-participant-operations";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 // Agent 10 -- Founder / Operations digest. This is the one place that reads
@@ -48,6 +49,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     guideOperations,
     certificationOperations,
     guideAccessOperations,
+    hostParticipantOperations,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -84,6 +86,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     getGuideOperationsSnapshot(),
     getCertificationOperationsSummary(),
     getGuideOperationsSummary(),
+    getHostParticipantOperationsSummary(),
   ]);
 
   // --- WHAT HAPPENED ------------------------------------------------------
@@ -152,6 +155,19 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     waiting.push(`${guideAccessSummary.permissionMismatches} Guide permission mismatch(es) outstanding.`);
   }
 
+  // Host / Participant Operations Agent -- mechanical journey/participant
+  // state counts only (lib/ops/host-participant-operations.ts), fed into
+  // the existing WAITING/NEEDS DORIAN sections as plain strings, same
+  // pattern as guideAccessSummary above. No new digest section; nothing
+  // here references conversation content or makes a safety judgment.
+  const hostParticipantSummary = hostParticipantOperations.summary;
+  if (hostParticipantSummary.hostsBlockedByEntitlement > 0) {
+    waiting.push(`${hostParticipantSummary.hostsBlockedByEntitlement} Host(s) have reached a membership-gated stage and are waiting to continue.`);
+  }
+  if (hostParticipantSummary.participantsReadyOrInProgress > 0) {
+    waiting.push(`${hostParticipantSummary.participantsReadyOrInProgress} Guide-facilitated participant(s) ready for or in an active session.`);
+  }
+
   // --- WHAT NEEDS DORIAN ----------------------------------------------------
   const needsDorian: string[] = [];
   if (certSummary.readyForReview > 0) {
@@ -168,6 +184,15 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
   if (guideAccessSummary.failedAutomations > 0) {
     needsDorian.push(`${guideAccessSummary.failedAutomations} Guide(s) retain active access despite a paused or revoked certification -- needs review.`);
+  }
+  if (hostParticipantSummary.hostOperationalMismatches > 0) {
+    needsDorian.push(`${hostParticipantSummary.hostOperationalMismatches} Host journey operational mismatch(es) (e.g. an incomplete stage handoff) need review.`);
+  }
+  if (hostParticipantSummary.participantMismatches > 0) {
+    needsDorian.push(`${hostParticipantSummary.participantMismatches} Guide-facilitated participant record(s) have an operational mismatch.`);
+  }
+  if (hostParticipantSummary.invalidHostScopedAccess > 0) {
+    needsDorian.push(`${hostParticipantSummary.invalidHostScopedAccess} Host-scoped Guide access grant(s) are active despite invalid Guide standing/authorization.`);
   }
   for (const c of needsDorianAvaiaContacts ?? []) {
     needsDorian.push(`AVAIA contact form -- ${c.name} (${c.reason}), ${daysAgo(c.created_at)} day(s) ago.`);

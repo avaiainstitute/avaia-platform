@@ -26,6 +26,16 @@ export default function AdminIndexPage() {
             Certification standing, platform permissions, and access mismatches for every Certified Guide.
           </p>
         </Link>
+        <Link
+          href="/admin/host-participant-operations"
+          className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-opacity hover:opacity-90"
+        >
+          <p className="font-serif text-lg text-ink">Host / Participant Operations</p>
+          <p className="mt-1 text-sm text-muted">
+            Onboarding stalls, entitlement blocks, Guide-facilitated participant logistics, and
+            Host-scoped access mismatches.
+          </p>
+        </Link>
       </div>
     </div>
   );
