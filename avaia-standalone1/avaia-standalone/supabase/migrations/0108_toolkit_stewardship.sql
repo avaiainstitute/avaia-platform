@@ -76,10 +76,10 @@ do $$ begin
     with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 exception when duplicate_object then null; end $$;
 
--- --------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 -- toolkit_support_reminders -- idempotency/cooldown tracking, same shape
 -- and purpose as every other *_reminders table in this codebase (0064).
--- --------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 create table if not exists public.toolkit_support_reminders (
   id              uuid primary key default gen_random_uuid(),
   item_id         uuid not null references public.toolkit_support_items (id) on delete cascade,
