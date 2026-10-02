@@ -1,9 +1,28 @@
 {
   "crons": [
-    { "path": "/api/cron/host-onboarding", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/guide-operations", "schedule": "10 12 * * *" },
-    { "path": "/api/cron/certification-companion", "schedule": "20 12 * * *" },
-    { "path": "/api/cron/certification-operations", "schedule": "25 12 * * *" },
-    { "path": "/api/cron/founder-digest", "schedule": "30 12 * * *" }
+    {
+      "path": "/api/cron/host-onboarding",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/guide-operations",
+      "schedule": "10 12 * * *"
+    },
+    {
+      "path": "/api/cron/certification-companion",
+      "schedule": "20 12 * * *"
+    },
+    {
+      "path": "/api/cron/certification-operations",
+      "schedule": "25 12 * * *"
+    },
+    {
+      "path": "/api/cron/pink-foundation-operations",
+      "schedule": "28 12 * * *"
+    },
+    {
+      "path": "/api/cron/founder-digest",
+      "schedule": "30 12 * * *"
+    }
   ]
 }

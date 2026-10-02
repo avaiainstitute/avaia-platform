@@ -46,6 +46,16 @@ export default function AdminIndexPage() {
             groups and organizations.
           </p>
         </Link>
+        <Link
+          href="/admin/foundation-operations"
+          className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-opacity hover:opacity-90"
+        >
+          <p className="font-serif text-lg text-ink">Foundation Operations</p>
+          <p className="mt-1 text-sm text-muted">
+            The Pink Shoelace Foundation&rsquo;s Legacy Review Queue, Sponsored Access, partnerships,
+            campaign review, and volunteer tracking.
+          </p>
+        </Link>
       </div>
     </div>
   );

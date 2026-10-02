@@ -282,3 +282,37 @@ export function hostParticipantOperationsExceptionEmailHtml({
     in /admin/host-participant-operations to decide next steps.</p>
   `.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Pink Shoelace Foundation Operations + Legacy Control Agent -- daily
+// exception notification. Internal to admin/ops only, same posture as
+// hostParticipantOperationsExceptionEmailHtml above. Never sent to Legacy
+// Global Programs directly -- see lib/ops/pink-foundation-operations.ts's
+// own header comment for why ("Do not automatically contact Legacy until
+// the existing email/workflow architecture and recipient information are
+// verified" -- no Legacy recipient has been verified, so this always goes
+// to the Foundation's own internal notification address).
+// ---------------------------------------------------------------------------
+export function pinkFoundationOperationsExceptionEmailHtml({
+  entityType,
+  category,
+  reason,
+  description,
+  entityId,
+}: {
+  entityType: string;
+  category: string;
+  reason: string;
+  description: string;
+  entityId: string;
+}): string {
+  return `
+    <h2>Pink Shoelace Foundation Operations: ${escapeHtml(category)}</h2>
+    <p><strong>${escapeHtml(entityType)}:</strong> ${escapeHtml(description)}</p>
+    <p>${escapeHtml(reason)}</p>
+    <p><strong>Record ID:</strong> ${escapeHtml(entityId)}</p>
+    <p style="color:#888">This is an operational routing notice only -- it does not approve a
+    charitable expenditure, sign for Legacy, or record Legacy's decision. Review the record
+    directly in /admin/foundation-operations to decide next steps.</p>
+  `.trim();
+}
