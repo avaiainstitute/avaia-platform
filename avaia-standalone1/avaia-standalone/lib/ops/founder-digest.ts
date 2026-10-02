@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
 import { getCertificationOperationsSummary } from "@/lib/ops/certification-operations";
+import { getGuideOperationsSummary } from "@/lib/ops/guide-access-operations";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 // Agent 10 -- Founder / Operations digest. This is the one place that reads
@@ -46,6 +47,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     hostOnboarding,
     guideOperations,
     certificationOperations,
+    guideAccessOperations,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -81,6 +83,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     getHostOnboardingSnapshot(),
     getGuideOperationsSnapshot(),
     getCertificationOperationsSummary(),
+    getGuideOperationsSummary(),
   ]);
 
   // --- WHAT HAPPENED ------------------------------------------------------
@@ -136,6 +139,19 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     waiting.push(`${certSummary.practicumAwaitingHuman} Practicum result(s) awaiting a human decision.`);
   }
 
+  // Guide Operations Agent -- mechanical standing/permission counts only
+  // (lib/ops/guide-access-operations.ts), fed into the existing WAITING
+  // section as plain strings, same pattern as certSummary above. No new
+  // digest section; nothing here is a certification or authorization
+  // judgment.
+  const guideAccessSummary = guideAccessOperations.summary;
+  if (guideAccessSummary.pausedOrRevokedNeedingAction > 0) {
+    waiting.push(`${guideAccessSummary.pausedOrRevokedNeedingAction} paused/revoked Guide(s) whose access needs review.`);
+  }
+  if (guideAccessSummary.permissionMismatches > 0) {
+    waiting.push(`${guideAccessSummary.permissionMismatches} Guide permission mismatch(es) outstanding.`);
+  }
+
   // --- WHAT NEEDS DORIAN ----------------------------------------------------
   const needsDorian: string[] = [];
   if (certSummary.readyForReview > 0) {
@@ -146,6 +162,12 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
   if (certSummary.failedAutomations > 0) {
     needsDorian.push(`${certSummary.failedAutomations} certification Critical Fail record(s) need a human decision on candidacy standing.`);
+  }
+  if (guideAccessSummary.incompleteHandoffs > 0) {
+    needsDorian.push(`${guideAccessSummary.incompleteHandoffs} Guide certification(s) handed off incompletely -- role/permissions not fully aligned.`);
+  }
+  if (guideAccessSummary.failedAutomations > 0) {
+    needsDorian.push(`${guideAccessSummary.failedAutomations} Guide(s) retain active access despite a paused or revoked certification -- needs review.`);
   }
   for (const c of needsDorianAvaiaContacts ?? []) {
     needsDorian.push(`AVAIA contact form -- ${c.name} (${c.reason}), ${daysAgo(c.created_at)} day(s) ago.`);

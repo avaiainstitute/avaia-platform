@@ -222,3 +222,31 @@ export function certificationOperationsExceptionEmailHtml({
     Review the candidate's record directly in /admin/guide-candidates to decide next steps.</p>
   `.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Guide Operations Agent -- daily access/mismatch notification. Internal to
+// admin/ops only, same posture as certificationOperationsExceptionEmailHtml
+// above: a mechanical fact about existing records, never a judgment, and
+// never an automatic change to standing, role, or authorization.
+// ---------------------------------------------------------------------------
+export function guideAccessExceptionEmailHtml({
+  mismatchType,
+  detail,
+  operationalState,
+  hostId,
+}: {
+  mismatchType: string;
+  detail: string;
+  operationalState: string;
+  hostId: string;
+}): string {
+  return `
+    <h2>Guide Operations: ${escapeHtml(mismatchType)}</h2>
+    <p>${escapeHtml(detail)}</p>
+    <p><strong>Operational state:</strong> ${escapeHtml(operationalState)}</p>
+    <p><strong>Host ID:</strong> ${escapeHtml(hostId)}</p>
+    <p style="color:#888">This is a mechanical alignment notice only -- it does not decide
+    certification, suspension, revocation, or authorization. Review the Guide's record directly
+    in /admin/guide-operations to decide next steps.</p>
+  `.trim();
+}

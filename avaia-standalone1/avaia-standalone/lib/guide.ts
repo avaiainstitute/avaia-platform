@@ -26,6 +26,84 @@ export async function isGuide(supabase: SupabaseClient, userId: string): Promise
   return data?.role === "guide";
 }
 
+/** Certification standing, read directly -- never cached, never inferred
+ *  from role. 'active' is the only standing that should ever gate
+ *  operational Guide access; a missing row (never certified) is treated
+ *  the same as not-active. Guide Operations Agent: role alone, or an
+ *  authorization row alone, is never sufficient -- see
+ *  lib/guide-operations.ts for the full deterministic rationale. */
+export async function hasActiveCertificationStanding(supabase: SupabaseClient, hostId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("guide_certifications")
+    .select("standing")
+    .eq("host_id", hostId)
+    .maybeSingle();
+  return data?.standing === "active";
+}
+
+/** Whether the most recent guide_platform_authorizations row for this
+ *  (host, capability) pair is 'authorized'. These rows are an append-only
+ *  history (a new row per grant/revoke, not an update-in-place), so
+ *  "current" means the one with the latest status_changed_at (falling
+ *  back to granted_at) -- the same rule lib/certification-operations.ts
+ *  uses for the same table. */
+export async function hasAuthorizedPlatformCapability(
+  supabase: SupabaseClient,
+  hostId: string,
+  capability: "toolkit" | "guided_journey_facilitation"
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("guide_platform_authorizations")
+    .select("status, granted_at, status_changed_at")
+    .eq("host_id", hostId)
+    .eq("capability", capability);
+  const rows = (data as { status: string; granted_at: string; status_changed_at: string | null }[]) ?? [];
+  if (rows.length === 0) return false;
+  const latest = rows.reduce((a, b) =>
+    new Date(b.status_changed_at ?? b.granted_at) > new Date(a.status_changed_at ?? a.granted_at) ? b : a
+  );
+  return latest.status === "authorized";
+}
+
+/** The real Guide Toolkit gate: role alone ("profiles.role === 'guide'")
+ *  is NOT sufficient Guide permission on its own -- it must also carry an
+ *  active certification standing AND an explicit, currently-authorized
+ *  'toolkit' platform-authorization row. Before this, app/toolkit/layout.tsx
+ *  checked role alone; an audit (Guide Operations Agent build) found a live
+ *  profiles row with role='guide' and NO guide_certifications record at
+ *  all, which that check would have let into the entire Guide Toolkit.
+ *  guide_platform_authorizations's 'toolkit' capability already exists in
+ *  the schema for exactly this purpose and was simply never read -- this
+ *  wires it in as the smallest additive correction, per the Guide
+ *  Operations Agent build instruction's item 4 ("role alone when explicit
+ *  authorization is required"). It only ever narrows access versus the
+ *  previous check; it never widens it. */
+export async function isGuideToolkitAuthorized(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const [guide, standingActive, toolkitAuthorized] = await Promise.all([
+    isGuide(supabase, userId),
+    hasActiveCertificationStanding(supabase, userId),
+    hasAuthorizedPlatformCapability(supabase, userId, "toolkit"),
+  ]);
+  return guide && standingActive && toolkitAuthorized;
+}
+
+/** The Guided Journey Facilitation gate -- same reasoning as
+ *  isGuideToolkitAuthorized, for the separate 'guided_journey_facilitation'
+ *  capability that specifically covers facilitating a CAT/InnerCompass
+ *  conversation on a Host's behalf (see isAuthorizedGuideConversation
+ *  below, the only caller). Kept as its own function rather than folded
+ *  into isGuideToolkitAuthorized because the two capabilities are
+ *  deliberately separate in guide_platform_authorizations and must not be
+ *  collapsed into one check. */
+export async function isGuideJourneyFacilitationAuthorized(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const [guide, standingActive, journeyAuthorized] = await Promise.all([
+    isGuide(supabase, userId),
+    hasActiveCertificationStanding(supabase, userId),
+    hasAuthorizedPlatformCapability(supabase, userId, "guided_journey_facilitation"),
+  ]);
+  return guide && standingActive && journeyAuthorized;
+}
+
 export type GuideParticipant = {
   id: string;
   guide_id: string;
@@ -121,21 +199,28 @@ export async function hasReferralForConversation(
 }
 
 /** Whether a Guide is authorized to run this specific conversation --
- *  requires both a live 'guide' role (checked fresh, not cached from a
- *  historical row) and an actual guide_sessions row tying this exact
- *  conversation to this exact Guide. This is the narrow exception
- *  /api/conversation and /api/referral check before falling back to their
- *  ordinary isMember() gate: it only ever unlocks a conversation the
- *  Guide's own Toolkit already created and owns, never an arbitrary Host's
- *  conversation, and never grants a Guide unrestricted access on the
- *  strength of role alone. */
+ *  requires an active-standing, Guided-Journey-Facilitation-authorized
+ *  Guide (isGuideJourneyFacilitationAuthorized -- see its own comment) AND
+ *  an actual guide_sessions row tying this exact conversation to this
+ *  exact Guide. This is the narrow exception /api/conversation and
+ *  /api/referral check before falling back to their ordinary isMember()
+ *  gate: it only ever unlocks a conversation the Guide's own Toolkit
+ *  already created and owns, never an arbitrary Host's conversation.
+ *
+ *  Guide Operations Agent correction: this previously called isGuide()
+ *  alone -- a pure profiles.role check -- despite its own comment already
+ *  claiming it never grants access "on the strength of role alone." An
+ *  audit found that claim wasn't actually enforced in code. Swapped to
+ *  isGuideJourneyFacilitationAuthorized so certification standing and the
+ *  explicit 'guided_journey_facilitation' platform authorization are both
+ *  required, matching what the comment always intended. */
 export async function isAuthorizedGuideConversation(
   supabase: SupabaseClient,
   userId: string,
   conversationId: string
 ): Promise<boolean> {
-  const [guide, session] = await Promise.all([
-    isGuide(supabase, userId),
+  const [authorized, session] = await Promise.all([
+    isGuideJourneyFacilitationAuthorized(supabase, userId),
     supabase
       .from("guide_sessions")
       .select("id")
@@ -144,7 +229,7 @@ export async function isAuthorizedGuideConversation(
       .limit(1)
       .maybeSingle(),
   ]);
-  return guide && !!session.data;
+  return authorized && !!session.data;
 }
 
 /** Finds the conversation for a given stage within a Journey -- used after

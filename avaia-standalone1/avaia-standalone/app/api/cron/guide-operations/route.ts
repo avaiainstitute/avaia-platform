@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
 import { recordGuideOperationsReminders } from "@/lib/ops/guide-operations";
+import { recordGuideAccessExceptions } from "@/lib/ops/guide-access-operations";
 import { sendEmail } from "@/lib/resend";
-import { guideOperationsWaitingNotificationEmailHtml } from "@/lib/ops/emails";
+import { guideOperationsWaitingNotificationEmailHtml, guideAccessExceptionEmailHtml } from "@/lib/ops/emails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,14 @@ export const dynamic = "force-dynamic";
 // activity). It does not evaluate, rank, or comment on anyone's
 // eligibility -- "do not invent certification requirements" is satisfied by
 // this route never touching that question at all.
+//
+// Guide Operations Agent addition: this same route now also runs the
+// post-certification access/mismatch check (recordGuideAccessExceptions),
+// reusing this existing cron/schedule rather than adding an overlapping
+// one, per that build's own instruction. It never changes
+// guide_certifications.standing, profiles.role, or any authorization row --
+// only records that a mismatch was surfaced, for the same cooldown reasons
+// as the reminders above.
 export async function GET(request: Request) {
   if (!isAuthorizedCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,5 +45,23 @@ export async function GET(request: Request) {
     });
   });
 
-  return NextResponse.json({ ok: true, ...result });
+  const accessResult = await recordGuideAccessExceptions(async (n) => {
+    if (!notifyTo) return;
+    await sendEmail({
+      to: notifyTo,
+      subject: `Guide Operations: ${n.mismatch.type}`,
+      html: guideAccessExceptionEmailHtml({
+        mismatchType: n.mismatch.type,
+        detail: n.mismatch.detail,
+        operationalState: n.operationalState,
+        hostId: n.hostId,
+      }),
+    });
+  });
+
+  return NextResponse.json({
+    ok: true,
+    candidacyReminders: result,
+    guideAccessExceptions: accessResult,
+  });
 }
