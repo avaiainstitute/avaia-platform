@@ -6,6 +6,10 @@ import { getCertificationOperationsSummary } from "@/lib/ops/certification-opera
 import { getGuideOperationsSummary } from "@/lib/ops/guide-access-operations";
 import { getHostParticipantOperationsSummary } from "@/lib/ops/host-participant-operations";
 import { getProgramOperationsSummary } from "@/lib/ops/program-operations";
+import { getToolkitStewardshipSummary } from "@/lib/ops/toolkit-stewardship";
+import { founderDigestWorthyToolkitItems } from "@/lib/toolkit-stewardship";
+import { getConversationIntegritySummary } from "@/lib/ops/conversation-integrity";
+import { founderDigestWorthyIntegrityItems } from "@/lib/conversation-integrity";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 // Agent 10 -- Founder / Operations digest. This is the one place that reads
@@ -52,6 +56,8 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     guideAccessOperations,
     hostParticipantOperations,
     programOperations,
+    toolkitStewardship,
+    conversationIntegrity,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -90,6 +96,8 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     getGuideOperationsSummary(),
     getHostParticipantOperationsSummary(),
     getProgramOperationsSummary(),
+    getToolkitStewardshipSummary(),
+    getConversationIntegritySummary(),
   ]);
 
   // --- WHAT HAPPENED ------------------------------------------------------
@@ -185,8 +193,43 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     waiting.push(`${programOperationsSummary.staleTraining} specialty-program enrollment(s) with no recent training activity.`);
   }
 
+  // Toolkit Stewardship Agent -- deliberately narrow (item 10: do not flood
+  // Founder Digest with ordinary support tickets). founderDigestWorthyToolkitItems
+  // mixes visibility-only lines (recurring patterns, registry health) with
+  // the same policy/awaiting-human facts restated below as counts for
+  // NEEDS DORIAN -- only the visibility-only lines go to WAITING here, so
+  // nothing is said twice in the digest.
+  for (const line of founderDigestWorthyToolkitItems(toolkitStewardship.summary)) {
+    if (line.startsWith("Recurring:") || line.includes("health issue")) waiting.push(line);
+  }
+
+  // Conversation Integrity & Boundary Oversight Agent -- same narrow
+  // posture: only high-priority/policy/legal items and recurring patterns
+  // are digest-worthy; routine NO_VIOLATION reviews never appear here.
+  // Recurring-pattern lines go to WAITING; the counts below go to NEEDS DORIAN.
+  for (const line of founderDigestWorthyIntegrityItems(conversationIntegrity.summary)) {
+    if (line.startsWith("Recurring:")) waiting.push(line);
+  }
+
   // --- WHAT NEEDS DORIAN ----------------------------------------------------
   const needsDorian: string[] = [];
+  if (toolkitStewardship.summary.policyRequired.length > 0) {
+    needsDorian.push(`${toolkitStewardship.summary.policyRequired.length} Toolkit item(s) require an AVAIA policy decision.`);
+  }
+  if (toolkitStewardship.summary.addsAndAdaptationsAwaitingHuman.length > 0) {
+    needsDorian.push(
+      `${toolkitStewardship.summary.addsAndAdaptationsAwaitingHuman.length} Toolkit adaptation/addition request(s) awaiting human decision.`
+    );
+  }
+  if (conversationIntegrity.summary.highPriority.length > 0) {
+    needsDorian.push(`${conversationIntegrity.summary.highPriority.length} high-priority Conversation Integrity flag(s) open.`);
+  }
+  if (conversationIntegrity.summary.policyRequired.length > 0) {
+    needsDorian.push(`${conversationIntegrity.summary.policyRequired.length} Conversation Integrity item(s) require an AVAIA policy decision.`);
+  }
+  if (conversationIntegrity.summary.legalReviewRequired.length > 0) {
+    needsDorian.push(`${conversationIntegrity.summary.legalReviewRequired.length} Conversation Integrity item(s) require legal review.`);
+  }
   if (certSummary.readyForReview > 0) {
     needsDorian.push(`${certSummary.readyForReview} certification candidate(s) READY FOR HUMAN CERTIFICATION REVIEW.`);
   }
