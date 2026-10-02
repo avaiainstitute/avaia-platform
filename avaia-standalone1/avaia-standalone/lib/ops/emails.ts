@@ -125,3 +125,70 @@ export function founderDigestEmailHtml({
     ${section("TODAY'S PRIORITIES", priorities, "No specific priorities surfaced today.")}
   `.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Certification Companion -- human escalation notice. Sent to
+// GUIDE_OPS_NOTIFICATION_EMAIL (same env var Agent 7 already uses) the
+// moment the Companion logs a certification_companion_escalations row
+// (app/api/certification/companion/route.ts). Like the Agent 7 template
+// above, this states identifiers and category only -- never the model's
+// reply, never an evaluation, never a recommendation. A crisis category
+// reuses the exact resource line already approved in lib/safety.ts
+// (CRISIS_RESOURCES.US) rather than writing new crisis wording here.
+// ---------------------------------------------------------------------------
+const ESCALATION_CATEGORY_LABEL: Record<string, string> = {
+  crisis: "Possible crisis content detected",
+  waiver_request: "Candidate asked to waive or skip a requirement",
+  evaluation_dispute: "Candidate disputed a recorded evaluation",
+  judgment_territory: "Candidate asked about a Boundary Gate / Practicum judgment",
+  no_confident_match: "Candidate asked a content question the Companion could not confidently answer",
+};
+
+export function certificationCompanionEscalationEmailHtml({
+  category,
+  hostId,
+  candidateId,
+  note,
+}: {
+  category: string;
+  hostId: string;
+  candidateId: string;
+  note?: string | null;
+}): string {
+  const label = ESCALATION_CATEGORY_LABEL[category] ?? "Certification Companion escalation";
+  return `
+    <h2>${escapeHtml(label)}</h2>
+    <p>The AVAIA Certification Companion flagged a conversation that needs a person.</p>
+    <p><strong>Host ID:</strong> ${escapeHtml(hostId)}</p>
+    <p><strong>Candidate ID:</strong> ${escapeHtml(candidateId)}</p>
+    ${note ? `<p><strong>Candidate's message (verbatim, truncated):</strong></p><p style="white-space:pre-wrap">${escapeHtml(note)}</p>` : ""}
+    ${
+      category === "crisis"
+        ? `<p style="color:#8f3b34"><strong>988</strong> (call or text) · <strong>911</strong> for immediate danger · text <strong>HOME</strong> to <strong>741741</strong></p>`
+        : ""
+    }
+    <p style="color:#888">This is a routing notice only -- the Companion did not evaluate, decide,
+    or waive anything. Review the conversation directly to decide next steps.</p>
+  `.trim();
+}
+
+// ---------------------------------------------------------------------------
+// Certification Companion -- basic progress-aware check-in, sent directly
+// to the candidate (unlike every other template in this file, which is
+// internal to Dorian/admin). Deliberately generic and warm, same posture
+// as hostOnboardingReminderEmailHtml above: no urgency, no reference to
+// what specifically is incomplete beyond the plain fact of inactivity.
+// ---------------------------------------------------------------------------
+export function certificationCompanionCheckinEmailHtml({ companionUrl }: { companionUrl: string }): string {
+  return `
+    <p>Hi,</p>
+    <p>It's been a little while since you last touched your AVAIA Guide Certification work.
+    There's no deadline attached to this note -- everything you've already done is saved exactly
+    as you left it.</p>
+    <p>If you have a question about where you are, or want to pick back up, the Certification
+    Companion can help you find your place.</p>
+    <p><a href="${companionUrl}">Open the Certification Companion</a></p>
+    <p style="color:#888">If you'd rather not continue right now, you can ignore this -- we won't
+    send another check-in about this for a while.</p>
+  `.trim();
+}
