@@ -5,6 +5,7 @@ import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
 import { getCertificationOperationsSummary } from "@/lib/ops/certification-operations";
 import { getGuideOperationsSummary } from "@/lib/ops/guide-access-operations";
 import { getHostParticipantOperationsSummary } from "@/lib/ops/host-participant-operations";
+import { getProgramOperationsSummary } from "@/lib/ops/program-operations";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 // Agent 10 -- Founder / Operations digest. This is the one place that reads
@@ -50,6 +51,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     certificationOperations,
     guideAccessOperations,
     hostParticipantOperations,
+    programOperations,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -87,6 +89,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     getCertificationOperationsSummary(),
     getGuideOperationsSummary(),
     getHostParticipantOperationsSummary(),
+    getProgramOperationsSummary(),
   ]);
 
   // --- WHAT HAPPENED ------------------------------------------------------
@@ -168,6 +171,20 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     waiting.push(`${hostParticipantSummary.participantsReadyOrInProgress} Guide-facilitated participant(s) ready for or in an active session.`);
   }
 
+  // Program Operations Agent -- mechanical specialty-authorization counts
+  // only (lib/ops/program-operations.ts), fed into the existing
+  // WAITING/NEEDS DORIAN sections as plain strings, same pattern as
+  // hostParticipantSummary above. No new digest section; nothing here is
+  // an authorization decision -- only counts of enrollments waiting on
+  // one.
+  const programOperationsSummary = programOperations.summary;
+  if (programOperationsSummary.developmentRequired > 0) {
+    waiting.push(`${programOperationsSummary.developmentRequired} specialty-program enrollment(s) marked Development Required.`);
+  }
+  if (programOperationsSummary.staleTraining > 0) {
+    waiting.push(`${programOperationsSummary.staleTraining} specialty-program enrollment(s) with no recent training activity.`);
+  }
+
   // --- WHAT NEEDS DORIAN ----------------------------------------------------
   const needsDorian: string[] = [];
   if (certSummary.readyForReview > 0) {
@@ -193,6 +210,15 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
   if (hostParticipantSummary.invalidHostScopedAccess > 0) {
     needsDorian.push(`${hostParticipantSummary.invalidHostScopedAccess} Host-scoped Guide access grant(s) are active despite invalid Guide standing/authorization.`);
+  }
+  if (programOperationsSummary.readyForHumanReview > 0) {
+    needsDorian.push(`${programOperationsSummary.readyForHumanReview} specialty-program enrollment(s) READY FOR HUMAN AUTHORIZATION REVIEW.`);
+  }
+  if (programOperationsSummary.permissionMismatches > 0) {
+    needsDorian.push(`${programOperationsSummary.permissionMismatches} specialty-program authorization/Toolkit permission mismatch(es) need review.`);
+  }
+  if (programOperationsSummary.failedAutomation > 0) {
+    needsDorian.push(`${programOperationsSummary.failedAutomation} specialty-program authorization automation failure(s) need review.`);
   }
   for (const c of needsDorianAvaiaContacts ?? []) {
     needsDorian.push(`AVAIA contact form -- ${c.name} (${c.reason}), ${daysAgo(c.created_at)} day(s) ago.`);

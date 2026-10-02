@@ -56,6 +56,16 @@ export default function AdminIndexPage() {
             campaign review, and volunteer tracking.
           </p>
         </Link>
+        <Link
+          href="/admin/program-operations"
+          className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-opacity hover:opacity-90"
+        >
+          <p className="font-serif text-lg text-ink">Program Operations</p>
+          <p className="mt-1 text-sm text-muted">
+            Post-certification specialty authorization for Defying Grief and Unsung Heroes --
+            enrollment, prerequisite, evidence, and evaluator review state.
+          </p>
+        </Link>
       </div>
     </div>
   );

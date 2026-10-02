@@ -316,3 +316,33 @@ export function pinkFoundationOperationsExceptionEmailHtml({
     directly in /admin/foundation-operations to decide next steps.</p>
   `.trim();
 }
+
+/** Program Operations Agent exception notification. Always an internal
+ *  admin/evaluator/ops notice -- never sent to the Guide. Never says
+ *  "authorized" or "denied"; states only the mechanical exception and
+ *  points to /admin/program-operations for a human to act on, consistent
+ *  with the "READY FOR HUMAN AUTHORIZATION REVIEW, never READY TO
+ *  AUTHORIZE" boundary. */
+export function programOperationsExceptionEmailHtml({
+  program,
+  category,
+  reason,
+  enrollmentId,
+  hostId,
+}: {
+  program: string;
+  category: string;
+  reason: string;
+  enrollmentId: string;
+  hostId: string;
+}): string {
+  return `
+    <h2>Program Operations: ${escapeHtml(category)}</h2>
+    <p><strong>Program:</strong> ${escapeHtml(program)}</p>
+    <p>${escapeHtml(reason)}</p>
+    <p><strong>Enrollment ID:</strong> ${escapeHtml(enrollmentId)} &middot; <strong>Guide (host) ID:</strong> ${escapeHtml(hostId)}</p>
+    <p style="color:#888">This is an operational routing notice only -- it does not authorize, waive, or
+    decide anything. Review the record directly in /admin/program-operations. A human authorization
+    decision is required before this enrollment can be marked authorized.</p>
+  `.trim();
+}

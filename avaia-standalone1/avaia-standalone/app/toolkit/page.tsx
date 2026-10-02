@@ -11,6 +11,7 @@ import {
 import { getGuideOperationsRecordForHost } from "@/lib/guide-operations";
 import { getGuideParticipantStatusesForGuide } from "@/lib/host-operations";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
+import { getGuideFacingProgramAuthorizations } from "@/lib/ops/program-operations";
 
 export const metadata = { title: "Guide Toolkit — AVAIA" };
 export const dynamic = "force-dynamic";
@@ -104,11 +105,12 @@ export default async function ToolkitDashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/toolkit");
 
-  const [participants, sessions, guideStatus, participantStatuses] = await Promise.all([
+  const [participants, sessions, guideStatus, participantStatuses, programAuthorizations] = await Promise.all([
     listGuideParticipants(supabase, user.id),
     listGuideSessions(supabase, user.id),
     getGuideOperationsRecordForHost(supabase, user.id),
     getGuideParticipantStatusesForGuide(supabase, user.id),
+    getGuideFacingProgramAuthorizations(user.id),
   ]);
 
   const participantById = new Map<string, GuideParticipant>(participants.map((p) => [p.id, p]));
@@ -279,6 +281,36 @@ export default async function ToolkitDashboardPage() {
           </div>
         </section>
       )}
+
+      {/* My Program Authorizations -- Program Operations Agent. Truthful
+          states only (available/in_training/development_required/
+          awaiting_human_review/authorized/not_authorized/paused/withdrawn);
+          this Guide-facing view is built from getGuideFacingProgramAuthorizations,
+          which structurally never reads program_authorization_evidence or
+          program_authorization_history -- no evaluator-only content can
+          reach this page even by mistake. */}
+      <section className="rule-t mt-14 border-t border-rule pt-8">
+        <p className="label mb-3 text-muted">My Program Authorizations</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {programAuthorizations.map((pa) => (
+            <div key={pa.program} className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="font-serif text-lg text-ink">{pa.label}</p>
+                <span className="label shrink-0 text-muted">
+                  {pa.state === "available" && "Available"}
+                  {pa.state === "in_training" && "In Training"}
+                  {pa.state === "development_required" && "Development Required"}
+                  {pa.state === "awaiting_human_review" && "Awaiting Human Review"}
+                  {pa.state === "authorized" && "Authorized"}
+                  {pa.state === "not_authorized" && "Not Authorized"}
+                  {pa.state === "paused" && "Paused"}
+                  {pa.state === "withdrawn" && "Withdrawn"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Records / continuity -- the Workbook is the existing, real
           continuity view (referrals, transcripts, patterns across
