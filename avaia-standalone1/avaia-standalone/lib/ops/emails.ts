@@ -346,3 +346,60 @@ export function programOperationsExceptionEmailHtml({
     decision is required before this enrollment can be marked authorized.</p>
   `.trim();
 }
+
+
+/** Toolkit Stewardship Agent exception notification. Always an internal
+ *  admin/ops notice -- never sent to the Guide who filed the item. Never
+ *  approves, adapts, or resolves anything; states only the mechanical
+ *  item and points to /admin/toolkit-stewardship for a human to act on. */
+export function toolkitStewardshipExceptionEmailHtml({
+  category,
+  description,
+  toolKey,
+  hostId,
+  itemId,
+}: {
+  category: string;
+  description: string;
+  toolKey: string;
+  hostId: string;
+  itemId: string;
+}): string {
+  return `
+    <h2>Toolkit Stewardship: ${escapeHtml(category)}</h2>
+    <p><strong>Toolkit item:</strong> ${escapeHtml(toolKey)}</p>
+    <p>${escapeHtml(description)}</p>
+    <p><strong>Filed by (host) ID:</strong> ${escapeHtml(hostId)} &middot; <strong>Item ID:</strong> ${escapeHtml(itemId)}</p>
+    <p style="color:#888">This is an operational routing notice only -- it does not approve an adaptation
+    or addition, or change authorization rules. Review the record directly in
+    /admin/toolkit-stewardship to decide next steps.</p>
+  `.trim();
+}
+
+/** Conversation Integrity & Boundary Oversight Agent reviewer reminder.
+ *  Always an internal admin/reviewer notice -- never sent to the Host or
+ *  the Guide whose reply triggered the flag. Carries only the category,
+ *  severity, and the AVAIA rule implicated -- never message content and
+ *  never a psychological conclusion about anyone. */
+export function conversationIntegrityExceptionEmailHtml({
+  flagCategory,
+  severity,
+  detail,
+  hostId,
+  flagId,
+}: {
+  flagCategory: string;
+  severity: string;
+  detail: string;
+  hostId: string | null;
+  flagId: string;
+}): string {
+  return `
+    <h2>Conversation Integrity: ${escapeHtml(flagCategory)} (${escapeHtml(severity)})</h2>
+    <p>${escapeHtml(detail)}</p>
+    <p><strong>Host ID:</strong> ${escapeHtml(hostId ?? "n/a")} &middot; <strong>Flag ID:</strong> ${escapeHtml(flagId)}</p>
+    <p style="color:#888">This is a possible flag for human review only -- it is not an automatic
+    finding of misconduct and not a diagnosis or character judgment about anyone. Review the
+    record directly in /admin/conversation-integrity to record a disposition.</p>
+  `.trim();
+}
