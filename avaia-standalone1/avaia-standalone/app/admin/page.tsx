@@ -36,6 +36,16 @@ export default function AdminIndexPage() {
             Host-scoped access mismatches.
           </p>
         </Link>
+        <Link
+          href="/admin/organization-operations"
+          className="block rounded-lg border border-rule bg-white/[0.04] px-5 py-4 backdrop-blur-sm transition-opacity hover:opacity-90"
+        >
+          <p className="font-serif text-lg text-ink">Organization / Event Operations</p>
+          <p className="mt-1 text-sm text-muted">
+            Organization setup and connected-Guide coverage for AVAIA Experiences delivered to
+            groups and organizations.
+          </p>
+        </Link>
       </div>
     </div>
   );
