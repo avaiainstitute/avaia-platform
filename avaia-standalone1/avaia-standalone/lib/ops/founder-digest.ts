@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
+import { getCertificationOperationsSummary } from "@/lib/ops/certification-operations";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
 
 // Agent 10 -- Founder / Operations digest. This is the one place that reads
@@ -44,6 +45,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     { data: actionNeededPartnerships },
     hostOnboarding,
     guideOperations,
+    certificationOperations,
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin
@@ -78,6 +80,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     admin.from("pink_partnerships").select("organization_name").eq("dorian_action_needed", true),
     getHostOnboardingSnapshot(),
     getGuideOperationsSnapshot(),
+    getCertificationOperationsSummary(),
   ]);
 
   // --- WHAT HAPPENED ------------------------------------------------------
@@ -115,8 +118,35 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     );
   }
 
+  // Certification Operations Agent -- mechanical workflow counts only
+  // (lib/ops/certification-operations.ts), fed into the existing WAITING
+  // section as plain strings, same pattern as guideOperations above. No new
+  // digest section; nothing here is a certification judgment.
+  const certSummary = certificationOperations.summary;
+  if (certSummary.inTraining > 0) {
+    waiting.push(`${certSummary.inTraining} certification candidate(s) currently in training.`);
+  }
+  if (certSummary.stalled > 0) {
+    waiting.push(`${certSummary.stalled} certification candidate(s) stalled with no recent recorded activity.`);
+  }
+  if (certSummary.boundaryGateAwaitingHuman > 0) {
+    waiting.push(`${certSummary.boundaryGateAwaitingHuman} Boundary Gate result(s) awaiting a human decision.`);
+  }
+  if (certSummary.practicumAwaitingHuman > 0) {
+    waiting.push(`${certSummary.practicumAwaitingHuman} Practicum result(s) awaiting a human decision.`);
+  }
+
   // --- WHAT NEEDS DORIAN ----------------------------------------------------
   const needsDorian: string[] = [];
+  if (certSummary.readyForReview > 0) {
+    needsDorian.push(`${certSummary.readyForReview} certification candidate(s) READY FOR HUMAN CERTIFICATION REVIEW.`);
+  }
+  if (certSummary.permissionMismatches > 0) {
+    needsDorian.push(`${certSummary.permissionMismatches} post-certification permission mismatch(es) need review.`);
+  }
+  if (certSummary.failedAutomations > 0) {
+    needsDorian.push(`${certSummary.failedAutomations} certification Critical Fail record(s) need a human decision on candidacy standing.`);
+  }
   for (const c of needsDorianAvaiaContacts ?? []) {
     needsDorian.push(`AVAIA contact form -- ${c.name} (${c.reason}), ${daysAgo(c.created_at)} day(s) ago.`);
   }

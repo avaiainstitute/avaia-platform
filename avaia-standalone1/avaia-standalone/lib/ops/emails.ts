@@ -192,3 +192,33 @@ export function certificationCompanionCheckinEmailHtml({ companionUrl }: { compa
     send another check-in about this for a while.</p>
   `.trim();
 }
+
+// ---------------------------------------------------------------------------
+// Certification Operations Agent -- daily exception notification. Internal
+// to admin/ops only, same posture as guideOperationsWaitingNotificationEmailHtml
+// above: a mechanical fact about existing records, never an evaluation.
+// ---------------------------------------------------------------------------
+export function certificationOperationsExceptionEmailHtml({
+  category,
+  detail,
+  derivedState,
+  hostId,
+  candidateId,
+}: {
+  category: string;
+  detail: string;
+  derivedState: string;
+  hostId: string;
+  candidateId: string;
+}): string {
+  return `
+    <h2>Certification Operations: ${escapeHtml(category)}</h2>
+    <p>${escapeHtml(detail)}</p>
+    <p><strong>Operational state:</strong> ${escapeHtml(derivedState)}</p>
+    <p><strong>Candidate ID:</strong> ${escapeHtml(candidateId)}</p>
+    <p><strong>Host ID:</strong> ${escapeHtml(hostId)}</p>
+    <p style="color:#888">This is a mechanical workflow notice only -- it does not evaluate
+    competency, grade a Boundary Gate or Practicum, determine Critical Fail, or certify anyone.
+    Review the candidate's record directly in /admin/guide-candidates to decide next steps.</p>
+  `.trim();
+}
