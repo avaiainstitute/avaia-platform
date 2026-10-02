@@ -27,6 +27,14 @@
     {
       "path": "/api/cron/program-operations",
       "schedule": "32 12 * * *"
+    },
+    {
+      "path": "/api/cron/toolkit-stewardship",
+      "schedule": "34 12 * * *"
+    },
+    {
+      "path": "/api/cron/conversation-integrity",
+      "schedule": "36 12 * * *"
     }
   ]
 }
