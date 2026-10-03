@@ -123,11 +123,15 @@ export async function POST(request: Request) {
       category: loggedCategory,
       note: message.slice(0, 500),
     });
-    // "no_confident_match" is a softer signal (a content question the
-    // Companion just didn't match) -- logged for review, but doesn't page
-    // Dorian/admin by email the way a real escalation does.
+    // Only a possible crisis is emailed immediately: it cannot wait for the
+    // next daily summary. Every other escalation (a request to waive a
+    // requirement, a disputed evaluation, a question about Gate/Practicum
+    // judgment) is saved above and shows up in the one Needs-Dorian source,
+    // in the Founder Digest and on /admin/today, until it is marked handled --
+    // so it is not also sent as a separate email. "no_confident_match" is a
+    // softer signal and is only logged.
     const notifyTo = process.env.GUIDE_OPS_NOTIFICATION_EMAIL || process.env.CONTACT_NOTIFICATION_EMAIL;
-    if (notifyTo && loggedCategory !== "no_confident_match") {
+    if (notifyTo && loggedCategory === "crisis") {
       await sendEmail({
         to: notifyTo,
         subject: "AVAIA Certification Companion -- escalation",

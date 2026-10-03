@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
-import {
-  recordGuideOperationsReminders,
-  runCertificationLifecycle,
-  type CertificationLifecycleResult,
-} from "@/lib/ops/guide-operations";
+import { runCertificationLifecycle, type CertificationLifecycleResult } from "@/lib/ops/guide-operations";
 import { sendEmail } from "@/lib/resend";
-import {
-  guideOperationsWaitingNotificationEmailHtml,
-  certificationRenewalReminderEmailHtml,
-} from "@/lib/ops/emails";
+import { certificationRenewalReminderEmailHtml } from "@/lib/ops/emails";
 import { recordCronRun } from "@/lib/ops/cron-runs";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { describeEthics, describePayment, formatDateLabel } from "@/lib/certification-renewal";
@@ -17,12 +10,15 @@ import { describeEthics, describePayment, formatDateLabel } from "@/lib/certific
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SUBJECT_BY_TYPE: Record<string, string> = {
-  paid_awaiting_decision: "Certification payment awaiting a decision",
-  candidacy_stalled: "Guide candidacy waiting on next step",
-  certified_awaiting_grant: "Certified decision awaiting the certification grant",
-  certified_awaiting_toolkit_auth: "Certification awaiting Toolkit authorization",
-};
+// Guide Operations: a certified Guide's STANDING after certification. Marks a
+// lapsed certification inactive (never deletes it), notes when an inactive
+// certification reaches the end of its reactivation window, and sends the
+// Guide their 90/60/30/14/7-day renewal reminders. It tells Dorian nothing
+// directly: anything that needs him (a renewal ready to confirm, a
+// reactivation ready for his decision) is surfaced through the one shared
+// Needs-Dorian source (lib/ops/needs-dorian.ts) and so appears identically in
+// the Founder Digest and /admin/today. The candidate pipeline (before
+// certification) is Certification Operations' and is not handled here.
 
 export async function GET(request: Request) {
   if (!isAuthorizedCronRequest(request)) {
@@ -30,40 +26,10 @@ export async function GET(request: Request) {
   }
 
   const startedAt = new Date();
-  const notifyTo = process.env.GUIDE_OPS_NOTIFICATION_EMAIL || process.env.CONTACT_NOTIFICATION_EMAIL;
   const admin = createAdminClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://avaiainstitute.com";
 
   try {
-    const result = await recordGuideOperationsReminders(async (item) => {
-      // Throw rather than silently no-op when there's no configured
-      // recipient -- recordGuideOperationsReminders treats a thrown sendFn
-      // as "not actually sent" and won't start this item's cooldown.
-      if (!notifyTo) {
-        throw new Error("GUIDE_OPS_NOTIFICATION_EMAIL / CONTACT_NOTIFICATION_EMAIL is not configured.");
-      }
-      // Audit finding #3.4: resolve the email here so Dorian isn't forced
-      // to re-look it up by hand before he can act on this notice.
-      const { data: userData } = await admin.auth.admin.getUserById(item.hostId);
-      const hostEmail = userData?.user?.email ?? null;
-
-      await sendEmail({
-        to: notifyTo,
-        subject: SUBJECT_BY_TYPE[item.type],
-        html: guideOperationsWaitingNotificationEmailHtml(
-          item.type === "paid_awaiting_decision"
-            ? { type: "paid_awaiting_decision", hostId: item.hostId, hostEmail, sinceDays: item.sinceDays }
-            : item.type === "candidacy_stalled"
-              ? { type: "candidacy_stalled", hostId: item.hostId, hostEmail, sinceDays: item.sinceDays, status: item.status }
-              : { type: item.type, hostId: item.hostId, hostEmail, sinceDays: item.sinceDays }
-        ),
-      });
-    });
-
-    // Certification lifecycle (renewal cycle, Active -> Inactive, renewal
-    // reminders to the Guide). Isolated in its own try/catch so a problem
-    // here (for instance migration 0082 not yet applied) can never take down
-    // the pipeline reminders above, which already ran.
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://avaiainstitute.com";
     let certification: CertificationLifecycleResult | { error: string };
     try {
       certification = await runCertificationLifecycle(async (item) => {
@@ -94,17 +60,15 @@ export async function GET(request: Request) {
       console.error("[guide-operations] certification lifecycle failed", err);
     }
     const certificationProblem =
-      "error" in certification ||
-      certification.remindersFailed > 0 ||
-      certification.errors.length > 0;
+      "error" in certification || certification.remindersFailed > 0 || certification.errors.length > 0;
 
     await recordCronRun({
       cronName: "guide-operations",
       startedAt,
-      status: result.failed > 0 || certificationProblem ? "partial" : "success",
-      detail: { ...result, certification },
+      status: certificationProblem ? "partial" : "success",
+      detail: { certification },
     });
-    return NextResponse.json({ ok: true, ...result, certification });
+    return NextResponse.json({ ok: true, certification });
   } catch (err) {
     await recordCronRun({
       cronName: "guide-operations",

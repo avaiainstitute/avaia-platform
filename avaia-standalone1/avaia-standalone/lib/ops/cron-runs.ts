@@ -12,7 +12,6 @@ export const RECORDED_CRON_NAMES = [
   "entitlement-reconciliation",
   "guardian-consent-reminder",
   "family-invite-reminder",
-  "certification-operations",
   "certification-companion",
   "system-checks",
   "prospect-research",

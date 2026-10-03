@@ -6,6 +6,8 @@ import { recordCronRun } from "@/lib/ops/cron-runs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Builds the one Needs-Dorian snapshot (a few dozen small queries); give it room.
+export const maxDuration = 30;
 
 export async function GET(request: Request) {
   if (!isAuthorizedCronRequest(request)) {

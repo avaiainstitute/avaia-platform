@@ -194,11 +194,6 @@ export async function schemaChecks(): Promise<CheckResult[]> {
     if (notAllowed.length > 0) failures.push(`cron_runs does not yet accept: ${notAllowed.join(", ")} (their runs cannot be recorded)`);
   }
 
-  const reminders = need("guide_candidate_reminders");
-  if (reminders && !(reminders.checks["guide_candidate_reminders_reminder_type_check"] ?? "").includes("certified_awaiting_toolkit_auth")) {
-    failures.push(`guide_candidate_reminders does not accept the newest reminder type`);
-  }
-
   const reflections = need("certification_candidate_reflections");
   if (reflections) {
     if (reflections.policies.length === 0) failures.push(`certification_candidate_reflections has no access policy`);
@@ -208,7 +203,7 @@ export async function schemaChecks(): Promise<CheckResult[]> {
 
   results.push(
     failures.length === 0
-      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, cron-name and reminder constraints, and candidate-reflection privacy are all as designed.")
+      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, and candidate-reflection privacy are all as designed.")
       : row("schema_rules", "Protective database rules are in place", "problem", failures.join("; ") + ".")
   );
 

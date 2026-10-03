@@ -138,7 +138,19 @@ export const EXCEPTION_CATEGORIES = [
 
 export type ExceptionCategory = (typeof EXCEPTION_CATEGORIES)[number];
 
-export type CertificationException = { category: ExceptionCategory; detail: string };
+/** A stable name for each root cause, so the same condition is never reported twice
+ *  and every consumer (Needs-Dorian, the self-test) can classify it. */
+export type ExceptionCode =
+  | "critical_fail"
+  | "gate_waiting"
+  | "practicum_waiting"
+  | "ready_for_review"
+  | "mismatch_no_decision"
+  | "missing_certification"
+  | "activation_pending"
+  | "stale";
+
+export type CertificationException = { category: ExceptionCategory; code: ExceptionCode; detail: string };
 
 export type CertificationOperationsRecord = {
   candidateId: string;
@@ -146,6 +158,7 @@ export type CertificationOperationsRecord = {
   lifecycleStatus: string;
   admittedAt: string;
   readyForReview: boolean;
+  readyForReviewNotes: string | null;
   progress: ProgressSummary;
   latestEvidenceByType: Partial<Record<EvidenceType, EvidenceRow>>;
   decision: DecisionRow | null;
@@ -384,21 +397,36 @@ export function deriveOperationalState(args: {
 
 const STALE_DAYS = Number(process.env.CERTIFICATION_OPERATIONS_STALE_DAYS ?? 10);
 
+/** States where the ball is in the CANDIDATE's court, so silence is worth a
+ *  heads-up. A candidate waiting on a human decision (Boundary Gate or
+ *  Practicum result, the certification decision) is not "quiet": that wait is
+ *  already its own item, and calling it a stall too would say the same thing
+ *  twice. */
 const STATES_CONSIDERED_ACTIVE: OperationalState[] = [
   "agreement_pending",
   "training_active",
   "practice_eligible",
-  "boundary_gate_eligible",
-  "boundary_gate_waiting",
-  "practicum_eligible",
-  "practicum_waiting",
   "portfolio_incomplete",
-  "ready_for_human_review",
 ];
 
-/** Deterministic exception detection -- every category here is triggered by
+/** Days a post-decision handoff step (the certification record, then Toolkit
+ *  authorization) may take before it is worth a human's attention. One rule
+ *  for the whole system: before this was consolidated, one agent used 4 days
+ *  and another fired immediately for the same two conditions. */
+const HANDOFF_GRACE_DAYS = Number(process.env.CERTIFICATION_HANDOFF_GRACE_DAYS ?? 4);
+
+function ageInDays(iso: string | null | undefined, now: number): number | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? null : (now - t) / 86_400_000;
+}
+
+/** Deterministic exception detection -- every exception here is triggered by
  *  an objective fact already computed above or read directly from a table;
- *  nothing here is a judgment call about the candidate. */
+ *  nothing here is a judgment call about the candidate. Exactly ONE exception
+ *  per root cause (each has a stable `code`), so the same condition can never
+ *  be reported twice. This is the single authoritative place the candidate
+ *  pipeline's rules live. */
 export function detectExceptions(args: {
   state: OperationalState;
   latest: Partial<Record<EvidenceType, EvidenceRow>>;
@@ -406,59 +434,88 @@ export function detectExceptions(args: {
   certification: CertificationRow | null;
   toolkitAuthorizationStatus: PlatformAuthStatus;
   lastActivityAt: string | null;
+  readyForReview?: boolean;
+  now?: number;
 }): CertificationException[] {
   const { state, latest, decision, certification, lastActivityAt } = args;
+  const now = args.now ?? Date.now();
   const exceptions: CertificationException[] = [];
 
-  // FAILED -- any critical_fail evidence recorded, ever. Surfaced, never
-  // acted on automatically.
+  // A critical fail recorded on any evidence: surfaced for a human decision
+  // on candidacy standing, never acted on automatically.
   const criticalFails = hasCriticalFail(latest);
   if (criticalFails.length > 0) {
     exceptions.push({
       category: "FAILED",
-      detail: `Critical Fail recorded on: ${describeMissing(criticalFails)}.`,
+      code: "critical_fail",
+      detail: `Critical Fail recorded on: ${describeMissing(criticalFails)}. This needs a human decision on candidacy standing.`,
     });
-    exceptions.push({ category: "HUMAN_DECISION_REQUIRED", detail: "Critical Fail requires a human decision on candidacy standing." });
   }
 
-  // WAITING -- an attempt recorded without a competent result, awaiting a
-  // human retry/remediation decision.
-  if (state === "boundary_gate_waiting" || state === "practicum_waiting") {
-    exceptions.push({ category: "WAITING", detail: `Operational state is "${state}" -- awaiting a human retry/remediation decision.` });
-    exceptions.push({ category: "HUMAN_DECISION_REQUIRED", detail: "Non-competent gate/practicum attempt awaiting human disposition." });
+  // An attempt recorded without a competent result: a human decides retry or
+  // remediation.
+  if (state === "boundary_gate_waiting") {
+    exceptions.push({ category: "HUMAN_DECISION_REQUIRED", code: "gate_waiting", detail: "Boundary Gate evidence is on file but not yet competent: a human decides retry or remediation." });
+  }
+  if (state === "practicum_waiting") {
+    exceptions.push({ category: "HUMAN_DECISION_REQUIRED", code: "practicum_waiting", detail: "Observed Practicum evidence is on file but not yet competent: a human decides retry or remediation." });
   }
 
-  // HUMAN_DECISION_REQUIRED -- portfolio complete, nothing recorded yet.
-  if (state === "ready_for_human_review") {
-    exceptions.push({ category: "HUMAN_DECISION_REQUIRED", detail: "Portfolio administratively complete; a human certification decision has not been recorded." });
+  // Ready for the human certification decision: the portfolio is
+  // administratively complete, or Dorian himself marked the candidate ready,
+  // and no 'certified' decision exists yet. One item whichever applies.
+  const portfolioComplete = state === "ready_for_human_review";
+  const flagged = !!args.readyForReview && decision?.decision !== "certified" && state !== "lifecycle_closed";
+  if (portfolioComplete || flagged) {
+    exceptions.push({
+      category: "HUMAN_DECISION_REQUIRED",
+      code: "ready_for_review",
+      detail: [portfolioComplete ? "every evidence step has a competent record" : null, flagged ? "you marked this candidate ready" : null]
+        .filter(Boolean)
+        .join("; "),
+    });
   }
 
-  // MISMATCH -- a certification record exists with no corresponding
-  // decision record on file (an inconsistency between two tables, not a
-  // judgment about the candidate).
+  // An inconsistency between two records, not a judgment about the candidate:
+  // a certification exists with no recorded certification decision.
   if (certification && !decision) {
     exceptions.push({
       category: "MISMATCH",
-      detail: "An active guide_certifications record exists with no corresponding guide_certification_decisions row on file.",
+      code: "mismatch_no_decision",
+      detail: "A certification record exists with no certification decision on file.",
     });
   }
 
-  // MISSING -- a decision of 'certified' exists but the certification record
-  // itself is not yet on file.
-  if (decision?.decision === "certified" && !certification) {
-    exceptions.push({ category: "MISSING", detail: "Decision recorded as certified, but no guide_certifications record exists yet." });
+  // Post-decision handoff, with one shared grace period.
+  if (decision?.decision === "certified") {
+    if (!certification) {
+      const age = ageInDays(decision.decision_date, now);
+      if (age !== null && age >= HANDOFF_GRACE_DAYS) {
+        exceptions.push({
+          category: "MISSING",
+          code: "missing_certification",
+          detail: `A 'certified' decision was recorded ${Math.floor(age)} day(s) ago but the certification record has not been granted yet.`,
+        });
+      }
+    } else if (certification.standing === "active" && args.toolkitAuthorizationStatus !== "authorized") {
+      const age = ageInDays(certification.certified_at, now);
+      if (age !== null && age >= HANDOFF_GRACE_DAYS) {
+        exceptions.push({
+          category: "HUMAN_DECISION_REQUIRED",
+          code: "activation_pending",
+          detail: `The certification has been active ${Math.floor(age)} day(s) but Toolkit authorization has not been granted yet.`,
+        });
+      }
+    }
   }
 
-  if (state === "permission_activation_pending") {
-    exceptions.push({ category: "HUMAN_DECISION_REQUIRED", detail: "Post-certification handoff is incomplete and needs a human to complete it." });
-  }
-
-  // STALE -- no recorded activity within the stall window while the
-  // candidate is in an otherwise-active operational state.
+  // No recorded activity within the stall window while the candidate is in an
+  // otherwise-active state. Visibility only: the candidate has already been
+  // gently checked in on (Companion check-ins, a separate support function).
   if (STATES_CONSIDERED_ACTIVE.includes(state) && lastActivityAt) {
-    const ageDays = (Date.now() - new Date(lastActivityAt).getTime()) / 86_400_000;
+    const ageDays = (now - new Date(lastActivityAt).getTime()) / 86_400_000;
     if (ageDays >= STALE_DAYS) {
-      exceptions.push({ category: "STALE", detail: `No recorded activity in ${Math.floor(ageDays)} day(s) while in state "${state}".` });
+      exceptions.push({ category: "STALE", code: "stale", detail: `No recorded activity in ${Math.floor(ageDays)} day(s) while in state "${state}".` });
     }
   }
 
@@ -481,6 +538,8 @@ type RawInputs = {
   progressRows: { candidate_id: string; item_key: string; status: string; last_touched_at: string }[];
   curriculumCounts: { lessonsTotal: number; labsTotal: number };
   historyLastActivity: Map<string, string>;
+  /** Optional clock for tests (defaults to the current time). */
+  now?: number;
 };
 
 /** Builds one CertificationOperationsRecord per candidate from already-fetched
@@ -556,6 +615,8 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
       certification,
       toolkitAuthorizationStatus,
       lastActivityAt,
+      readyForReview: candidate.ready_for_review,
+      now: inputs.now,
     });
 
     return {
@@ -564,6 +625,7 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
       lifecycleStatus: candidate.status,
       admittedAt: candidate.admitted_at,
       readyForReview: candidate.ready_for_review,
+      readyForReviewNotes: candidate.ready_for_review_notes ?? null,
       progress: {
         lessonsSelfCheckedComplete: lessonProgress.filter((p) => p.status === "self_checked_complete").length,
         lessonsTotal: inputs.curriculumCounts.lessonsTotal,
@@ -581,7 +643,7 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
       derivedState: state,
       missingPrerequisites,
       nextAction,
-      humanActionRequired: humanActionRequired || exceptions.some((e) => e.category === "HUMAN_DECISION_REQUIRED"),
+      humanActionRequired: humanActionRequired || exceptions.some((e) => e.category === "HUMAN_DECISION_REQUIRED" || e.category === "FAILED"),
       lastActivityAt,
       exceptions,
     };

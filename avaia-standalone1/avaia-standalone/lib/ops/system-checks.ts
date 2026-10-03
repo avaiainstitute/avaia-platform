@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getExpectedCrons } from "@/lib/ops/cron-runs";
 import { schemaChecks, scheduleChecks, deploymentChecks } from "@/lib/ops/system-truth";
+import { pipelineChecks } from "@/lib/ops/needs-dorian-selftest";
 
 // Round 4 (Automation Blueprint): Website Watcher, Journey Watcher, Shared
 // Room Operations Watcher, Launch Readiness Watcher, and Testing/QC -- one
@@ -265,6 +266,8 @@ export async function runSystemChecks(): Promise<{
     schemaChecks(),
     scheduleChecks(),
     deploymentChecks(),
+    // The Needs-Dorian pipeline proves itself with simulated records.
+    pipelineChecks(),
   ]);
   const results: CheckResult[] = [];
   for (const g of groups) {

@@ -26,42 +26,6 @@ export function hostOnboardingReminderEmailHtml({
   `.trim();
 }
 
-export function guideOperationsWaitingNotificationEmailHtml({
-  type,
-  hostId,
-  hostEmail,
-  sinceDays,
-  status,
-}: {
-  type: "candidacy_stalled" | "paid_awaiting_decision" | "certified_awaiting_grant" | "certified_awaiting_toolkit_auth";
-  hostId: string;
-  hostEmail?: string | null;
-  sinceDays: number;
-  status?: string;
-}): string {
-  const heading = {
-    paid_awaiting_decision: "Certification payment awaiting a decision",
-    candidacy_stalled: "Guide candidacy waiting on next step",
-    certified_awaiting_grant: "Certified decision awaiting the certification grant",
-    certified_awaiting_toolkit_auth: "Certification awaiting Toolkit authorization",
-  }[type];
-  const body = {
-    paid_awaiting_decision: `A candidate paid for certification ${sinceDays} day(s) ago and no certification decision has been recorded yet.`,
-    candidacy_stalled: `A candidacy (status: ${escapeHtml(status ?? "unknown")}) has had no recorded activity in ${sinceDays} day(s).`,
-    certified_awaiting_grant: `A 'certified' decision was recorded ${sinceDays} day(s) ago, but the certification itself has not yet been granted.`,
-    certified_awaiting_toolkit_auth: `This person's certification has been active for ${sinceDays} day(s), but Toolkit authorization has not yet been granted.`,
-  }[type];
-  return `
-    <h2>${heading}</h2>
-    <p>${body}</p>
-    <p><strong>Host ID:</strong> ${escapeHtml(hostId)}</p>
-    ${hostEmail ? `<p><strong>Host email:</strong> ${escapeHtml(hostEmail)}</p>` : ""}
-    <p style="color:#888">This is a scheduling notice only -- it does not include any evaluation
-    notes, application content, or a recommendation. Review the candidate's record directly to
-    decide next steps.</p>
-  `.trim();
-}
-
 /** Renewal reminder to the Guide themselves (90/60/30/14/7 days before
  *  their individual 365-day certification period ends). Shows only the
  *  Guide's own certification standing -- expiration, days remaining, CE
@@ -177,7 +141,7 @@ export function founderDigestEmailHtml({
     ${section("WHAT HAPPENED", whatHappened, "Nothing new since the last summary.")}
     ${section("WHAT IS BEING HANDLED AUTOMATICALLY", automatic, "Nothing currently in automated handling.")}
     ${section("OPPORTUNITIES", opportunities ?? [], "No new research-found opportunities today.")}
-    ${section("WHAT IS WAITING", waiting, "Nothing waiting.")}
+    ${section("BEING WATCHED (nothing for you to do)", waiting, "Nothing being watched.")}
     ${section("WHAT NEEDS DORIAN", needsDorian, "Nothing needs your attention today.")}
     ${section("TODAY'S PRIORITIES", priorities, "No specific priorities surfaced today.")}
   `.trim();
@@ -237,30 +201,5 @@ export function certificationCompanionCheckinEmailHtml({ classroomUrl }: { class
     <p><a href="${classroomUrl}">Open your certification classroom</a></p>
     <p style="color:#888">If you'd rather not continue right now, you can ignore this -- we won't
     send another check-in about this for a while.</p>
-  `.trim();
-}
-
-export function certificationOperationsExceptionEmailHtml({
-  category,
-  detail,
-  derivedState,
-  hostId,
-  candidateId,
-}: {
-  category: string;
-  detail: string;
-  derivedState: string;
-  hostId: string;
-  candidateId: string;
-}): string {
-  return `
-    <h2>Certification Operations: ${escapeHtml(category)}</h2>
-    <p>${escapeHtml(detail)}</p>
-    <p><strong>Operational state:</strong> ${escapeHtml(derivedState)}</p>
-    <p><strong>Candidate ID:</strong> ${escapeHtml(candidateId)}</p>
-    <p><strong>Host ID:</strong> ${escapeHtml(hostId)}</p>
-    <p style="color:#888">This is a mechanical workflow notice only -- it does not evaluate
-    competency, grade a Boundary Gate or Practicum, determine Critical Fail, or certify anyone.
-    Review the candidate's record directly in /admin/guide-candidates to decide next steps.</p>
   `.trim();
 }

@@ -15,7 +15,7 @@ and has a "Run checks now" button.
 | Every column a migration adds exists | `add column` statements in this folder | `schema_columns` |
 | Every database function the code calls exists | `.rpc("…")` calls | `schema_functions` |
 | Row-level security is on for every table | the live catalog (`avaia_schema_snapshot()`, migration 0111) | `schema_rls` |
-| A short list of protective rules (60-month rule, renewal cycle, cron-name and reminder constraints, candidate-reflection privacy) | `lib/ops/system-truth.ts` | `schema_rules` |
+| A short list of protective rules (60-month rule, renewal cycle, scheduled-job-name rule, candidate-reflection privacy) | `lib/ops/system-truth.ts` | `schema_rules` |
 | Every job in `vercel.json` has recorded a recent run | `vercel.json` | `schedule_jobs` |
 | Production runs the latest commit of the production branch | GitHub vs. Vercel's build environment | `deploy_matches_branch` |
 
