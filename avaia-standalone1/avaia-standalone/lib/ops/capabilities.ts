@@ -4,6 +4,7 @@ import type { CapabilityEvidence, CapabilityResult, NeedsItem } from "@/lib/ops/
 import type { CheckResult, CheckStatus } from "@/lib/ops/system-checks";
 import { evaluateGuideOperations } from "@/lib/ops/guide-access-operations";
 import { evaluateHostParticipantOperations } from "@/lib/ops/host-participant-operations";
+import { evaluateOrganizationOperations } from "@/lib/ops/organization-operations";
 
 // OPERATIONAL CAPABILITIES: the one registry of every approved AVAIA operational
 // capability that runs through the single Needs-Dorian source.
@@ -37,6 +38,7 @@ export type CapabilityDefinition = {
 export const CAPABILITIES: CapabilityDefinition[] = [
   { key: "guide_operations", label: "Guide Operations", run: evaluateGuideOperations },
   { key: "host_participant_operations", label: "Host / Participant Operations", run: evaluateHostParticipantOperations },
+  { key: "organization_operations", label: "Organization / Event Operations", run: evaluateOrganizationOperations },
 ];
 
 const flaggedCount = (r: CapabilityResult): number =>

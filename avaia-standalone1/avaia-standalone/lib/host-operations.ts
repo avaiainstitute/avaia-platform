@@ -30,8 +30,6 @@ import "server-only";
  * in What Needs Dorian, because there is nothing for Dorian to decide: the
  * records are repaired by the product itself when the person returns.
  */
- *    handoff failure, surfaced as a mismatch, never silently papered over.
- */
 
 export const HOST_JOURNEY_STATES = [
   "account_created_no_journey",

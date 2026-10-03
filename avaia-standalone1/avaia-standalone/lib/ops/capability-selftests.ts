@@ -9,6 +9,8 @@ import {
   type HostJourneyRecord,
 } from "@/lib/host-operations";
 import { classifyHostParticipantOperations, classifyHostScopedAccess } from "@/lib/ops/host-participant-operations";
+import { buildOrganizationRecords, type OrganizationAdminStatus, type RawOrganizationRow } from "@/lib/organization-operations";
+import { classifyOrganizations } from "@/lib/ops/organization-operations";
 import type { CheckResult } from "@/lib/ops/system-checks";
 
 // SELF-TESTS FOR THE OPERATIONAL CAPABILITIES. Like needs-dorian-selftest.ts,
@@ -182,6 +184,57 @@ function hostParticipantCheck(): CheckResult {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Organization / Event Operations
+// ---------------------------------------------------------------------------
+
+function organizationCheck(): CheckResult {
+  return attempt("pipeline_organization_operations", "Organization / Event Operations behaves as designed", () => {
+    const cases: Case[] = [];
+    const goodGuide = { guideId: "g-good", status: "connected" as const, certificationActive: true, toolkitAuthorized: true };
+    const run = (rows: Partial<RawOrganizationRow>[]) =>
+      classifyOrganizations(
+        buildOrganizationRecords(rows.map((r, i) => ({ organizationId: `o${i}`, name: `Org ${i}`, adminStatuses: ["authorized"] as OrganizationAdminStatus[], guideConnections: [goodGuide], ...r }))),
+        (id) => `guide ${id}`
+      );
+
+    // A ready organization is silent.
+    const ready = run([{}]);
+    cases.push({ name: "a ready organization produced items", ok: !(ready.people?.length || ready.problems?.length || ready.watching?.length) && ready.evaluated === 1 });
+
+    // No administrator: only Dorian can authorize one, so it is a task.
+    const noAdmin = run([{ adminStatuses: [] }]);
+    cases.push({ name: "an organization with no administrator was not a task for Dorian", ok: (noAdmin.people?.length ?? 0) === 1 });
+    const revokedAdmin = run([{ adminStatuses: ["revoked"] }]);
+    cases.push({ name: "an organization whose only administrator was revoked was not a task", ok: (revokedAdmin.people?.length ?? 0) === 1 });
+
+    // No connected Guides yet: its administrator connects them, so visibility only.
+    const noGuides = run([{ guideConnections: [] }]);
+    cases.push({ name: "an organization with no Guides yet was a task instead of visibility", ok: (noGuides.watching?.length ?? 0) === 1 && !(noGuides.people?.length || noGuides.problems?.length) });
+
+    // A connected Guide without active certification or Toolkit authorization.
+    const badGuide = run([{ guideConnections: [goodGuide, { guideId: "g-bad", status: "connected", certificationActive: false, toolkitAuthorized: false }] }]);
+    cases.push({ name: "a connected uncertified, unauthorized Guide did not raise two problems", ok: (badGuide.problems?.length ?? 0) === 2 });
+    const keys = (badGuide.problems ?? []).map((p) => p.key);
+    cases.push({ name: "problem items were not unique", ok: new Set(keys).size === keys.length });
+
+    // Two authorized administrators is only worth a glance.
+    const dupes = run([{ adminStatuses: ["authorized", "authorized"] }]);
+    cases.push({ name: "duplicate administrators were a task instead of a glance", ok: (dupes.watching?.length ?? 0) === 1 && !dupes.problems?.length });
+
+    // Every actionable item points where Dorian can act.
+    const all = [...(noAdmin.people ?? []), ...(badGuide.problems ?? [])];
+    cases.push({ name: "an item has no place to act", ok: all.every((i) => !!i.href) });
+
+    return result(
+      "pipeline_organization_operations",
+      "Organization / Event Operations behaves as designed",
+      "Simulated organizations confirm: a ready organization is silent; no administrator is a task for Dorian; no Guides yet and duplicate administrators are visibility only; a connected Guide without active certification or Toolkit authorization is reported once per gap.",
+      cases
+    );
+  });
+}
+
 export function capabilityRuleChecks(): CheckResult[] {
-  return [guideOperationsCheck(), hostParticipantCheck()];
+  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck()];
 }
