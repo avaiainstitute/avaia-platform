@@ -34,6 +34,32 @@ export type NeedsItem = {
 
 export type NeedsBucket = { count: number; items: NeedsItem[] };
 
+/** What one operational capability reports each time it is evaluated: the items
+ *  that need a person (by bucket) plus how many records it looked at, so that
+ *  System Checks can prove it is actually operating, not merely present. */
+export type CapabilityResult = {
+  key: string;
+  label: string;
+  /** How many records this capability examined. */
+  evaluated: number;
+  people?: NeedsItem[];
+  decisions?: NeedsItem[];
+  approvals?: NeedsItem[];
+  problems?: NeedsItem[];
+  watching?: NeedsItem[];
+};
+
+/** The recorded proof that a capability ran (stored with the digest cron run). */
+export type CapabilityEvidence = {
+  key: string;
+  label: string;
+  ok: boolean;
+  evaluated: number;
+  /** Items that need a person (people + decisions + approvals + problems). */
+  flagged: number;
+  error?: string;
+};
+
 export type NeedsDorianSnapshot = {
   generatedAt: string;
   people: NeedsBucket;
@@ -46,6 +72,8 @@ export type NeedsDorianSnapshot = {
   automatic: string[];
   /** people + decisions + approvals + problems. */
   totalNeeded: number;
+  /** Proof, per operational capability, that it was evaluated for this snapshot. */
+  capabilityEvidence?: CapabilityEvidence[];
 };
 
 const bucket = (items: NeedsItem[]): NeedsBucket => ({ count: items.length, items });
@@ -163,6 +191,7 @@ export function assembleSnapshot(parts: {
   problems: NeedsItem[];
   opportunities: NeedsItem[];
   watching: NeedsItem[];
+  capabilityEvidence?: CapabilityEvidence[];
 }): NeedsDorianSnapshot {
   const snapshot: NeedsDorianSnapshot = {
     generatedAt: new Date().toISOString(),
@@ -174,6 +203,7 @@ export function assembleSnapshot(parts: {
     watching: bucket(parts.watching),
     automatic: AUTOMATIC_SUMMARY,
     totalNeeded: parts.people.length + parts.decisions.length + parts.approvals.length + parts.problems.length,
+    capabilityEvidence: parts.capabilityEvidence,
   };
   return snapshot;
 }

@@ -31,6 +31,50 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://avaiainstitute.com";
 const PRODUCTION_BRANCH = "defying-grief-v2";
 const GITHUB_REPO = "avaiainstitute/avaia-platform";
 
+// ---------------------------------------------------------------------------
+// Safeguards against "built but not operating" (the 1-2 October 2026 failure:
+// seven automation systems were written to `main`, which is not the production
+// branch, and nothing noticed for days).
+// ---------------------------------------------------------------------------
+
+/** Branches whose unreleased work was reviewed and deliberately superseded.
+ *  A branch is ignored ONLY while its tip is exactly the recorded commit, so any
+ *  new commit written to it is reported again. `main`'s seven agents were
+ *  completed on production's own architecture and archived as the Git tag
+ *  archive/main-2026-10-03. */
+const ARCHIVED_BRANCH_TIPS: Record<string, string> = {
+  main: "ad9710d58eda5ce552c5d7bbfd8ea1c164fd87c9",
+};
+
+/** A branch with unreleased work is only "stray" while it is recent; older
+ *  branches are long-paused feature work that is tracked elsewhere. */
+const STRAY_BRANCH_RECENT_DAYS = 30;
+
+/** Tables that exist in the database but are deliberately not used by the
+ *  application's code today. Every one is preserved (nothing is ever dropped to
+ *  tidy up). A table that is in the database, not used by code, and NOT listed
+ *  here is reported: that is exactly what a migration applied without its
+ *  application code looks like. */
+const PRESERVED_UNUSED_TABLES: Record<string, string> = {
+  certification_content_version: "Version marker for the seeded certification curriculum; kept as history.",
+  certification_operations_exceptions: "History from the retired certification-operations emails; kept.",
+  community_contacts: "Older contact table that predates the current forms; kept.",
+  gpt_handoff_sessions: "GPT-to-AVAIA handoff history from the resolved OAuth architecture; kept.",
+  guide_access_exceptions: "Cooldown ledger of the retired per-agent email; Needs Dorian replaced the email, the table is kept.",
+  guide_candidate_reminders: "History of the retired candidate reminder rules; kept.",
+  host_participant_operations_exceptions: "Cooldown ledger of the retired per-agent email; kept.",
+  conversation_integrity_reminders: "Cooldown ledger of the retired per-agent email; kept.",
+  conversation_integrity_scans: "Scan ledger from the original design; flags are recorded in-request instead; kept.",
+  program_authorization_reminders: "Cooldown ledger of the retired per-agent email; kept.",
+  toolkit_support_reminders: "Cooldown ledger of the retired per-agent email; kept.",
+  pink_foundation_reminders: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+  pink_legacy_review_items: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+  pink_sponsored_access_requests: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+  pink_campaign_items: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+  pink_commercial_co_ventures: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+  pink_volunteers: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+};
+
 function row(checkKey: string, label: string, status: CheckStatus, detail: string | null): CheckResult {
   return { category: "quality", checkKey, label, status, detail };
 }
@@ -165,6 +209,28 @@ export async function schemaChecks(): Promise<CheckResult[]> {
       : row("schema_functions", "Database functions the app calls all exist", "problem", `Missing database function(s): ${list(missingFns)}.`)
   );
 
+  // 3b-2. Tables that exist but no code uses. A table with no application code
+  //       is what a migration applied without its code looks like; the only ones
+  //       allowed are those deliberately preserved and documented above.
+  const used = new Set<string>(EXPECTED_TABLES);
+  const orphans = snapshot.tables.map((t) => t.name).filter((n) => !used.has(n) && !PRESERVED_UNUSED_TABLES[n]);
+  const preservedPresent = snapshot.tables.map((t) => t.name).filter((n) => !used.has(n) && PRESERVED_UNUSED_TABLES[n]);
+  results.push(
+    orphans.length === 0
+      ? row(
+          "schema_orphan_tables",
+          "Every database table is either used by the app or deliberately preserved",
+          "pass",
+          `No unexplained tables. ${preservedPresent.length} table(s) are intentionally kept without application code (history and Pink Shoelace records); none are ever dropped.`
+        )
+      : row(
+          "schema_orphan_tables",
+          "Every database table is either used by the app or deliberately preserved",
+          "problem",
+          `${orphans.length} table(s) exist in the database but no application code uses them and they are not on the preserved list: ${list(orphans)}. A migration was probably applied without its application code.`
+        )
+  );
+
   // 3c. A short list of rules that must hold, each one something a past or
   //     present AVAIA decision depends on.
   const failures: string[] = [];
@@ -245,6 +311,104 @@ export async function scheduleChecks(): Promise<CheckResult[]> {
 // Deployment truth
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Unreleased work on other branches
+// ---------------------------------------------------------------------------
+
+type GithubBranch = { name: string; commit: { sha: string } };
+type GithubCompare = { ahead_by?: number; commits?: { commit?: { committer?: { date?: string } } }[] };
+
+async function githubJson<T>(path: string): Promise<{ ok: true; body: T } | { ok: false; status: number }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}${path}`, {
+      headers: { Accept: "application/vnd.github+json", "User-Agent": "avaia-system-checks" },
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, body: (await res.json()) as T };
+  } catch {
+    return { ok: false, status: 0 };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Two safeguards in one: (1) GitHub's default branch must be the production
+ *  branch, because tools that write to "the default branch" would otherwise
+ *  write work that never goes live; (2) no other branch may be sitting on recent
+ *  work production does not have. */
+export async function branchChecks(): Promise<CheckResult[]> {
+  const results: CheckResult[] = [];
+  const defaultLabel = "GitHub's default branch is the production branch";
+  const strayLabel = "No unreleased work is sitting on another branch";
+
+  const repo = await githubJson<{ default_branch?: string }>("");
+  if (!repo.ok) {
+    results.push(row("deploy_default_branch", defaultLabel, "pass", `Could not read GitHub (HTTP ${repo.status || "no response"}); this comparison is skipped, not failed.`));
+  } else if (repo.body.default_branch && repo.body.default_branch !== PRODUCTION_BRANCH) {
+    results.push(
+      row(
+        "deploy_default_branch",
+        defaultLabel,
+        "needs_dorian",
+        `GitHub's default branch is "${repo.body.default_branch}", but production is built from "${PRODUCTION_BRANCH}". Any tool or person that writes to the default branch writes work that will never go live. In GitHub: Settings, Branches, Default branch, switch to ${PRODUCTION_BRANCH}.`
+      )
+    );
+  } else {
+    results.push(row("deploy_default_branch", defaultLabel, "pass", `The default branch is ${PRODUCTION_BRANCH}, the same branch production is built from.`));
+  }
+
+  const branches = await githubJson<GithubBranch[]>("/branches?per_page=100");
+  if (!branches.ok) {
+    results.push(row("deploy_stray_work", strayLabel, "pass", `Could not read GitHub (HTTP ${branches.status || "no response"}); this comparison is skipped, not failed.`));
+    return results;
+  }
+
+  const others = branches.body.filter((b) => b.name !== PRODUCTION_BRANCH && ARCHIVED_BRANCH_TIPS[b.name] !== b.commit.sha).slice(0, 40);
+  const stray: string[] = [];
+  let unreadable = 0;
+  await inBatches(others, 5, async (b) => {
+    const cmp = await githubJson<GithubCompare>(`/compare/${encodeURIComponent(PRODUCTION_BRANCH)}...${encodeURIComponent(b.name)}`);
+    if (!cmp.ok) {
+      unreadable += 1;
+      return;
+    }
+    const ahead = cmp.body.ahead_by ?? 0;
+    if (ahead === 0) return;
+    const commits = cmp.body.commits ?? [];
+    const last = commits[commits.length - 1]?.commit?.committer?.date;
+    const ageMs = last ? Date.now() - new Date(last).getTime() : 0;
+    // Pushed minutes ago: probably a preview build in flight, not stray work.
+    if (ageMs < 20 * 60_000) return;
+    if (ageMs > STRAY_BRANCH_RECENT_DAYS * 86_400_000) return;
+    stray.push(`${b.name} (${ahead} commit(s) production does not have, newest ${Math.round(ageMs / 86_400_000)} day(s) ago)`);
+  });
+
+  if (stray.length > 0) {
+    results.push(
+      row(
+        "deploy_stray_work",
+        strayLabel,
+        "problem",
+        `Recent work exists on a branch that is not production, so it is not live: ${list(stray)}. Port it into ${PRODUCTION_BRANCH} (or archive the branch) so it cannot be mistaken for finished work.`
+      )
+    );
+  } else {
+    results.push(
+      row(
+        "deploy_stray_work",
+        strayLabel,
+        "pass",
+        `${others.length - unreadable} other branch(es) checked; none has recent work that production lacks${unreadable ? ` (${unreadable} could not be read)` : ""}.`
+      )
+    );
+  }
+  return results;
+}
+
 export async function deploymentChecks(): Promise<CheckResult[]> {
   const results: CheckResult[] = [];
 
@@ -317,5 +481,6 @@ export async function deploymentChecks(): Promise<CheckResult[]> {
     results.push(row("deploy_health", "Production is configured and the database is reachable", "needs_dorian", `The health endpoint could not be read (${e instanceof Error ? e.message : "error"}).`));
   }
 
+  results.push(...(await branchChecks()));
   return results;
 }

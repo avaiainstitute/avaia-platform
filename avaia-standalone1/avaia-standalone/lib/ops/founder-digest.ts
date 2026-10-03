@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getNeedsDorian, snapshotToDigestSections } from "@/lib/ops/needs-dorian";
 import { founderDigestEmailHtml } from "@/lib/ops/emails";
+import type { CapabilityEvidence } from "@/lib/ops/needs-dorian-core";
 
 // The daily email. It is one VIEW of the single Needs-Dorian source
 // (lib/ops/needs-dorian.ts), the same source /admin/today renders live, so
@@ -16,7 +17,7 @@ function isoDaysAgo(days: number): string {
   return new Date(Date.now() - days * ONE_DAY_MS).toISOString();
 }
 
-export async function buildFounderDigestEmail(): Promise<{ subject: string; html: string }> {
+export async function buildFounderDigestEmail(): Promise<{ subject: string; html: string; capabilityEvidence: CapabilityEvidence[] }> {
   const admin = createAdminClient();
   const since = isoDaysAgo(1);
 
@@ -80,5 +81,5 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       ? `AVAIA + Pink Shoelace daily summary -- ${sections.needsDorian.length} item(s) need you`
       : "AVAIA + Pink Shoelace daily summary";
 
-  return { subject, html };
+  return { subject, html, capabilityEvidence: snapshot.capabilityEvidence ?? [] };
 }

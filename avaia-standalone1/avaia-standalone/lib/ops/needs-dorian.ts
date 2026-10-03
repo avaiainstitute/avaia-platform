@@ -10,6 +10,7 @@ import { getCronHealthIssues } from "@/lib/ops/cron-runs";
 import { getUnresolvedReconciliationFindings } from "@/lib/ops/entitlement-reconciliation";
 import { getGuardianConsentSnapshot } from "@/lib/ops/guardian-consent-reminders";
 import { getStalledFamilyInvites } from "@/lib/ops/family-invite-reminders";
+import { evaluateCapabilities, mergeCapabilityItems } from "@/lib/ops/capabilities";
 
 
 // The pure rules (what counts, where each item belongs, how the email reads it)
@@ -72,6 +73,7 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
     reconciliation,
     guardianWaiting,
     stalledFamily,
+    capabilityEvaluation,
   ] = await Promise.all([
     admin.from("contact_submissions").select("name, reason, created_at").eq("needs_dorian", true).in("status", ["new", "acknowledged"]).order("created_at", { ascending: true }),
     admin.from("pink_contact_submissions").select("name, category, created_at").eq("needs_dorian", true).in("status", ["new", "acknowledged"]).order("created_at", { ascending: true }),
@@ -112,6 +114,7 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
     getUnresolvedReconciliationFindings().catch(() => []),
     getGuardianConsentSnapshot().then((s) => s.waitingItems.filter((i) => i.sinceDays >= 8)).catch(() => []),
     getStalledFamilyInvites().then((r) => r.stalled).catch(() => []),
+    evaluateCapabilities(),
   ]);
 
   // Failed sends in the last day (count only).
@@ -247,5 +250,14 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
   }
   watching.push(...cert.watching);
 
-  return assembleSnapshot({ people, decisions, approvals, problems, opportunities, watching });
+  // Operational capabilities (lib/ops/capabilities.ts): each contributes its own items
+  // to the same buckets, and its evidence travels with the snapshot.
+  const capability = mergeCapabilityItems(capabilityEvaluation.results);
+  people.push(...capability.people);
+  decisions.push(...capability.decisions);
+  approvals.push(...capability.approvals);
+  problems.push(...capability.problems);
+  watching.push(...capability.watching);
+
+  return assembleSnapshot({ people, decisions, approvals, problems, opportunities, watching, capabilityEvidence: capabilityEvaluation.evidence });
 }

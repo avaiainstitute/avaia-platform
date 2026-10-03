@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getExpectedCrons } from "@/lib/ops/cron-runs";
 import { schemaChecks, scheduleChecks, deploymentChecks } from "@/lib/ops/system-truth";
 import { pipelineChecks } from "@/lib/ops/needs-dorian-selftest";
+import { capabilityChecks } from "@/lib/ops/capabilities";
 
 // Round 4 (Automation Blueprint): Website Watcher, Journey Watcher, Shared
 // Room Operations Watcher, Launch Readiness Watcher, and Testing/QC -- one
@@ -286,6 +287,8 @@ export async function runSystemChecks(): Promise<{
     deploymentChecks(),
     // The Needs-Dorian pipeline proves itself with simulated records.
     pipelineChecks(),
+    // Proof that each operational capability is evaluated and operating.
+    capabilityChecks(),
   ]);
   const results: CheckResult[] = [];
   for (const g of groups) {

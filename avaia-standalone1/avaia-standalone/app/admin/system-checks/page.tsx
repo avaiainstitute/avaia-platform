@@ -82,13 +82,14 @@ export default async function AdminSystemChecksPage({
   type Row = { check_key: string; label: string; status: string; detail: string | null };
   const qualityRows = (byCategory.get("quality") ?? []) as unknown as Row[];
   const withPrefix = (prefix: string) => qualityRows.filter((r) => r.check_key.startsWith(prefix));
-  const otherQuality = qualityRows.filter((r) => !/^(schema_|schedule_|deploy_|pipeline_)/.test(r.check_key));
+  const otherQuality = qualityRows.filter((r) => !/^(schema_|schedule_|deploy_|pipeline_|capability_)/.test(r.check_key));
   const sections: { key: string; label: string; items: Row[] }[] = [
     { key: "launch_readiness", label: CATEGORY_LABEL.launch_readiness, items: (byCategory.get("launch_readiness") ?? []) as unknown as Row[] },
     { key: "truth_db", label: "Database: is everything the app needs really there?", items: withPrefix("schema_") },
     { key: "truth_jobs", label: "Scheduled jobs: are they running?", items: withPrefix("schedule_") },
     { key: "truth_deploy", label: "Deployment: is the latest version live and configured?", items: withPrefix("deploy_") },
     { key: "truth_pipeline", label: "Needs Dorian: does the pipeline behave as designed?", items: withPrefix("pipeline_") },
+    { key: "truth_capabilities", label: "Operational capabilities: is each one actually operating?", items: withPrefix("capability_") },
     { key: "website", label: CATEGORY_LABEL.website, items: (byCategory.get("website") ?? []) as unknown as Row[] },
     { key: "quality", label: CATEGORY_LABEL.quality, items: otherQuality },
     { key: "journey", label: CATEGORY_LABEL.journey, items: (byCategory.get("journey") ?? []) as unknown as Row[] },

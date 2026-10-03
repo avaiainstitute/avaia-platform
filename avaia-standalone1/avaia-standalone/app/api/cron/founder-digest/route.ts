@@ -30,9 +30,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { subject, html } = await buildFounderDigestEmail();
+    const { subject, html, capabilityEvidence } = await buildFounderDigestEmail();
     await sendEmail({ to, subject, html });
-    await recordCronRun({ cronName: "founder-digest", startedAt, status: "success" });
+    await recordCronRun({
+      cronName: "founder-digest",
+      startedAt,
+      status: capabilityEvidence.some((c) => !c.ok) ? "partial" : "success",
+      // Proof, recorded by the scheduled run itself, that every operational
+      // capability was evaluated (see lib/ops/capabilities.ts).
+      detail: { capabilities: capabilityEvidence },
+    });
     return NextResponse.json({ ok: true, sent: true });
   } catch (err) {
     // buildFounderDigestEmail/sendEmail previously had no try/catch here at
