@@ -20,6 +20,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "The primary operating view -- people, decisions, approvals, problems, and opportunities that genuinely need you.",
   },
   {
+    href: "/admin/operations",
+    label: "Operations",
+    description: "Every operational capability (Guides, Hosts and participants, Organizations, Toolkit, Conversation Integrity, Programs) -- what each examined and found, and proof it is running.",
+  },
+  {
     href: "/admin/notes",
     label: "Ideas, Decisions & Follow-ups",
     description: "Capture an idea, a governing decision, or a follow-up before it's lost.",

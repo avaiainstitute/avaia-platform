@@ -11,6 +11,7 @@ import {
 } from "@/lib/guide";
 import { loadStatusForHost, formatDateLabel } from "@/lib/certification-renewal";
 import { getGuideOperationsRecordForHost } from "@/lib/guide-operations";
+import { getGuideParticipantStatusesForGuide } from "@/lib/host-operations";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
@@ -176,6 +177,10 @@ export default async function ToolkitDashboardPage() {
   // through their own session (every table has a self-read policy).
   const guideStatus = await getGuideOperationsRecordForHost(supabase, user.id).catch(() => null);
 
+  // Host / Participant Operations: where each of the Guide's participants stands (read through
+  // the Guide's own session, so only their own participants and sessions are visible).
+  const participantStatuses = await getGuideParticipantStatusesForGuide(supabase, user.id).catch(() => new Map());
+
   return (
     <div>
       <p className="label mb-3">Guide Dashboard</p>
@@ -294,6 +299,9 @@ export default async function ToolkitDashboardPage() {
                     {p.email ?? "No email on file"}
                     {p.linked_host_id ? " · Linked to an AVAIA account" : ""}
                   </p>
+                  {participantStatuses.get(p.id)?.state === "follow_up_available" && (
+                    <p className="mt-1 text-xs text-ink">Follow-up available: the next stage is ready for a new session.</p>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Link

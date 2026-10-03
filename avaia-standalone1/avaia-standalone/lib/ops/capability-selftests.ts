@@ -1,6 +1,14 @@
 import "server-only";
 import { buildGuideOperationsRecords, type RawGuideRow } from "@/lib/guide-operations";
 import { classifyGuideOperations } from "@/lib/ops/guide-access-operations";
+import {
+  deriveGuideParticipantState,
+  deriveHostJourneyState,
+  type GuideParticipantRecord,
+  type HostConversationRow,
+  type HostJourneyRecord,
+} from "@/lib/host-operations";
+import { classifyHostParticipantOperations, classifyHostScopedAccess } from "@/lib/ops/host-participant-operations";
 import type { CheckResult } from "@/lib/ops/system-checks";
 
 // SELF-TESTS FOR THE OPERATIONAL CAPABILITIES. Like needs-dorian-selftest.ts,
@@ -93,6 +101,87 @@ function guideOperationsCheck(): CheckResult {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Host / Participant Operations
+// ---------------------------------------------------------------------------
+
+function hostParticipantCheck(): CheckResult {
+  return attempt("pipeline_host_participant_operations", "Host / Participant Operations behaves as designed", () => {
+    const cases: Case[] = [];
+    const t = (n: number) => new Date(Date.UTC(2026, 0, 1 + n)).toISOString();
+    const convo = (id: string, stage: HostConversationRow["stage"], status: HostConversationRow["status"], day: number, journey: string | null = "j1"): HostConversationRow => ({
+      id,
+      stage,
+      status,
+      created_at: t(day),
+      journey_id: journey,
+    });
+    const host = (hostId: string, conversations: HostConversationRow[], isMember: boolean): HostJourneyRecord => {
+      const d = deriveHostJourneyState({ conversations, engagedConversationIds: new Set(conversations.map((c) => c.id)), isMember });
+      return { hostId, isMember, ...d };
+    };
+
+    // Healthy: IAP complete, CAT active, a member.
+    const healthy = host("healthy", [convo("a", "iap", "complete", 1), convo("b", "cat", "active", 2)], true);
+    cases.push({ name: "a healthy Host in CAT was flagged", ok: healthy.mismatches.length === 0 && healthy.state === "cat_in_progress" });
+
+    // Two active conversations at once.
+    const multi = host("multi", [convo("a", "iap", "active", 1, "j1"), convo("b", "iap", "active", 2, "j2")], false);
+    cases.push({ name: "two active conversations were not detected", ok: multi.mismatches.some((m) => m.type === "multiple_active_conversations") });
+
+    // A completed stage with no next stage (production heals this when the Host returns).
+    const stranded = host("stranded", [convo("a", "iap", "complete", 1)], false);
+    cases.push({ name: "a completed stage with no next stage was not detected", ok: stranded.mismatches.some((m) => m.type === "stage_complete_handoff_missing") });
+    // ...but a finished Journey is never a mismatch.
+    const finished = host("finished", [convo("a", "iap", "complete", 1), convo("b", "cat", "complete", 2), convo("c", "innercompass", "complete", 3)], true);
+    cases.push({ name: "a finished Journey was flagged", ok: finished.mismatches.length === 0 && finished.state === "journey_complete" });
+
+    // Free stage done, waiting at the membership gate.
+    const gated = host("gated", [convo("a", "iap", "complete", 1), convo("b", "cat", "active", 2)], false);
+    cases.push({ name: "a non-member waiting at the membership gate was not recognized", ok: gated.state === "continuation_blocked_by_entitlement" });
+
+    // Participants.
+    const sess = (id: string, status: "active" | "complete", conversationId: string | null, day: number) => ({ id, tool: "iap", status, conversation_id: conversationId, created_at: t(day) });
+    cases.push({ name: "a participant with no session was not 'ready'", ok: deriveGuideParticipantState({ sessions: [], nextConversationAwaitingSession: false }).state === "ready_for_session" });
+    cases.push({ name: "an active session was not 'in progress'", ok: deriveGuideParticipantState({ sessions: [sess("s", "active", "c", 1)], nextConversationAwaitingSession: false }).state === "session_in_progress" });
+    cases.push({
+      name: "a finished session with the next stage already created was not 'follow-up available'",
+      ok: deriveGuideParticipantState({ sessions: [sess("s", "complete", "c", 1)], nextConversationAwaitingSession: true }).state === "follow_up_available",
+    });
+    const brokenParticipant = deriveGuideParticipantState({ sessions: [sess("s", "complete", null, 1)], nextConversationAwaitingSession: false });
+    cases.push({ name: "a complete session with no conversation was not a mismatch", ok: brokenParticipant.state === "operational_mismatch" });
+
+    // Host-scoped Guide access.
+    const access = classifyHostScopedAccess(
+      [{ guide_id: "ok" }, { guide_id: "lapsed" }, { guide_id: "noauth" }, { guide_id: "paused" }],
+      [
+        { hostId: "ok", certificationStanding: "active", journeyFacilitationAuthorized: true },
+        { hostId: "lapsed", certificationStanding: "inactive", journeyFacilitationAuthorized: true },
+        { hostId: "noauth", certificationStanding: "active", journeyFacilitationAuthorized: false },
+        { hostId: "paused", certificationStanding: "paused", journeyFacilitationAuthorized: true },
+      ]
+    );
+    cases.push({ name: "Host-scoped access was not classified into valid / lapsed / unauthorized / reported-by-Guide-Operations", ok: access.map((a) => a.kind).join(",") === "valid,suspended_by_lapse,missing_facilitation_authorization,reported_by_guide_operations" });
+
+    // The capability result: everything is visibility only, nothing is a task, and a quiet system is quiet.
+    const participantRecords: GuideParticipantRecord[] = [{ participantId: "p", state: brokenParticipant.state, latestSessionId: "s", humanActionRequired: true, note: brokenParticipant.note }];
+    const busy = classifyHostParticipantOperations([healthy, multi, stranded, gated], participantRecords, access, (id) => `host ${id}`);
+    cases.push({ name: "a finding became a task for Dorian instead of visibility", ok: !(busy.people?.length || busy.decisions?.length || busy.approvals?.length || busy.problems?.length) });
+    cases.push({ name: "findings were not shown under Being watched", ok: (busy.watching?.length ?? 0) >= 4 });
+    const keys = (busy.watching ?? []).map((w) => w.key);
+    cases.push({ name: "watching items were not unique", ok: new Set(keys).size === keys.length });
+    const quiet = classifyHostParticipantOperations([healthy, finished], [], [{ guideId: "ok", kind: "valid" }], (id) => id);
+    cases.push({ name: "a quiet system produced items", ok: (quiet.watching?.length ?? 0) === 0 && quiet.evaluated === 3 });
+
+    return result(
+      "pipeline_host_participant_operations",
+      "Host / Participant Operations behaves as designed",
+      "Simulated Hosts and Guides confirm: healthy and finished Journeys are never flagged; two active conversations, an unfinished handoff, the membership gate, an inconsistent participant record and lapsed or unauthorized Host-scoped access are each recognized once and shown as visibility, never as a task.",
+      cases
+    );
+  });
+}
+
 export function capabilityRuleChecks(): CheckResult[] {
-  return [guideOperationsCheck()];
+  return [guideOperationsCheck(), hostParticipantCheck()];
 }
