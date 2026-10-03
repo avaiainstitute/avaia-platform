@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isToolkitAuthorized } from "@/lib/guide";
+import { isCertificationCandidate } from "@/lib/certification";
 import { findActiveRoomForHost } from "@/lib/engine/room";
 import SignOutButton from "@/components/SignOutButton";
 import NavDropdown from "@/components/NavDropdown";
@@ -56,11 +57,16 @@ export default async function Nav() {
   // who can actually reach /toolkit; someone not authorized typing the URL
   // is still redirected there exactly as before.
   let toolkitAuthorized = false;
+  // Discoverability only: /certification and every page and action under it
+  // re-check candidacy themselves. Shown only to a person a human admin has
+  // admitted as an active certification candidate.
+  let certificationCandidate = false;
   let isAdmin = false;
   let isOrgAdmin = false;
   let activeRoomJoinPath: string | null = null;
   if (user) {
     toolkitAuthorized = await isToolkitAuthorized(supabase, user.id);
+    certificationCandidate = await isCertificationCandidate(supabase, user.id);
     // Same purely-for-discoverability posture as toolkitAuthorized above,
     // /admin and its sub-pages already re-check profiles.role themselves
     // (this changes nothing about who can actually reach them). Found
@@ -140,6 +146,17 @@ export default async function Nav() {
                   Account
                 </Link>
               </li>
+              {certificationCandidate && (
+                <li>
+                  <Link
+                    href="/certification"
+                    prefetch={false}
+                    className="label text-seal hover:opacity-80 transition-opacity"
+                  >
+                    Certification
+                  </Link>
+                </li>
+              )}
               {toolkitAuthorized && (
                 <li>
                   <Link

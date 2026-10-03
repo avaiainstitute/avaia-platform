@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
 import { getGuideOperationsSnapshot, getCertificationOpsSnapshot } from "@/lib/ops/guide-operations";
+import { getCertificationOperationsSummary } from "@/lib/ops/certification-operations";
 import { getPinkAvaiaConnections } from "@/lib/ops/pink-avaia-connection";
 import { getLatestCheckProblems } from "@/lib/ops/system-checks";
 import { getCronHealthIssues } from "@/lib/ops/cron-runs";
@@ -213,6 +214,13 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     lapsedLast24h: 0,
   }));
 
+  // Certification Operations (candidate workflow): mechanical counts only
+  // (lib/ops/certification-operations.ts), never a competency judgment.
+  // Read-only; the catch keeps a missing table from taking the digest down.
+  const certificationPipeline = await getCertificationOperationsSummary()
+    .then((r) => r.summary)
+    .catch(() => null);
+
   // Audit finding #1.2: count only -- every caller already logs its own
   // context via console.error too, this is just the one place that count
   // becomes visible without needing to go looking in Vercel's own logs.
@@ -301,6 +309,19 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     }
   }
   waiting.push(...certificationOps.waiting);
+  if (certificationPipeline) {
+    if (certificationPipeline.inTraining > 0) {
+      waiting.push(`${certificationPipeline.inTraining} certification candidate(s) currently working through the classroom and evidence steps.`);
+    }
+    if (certificationPipeline.stalled > 0) {
+      waiting.push(`${certificationPipeline.stalled} certification candidate(s) with no recorded activity recently.`);
+    }
+    if (certificationPipeline.finishedAvailableLessons > 0) {
+      waiting.push(
+        `${certificationPipeline.finishedAvailableLessons} certification candidate(s) have finished every currently available lesson (visibility only: this advances nothing, and the Boundary Gate, Observed Practicum, and certification decision remain yours).`
+      );
+    }
+  }
   for (const c of pinkAvaiaConnections) {
     waiting.push(
       `Pink Shoelace <> AVAIA connection: ${c.pinkName} (${c.pinkEmail}) appears in both Pink Shoelace and AVAIA -- for visibility only, no automatic action taken.`
@@ -381,6 +402,23 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     );
   }
   needsDorian.push(...certificationOps.needsDorian);
+  if (certificationPipeline) {
+    if (certificationPipeline.readyForReview > 0) {
+      needsDorian.push(`${certificationPipeline.readyForReview} certification candidate(s) READY FOR HUMAN CERTIFICATION REVIEW.`);
+    }
+    if (certificationPipeline.boundaryGateAwaitingHuman > 0) {
+      needsDorian.push(`${certificationPipeline.boundaryGateAwaitingHuman} certification candidate(s) have a Boundary Gate result awaiting your retry/remediation decision.`);
+    }
+    if (certificationPipeline.practicumAwaitingHuman > 0) {
+      needsDorian.push(`${certificationPipeline.practicumAwaitingHuman} certification candidate(s) have an Observed Practicum result awaiting your retry/remediation decision.`);
+    }
+    if (certificationPipeline.permissionMismatches > 0) {
+      needsDorian.push(`${certificationPipeline.permissionMismatches} post-certification record mismatch(es) need review.`);
+    }
+    if (certificationPipeline.failedAutomations > 0) {
+      needsDorian.push(`${certificationPipeline.failedAutomations} certification Critical Fail record(s) need a human decision on candidacy standing.`);
+    }
+  }
   // Round 4: Website/Journey/Shared Room Watchers + Testing/QC.
   for (const p of checkProblems) {
     needsDorian.push(`${p.label}${p.detail ? ` -- ${p.detail}` : ""} (${p.category.replace(/_/g, " ")}).`);

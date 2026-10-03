@@ -3,6 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadPolicy, addMonthsUtc } from "@/lib/certification-renewal";
+import { buildClassroomSummary } from "@/lib/certification-classroom";
+import { getCertificationOperationsRecordForCandidate } from "@/lib/certification-operations";
+import type { CandidateProgressRow } from "@/lib/certification";
 
 export const metadata = { title: "Guide Candidate, AVAIA Admin" };
 export const dynamic = "force-dynamic";
@@ -942,6 +945,26 @@ export default async function AdminGuideCandidateDetailPage({
   // eligibility check so no second "latest decision" query is needed.
   const latestDecision = decisions[0] ?? null;
 
+  // Classroom progress (read-only) and the Certification Operations
+  // workflow view. Counts and dates from the candidate's own progress rows
+  // only: NEVER their workbook reflections (no admin policy exists on that
+  // table by design) and never anything that implies a competency judgment.
+  // Completing the classroom lessons is not a certification requirement
+  // recorded anywhere and advances no step; the evidence and decision records
+  // below stay the only human-governed path.
+  let classroomSummary: ReturnType<typeof buildClassroomSummary> | null = null;
+  let operationsRecord: Awaited<ReturnType<typeof getCertificationOperationsRecordForCandidate>> = null;
+  try {
+    const { data: progressRows } = await supabase
+      .from("certification_candidate_progress")
+      .select("item_key, status, self_reported_at, last_touched_at")
+      .eq("candidate_id", candidate.id);
+    classroomSummary = buildClassroomSummary((progressRows ?? []) as CandidateProgressRow[], new Set<string>());
+    operationsRecord = await getCertificationOperationsRecordForCandidate(supabase, candidate.id);
+  } catch {
+    // The classroom tables may not be readable; the rest of the page is unaffected.
+  }
+
   // Certification (Phase C.9), checked by candidate_id first (the direct,
   // natural scope of this page), then by host_id, so this display can never
   // disagree with grantGuideCertification's own duplicate-credential guard
@@ -1220,6 +1243,35 @@ export default async function AdminGuideCandidateDetailPage({
           </form>
         )}
       </section>
+
+      {classroomSummary && (
+        <section className="rule-t mt-14 border-t border-rule pt-8">
+          <p className="label mb-3 text-muted">Classroom Progress</p>
+          <p className="mb-4 text-sm text-muted">
+            The candidate&rsquo;s own self-recorded coursework. Counts and dates only; their workbook reflections are private to them
+            and are not available here. This is not evidence and does not advance any step.
+          </p>
+          <div className="rounded-lg border border-rule bg-white/[0.04] px-5 py-4 text-sm">
+            <p className="text-ink">
+              Lessons completed: {classroomSummary.overall.completedLessons} of {classroomSummary.overall.availableLessons} available
+              {classroomSummary.overall.heldLessons > 0 ? ` (${classroomSummary.overall.heldLessons} lessons held pending AVAIA content)` : ""}
+            </p>
+            <p className="mt-1 text-ink">
+              Practice Labs recorded: {classroomSummary.labsCompleted} of {classroomSummary.labsTotal}
+            </p>
+            <p className="mt-1 text-muted">
+              Last classroom activity:{" "}
+              {classroomSummary.lastTouchedAt ? new Date(classroomSummary.lastTouchedAt).toLocaleDateString() : "none yet"}
+            </p>
+            {operationsRecord && (
+              <p className="mt-3 border-t border-rule pt-3 text-muted">
+                Certification Operations: <span className="text-ink">{operationsRecord.derivedState.replace(/_/g, " ")}</span>.{" "}
+                {operationsRecord.nextAction}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Certification Evidence</p>
