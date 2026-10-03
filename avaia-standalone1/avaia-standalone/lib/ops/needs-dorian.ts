@@ -211,6 +211,9 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
   for (const p of checkProblems) {
     // Scheduled-job findings are listed above from the same source (live), not twice.
     if (p.checkKey.startsWith("schedule_")) continue;
+    // "Overall launch readiness" is only a summary of the other checks (it reads
+    // "needs attention" whenever any one of them does), never a separate problem.
+    if (p.category === "launch_readiness") continue;
     add(problems, "check", `${p.label}${p.detail ? ` -- ${p.detail}` : ""} (${p.category.replace(/_/g, " ")}).`, { href: "/admin/system-checks" });
   }
   problems.push(...cert.problems);
