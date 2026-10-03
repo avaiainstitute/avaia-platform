@@ -25,6 +25,13 @@ async function requireAdmin() {
   if (profile?.role !== "admin") redirect("/");
 }
 
+/** Where a person manages each capability, when it has somewhere to act. */
+const MANAGE: Record<string, { href: string; label: string }> = {
+  guide_operations: { href: "/admin/guide-certifications", label: "Guide certifications" },
+  organization_operations: { href: "/admin/organization-admins", label: "Organization administrators" },
+  toolkit_stewardship: { href: "/admin/toolkit-support", label: "Toolkit support queue" },
+};
+
 function ItemList({ title, items, tone }: { title: string; items: NeedsItem[] | undefined; tone?: "quiet" }) {
   if (!items || items.length === 0) return null;
   return (
@@ -81,7 +88,17 @@ export default async function AdminOperationsPage() {
               <p className="font-serif text-2xl text-ink">{r.label}</p>
               <span className={`label ${ev?.ok ? "text-seal" : "text-[#e0857d]"}`}>{ev?.ok ? "OPERATING" : "NOT OPERATING"}</span>
             </div>
-            <p className="mt-1 text-sm text-muted">Examined {r.evaluated} record(s) just now.</p>
+            <p className="mt-1 text-sm text-muted">
+              Examined {r.evaluated} record(s) just now.
+              {MANAGE[r.key] && (
+                <>
+                  {" "}
+                  <Link href={MANAGE[r.key].href} className="text-seal underline-offset-2 hover:underline">
+                    {MANAGE[r.key].label}
+                  </Link>
+                </>
+              )}
+            </p>
             <ItemList title="Problems" items={r.problems} />
             <ItemList title="Decisions" items={r.decisions} />
             <ItemList title="People" items={r.people} />

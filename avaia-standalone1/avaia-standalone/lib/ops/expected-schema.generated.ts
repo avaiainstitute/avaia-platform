@@ -92,6 +92,7 @@ export const EXPECTED_TABLES: string[] = [
   "shared_access",
   "shared_access_invites",
   "system_check_results",
+  "toolkit_support_items",
   "unsaid_conversations",
   "unsaid_messages",
   "unsung_heroes_conversations",

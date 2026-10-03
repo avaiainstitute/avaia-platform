@@ -11,6 +11,8 @@ import {
 import { classifyHostParticipantOperations, classifyHostScopedAccess } from "@/lib/ops/host-participant-operations";
 import { buildOrganizationRecords, type OrganizationAdminStatus, type RawOrganizationRow } from "@/lib/organization-operations";
 import { classifyOrganizations } from "@/lib/ops/organization-operations";
+import { answerRoutineToolkitQuestion, checkToolkitRegistryHealth, requiresHumanApproval, type ToolkitSupportItem } from "@/lib/toolkit-stewardship";
+import { classifyToolkitStewardship } from "@/lib/ops/toolkit-stewardship";
 import type { CheckResult } from "@/lib/ops/system-checks";
 
 // SELF-TESTS FOR THE OPERATIONAL CAPABILITIES. Like needs-dorian-selftest.ts,
@@ -235,6 +237,72 @@ function organizationCheck(): CheckResult {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Toolkit Stewardship
+// ---------------------------------------------------------------------------
+
+function toolkitCheck(): CheckResult {
+  return attempt("pipeline_toolkit_stewardship", "Toolkit Stewardship behaves as designed", () => {
+    const cases: Case[] = [];
+    const item = (id: string, category: ToolkitSupportItem["category"], state: ToolkitSupportItem["state"] = "open", toolKey: ToolkitSupportItem["toolKey"] = "preparation"): ToolkitSupportItem => ({
+      id,
+      hostId: `guide-${id}`,
+      hostName: null,
+      toolKey,
+      category,
+      description: "simulated description",
+      affectedResource: null,
+      currentVersionOrStatus: "installed",
+      state,
+      requiresHumanApproval: requiresHumanApproval(category),
+      assignedTo: null,
+      resolution: null,
+      createdAt: "2026-01-01T00:00:00Z",
+      updatedAt: "2026-01-01T00:00:00Z",
+    });
+    const label = (id: string) => `guide ${id}`;
+
+    // An adaptation, addition or policy item is a decision no automation may make.
+    const adaptation = classifyToolkitStewardship([item("a", "ADAPTATION_REQUEST"), item("b", "ADDITION_REQUEST"), item("c", "POLICY_REQUIRED")], [], label);
+    cases.push({ name: "adaptation, addition and policy items were not all decisions for Dorian", ok: (adaptation.decisions?.length ?? 0) === 3 && !adaptation.people?.length });
+
+    // A bug report or question is a reply a person owes, not a decision.
+    const routine = classifyToolkitStewardship([item("d", "BUG"), item("e", "MISSING_ASSET"), item("f", "AUTHORIZATION_QUESTION")], [], label);
+    cases.push({ name: "problem reports and questions did not become replies a person owes", ok: (routine.people?.length ?? 0) === 3 && !routine.decisions?.length });
+
+    // Resolved and closed items disappear.
+    const resolved = classifyToolkitStewardship([item("g", "BUG", "resolved"), item("h", "ADAPTATION_REQUEST", "closed")], [], label);
+    cases.push({ name: "a resolved or closed item still needed attention", ok: !resolved.people?.length && !resolved.decisions?.length });
+
+    // The registry is held to its own word.
+    const issues = checkToolkitRegistryHealth({ preparation: false });
+    cases.push({ name: "an installed tool whose page is missing was not detected", ok: issues.some((i) => i.toolKey === "preparation" && i.kind === "marked_installed_but_route_missing") });
+    const healthy = classifyToolkitStewardship([], checkToolkitRegistryHealth({}), label);
+    cases.push({ name: "a healthy registry produced a problem", ok: !healthy.problems?.length });
+    const broken = classifyToolkitStewardship([], issues, label);
+    cases.push({ name: "a broken tool page was not a problem", ok: (broken.problems?.length ?? 0) >= 1 });
+
+    // Several Guides hitting the same thing is surfaced as a pattern (visibility).
+    const pattern = classifyToolkitStewardship([item("i", "BUG"), item("j", "BUG"), item("k", "BUG")], [], label);
+    cases.push({ name: "three open reports on one tool were not noticed as a pattern", ok: (pattern.watching?.length ?? 0) === 1 });
+
+    // A plain question the registry can answer is answered, not ticketed; an unknown one is not.
+    cases.push({ name: "a routine question the registry can answer was not answered", ok: answerRoutineToolkitQuestion("preparation").kind === "answered" });
+
+    // Items are unique and point somewhere a person can act.
+    const all = [...(adaptation.decisions ?? []), ...(routine.people ?? []), ...(broken.problems ?? [])];
+    cases.push({ name: "items were not unique", ok: new Set(all.map((i) => i.key)).size === all.length });
+    cases.push({ name: "an item has no place to act", ok: all.every((i) => !!i.href) });
+
+    return result(
+      "pipeline_toolkit_stewardship",
+      "Toolkit Stewardship behaves as designed",
+      "Simulated Toolkit reports confirm: adaptation, addition and policy items are decisions for Dorian; problem reports and questions are replies a person owes; resolved items disappear; a missing tool page is a problem; repeated reports are noticed; a routine question the registry can answer is answered on the spot.",
+      cases
+    );
+  });
+}
+
 export function capabilityRuleChecks(): CheckResult[] {
-  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck()];
+  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck(), toolkitCheck()];
 }

@@ -232,6 +232,15 @@ export default async function ToolkitDashboardPage() {
         </section>
       )}
 
+      {/* Toolkit Stewardship: report a problem or make a request */}
+      <Link
+        href="/toolkit/support"
+        className="mt-4 block rounded-lg border border-rule bg-white/[0.04] px-5 py-3 transition-colors hover:border-seal"
+      >
+        <p className="label text-muted">Toolkit support</p>
+        <p className="mt-1 text-sm text-ink">Something broken, missing, or unclear? Report it or make a request.</p>
+      </Link>
+
       {/* Start a new session */}
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Start a New Session</p>
