@@ -201,9 +201,16 @@ export async function schemaChecks(): Promise<CheckResult[]> {
     if (adminPolicy) failures.push(`certification_candidate_reflections has an admin-access policy ("${adminPolicy.name}"); candidate reflections are meant to be private to the candidate`);
   }
 
+  // A person must not be able to grant themselves authority by editing their own
+  // profile (migration 0112). The rule that stops it is a trigger on profiles.
+  const profilesTable = need("profiles");
+  if (profilesTable && !profilesTable.triggers.includes("profiles_protect_authority")) {
+    failures.push(`profiles is missing the protective rule "profiles_protect_authority" (migration 0112): without it a signed-in person can change their own role`);
+  }
+
   results.push(
     failures.length === 0
-      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, and candidate-reflection privacy are all as designed.")
+      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection privacy, and the rule that stops anyone from editing their own role are all as designed.")
       : row("schema_rules", "Protective database rules are in place", "problem", failures.join("; ") + ".")
   );
 
