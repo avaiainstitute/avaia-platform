@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { CapabilityEvidence, CapabilityResult, NeedsItem } from "@/lib/ops/needs-dorian-core";
 import type { CheckResult, CheckStatus } from "@/lib/ops/system-checks";
+import { evaluateGuideOperations } from "@/lib/ops/guide-access-operations";
 
 // OPERATIONAL CAPABILITIES: the one registry of every approved AVAIA operational
 // capability that runs through the single Needs-Dorian source.
@@ -32,7 +33,9 @@ export type CapabilityDefinition = {
 };
 
 /** Every operational capability currently wired into production. */
-export const CAPABILITIES: CapabilityDefinition[] = [];
+export const CAPABILITIES: CapabilityDefinition[] = [
+  { key: "guide_operations", label: "Guide Operations", run: evaluateGuideOperations },
+];
 
 const flaggedCount = (r: CapabilityResult): number =>
   (r.people?.length ?? 0) + (r.decisions?.length ?? 0) + (r.approvals?.length ?? 0) + (r.problems?.length ?? 0);

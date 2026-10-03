@@ -10,6 +10,7 @@ import {
   type GuideParticipant,
 } from "@/lib/guide";
 import { loadStatusForHost, formatDateLabel } from "@/lib/certification-renewal";
+import { getGuideOperationsRecordForHost } from "@/lib/guide-operations";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
@@ -171,6 +172,10 @@ export default async function ToolkitDashboardPage() {
   // ever goes inactive and this Toolkit does not.
   const certificationStatus = await loadStatusForHost(supabase, user.id);
 
+  // Guide Operations: the Guide's own access status. Only their own records, read
+  // through their own session (every table has a self-read policy).
+  const guideStatus = await getGuideOperationsRecordForHost(supabase, user.id).catch(() => null);
+
   return (
     <div>
       <p className="label mb-3">Guide Dashboard</p>
@@ -197,6 +202,29 @@ export default async function ToolkitDashboardPage() {
           </p>
           <p className="mt-1 text-xs text-muted">See your full status →</p>
         </Link>
+      )}
+
+      {/* My Guide Status (Guide Operations) -- only data this Guide is entitled to
+          see: their own standing, their platform authorizations, and a count of
+          active Host-scoped relationships. Never private Host content. */}
+      {guideStatus && (
+        <section className="mt-6 rounded-lg border border-rule bg-white/[0.04] px-5 py-4">
+          <p className="label mb-2 text-muted">My Guide Status</p>
+          <p className="text-sm text-ink">
+            Certification standing: <span className="text-muted">{guideStatus.certificationStanding ?? "none on file"}</span>
+          </p>
+          <p className="mt-1 text-sm text-ink">
+            Toolkit: <span className="text-muted">{guideStatus.toolkitAuthorized ? "available" : "not currently authorized"}</span>
+            {" "}&middot; Guided Journey Facilitation:{" "}
+            <span className="text-muted">{guideStatus.journeyFacilitationAuthorized ? "available" : "not currently authorized"}</span>
+          </p>
+          <p className="mt-1 text-sm text-muted">{guideStatus.activeHostScopedAccessCount} active Host-scoped relationship(s).</p>
+          {guideStatus.operationalState === "permission_mismatch" && (
+            <p className="mt-2 text-sm text-ink">
+              Something about your account needs AVAIA&rsquo;s attention. Reach out if you have questions about your access.
+            </p>
+          )}
+        </section>
       )}
 
       {/* Start a new session */}

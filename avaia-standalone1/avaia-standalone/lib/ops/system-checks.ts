@@ -4,6 +4,7 @@ import { getExpectedCrons } from "@/lib/ops/cron-runs";
 import { schemaChecks, scheduleChecks, deploymentChecks } from "@/lib/ops/system-truth";
 import { pipelineChecks } from "@/lib/ops/needs-dorian-selftest";
 import { capabilityChecks } from "@/lib/ops/capabilities";
+import { capabilityRuleChecks } from "@/lib/ops/capability-selftests";
 
 // Round 4 (Automation Blueprint): Website Watcher, Journey Watcher, Shared
 // Room Operations Watcher, Launch Readiness Watcher, and Testing/QC -- one
@@ -289,6 +290,8 @@ export async function runSystemChecks(): Promise<{
     pipelineChecks(),
     // Proof that each operational capability is evaluated and operating.
     capabilityChecks(),
+    // Each capability's rules, proven on simulated records.
+    Promise.resolve(capabilityRuleChecks()),
     // Proof that no Pink Shoelace Foundation item appears in AVAIA's operations.
     import("@/lib/pink/separation").then((m) => m.pinkSeparationChecks()),
   ]);
