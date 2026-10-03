@@ -13,6 +13,8 @@ import { buildOrganizationRecords, type OrganizationAdminStatus, type RawOrganiz
 import { classifyOrganizations } from "@/lib/ops/organization-operations";
 import { answerRoutineToolkitQuestion, checkToolkitRegistryHealth, requiresHumanApproval, type ToolkitSupportItem } from "@/lib/toolkit-stewardship";
 import { classifyToolkitStewardship } from "@/lib/ops/toolkit-stewardship";
+import type { IntegrityFlag } from "@/lib/conversation-integrity";
+import { classifyConversationIntegrity, flagsForReply } from "@/lib/ops/conversation-integrity";
 import type { CheckResult } from "@/lib/ops/system-checks";
 
 // SELF-TESTS FOR THE OPERATIONAL CAPABILITIES. Like needs-dorian-selftest.ts,
@@ -303,6 +305,79 @@ function toolkitCheck(): CheckResult {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Conversation Integrity & Boundary Oversight
+// ---------------------------------------------------------------------------
+
+function integrityCheck(): CheckResult {
+  return attempt("pipeline_conversation_integrity", "Conversation Integrity behaves as designed", () => {
+    const cases: Case[] = [];
+
+    // The scan: only the boundary problems keywords can honestly detect.
+    const diagnostic = "I am diagnosing you with depression based on what you told me.";
+    const prescription = "I prescribe a higher dose, so you should take 50 mg every day.";
+    const legal = "As your lawyer, I can tell you that you should sue.";
+    const benign = "That sounds like it has been carrying a lot of weight. What feels most present right now?";
+    cases.push({ name: "a diagnosing reply was not flagged", ok: flagsForReply(diagnostic, false).some((f) => f.category === "DIAGNOSTIC_OVERREACH") });
+    cases.push({ name: "a prescribing reply was not flagged", ok: flagsForReply(prescription, false).some((f) => f.category === "PRESCRIPTION") });
+    cases.push({ name: "a legal-advice reply was not flagged", ok: flagsForReply(legal, false).some((f) => f.category === "SCOPE_OVERREACH") });
+    cases.push({ name: "an ordinary compassionate reply was flagged", ok: flagsForReply(benign, false).length === 0 });
+
+    // The crisis pathway: after a crisis flag, the very next reply must carry the protocol.
+    cases.push({ name: "a reply that ignored the crisis pathway was not flagged", ok: flagsForReply(benign, true).some((f) => f.category === "SAFETY_PROTOCOL" && f.severity === "HIGH_PRIORITY") });
+    cases.push({ name: "a reply that followed the crisis pathway was flagged", ok: flagsForReply("If you are in danger, please call 988 or 911 right now.", true).length === 0 });
+    cases.push({ name: "the crisis pathway check ran when no crisis had fired", ok: flagsForReply(benign, false).length === 0 });
+
+    // Privacy: what is stored is a category and a rule, never the reply itself.
+    const stored = JSON.stringify(flagsForReply(diagnostic, false));
+    cases.push({ name: "a flag carried the reply's own words", ok: !stored.includes("based on what you told me") && !stored.includes(diagnostic) });
+
+    // What reaches Dorian.
+    const flag = (id: string, severity: IntegrityFlag["severity"], category: IntegrityFlag["flagCategory"], status: IntegrityFlag["reviewStatus"] = "open", stage: IntegrityFlag["stage"] = "iap"): IntegrityFlag => ({
+      id,
+      conversationId: null,
+      hostId: "h",
+      messageId: null,
+      stage,
+      program: "journey",
+      involvedRole: "guide",
+      flagCategory: category,
+      severity,
+      avaiaRuleImplicated: "rule",
+      detectionBasis: "basis",
+      modelSnapshot: null,
+      reviewStatus: status,
+      humanDisposition: status === "resolved" ? "NO_VIOLATION" : null,
+      correctiveAction: null,
+      createdAt: "2026-01-01T00:00:00Z",
+    });
+    const high = classifyConversationIntegrity([flag("a", "HIGH_PRIORITY", "SAFETY_PROTOCOL"), flag("b", "POLICY_REQUIRED", "POLICY_REQUIRED"), flag("c", "LEGAL_REVIEW_REQUIRED", "LEGAL_REVIEW_REQUIRED")]);
+    cases.push({ name: "high-priority, policy and legal flags were not all decisions for Dorian", ok: (high.decisions?.length ?? 0) === 3 });
+    const ordinary = classifyConversationIntegrity([flag("d", "REVIEW", "DIAGNOSTIC_OVERREACH"), flag("e", "REVIEW", "PRESCRIPTION")]);
+    cases.push({ name: "ordinary flags became tasks instead of visibility", ok: !ordinary.decisions?.length && (ordinary.watching?.length ?? 0) === 1 });
+    const resolved = classifyConversationIntegrity([flag("f", "HIGH_PRIORITY", "SAFETY_PROTOCOL", "resolved")]);
+    cases.push({ name: "a resolved flag still needed attention", ok: !resolved.decisions?.length && !resolved.watching?.length });
+    const pattern = classifyConversationIntegrity([flag("g", "REVIEW", "DIAGNOSTIC_OVERREACH"), flag("h", "REVIEW", "DIAGNOSTIC_OVERREACH"), flag("i", "REVIEW", "DIAGNOSTIC_OVERREACH")]);
+    cases.push({ name: "three open flags of one kind were not noticed as a pattern", ok: (pattern.decisions?.length ?? 0) >= 1 });
+    const cleared = classifyConversationIntegrity([
+      flag("j", "REVIEW", "DIAGNOSTIC_OVERREACH", "resolved"),
+      flag("k", "REVIEW", "DIAGNOSTIC_OVERREACH", "resolved"),
+      flag("l", "REVIEW", "DIAGNOSTIC_OVERREACH", "resolved"),
+    ]);
+    cases.push({ name: "recording dispositions did not clear the pattern", ok: !cleared.decisions?.length });
+    const all = [...(high.decisions ?? []), ...(pattern.decisions ?? [])];
+    cases.push({ name: "items were not unique", ok: new Set(all.map((i) => i.key)).size === all.length });
+    cases.push({ name: "an item has no place to act", ok: all.every((i) => !!i.href) });
+
+    return result(
+      "pipeline_conversation_integrity",
+      "Conversation Integrity behaves as designed",
+      "Simulated replies confirm: diagnosing, prescribing and legal-advice language are flagged and an ordinary compassionate reply is not; a reply that ignores the crisis pathway is flagged and one that follows it is not; no flag carries the reply's words; high-priority, policy and legal flags are decisions for Dorian, ordinary flags are visibility, and recording a disposition clears them.",
+      cases
+    );
+  });
+}
+
 export function capabilityRuleChecks(): CheckResult[] {
-  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck(), toolkitCheck()];
+  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck(), toolkitCheck(), integrityCheck()];
 }

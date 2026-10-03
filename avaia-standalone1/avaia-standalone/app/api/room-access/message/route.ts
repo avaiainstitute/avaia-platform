@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authenticateBearer } from "@/lib/supabase/bearer";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
+import { recordIntegrityForReply } from "@/lib/ops/conversation-integrity";
 import {
   AVAIA_MODEL,
   systemPromptFor,
@@ -197,6 +198,8 @@ export async function POST(request: Request) {
         content: clean,
       });
       if (replyError) console.error("AVAIA room-access message error: reply failed to persist", replyError);
+      // Conversation Integrity: scan only this reply, never the participant's words.
+      await recordIntegrityForReply({ hostId: userId, surface: "shared_room", conversationId, stage, replyText: clean, crisisJustFired: crisis });
     }
     return NextResponse.json({ reply: clean, crisis }, { headers: { "x-avaia-crisis": crisis ? "1" : "0" } });
   } catch (e) {

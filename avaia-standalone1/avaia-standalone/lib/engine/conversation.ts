@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Program, Stage, YouthProgram, OriginContextInput } from "./prompts";
+import { recordIntegrityForReply } from "../ops/conversation-integrity";
 
 export const STAGE_ORDER: Stage[] = ["iap", "cat", "innercompass"];
 
@@ -121,6 +122,11 @@ export async function createConversation(
     role: "guide",
     content: opening ?? STAGE_OPENING[stage],
   });
+  // Conversation Integrity: a model-written opening is the AI speaking too (the fixed
+  // stage openings are AVAIA's own approved text and are not scanned).
+  if (opening) {
+    await recordIntegrityForReply({ hostId, surface: "journey_opening", conversationId: convo.id, stage, replyText: opening });
+  }
 
   return convo;
 }

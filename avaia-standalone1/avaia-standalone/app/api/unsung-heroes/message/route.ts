@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
+import { recordIntegrityForReply } from "@/lib/ops/conversation-integrity";
 import {
   AVAIA_MODEL,
   unsungHeroesSystemPrompt,
@@ -149,6 +150,8 @@ export async function POST(request: Request) {
             role: "guide",
             content: clean,
           });
+          // Conversation Integrity: scan only this reply, never the Host's words.
+          await recordIntegrityForReply({ hostId: user.id, surface: "unsung_heroes", replyText: clean, crisisJustFired: crisis });
         }
         controller.close();
       } catch (e) {

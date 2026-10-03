@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
+import { recordIntegrityForReply } from "@/lib/ops/conversation-integrity";
 import {
   AVAIA_MODEL,
   systemPromptFor,
@@ -249,6 +250,9 @@ export async function POST(request: Request) {
           if (replyError) {
             console.error("AVAIA conversation error: reply failed to persist", replyError);
           }
+          // Conversation Integrity: scan only this reply (the AI speaking), never the
+          // Host's words. Never throws and stores no message text.
+          await recordIntegrityForReply({ hostId: user.id, surface: "journey", conversationId, stage, replyText: clean, crisisJustFired: crisis });
         }
         controller.close();
       } catch (e) {

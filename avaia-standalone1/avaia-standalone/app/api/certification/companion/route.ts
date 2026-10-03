@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
+import { recordIntegrityForReply } from "@/lib/ops/conversation-integrity";
 import { AVAIA_MODEL } from "@/lib/engine/prompts";
 import { sendEmail } from "@/lib/resend";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -194,6 +195,8 @@ export async function POST(request: Request) {
             input_tokens: finalMessage.usage?.input_tokens ?? null,
             output_tokens: finalMessage.usage?.output_tokens ?? null,
           });
+          // Conversation Integrity: scan only the Companion's own reply, never the candidate's words.
+          await recordIntegrityForReply({ hostId: user.id, surface: "certification_companion", replyText: full, crisisJustFired: crisis });
         }
         controller.close();
       } catch (e) {

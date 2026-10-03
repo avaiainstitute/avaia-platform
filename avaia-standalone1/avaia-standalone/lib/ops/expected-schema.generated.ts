@@ -18,6 +18,7 @@ export const EXPECTED_TABLES: string[] = [
   "certification_curriculum_items",
   "classes",
   "contact_submissions",
+  "conversation_integrity_flags",
   "conversations",
   "crisis_events",
   "cron_runs",

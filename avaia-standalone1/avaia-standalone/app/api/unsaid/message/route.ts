@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { anthropic, detectCrisis } from "@/lib/engine/anthropic";
+import { recordIntegrityForReply } from "@/lib/ops/conversation-integrity";
 import { AVAIA_MODEL, unsaidSystemPrompt } from "@/lib/engine/prompts";
 import { toAnthropicMessages } from "@/lib/engine/conversation";
 import { loadUnsaidMessages } from "@/lib/engine/unsaid";
@@ -107,6 +108,8 @@ export async function POST(request: Request) {
             content: full,
             wants_response: null,
           });
+          // Conversation Integrity: scan only this reply, never the Host's words.
+          await recordIntegrityForReply({ hostId: user.id, surface: "unsaid", replyText: full, crisisJustFired: crisis });
         }
         controller.close();
       } catch (e) {

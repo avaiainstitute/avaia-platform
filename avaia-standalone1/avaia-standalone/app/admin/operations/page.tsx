@@ -30,6 +30,7 @@ const MANAGE: Record<string, { href: string; label: string }> = {
   guide_operations: { href: "/admin/guide-certifications", label: "Guide certifications" },
   organization_operations: { href: "/admin/organization-admins", label: "Organization administrators" },
   toolkit_stewardship: { href: "/admin/toolkit-support", label: "Toolkit support queue" },
+  conversation_integrity: { href: "/admin/conversation-integrity", label: "Integrity review queue" },
 };
 
 function ItemList({ title, items, tone }: { title: string; items: NeedsItem[] | undefined; tone?: "quiet" }) {

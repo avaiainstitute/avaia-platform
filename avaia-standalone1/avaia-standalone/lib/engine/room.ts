@@ -14,6 +14,7 @@ import {
 import { createConversation, createJourney, loadMessages, toAnthropicMessages } from "./conversation";
 import { generateIapOriginOpening } from "./openings";
 import { recordAiUsage } from "./ai-usage";
+import { recordIntegrityForReply } from "../ops/conversation-integrity";
 import { isParticipantClearedToParticipate } from "../guardian-consent";
 import { createAdminClient } from "../supabase/admin";
 
@@ -321,6 +322,8 @@ export async function postRoomMessage(
       speaker_participant_id: null,
       content: reply,
     });
+    // Conversation Integrity: scan only this reply, never a participant's words.
+    await recordIntegrityForReply({ hostId: guideId, surface: "guided_room", replyText: reply, crisisJustFired: crisis });
   }
 
   return { reply, crisis };
