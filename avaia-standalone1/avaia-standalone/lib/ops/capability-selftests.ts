@@ -15,6 +15,14 @@ import { answerRoutineToolkitQuestion, checkToolkitRegistryHealth, requiresHuman
 import { classifyToolkitStewardship } from "@/lib/ops/toolkit-stewardship";
 import type { IntegrityFlag } from "@/lib/conversation-integrity";
 import { classifyConversationIntegrity, flagsForReply } from "@/lib/ops/conversation-integrity";
+import {
+  buildProgramAuthorizationRecord,
+  ENROLLMENT_STATUSES,
+  toGuideFacingView,
+  type ProgramAuthorizationInput,
+  type ProgramAuthorizationRecord,
+} from "@/lib/program-operations";
+import { classifyProgramOperations } from "@/lib/ops/program-operations";
 import type { CheckResult } from "@/lib/ops/system-checks";
 
 // SELF-TESTS FOR THE OPERATIONAL CAPABILITIES. Like needs-dorian-selftest.ts,
@@ -378,6 +386,89 @@ function integrityCheck(): CheckResult {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Program Operations
+// ---------------------------------------------------------------------------
+
+function programCheck(): CheckResult {
+  return attempt("pipeline_program_operations", "Program Operations behaves as designed", () => {
+    const cases: Case[] = [];
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
+    const make = (over: Partial<ProgramAuthorizationInput>) =>
+      buildProgramAuthorizationRecord({
+        enrollmentId: `e-${Math.random().toString(36).slice(2, 8)}`,
+        hostId: "h",
+        program: "defying_grief",
+        status: "in_training",
+        evaluatorId: "ev",
+        readyForReview: false,
+        updatedAt: daysAgo(1),
+        hasActiveCertificationStanding: true,
+        evidence: [],
+        hasAuthorizationRow: false,
+        authorizationStanding: null,
+        toolkitAuthorized: true,
+        ...over,
+      });
+    const label = (id: string) => `guide ${id}`;
+    const run = (rs: ProgramAuthorizationRecord[]) => classifyProgramOperations(rs, label);
+    const complete = [
+      { evidenceType: "practice_facilitation" as const, rating: "competent" as const, recordedAt: daysAgo(3) },
+      { evidenceType: "evaluator_review" as const, rating: "competent" as const, recordedAt: daysAgo(2) },
+    ];
+
+    // THE RULE: automation never authorizes. No enrollment status, with or without complete evidence,
+    // can ever read as authorized without a person's authorization record.
+    const neverAuthorized = ENROLLMENT_STATUSES.every((status) => make({ status, evidence: complete, readyForReview: true }).derivedState !== "authorized");
+    cases.push({ name: "an enrollment read as authorized without a person's authorization record", ok: neverAuthorized });
+    const readyRecord = make({ status: "ready_for_human_review", readyForReview: true, evidence: complete });
+    cases.push({ name: "a ready enrollment did not say it was waiting for HUMAN authorization review", ok: readyRecord.exception?.reason.includes("READY FOR HUMAN AUTHORIZATION REVIEW") === true && readyRecord.derivedState === "ready_for_human_review" });
+
+    // What reaches Dorian.
+    const ready = run([readyRecord]);
+    cases.push({ name: "a Guide ready for review was not a decision for Dorian", ok: (ready.decisions?.length ?? 0) === 1 });
+    const noEvaluator = run([make({ status: "ready_for_human_review", readyForReview: true, evaluatorId: null, evidence: complete })]);
+    cases.push({ name: "a ready enrollment with no evaluator was not flagged", ok: (noEvaluator.people?.length ?? 0) === 1 && !noEvaluator.decisions?.length });
+    const waiting = run([make({ status: "practice_evidence", evidence: complete })]);
+    cases.push({ name: "a complete evidence packet awaiting evaluator review was not flagged", ok: (waiting.people?.length ?? 0) === 1 });
+    const criticalFail = run([make({ status: "in_training", evidence: [{ evidenceType: "observed_session", rating: "critical_fail", recordedAt: daysAgo(1) }] })]);
+    cases.push({ name: "a critical-fail rating not moved to Development Required was not a problem", ok: (criticalFail.problems?.length ?? 0) === 1 });
+
+    // Certification comes first; a missing one waits quietly.
+    const noCert = run([make({ hasActiveCertificationStanding: false })]);
+    cases.push({ name: "an enrollment without active certification was a task instead of visibility", ok: (noCert.watching?.length ?? 0) === 1 && !noCert.decisions?.length && !noCert.people?.length && !noCert.problems?.length });
+
+    // Authorization handoff.
+    const authorized = run([make({ status: "ready_for_human_review", hasAuthorizationRow: true, authorizationStanding: "active", toolkitAuthorized: true })]);
+    cases.push({ name: "a properly authorized Guide produced items", ok: !(authorized.decisions?.length || authorized.people?.length || authorized.problems?.length || authorized.watching?.length) });
+    const authorizedNoToolkit = run([make({ hasAuthorizationRow: true, authorizationStanding: "active", toolkitAuthorized: false })]);
+    cases.push({ name: "an active authorization without Toolkit access was not a problem", ok: (authorizedNoToolkit.problems?.length ?? 0) === 1 });
+    const revokedStillOpen = run([make({ hasAuthorizationRow: true, authorizationStanding: "revoked", toolkitAuthorized: true })]);
+    cases.push({ name: "a revoked authorization with Toolkit access still open was not a problem", ok: (revokedStillOpen.problems?.length ?? 0) === 1 });
+
+    // Quiet and stale.
+    const fresh = run([make({ status: "in_training", updatedAt: daysAgo(2) })]);
+    cases.push({ name: "a healthy in-training enrollment produced items", ok: !(fresh.decisions?.length || fresh.people?.length || fresh.problems?.length || fresh.watching?.length) });
+    const stale = run([make({ status: "in_training", updatedAt: daysAgo(40) })]);
+    cases.push({ name: "a stalled enrollment was a task instead of visibility", ok: (stale.watching?.length ?? 0) === 1 && !stale.people?.length });
+
+    // A Guide sees only the state of their own authorization.
+    const view = toGuideFacingView(readyRecord);
+    cases.push({ name: "the Guide-facing view exposed more than program, label and state", ok: Object.keys(view).sort().join(",") === "label,program,state" && view.state === "awaiting_human_review" });
+
+    const all = [...(ready.decisions ?? []), ...(waiting.people ?? []), ...(criticalFail.problems ?? [])];
+    cases.push({ name: "items were not unique", ok: new Set(all.map((i) => i.key)).size === all.length });
+    cases.push({ name: "an item has no place to act", ok: all.every((i) => !!i.href) });
+
+    return result(
+      "pipeline_program_operations",
+      "Program Operations behaves as designed",
+      "Simulated enrollments confirm: nothing is ever authorized without a person's authorization record; a Guide ready for review is a decision for Dorian; a missing evaluator, complete evidence awaiting review, a critical-fail rating and an authorization/Toolkit mismatch are each reported once; a missing certification and a stalled enrollment are visibility only; a Guide sees only the state of their own authorization.",
+      cases
+    );
+  });
+}
+
 export function capabilityRuleChecks(): CheckResult[] {
-  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck(), toolkitCheck(), integrityCheck()];
+  return [guideOperationsCheck(), hostParticipantCheck(), organizationCheck(), toolkitCheck(), integrityCheck(), programCheck()];
 }

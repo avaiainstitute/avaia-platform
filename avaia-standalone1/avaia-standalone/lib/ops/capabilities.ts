@@ -7,6 +7,7 @@ import { evaluateHostParticipantOperations } from "@/lib/ops/host-participant-op
 import { evaluateOrganizationOperations } from "@/lib/ops/organization-operations";
 import { evaluateToolkitStewardship } from "@/lib/ops/toolkit-stewardship";
 import { evaluateConversationIntegrity } from "@/lib/ops/conversation-integrity";
+import { evaluateProgramOperations } from "@/lib/ops/program-operations";
 
 // OPERATIONAL CAPABILITIES: the one registry of every approved AVAIA operational
 // capability that runs through the single Needs-Dorian source.
@@ -43,6 +44,7 @@ export const CAPABILITIES: CapabilityDefinition[] = [
   { key: "organization_operations", label: "Organization / Event Operations", run: evaluateOrganizationOperations },
   { key: "toolkit_stewardship", label: "Toolkit Stewardship", run: evaluateToolkitStewardship },
   { key: "conversation_integrity", label: "Conversation Integrity & Boundary Oversight", run: evaluateConversationIntegrity },
+  { key: "program_operations", label: "Program Operations", run: evaluateProgramOperations },
 ];
 
 const flaggedCount = (r: CapabilityResult): number =>

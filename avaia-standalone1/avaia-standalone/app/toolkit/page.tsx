@@ -12,6 +12,7 @@ import {
 import { loadStatusForHost, formatDateLabel } from "@/lib/certification-renewal";
 import { getGuideOperationsRecordForHost } from "@/lib/guide-operations";
 import { getGuideParticipantStatusesForGuide } from "@/lib/host-operations";
+import { getGuideFacingProgramAuthorizations } from "@/lib/ops/program-operations";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
@@ -181,6 +182,10 @@ export default async function ToolkitDashboardPage() {
   // the Guide's own session, so only their own participants and sessions are visible).
   const participantStatuses = await getGuideParticipantStatusesForGuide(supabase, user.id).catch(() => new Map());
 
+  // Program Operations: where this Guide stands for each specialty program. Only the
+  // state of their own authorization, never evidence, history, or the evaluator.
+  const programAuthorizations = await getGuideFacingProgramAuthorizations(user.id).catch(() => []);
+
   return (
     <div>
       <p className="label mb-3">Guide Dashboard</p>
@@ -229,6 +234,39 @@ export default async function ToolkitDashboardPage() {
               Something about your account needs AVAIA&rsquo;s attention. Reach out if you have questions about your access.
             </p>
           )}
+        </section>
+      )}
+
+      {/* My Program Authorizations (Program Operations): the state of this Guide's own
+          authorization for each specialty program. A person records an authorization;
+          nothing here ever grants one. */}
+      {programAuthorizations.length > 0 && (
+        <section className="mt-4 rounded-lg border border-rule bg-white/[0.04] px-5 py-4">
+          <p className="label mb-2 text-muted">My Program Authorizations</p>
+          <ul className="space-y-1 text-sm">
+            {programAuthorizations.map((p) => (
+              <li key={p.program} className="text-ink">
+                {p.label}:{" "}
+                <span className="text-muted">
+                  {p.state === "available"
+                    ? "not enrolled yet"
+                    : p.state === "in_training"
+                      ? "in training"
+                      : p.state === "development_required"
+                        ? "development in progress"
+                        : p.state === "awaiting_human_review"
+                          ? "awaiting AVAIA's review"
+                          : p.state === "authorized"
+                            ? "authorized"
+                            : p.state === "not_authorized"
+                              ? "not authorized at this time"
+                              : p.state === "paused"
+                                ? "paused"
+                                : "withdrawn"}
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
