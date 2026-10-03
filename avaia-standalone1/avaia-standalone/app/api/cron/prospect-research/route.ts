@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
 import { runProspectResearch } from "@/lib/research/prospect-research";
+import { recordCronRun } from "@/lib/ops/cron-runs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const startedAt = new Date();
   const results: Record<string, { inserted: number; skipped: number } | { error: string }> = {};
 
   for (const vertical of ["partnership", "donor", "program", "speaking"] as const) {
@@ -31,5 +33,7 @@ export async function GET(request: Request) {
     }
   }
 
+  const anyFailed = Object.values(results).some((r) => "error" in r);
+  await recordCronRun({ cronName: "prospect-research", startedAt, status: anyFailed ? "partial" : "success", detail: { results } });
   return NextResponse.json({ ok: true, results });
 }

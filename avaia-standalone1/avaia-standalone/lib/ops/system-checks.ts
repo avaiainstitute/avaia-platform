@@ -1,5 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getExpectedCrons } from "@/lib/ops/cron-runs";
+import { schemaChecks, scheduleChecks, deploymentChecks } from "@/lib/ops/system-truth";
 
 // Round 4 (Automation Blueprint): Website Watcher, Journey Watcher, Shared
 // Room Operations Watcher, Launch Readiness Watcher, and Testing/QC -- one
@@ -102,6 +104,12 @@ async function websiteChecks(): Promise<CheckResult[]> {
     pageCheck("website", "avaia_experiences_page", "AVAIA Experiences page (Agent 8 inbound)", `${AVAIA_SITE}/experiences`),
     pageCheck("website", "avaia_defying_grief_page", "AVAIA Defying Grief page", `${AVAIA_SITE}/defying-grief`),
     pageCheck("website", "avaia_toolkit_gate", "AVAIA Toolkit page (membership gate)", `${AVAIA_SITE}/toolkit`),
+    pageCheck("website", "avaia_journey_page", "AVAIA Journey entry page", `${AVAIA_SITE}/journey`),
+    pageCheck("website", "avaia_membership_page", "AVAIA Membership page", `${AVAIA_SITE}/membership`),
+    pageCheck("website", "avaia_sign_in_page", "AVAIA sign-in page", `${AVAIA_SITE}/sign-in`),
+    pageCheck("website", "avaia_certified_guide_page", "AVAIA Certified Guide page", `${AVAIA_SITE}/certified-guide`),
+    pageCheck("website", "avaia_library_gate", "AVAIA Library page (sign-in gate)", `${AVAIA_SITE}/library`),
+    pageCheck("website", "avaia_certification_gate", "AVAIA Certification classroom (candidate gate)", `${AVAIA_SITE}/certification`),
     pageCheck("website", "pink_home", "Pink Shoelace home page", `${PINK_SITE}/`),
     pageCheck("website", "pink_get_involved_page", "Pink Shoelace Get Involved page (participation form)", `${PINK_SITE}/get-involved.html`),
     pageCheck("website", "pink_contact_page", "Pink Shoelace contact page", `${PINK_SITE}/contact.html`),
@@ -110,8 +118,14 @@ async function websiteChecks(): Promise<CheckResult[]> {
 
 async function qualityChecks(): Promise<CheckResult[]> {
   return Promise.all([
-    cronAuthGateCheck("cron_auth_founder_digest", "Founder Digest cron rejects unauthenticated requests", `${AVAIA_SITE}/api/cron/founder-digest`),
-    cronAuthGateCheck("cron_auth_prospect_research", "Prospect research cron rejects unauthenticated requests", `${AVAIA_SITE}/api/cron/prospect-research`),
+    // Every scheduled job in vercel.json must exist and reject an unauthenticated
+    // call. Derived from vercel.json itself so a new schedule is covered the
+    // moment it is added. Check keys for the two long-standing jobs are unchanged.
+    ...getExpectedCrons().map((c) =>
+      cronAuthGateCheck(`cron_auth_${c.name.replace(/-/g, "_")}`, `Scheduled job "${c.name}" exists and rejects unauthenticated requests`, `${AVAIA_SITE}${c.path}`)
+    ),
+    postOnlyRouteExistsCheck("route_conversation_exists", "Journey conversation endpoint is deployed", `${AVAIA_SITE}/api/conversation`),
+    postOnlyRouteExistsCheck("route_stripe_webhook_exists", "Stripe webhook endpoint is deployed", `${AVAIA_SITE}/api/stripe/webhook`),
     postOnlyRouteExistsCheck("route_contact_exists", "AVAIA contact form endpoint is deployed", `${AVAIA_SITE}/api/contact`),
     postOnlyRouteExistsCheck("route_experiences_inquiry_exists", "Experiences inquiry endpoint is deployed", `${AVAIA_SITE}/api/experiences/inquiry`),
     postOnlyRouteExistsCheck("route_pink_participation_exists", "Pink participation endpoint is deployed", `${AVAIA_SITE}/api/pink/participation`),
@@ -241,7 +255,17 @@ export async function runSystemChecks(): Promise<{
 }> {
   const admin = createAdminClient();
 
-  const groups = await Promise.allSettled([websiteChecks(), qualityChecks(), journeyChecks(), sharedRoomChecks()]);
+  const groups = await Promise.allSettled([
+    websiteChecks(),
+    qualityChecks(),
+    journeyChecks(),
+    sharedRoomChecks(),
+    // "AVAIA tells the truth about itself": database, schedules, deployment
+    // (lib/ops/system-truth.ts). Each is isolated like every other group.
+    schemaChecks(),
+    scheduleChecks(),
+    deploymentChecks(),
+  ]);
   const results: CheckResult[] = [];
   for (const g of groups) {
     if (g.status === "fulfilled") results.push(...g.value);

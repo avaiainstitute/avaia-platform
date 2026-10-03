@@ -15,6 +15,10 @@ const REQUIRED_ENV_VARS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "CRON_SECRET",
+  // The conversation engine and the membership checkout cannot work without these.
+  "ANTHROPIC_API_KEY",
+  "STRIPE_MEMBERSHIP_PRICE_ID_MONTHLY",
+  "STRIPE_MEMBERSHIP_PRICE_ID_ANNUAL",
 ];
 
 export async function GET() {
@@ -39,6 +43,13 @@ export async function GET() {
       database: databaseOk ? "reachable" : "unreachable",
       databaseError,
       missingEnvVars: missingEnvVars.length > 0 ? missingEnvVars : undefined,
+      // Which build is actually serving this request (set by Vercel; a commit id
+      // and branch name are not secrets). Lets anyone confirm what is deployed.
+      deployment: {
+        environment: process.env.VERCEL_ENV ?? null,
+        branch: process.env.VERCEL_GIT_COMMIT_REF ?? null,
+        commit: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
+      },
       checkedAt: new Date().toISOString(),
     },
     { status: ok ? 200 : 503 }

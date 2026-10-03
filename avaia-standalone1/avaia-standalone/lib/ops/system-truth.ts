@@ -1,0 +1,319 @@
+import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { EXPECTED_COLUMNS, EXPECTED_RPCS, EXPECTED_TABLES } from "@/lib/ops/expected-schema.generated";
+import { RECORDED_CRON_NAMES, getCronHealth } from "@/lib/ops/cron-runs";
+import type { CheckResult, CheckStatus } from "@/lib/ops/system-checks";
+
+// "AVAIA tells the truth about itself." A group of checks inside the EXISTING
+// system-check runner (lib/ops/system-checks.ts, its cron, its results table,
+// its Founder Digest and /admin/today surfacing) that compares what the
+// application believes exists with what production actually contains:
+//
+//   * schema_*  -- every table, column and database function the code needs
+//                  is really in the database; row-level security is on;
+//                  a few rules that protect privacy and scheduling are in place.
+//   * schedule_* -- every job scheduled in vercel.json has recorded a recent run.
+//   * deploy_*   -- production is running the latest commit of the production
+//                  branch, from the right branch, with the environment it needs.
+//
+// Metadata-only by construction: this reads table and column NAMES, policy
+// and trigger names, timestamps and statuses. It never selects a row's
+// content from any table (every probe below uses limit(0)).
+//
+// Rows use the existing "quality" category (the Testing/QC group) so they can
+// be recorded before any new migration is applied; a new category would have
+// required a database change just to store the result.
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://avaiainstitute.com";
+
+/** The branch Vercel is expected to build production from. If this ever
+ *  stops being true the check below says so (the 2026-08-17 incident). */
+const PRODUCTION_BRANCH = "defying-grief-v2";
+const GITHUB_REPO = "avaiainstitute/avaia-platform";
+
+function row(checkKey: string, label: string, status: CheckStatus, detail: string | null): CheckResult {
+  return { category: "quality", checkKey, label, status, detail };
+}
+
+function list(names: string[], max = 25): string {
+  const shown = names.slice(0, max).join(", ");
+  return names.length > max ? `${shown}, and ${names.length - max} more` : shown;
+}
+
+type DbError = { code?: string; message?: string } | null;
+
+function isMissingTable(error: DbError): boolean {
+  if (!error) return false;
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    /does not exist|could not find the table/i.test(error.message ?? "")
+  );
+}
+
+function isMissingColumn(error: DbError): boolean {
+  if (!error) return false;
+  return error.code === "42703" || error.code === "PGRST204" || /column .* does not exist|could not find the .* column/i.test(error.message ?? "");
+}
+
+async function inBatches<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = [];
+  for (let i = 0; i < items.length; i += size) {
+    out.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Database truth
+// ---------------------------------------------------------------------------
+
+type SnapshotPolicy = { name: string; cmd: string; qual: string | null; with_check: string | null };
+type SnapshotTable = {
+  name: string;
+  rls: boolean;
+  policies: SnapshotPolicy[];
+  triggers: string[];
+  checks: Record<string, string>;
+};
+type SchemaSnapshot = { tables: SnapshotTable[]; functions: string[] };
+
+export async function schemaChecks(): Promise<CheckResult[]> {
+  const admin = createAdminClient();
+  const results: CheckResult[] = [];
+
+  // 1. Tables the code uses. A head-less select with limit(0) returns no rows,
+  //    so nothing stored in any table is ever read.
+  const tableProbe = await inBatches(EXPECTED_TABLES, 20, async (table) => {
+    const { error } = await admin.from(table).select("*").limit(0);
+    return { table, missing: isMissingTable(error as DbError), otherError: error && !isMissingTable(error as DbError) ? (error as DbError)?.message : null };
+  });
+  const missingTables = tableProbe.filter((t) => t.missing).map((t) => t.table);
+  results.push(
+    missingTables.length === 0
+      ? row("schema_tables", "Database tables the app uses all exist", "pass", `All ${EXPECTED_TABLES.length} tables the application code uses are present.`)
+      : row(
+          "schema_tables",
+          "Database tables the app uses all exist",
+          "problem",
+          `${missingTables.length} table(s) the code depends on are NOT in the database: ${list(missingTables)}. A migration has probably not been applied. (If it was applied moments ago, Supabase may need a moment to refresh its schema.)`
+        )
+  );
+
+  // 2. Columns the migrations add to existing tables.
+  const presentTables = new Set(tableProbe.filter((t) => !t.missing).map((t) => t.table));
+  const columnTables = Object.keys(EXPECTED_COLUMNS).filter((t) => presentTables.has(t));
+  const missingColumns: string[] = [];
+  await inBatches(columnTables, 10, async (table) => {
+    const cols = EXPECTED_COLUMNS[table];
+    const { error } = await admin.from(table).select(cols.join(",")).limit(0);
+    if (!error) return;
+    if (isMissingColumn(error as DbError)) {
+      for (const col of cols) {
+        const { error: one } = await admin.from(table).select(col).limit(0);
+        if (one && isMissingColumn(one as DbError)) missingColumns.push(`${table}.${col}`);
+      }
+    }
+  });
+  results.push(
+    missingColumns.length === 0
+      ? row("schema_columns", "Database columns the app relies on all exist", "pass", `All ${Object.values(EXPECTED_COLUMNS).flat().length} columns added by migrations are present.`)
+      : row(
+          "schema_columns",
+          "Database columns the app relies on all exist",
+          "problem",
+          `${missingColumns.length} column(s) added by a migration are missing: ${list(missingColumns)}. That migration has probably not been applied.`
+        )
+  );
+
+  // 3. The deeper catalog check (security rules, triggers, constraints,
+  //    functions). Needs one read-only database function from migration
+  //    0111; if it is not installed yet this says so plainly instead of failing.
+  const { data: snapRaw, error: snapError } = await admin.rpc("avaia_schema_snapshot");
+  if (snapError || !snapRaw) {
+    const notInstalled = /could not find the function|does not exist|PGRST202/i.test(`${(snapError as DbError)?.code ?? ""} ${(snapError as DbError)?.message ?? ""}`);
+    results.push(
+      row(
+        "schema_catalog",
+        "Deeper database check (security rules, triggers, functions)",
+        "needs_dorian",
+        notInstalled
+          ? "Not installed yet. Run migration 0111_system_truth.sql (one read-only function, no data touched) to turn on checks for row-level security, protective rules and database functions."
+          : `Could not run: ${(snapError as DbError)?.message ?? "no result"}.`
+      )
+    );
+    return results;
+  }
+  const snapshot = snapRaw as SchemaSnapshot;
+  const byName = new Map(snapshot.tables.map((t) => [t.name, t]));
+
+  // 3a. Row-level security must be ON for every table the app uses. This is
+  //     what keeps one person's records from being readable by another.
+  const noRls = EXPECTED_TABLES.filter((t) => byName.has(t) && byName.get(t)!.rls === false);
+  results.push(
+    noRls.length === 0
+      ? row("schema_rls", "Row-level security is on for every table", "pass", "Every table the app uses has row-level security enabled.")
+      : row("schema_rls", "Row-level security is on for every table", "problem", `Row-level security is OFF on: ${list(noRls)}. Without it, the database's own privacy protection does not apply to these tables.`)
+  );
+
+  // 3b. Database functions the code calls.
+  const have = new Set(snapshot.functions);
+  const missingFns = EXPECTED_RPCS.filter((f) => !have.has(f));
+  results.push(
+    missingFns.length === 0
+      ? row("schema_functions", "Database functions the app calls all exist", "pass", `All ${EXPECTED_RPCS.length} database functions the code calls are present.`)
+      : row("schema_functions", "Database functions the app calls all exist", "problem", `Missing database function(s): ${list(missingFns)}.`)
+  );
+
+  // 3c. A short list of rules that must hold, each one something a past or
+  //     present AVAIA decision depends on.
+  const failures: string[] = [];
+  const need = (table: string): SnapshotTable | null => {
+    const t = byName.get(table);
+    if (!t) {
+      failures.push(`${table} is missing`);
+      return null;
+    }
+    return t;
+  };
+
+  const certs = need("guide_certifications");
+  if (certs) {
+    for (const trg of ["guide_certifications_guard_reactivation", "guide_certifications_set_cycle"]) {
+      if (!certs.triggers.includes(trg)) failures.push(`guide_certifications is missing the protective rule "${trg}" (the 60-month and renewal-cycle rules)`);
+    }
+    if (!(certs.checks["guide_certifications_standing_check"] ?? "").includes("inactive")) {
+      failures.push(`guide_certifications does not accept the "inactive" standing`);
+    }
+  }
+
+  const cronRuns = need("cron_runs");
+  if (cronRuns) {
+    const def = cronRuns.checks["cron_runs_cron_name_check"] ?? "";
+    const notAllowed = RECORDED_CRON_NAMES.filter((n) => !def.includes(`'${n}'`));
+    if (notAllowed.length > 0) failures.push(`cron_runs does not yet accept: ${notAllowed.join(", ")} (their runs cannot be recorded)`);
+  }
+
+  const reminders = need("guide_candidate_reminders");
+  if (reminders && !(reminders.checks["guide_candidate_reminders_reminder_type_check"] ?? "").includes("certified_awaiting_toolkit_auth")) {
+    failures.push(`guide_candidate_reminders does not accept the newest reminder type`);
+  }
+
+  const reflections = need("certification_candidate_reflections");
+  if (reflections) {
+    if (reflections.policies.length === 0) failures.push(`certification_candidate_reflections has no access policy`);
+    const adminPolicy = reflections.policies.find((p) => /admin/i.test(`${p.name} ${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (adminPolicy) failures.push(`certification_candidate_reflections has an admin-access policy ("${adminPolicy.name}"); candidate reflections are meant to be private to the candidate`);
+  }
+
+  results.push(
+    failures.length === 0
+      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, cron-name and reminder constraints, and candidate-reflection privacy are all as designed.")
+      : row("schema_rules", "Protective database rules are in place", "problem", failures.join("; ") + ".")
+  );
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
+// Scheduled jobs
+// ---------------------------------------------------------------------------
+
+export async function scheduleChecks(): Promise<CheckResult[]> {
+  const items = await getCronHealth();
+  const bad = items.filter((i) => i.state !== "ok" && i.state !== "not_recorded_yet");
+  const waiting = items.filter((i) => i.state === "not_recorded_yet").map((i) => i.name);
+  const ok = items.filter((i) => i.state === "ok").length;
+
+  if (bad.length === 0) {
+    return [
+      row(
+        "schedule_jobs",
+        "Scheduled jobs are running",
+        "pass",
+        `${ok} job(s) have run on schedule${waiting.length ? `; ${waiting.length} waiting for their first recorded run (${list(waiting)})` : ""}.`
+      ),
+    ];
+  }
+  const worst: CheckStatus = bad.every((b) => b.state === "partial") ? "needs_dorian" : "problem";
+  return [row("schedule_jobs", "Scheduled jobs are running", worst, bad.map((b) => b.detail).join(" "))];
+}
+
+// ---------------------------------------------------------------------------
+// Deployment truth
+// ---------------------------------------------------------------------------
+
+export async function deploymentChecks(): Promise<CheckResult[]> {
+  const results: CheckResult[] = [];
+
+  // Is production serving the latest commit of the production branch?
+  const env = process.env.VERCEL_ENV;
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA;
+  const ref = process.env.VERCEL_GIT_COMMIT_REF;
+  const label = "Production is running the latest pushed version";
+
+  if (env && env !== "production") {
+    results.push(row("deploy_matches_branch", label, "pass", `This is a ${env} deployment, so the production comparison was skipped.`));
+  } else if (!sha || !ref) {
+    results.push(
+      row("deploy_matches_branch", label, "needs_dorian", "This deployment does not report which commit it was built from, so it cannot be compared to GitHub. (In Vercel: Project Settings, Environment Variables, enable \"Automatically expose System Environment Variables\".)")
+    );
+  } else if (ref !== PRODUCTION_BRANCH) {
+    results.push(
+      row("deploy_matches_branch", label, "problem", `Production was built from the branch "${ref}", but AVAIA's production branch is "${PRODUCTION_BRANCH}". Work pushed to ${PRODUCTION_BRANCH} will not go live. Check Vercel, Project Settings, Git, Production Branch.`)
+    );
+  } else {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/commits/${PRODUCTION_BRANCH}`, {
+        headers: { Accept: "application/vnd.github+json", "User-Agent": "avaia-system-checks" },
+        signal: controller.signal,
+        cache: "no-store",
+      });
+      clearTimeout(timer);
+      if (!res.ok) {
+        results.push(row("deploy_matches_branch", label, "pass", `Could not read GitHub (HTTP ${res.status}); this comparison is skipped, not failed.`));
+      } else {
+        const body = (await res.json()) as { sha?: string; commit?: { committer?: { date?: string } } };
+        const head = body.sha ?? "";
+        const pushedAt = body.commit?.committer?.date ? new Date(body.commit.committer.date).getTime() : null;
+        if (head && head === sha) {
+          results.push(row("deploy_matches_branch", label, "pass", `Running ${sha.slice(0, 7)}, the latest commit of ${PRODUCTION_BRANCH}.`));
+        } else if (pushedAt !== null && Date.now() - pushedAt < 20 * 60_000) {
+          results.push(row("deploy_matches_branch", label, "pass", `A newer commit (${head.slice(0, 7)}) was pushed minutes ago; its deployment is probably still building.`));
+        } else {
+          const hours = pushedAt ? Math.round((Date.now() - pushedAt) / 3_600_000) : null;
+          results.push(
+            row(
+              "deploy_matches_branch",
+              label,
+              "problem",
+              `Production is running ${sha.slice(0, 7)} but ${PRODUCTION_BRANCH} is at ${head.slice(0, 7)}${hours !== null ? ` (pushed about ${hours} hour(s) ago)` : ""}. The latest push did not go live. Look for a failed build in Vercel.`
+            )
+          );
+        }
+      }
+    } catch (e) {
+      results.push(row("deploy_matches_branch", label, "pass", `Could not reach GitHub (${e instanceof Error ? e.message : "error"}); this comparison is skipped, not failed.`));
+    }
+  }
+
+  // Is the deployment configured: database reachable, required settings present?
+  try {
+    const res = await fetch(`${SITE}/api/health`, { cache: "no-store" });
+    const body = (await res.json()) as { ok?: boolean; database?: string; databaseError?: string | null; missingEnvVars?: string[] };
+    if (body.ok) {
+      results.push(row("deploy_health", "Production is configured and the database is reachable", "pass", "Required settings are present and the database responds."));
+    } else {
+      const parts: string[] = [];
+      if (body.database && body.database !== "reachable") parts.push(`the database is ${body.database}${body.databaseError ? ` (${body.databaseError})` : ""}`);
+      if (body.missingEnvVars?.length) parts.push(`required setting(s) missing: ${body.missingEnvVars.join(", ")}`);
+      results.push(row("deploy_health", "Production is configured and the database is reachable", "problem", parts.join("; ") || `The health endpoint reported a problem (HTTP ${res.status}).`));
+    }
+  } catch (e) {
+    results.push(row("deploy_health", "Production is configured and the database is reachable", "needs_dorian", `The health endpoint could not be read (${e instanceof Error ? e.message : "error"}).`));
+  }
+
+  return results;
+}

@@ -421,6 +421,9 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   }
   // Round 4: Website/Journey/Shared Room Watchers + Testing/QC.
   for (const p of checkProblems) {
+    // The scheduled-jobs findings are already listed above by getCronHealthIssues
+    // (same source), so repeating them here would say the same thing twice.
+    if (p.checkKey.startsWith("schedule_")) continue;
     needsDorian.push(`${p.label}${p.detail ? ` -- ${p.detail}` : ""} (${p.category.replace(/_/g, " ")}).`);
   }
 

@@ -6,6 +6,8 @@ import { runSystemChecks, type CheckCategory, type CheckStatus } from "@/lib/ops
 
 export const metadata = { title: "System Checks, AVAIA Admin" };
 export const dynamic = "force-dynamic";
+// "Run checks now" makes a few dozen small probes; give it room to finish.
+export const maxDuration = 30;
 
 // Website Watcher, Journey Watcher, Shared Room Operations Watcher, Launch
 // Readiness, and Testing/QC (Round 4) -- one shared view, since Dorian
@@ -74,7 +76,23 @@ export default async function AdminSystemChecksPage({
     byCategory.set(r.category as CheckCategory, list as any);
   }
 
-  const order: CheckCategory[] = ["launch_readiness", "website", "quality", "journey", "shared_room"];
+  // The "AVAIA tells the truth about itself" checks (lib/ops/system-truth.ts)
+  // are stored under the existing Testing/QC category and told apart by their
+  // key prefix, so they can be shown as their own readable sections.
+  type Row = { check_key: string; label: string; status: string; detail: string | null };
+  const qualityRows = (byCategory.get("quality") ?? []) as unknown as Row[];
+  const withPrefix = (prefix: string) => qualityRows.filter((r) => r.check_key.startsWith(prefix));
+  const otherQuality = qualityRows.filter((r) => !/^(schema_|schedule_|deploy_)/.test(r.check_key));
+  const sections: { key: string; label: string; items: Row[] }[] = [
+    { key: "launch_readiness", label: CATEGORY_LABEL.launch_readiness, items: (byCategory.get("launch_readiness") ?? []) as unknown as Row[] },
+    { key: "truth_db", label: "Database: is everything the app needs really there?", items: withPrefix("schema_") },
+    { key: "truth_jobs", label: "Scheduled jobs: are they running?", items: withPrefix("schedule_") },
+    { key: "truth_deploy", label: "Deployment: is the latest version live and configured?", items: withPrefix("deploy_") },
+    { key: "website", label: CATEGORY_LABEL.website, items: (byCategory.get("website") ?? []) as unknown as Row[] },
+    { key: "quality", label: CATEGORY_LABEL.quality, items: otherQuality },
+    { key: "journey", label: CATEGORY_LABEL.journey, items: (byCategory.get("journey") ?? []) as unknown as Row[] },
+    { key: "shared_room", label: CATEGORY_LABEL.shared_room, items: (byCategory.get("shared_room") ?? []) as unknown as Row[] },
+  ];
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
@@ -114,12 +132,12 @@ export default async function AdminSystemChecksPage({
           <p className="mt-8 text-sm text-muted">
             Last run: {new Date(latestRun.checked_at).toLocaleString()}
           </p>
-          {order.map((cat) => {
-            const items = byCategory.get(cat) ?? [];
+          {sections.map((section) => {
+            const items = section.items;
             if (items.length === 0) return null;
             return (
-              <section key={cat} className="rule-t mt-10 border-t border-rule pt-6">
-                <p className="label mb-3 text-muted">{CATEGORY_LABEL[cat]}</p>
+              <section key={section.key} className="rule-t mt-10 border-t border-rule pt-6">
+                <p className="label mb-3 text-muted">{section.label}</p>
                 <div className="space-y-2">
                   {items.map((r) => (
                     <div
