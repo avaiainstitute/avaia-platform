@@ -119,6 +119,15 @@ export function classifyCertificationRecords(
       }
     }
 
+    // The one rule skipped for a designated test account is stated, not hidden.
+    if (r.designatedTestAccount && r.certification && !r.decision) {
+      watching.push({
+        key: key("test_account"),
+        href,
+        text: `${who}: designated test account (founder_test); it has a certification but no certification decision on file, which is expected, so it is not flagged.`,
+      });
+    }
+
     if (r.derivedState === "boundary_gate_eligible") {
       watching.push({ key: key("gate_eligible"), href, text: `${who}: eligible for the Boundary Gate, waiting for it to be arranged.` });
     }

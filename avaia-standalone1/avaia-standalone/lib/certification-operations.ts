@@ -163,6 +163,8 @@ export type CertificationOperationsRecord = {
   latestEvidenceByType: Partial<Record<EvidenceType, EvidenceRow>>;
   decision: DecisionRow | null;
   certification: CertificationRow | null;
+  /** Holds an active 'founder_test' entitlement: Dorian's designated test account. */
+  designatedTestAccount: boolean;
   profileRole: string | null;
   guideCertifiedAt: string | null;
   toolkitAuthorizationStatus: PlatformAuthStatus;
@@ -435,6 +437,11 @@ export function detectExceptions(args: {
   toolkitAuthorizationStatus: PlatformAuthStatus;
   lastActivityAt: string | null;
   readyForReview?: boolean;
+  /** True only for an account holding an active 'founder_test' entitlement
+   *  (Dorian's designated test Guide). Skips ONE rule, mismatch_no_decision,
+   *  because that account was set up for testing and has no real certification
+   *  decision by design. Every other rule still applies to it. */
+  designatedTestAccount?: boolean;
   now?: number;
 }): CertificationException[] {
   const { state, latest, decision, certification, lastActivityAt } = args;
@@ -478,7 +485,7 @@ export function detectExceptions(args: {
 
   // An inconsistency between two records, not a judgment about the candidate:
   // a certification exists with no recorded certification decision.
-  if (certification && !decision) {
+  if (certification && !decision && !args.designatedTestAccount) {
     exceptions.push({
       category: "MISMATCH",
       code: "mismatch_no_decision",
@@ -538,6 +545,8 @@ type RawInputs = {
   progressRows: { candidate_id: string; item_key: string; status: string; last_touched_at: string }[];
   curriculumCounts: { lessonsTotal: number; labsTotal: number };
   historyLastActivity: Map<string, string>;
+  /** Hosts holding an active 'founder_test' entitlement (see detectExceptions). */
+  designatedTestHostIds?: Set<string>;
   /** Optional clock for tests (defaults to the current time). */
   now?: number;
 };
@@ -608,6 +617,8 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
       toolkitAuthorizationStatus,
     });
 
+    const designatedTestAccount = inputs.designatedTestHostIds?.has(candidate.host_id) ?? false;
+
     const exceptions = detectExceptions({
       state,
       latest,
@@ -616,6 +627,7 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
       toolkitAuthorizationStatus,
       lastActivityAt,
       readyForReview: candidate.ready_for_review,
+      designatedTestAccount,
       now: inputs.now,
     });
 
@@ -636,6 +648,7 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
       latestEvidenceByType: latest,
       decision,
       certification,
+      designatedTestAccount,
       profileRole: profile?.role ?? null,
       guideCertifiedAt: profile?.guide_certified_at ?? null,
       toolkitAuthorizationStatus,
@@ -655,7 +668,9 @@ export function buildCertificationOperationsRecords(inputs: RawInputs): Certific
  *  admin), for any future per-candidate surface. Not currently called by
  *  the admin list view (which batches, see lib/ops/certification-operations.ts)
  *  but kept so a candidate-count-of-one lookup never has to duplicate the
- *  batched query shape. */
+ *  batched query shape. It does not apply the designated-test-account
+ *  exemption (an RLS client cannot read other accounts' entitlements); use the
+ *  batched read for anything that decides what reaches Dorian. */
 export async function getCertificationOperationsRecordForCandidate(
   supabase: SupabaseClient,
   candidateId: string

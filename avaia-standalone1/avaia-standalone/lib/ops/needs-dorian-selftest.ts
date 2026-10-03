@@ -78,6 +78,7 @@ export async function pipelineChecks(): Promise<CheckResult[]> {
     decisions?: { host_id: string; decision: "certified" | "development_required" | "not_currently_eligible"; decision_date: string }[];
     certifications?: { candidate_id: string; host_id: string; standing: "active"; certified_at: string }[];
     toolkitFor?: string[];
+    testHosts?: string[];
   }) => {
     const records = buildCertificationOperationsRecords({
       candidates: inputs.candidates,
@@ -95,6 +96,7 @@ export async function pipelineChecks(): Promise<CheckResult[]> {
       progressRows: [],
       curriculumCounts: { lessonsTotal: 83, labsTotal: 15 },
       historyLastActivity: new Map<string, string>(),
+      designatedTestHostIds: new Set(inputs.testHosts ?? []),
       now,
     });
     return classifyCertificationRecords(records, label, now);
@@ -160,8 +162,36 @@ export async function pipelineChecks(): Promise<CheckResult[]> {
     });
     expect(gate.decisions.length === 1 && gate.decisions[0].key === "cert:gate:gate_waiting", "a not-yet-competent Boundary Gate should be exactly one decision item");
 
+    // Designated test account (active founder_test entitlement): a certification
+    // with no decision on file is NOT flagged for it, and nothing else is hidden.
+    const noDecisionCert = (id: string) => ({
+      candidates: [candidate(id, 40)],
+      certifications: [{ candidate_id: id, host_id: `host-${id}`, standing: "active" as const, certified_at: iso(10) }],
+      toolkitFor: [`host-${id}`],
+    });
+    const realMismatch = run(noDecisionCert("real"));
+    expect(realMismatch.problems.filter((p) => p.key === "cert:real:mismatch_no_decision").length === 1,
+      "a REAL Guide with a certification but no decision must still be flagged");
+    const testAccount = run({ ...noDecisionCert("testacct"), testHosts: ["host-testacct"] });
+    expect(testAccount.problems.length === 0 && testAccount.decisions.length === 0,
+      "the designated test account was flagged for a missing certification decision");
+    expect(testAccount.watching.some((w) => w.key === "cert:testacct:test_account"),
+      "the designated test account's exemption was not stated for visibility");
+    // The exemption is narrow: a test account's other conditions are still raised.
+    const testOverdue = run({
+      candidates: [candidate("testlate", 40)],
+      decisions: [{ host_id: "host-testlate", decision: "certified", decision_date: iso(10) }],
+      testHosts: ["host-testlate"],
+    });
+    expect(testOverdue.decisions.filter((d) => d.key === "cert:testlate:missing_certification").length === 1,
+      "the test-account exemption hid a different rule (missing certification record)");
+    // A test designation on a different host exempts nobody else.
+    const wrongHost = run({ ...noDecisionCert("other"), testHosts: ["host-someone-else"] });
+    expect(wrongHost.problems.some((p) => p.key === "cert:other:mismatch_no_decision"),
+      "exempting one account exempted another");
+
     // 5 (across everything): no two items anywhere share a key.
-    const all = [...ready.decisions, ...late.decisions, ...activation.decisions, ...gate.decisions, ...quiet.watching];
+    const all = [...ready.decisions, ...late.decisions, ...activation.decisions, ...gate.decisions, ...quiet.watching, ...realMismatch.problems, ...testAccount.watching];
     expect(new Set(all.map((i) => i.key)).size === all.length, "two items shared the same identity");
 
     // 2. One source -> both views. Build a snapshot with something in every bucket.

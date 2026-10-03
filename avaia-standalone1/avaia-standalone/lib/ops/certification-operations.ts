@@ -40,6 +40,7 @@ export async function getAllCertificationOperationsRecords(): Promise<Certificat
     { data: progressRows },
     { data: curriculumRows },
     { data: historyRows },
+    { data: testEntitlementRows },
   ] = await Promise.all([
     admin.from("guide_candidates").select("id, host_id, status, admitted_at, ready_for_review, ready_for_review_notes"),
     admin.from("guide_candidate_evidence").select("candidate_id, evidence_type, rating, recorded_by, recorded_at"),
@@ -50,6 +51,14 @@ export async function getAllCertificationOperationsRecords(): Promise<Certificat
     admin.from("certification_candidate_progress").select("candidate_id, item_key, status, last_touched_at"),
     admin.from("certification_curriculum_items").select("item_type"),
     admin.from("guide_candidate_history").select("candidate_id, recorded_at").order("recorded_at", { ascending: false }),
+    // Accounts Dorian designated as test accounts (active founder_test entitlement,
+    // same "active" meaning as lib/membership.ts).
+    admin
+      .from("entitlements")
+      .select("host_id")
+      .eq("source", "founder_test")
+      .eq("status", "active")
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
   ]);
 
   void curriculumRows;
@@ -78,5 +87,6 @@ export async function getAllCertificationOperationsRecords(): Promise<Certificat
       labsTotal: classroomCurriculumCounts().labsTotal,
     },
     historyLastActivity,
+    designatedTestHostIds: new Set(((testEntitlementRows ?? []) as { host_id: string }[]).map((r) => r.host_id)),
   });
 }
