@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { loadPolicy, addMonthsUtc } from "@/lib/certification-renewal";
 
 export const metadata = { title: "Guide Candidate, AVAIA Admin" };
 export const dynamic = "force-dynamic";
@@ -122,13 +123,17 @@ const DECISION_ERROR_MESSAGE: Record<string, string> = {
   insert_failed: "Could not record this certification decision. Please try again.",
 };
 
-const STANDINGS = ["active", "paused", "revoked"] as const;
+// 'inactive' (0082) is set by the Guide Operations agent when a 365-day
+// certification period ends without renewal, and cleared only by a
+// human-confirmed reactivation (see /admin/guide-certifications).
+const STANDINGS = ["active", "paused", "revoked", "inactive"] as const;
 type Standing = (typeof STANDINGS)[number];
 
 const STANDING_LABEL: Record<Standing, string> = {
   active: "Active",
   paused: "Paused",
   revoked: "Revoked",
+  inactive: "Inactive",
 };
 
 const CERTIFICATION_ERROR_MESSAGE: Record<string, string> = {
@@ -540,9 +545,41 @@ async function grantGuideCertification(formData: FormData) {
     .select("id")
     .eq("candidate_id", candidateId)
     .maybeSingle();
-  const { data: existingByHost } = existingByCandidate
-    ? { data: null }
-    : await supabase.from("guide_certifications").select("id").eq("host_id", candidate.host_id).maybeSingle();
+  // A Host's earlier certification only blocks a new one while it still
+  // stands. The one exception is an INACTIVE certification that has stayed
+  // inactive for the full reactivation window (RECERTIFICATION_REQUIRED): it
+  // can never be reactivated, so the human-governed process (a new candidacy,
+  // a recorded 'certified' decision, and this explicit grant) must be able to
+  // issue a NEW certification. The old row is left untouched as history.
+  let existingByHost: { id: string } | null = null;
+  if (!existingByCandidate) {
+    const { data: hostCertifications, error: hostCertError } = await supabase
+      .from("guide_certifications")
+      .select("id, standing, inactive_since")
+      .eq("host_id", candidate.host_id);
+    if (hostCertError) {
+      // Fail closed: if the renewal columns cannot be read (migration 0082
+      // not applied yet), fall back to the original rule, any certification
+      // for this Host blocks a new one.
+      const { data: anyByHost } = await supabase
+        .from("guide_certifications")
+        .select("id")
+        .eq("host_id", candidate.host_id)
+        .limit(1)
+        .maybeSingle();
+      existingByHost = anyByHost ?? null;
+    } else {
+      const windowMonths = (await loadPolicy(supabase)).reactivationWindowMonths;
+      const blocking = (hostCertifications ?? []).find((c) => {
+        const lapsedForGood =
+          c.standing === "inactive" &&
+          c.inactive_since &&
+          addMonthsUtc(new Date(c.inactive_since), windowMonths).getTime() <= Date.now();
+        return !lapsedForGood;
+      });
+      existingByHost = blocking ? { id: blocking.id } : null;
+    }
+  }
   if (existingByCandidate || existingByHost) {
     redirect(`/admin/guide-candidates/${candidateId}?certificationError=already_certified`);
   }
@@ -1635,6 +1672,14 @@ export default async function AdminGuideCandidateDetailPage({
                 <p className="mt-1 whitespace-pre-wrap text-ink">{certification.standing_notes}</p>
               </div>
             )}
+            <div className="mt-3 border-t border-rule pt-3">
+              <Link
+                href={`/admin/guide-certifications/${certification.id}`}
+                className="text-sm text-seal underline-offset-2 hover:underline"
+              >
+                Renewal cycle, continuing education &amp; reactivation →
+              </Link>
+            </div>
           </div>
         ) : null}
 

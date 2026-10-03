@@ -34,7 +34,20 @@ export default async function ToolkitLayout({ children }: { children: React.Reac
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
-  if (!(await isToolkitAuthorized(supabase, user.id))) redirect("/");
+  if (!(await isToolkitAuthorized(supabase, user.id))) {
+    // A person who holds a certification record (for instance one that has
+    // gone INACTIVE at the end of its 365-day period) is sent to the one
+    // page that explains where they stand and what renewal or reactivation
+    // needs, rather than silently bounced to the home page. Anyone with no
+    // certification at all is redirected exactly as before.
+    const { data: anyCertification } = await supabase
+      .from("guide_certifications")
+      .select("id")
+      .eq("host_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    redirect(anyCertification ? "/account#guide-certification" : "/");
+  }
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-16">

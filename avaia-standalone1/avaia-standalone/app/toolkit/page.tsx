@@ -9,6 +9,7 @@ import {
   isGuidedJourneyFacilitationAuthorized,
   type GuideParticipant,
 } from "@/lib/guide";
+import { loadStatusForHost, formatDateLabel } from "@/lib/certification-renewal";
 import { TOOL_REGISTRY, toolLabel } from "@/lib/toolkit";
 import { deleteYouthParticipantData } from "@/lib/youth-data-deletion";
 import { UNSUNG_HEROES_PATH_LABEL, type UnsungHeroesPath } from "@/lib/engine/prompts";
@@ -164,6 +165,12 @@ export default async function ToolkitDashboardPage() {
   // to show the link-out below, not the actual invitation list.
   const guidedJourneyFacilitationAuthorized = await isGuidedJourneyFacilitationAuthorized(supabase, user.id);
 
+  // The Guide's own certification period at a glance (null when the renewal
+  // tables aren't available yet, in which case nothing is shown). The full
+  // breakdown lives on /account, which stays reachable if a certification
+  // ever goes inactive and this Toolkit does not.
+  const certificationStatus = await loadStatusForHost(supabase, user.id);
+
   return (
     <div>
       <p className="label mb-3">Guide Dashboard</p>
@@ -172,6 +179,25 @@ export default async function ToolkitDashboardPage() {
         Begin a session with someone new, continue an existing one, or explore what&rsquo;s
         available in the Toolkit below.
       </p>
+
+      {certificationStatus && certificationStatus.cycleEndsAt && (
+        <Link
+          href="/account#guide-certification"
+          className="mt-6 block rounded-lg border border-rule bg-white/[0.04] px-5 py-3 transition-colors hover:border-seal"
+        >
+          <p className="label text-muted">Your certification</p>
+          <p className="mt-1 text-sm text-ink">
+            Current period ends {formatDateLabel(certificationStatus.cycleEndsAt)}
+            {certificationStatus.daysRemaining !== null && certificationStatus.daysRemaining > 0
+              ? `, ${certificationStatus.daysRemaining} day${certificationStatus.daysRemaining === 1 ? "" : "s"} remaining`
+              : ""}
+            {" · "}Continuing education {certificationStatus.ce.approvedInPeriod} of{" "}
+            {certificationStatus.ce.requiredCredits} credits
+            {certificationStatus.renewal.allMet ? " · Renewal requirements complete" : ""}
+          </p>
+          <p className="mt-1 text-xs text-muted">See your full status →</p>
+        </Link>
+      )}
 
       {/* Start a new session */}
       <section className="rule-t mt-14 border-t border-rule pt-8">

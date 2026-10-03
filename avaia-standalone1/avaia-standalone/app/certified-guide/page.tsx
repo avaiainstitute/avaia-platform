@@ -178,15 +178,15 @@ export default function CertifiedGuidePage() {
             boundary work, and practicum.
           </p>
           <p className="mt-4 text-ink">
-            <span className="font-serif text-lg">$4,500.</span> The current program investment.
-            Payment may be made in full, or through an installment arrangement, reach out to ask
-            about current options.
+            <span className="font-serif text-lg">Admission is by AVAIA&rsquo;s review.</span> There is
+            no instant enrollment or pay-to-join step. If you are interested in the Guide pathway,
+            reach out and AVAIA will talk with you about it directly.
           </p>
           <Link
-            href="/certified-guide/enroll"
+            href="/contact?reason=certification"
             className="mt-5 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
-            Enroll &amp; Pay in Full
+            Contact AVAIA About the Guide Pathway
           </Link>
         </div>
       </section>

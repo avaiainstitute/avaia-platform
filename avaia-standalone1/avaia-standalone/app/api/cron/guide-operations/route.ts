@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
-import { recordGuideOperationsReminders } from "@/lib/ops/guide-operations";
+import {
+  recordGuideOperationsReminders,
+  runCertificationLifecycle,
+  type CertificationLifecycleResult,
+} from "@/lib/ops/guide-operations";
 import { sendEmail } from "@/lib/resend";
-import { guideOperationsWaitingNotificationEmailHtml } from "@/lib/ops/emails";
+import {
+  guideOperationsWaitingNotificationEmailHtml,
+  certificationRenewalReminderEmailHtml,
+} from "@/lib/ops/emails";
 import { recordCronRun } from "@/lib/ops/cron-runs";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { describeEthics, describePayment, formatDateLabel } from "@/lib/certification-renewal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,13 +59,52 @@ export async function GET(request: Request) {
       });
     });
 
+    // Certification lifecycle (renewal cycle, Active -> Inactive, renewal
+    // reminders to the Guide). Isolated in its own try/catch so a problem
+    // here (for instance migration 0082 not yet applied) can never take down
+    // the pipeline reminders above, which already ran.
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://avaiainstitute.com";
+    let certification: CertificationLifecycleResult | { error: string };
+    try {
+      certification = await runCertificationLifecycle(async (item) => {
+        const { data: userData } = await admin.auth.admin.getUserById(item.hostId);
+        const guideEmail = userData?.user?.email;
+        // Throw rather than silently skip: a thrown send is treated as "not
+        // actually sent" and retried on the next run.
+        if (!guideEmail) throw new Error("No email address on file for this Guide.");
+
+        const s = item.status;
+        await sendEmail({
+          to: guideEmail,
+          subject: `Your AVAIA Guide certification period ends in ${s.daysRemaining ?? item.daysBefore} days`,
+          html: certificationRenewalReminderEmailHtml({
+            daysRemaining: s.daysRemaining ?? item.daysBefore,
+            expiresOn: formatDateLabel(s.cycleEndsAt),
+            ceApproved: s.ce.approvedInPeriod,
+            ceRequired: s.ce.requiredCredits,
+            ethicsLine: describeEthics(s),
+            paymentLine: describePayment(s),
+            statusUrl: `${siteUrl}/account#guide-certification`,
+          }),
+          context: "certification_renewal_reminder",
+        });
+      });
+    } catch (err) {
+      certification = { error: err instanceof Error ? err.message : String(err) };
+      console.error("[guide-operations] certification lifecycle failed", err);
+    }
+    const certificationProblem =
+      "error" in certification ||
+      certification.remindersFailed > 0 ||
+      certification.errors.length > 0;
+
     await recordCronRun({
       cronName: "guide-operations",
       startedAt,
-      status: result.failed > 0 ? "partial" : "success",
-      detail: result,
+      status: result.failed > 0 || certificationProblem ? "partial" : "success",
+      detail: { ...result, certification },
     });
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, ...result, certification });
   } catch (err) {
     await recordCronRun({
       cronName: "guide-operations",

@@ -1291,7 +1291,7 @@ create policy "experience sections admin all"
   with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 -- ---------------------------------------------------------------------------
--- guide_certification_payments -- $4,500 Certified Guide Program payment
+-- guide_certification_payments -- LEGACY $4,500 Certified Guide Program payment (that path is now closed; table kept as history)
 -- record (added alongside migrations 0060-0062). NOTE: schema.sql was
 -- already missing the guide_candidates/guide_certifications/
 -- guide_platform_authorizations/guide_candidate_evidence/

@@ -55,6 +55,11 @@ const ADMIN_SECTIONS: AdminSection[] = [
     description: "Review and admit Guide candidates.",
   },
   {
+    href: "/admin/guide-certifications",
+    label: "Guide Certifications",
+    description: "Renewal periods, continuing education, the renewal fee, inactive Guides, and reactivation. You confirm every renewal.",
+  },
+  {
     href: "/admin/library",
     label: "Library Content",
     description: "Manage AVAIA Living Library entries.",

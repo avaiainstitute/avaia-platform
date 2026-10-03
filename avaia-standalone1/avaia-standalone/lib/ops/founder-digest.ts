@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getHostOnboardingSnapshot } from "@/lib/ops/host-onboarding";
-import { getGuideOperationsSnapshot } from "@/lib/ops/guide-operations";
+import { getGuideOperationsSnapshot, getCertificationOpsSnapshot } from "@/lib/ops/guide-operations";
 import { getPinkAvaiaConnections } from "@/lib/ops/pink-avaia-connection";
 import { getLatestCheckProblems } from "@/lib/ops/system-checks";
 import { getCronHealthIssues } from "@/lib/ops/cron-runs";
@@ -201,6 +201,18 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     .then((r) => r.stalled)
     .catch(() => []);
 
+  // Certification renewal lifecycle (365-day cycle, CE, Inactive,
+  // reactivation). Only what genuinely needs Dorian goes in NEEDS DORIAN: a
+  // renewal or reactivation ready for his confirmation, a recertification
+  // that can only go through the human-governed process, or an owner
+  // decision blocking one. Everything else is visibility. Read-only; the
+  // catch keeps a not-yet-applied migration from taking the digest down.
+  const certificationOps = await getCertificationOpsSnapshot().catch(() => ({
+    needsDorian: [] as string[],
+    waiting: [] as string[],
+    lapsedLast24h: 0,
+  }));
+
   // Audit finding #1.2: count only -- every caller already logs its own
   // context via console.error too, this is just the one place that count
   // becomes visible without needing to go looking in Vercel's own logs.
@@ -218,6 +230,11 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     `${pinkContactCount ?? 0} new Pink Shoelace contact form submission(s) in the last 24 hours.`,
     `${pinkParticipationCount ?? 0} new Pink Shoelace participation-interest submission(s) in the last 24 hours.`,
     `${experienceInquiryCount ?? 0} new AVAIA Programs & Experiences inquiry/inquiries in the last 24 hours.`,
+    ...(certificationOps.lapsedLast24h > 0
+      ? [
+          `${certificationOps.lapsedLast24h} Guide certification(s) became inactive in the last 24 hours (their 365-day period ended without renewal; records and authorization history are preserved).`,
+        ]
+      : []),
     `Journey funnel right now -- new: ${hostOnboarding.stateCounts.new_host}, mid-IAP: ${hostOnboarding.stateCounts.iap_started}, at the membership gate: ${hostOnboarding.stateCounts.cat_eligible}, mid-CAT: ${hostOnboarding.stateCounts.cat_started}, mid-InnerCompass: ${hostOnboarding.stateCounts.innercompass_started}, completed: ${hostOnboarding.stateCounts.journey_completed}.`,
   ];
 
@@ -231,6 +248,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
     "Stripe subscription state is checked against AVAIA's own access records daily -- an entitlement that should have ended is revoked automatically; anything else is only ever surfaced, never auto-granted.",
     "Guardian consents that stall are reminded to the owning Guide automatically, rate-limited so nobody is chased more than once every two weeks.",
     "An unaccepted Family Membership invitation is reminded directly to the invited person automatically, rate-limited the same way.",
+    "Certified Guides are reminded automatically at 90, 60, 30, 14, and 7 days before their individual 365-day certification period ends. A period that ends without every renewal requirement met moves the certification to inactive automatically (never deleted); nothing is ever renewed, reactivated, or recertified automatically.",
   ];
 
   const opportunities: string[] = [];
@@ -282,6 +300,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       waiting.push(`An active certification has been waiting ${item.sinceDays} day(s) for Toolkit authorization.`);
     }
   }
+  waiting.push(...certificationOps.waiting);
   for (const c of pinkAvaiaConnections) {
     waiting.push(
       `Pink Shoelace <> AVAIA connection: ${c.pinkName} (${c.pinkEmail}) appears in both Pink Shoelace and AVAIA -- for visibility only, no automatic action taken.`
@@ -361,6 +380,7 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
       `Guide candidate ready for certification review (Host ${c.host_id})${c.ready_for_review_notes ? ` -- ${c.ready_for_review_notes}` : "."}`
     );
   }
+  needsDorian.push(...certificationOps.needsDorian);
   // Round 4: Website/Journey/Shared Room Watchers + Testing/QC.
   for (const p of checkProblems) {
     needsDorian.push(`${p.label}${p.detail ? ` -- ${p.detail}` : ""} (${p.category.replace(/_/g, " ")}).`);

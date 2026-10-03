@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import type { GuideCertificationView } from "@/lib/certification-status-view";
 
 /**
  * The safe migration path for AVAIA's existing passwordless Hosts (item 5
@@ -35,6 +36,7 @@ export default function AccountPage() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [family, setFamily] = useState<FamilyStatus>({ kind: "none" });
+  const [certification, setCertification] = useState<GuideCertificationView | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -69,6 +71,20 @@ export default function AccountPage() {
           .eq("status", "active")
           .maybeSingle();
         if (myMembership) setFamily({ kind: "member", ownerEmail: null });
+      }
+
+      // A Certified Guide's own certification status (renewal period, CE,
+      // Ethics, renewal fee). Lives here because this page stays reachable
+      // when a certification is inactive and the Toolkit is not. Anyone
+      // without a certification gets { status: null } and sees nothing.
+      try {
+        const res = await fetch("/api/guide/certification-status");
+        if (res.ok) {
+          const body = (await res.json()) as { status: GuideCertificationView | null };
+          setCertification(body.status ?? null);
+        }
+      } catch {
+        // The certification section is simply omitted if this can't load.
       }
 
       setLoading(false);
@@ -120,6 +136,76 @@ export default function AccountPage() {
       <p className="mt-4 text-lg text-muted">
         Signed in as <span className="text-ink">{email}</span>.
       </p>
+
+      {certification && (
+        <section
+          id="guide-certification"
+          className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm"
+        >
+          <p className="label mb-2 text-muted">Certified AVAIA Guide</p>
+          <p className="font-serif text-xl text-ink">{certification.lifecycleLabel}</p>
+          <dl className="mt-4 space-y-3 text-sm">
+            <div>
+              <dt className="label text-muted">Certified</dt>
+              <dd className="mt-1 text-ink">{certification.certifiedOn}</dd>
+            </div>
+            {certification.inactive ? (
+              <div>
+                <dt className="label text-muted">Inactive for</dt>
+                <dd className="mt-1 text-ink">
+                  {certification.inactive.monthsInactive} month{certification.inactive.monthsInactive === 1 ? "" : "s"}
+                  {certification.inactive.windowOpen
+                    ? `, reactivation available until ${certification.inactive.reactivationWindowEndsOn}`
+                    : `, the reactivation window ended ${certification.inactive.reactivationWindowEndsOn}`}
+                </dd>
+              </div>
+            ) : (
+              certification.periodEndsOn && (
+                <div>
+                  <dt className="label text-muted">Current period ends</dt>
+                  <dd className="mt-1 text-ink">
+                    {certification.periodEndsOn}
+                    {certification.daysRemaining !== null &&
+                      (certification.daysRemaining > 0
+                        ? `, ${certification.daysRemaining} day${certification.daysRemaining === 1 ? "" : "s"} remaining`
+                        : ", the period has ended")}
+                  </dd>
+                </div>
+              )
+            )}
+            <div>
+              <dt className="label text-muted">Continuing education this period</dt>
+              <dd className="mt-1 text-ink">
+                {certification.ce.approved} of {certification.ce.required} approved credits
+                {certification.ce.pending > 0 ? ` (${certification.ce.pending} more awaiting approval)` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt className="label text-muted">Ethics</dt>
+              <dd className="mt-1 text-ink">{certification.ethicsText}</dd>
+            </div>
+            <div>
+              <dt className="label text-muted">{certification.inactive ? "Reactivation fee" : "Renewal fee"}</dt>
+              <dd className="mt-1 text-ink">{certification.paymentText}</dd>
+            </div>
+          </dl>
+          {certification.nextSteps.length > 0 && (
+            <div className="mt-4 border-t border-rule pt-4">
+              <p className="label mb-2 text-muted">What is needed</p>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+                {certification.nextSteps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <p className="mt-4 text-xs text-muted">
+            Renewal needs all of it, approved continuing education, any required Ethics coursework, the
+            annual fee, and good standing. Any one of these alone is not renewal, and AVAIA confirms every
+            renewal. A certification that is not renewed becomes inactive, it is never deleted.
+          </p>
+        </section>
+      )}
 
       {family.kind === "owner" && (
         <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">

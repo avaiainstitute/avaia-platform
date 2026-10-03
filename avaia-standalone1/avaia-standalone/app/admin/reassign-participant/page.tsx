@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isToolkitAuthorized } from "@/lib/guide";
 
 export const metadata = { title: "Reassign Participant, Admin, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -48,18 +49,12 @@ async function reassignParticipant(formData: FormData) {
 
   const admin = createAdminClient();
 
-  // Re-verify the target actually holds toolkit authorization right now,
-  // never trust a hidden form field alone for who receives someone's
-  // private record.
-  const { data: targetAuth } = await admin
-    .from("guide_platform_authorizations")
-    .select("id")
-    .eq("host_id", newGuideId)
-    .eq("capability", "toolkit")
-    .eq("status", "authorized")
-    .maybeSingle();
-  if (!targetAuth) {
-    redirect(`/admin/reassign-participant?q=${encodeURIComponent(q)}&error=${encodeURIComponent("Target is not a currently toolkit-authorized Guide.")}`);
+  // Re-verify the target actually holds toolkit authorization AND an
+  // active certification right now (an inactive Guide must not receive
+  // someone's private record), never trust a hidden form field alone for
+  // who receives it.
+  if (!(await isToolkitAuthorized(admin, newGuideId))) {
+    redirect(`/admin/reassign-participant?q=${encodeURIComponent(q)}&error=${encodeURIComponent("Target is not a currently toolkit-authorized, actively certified Guide.")}`);
   }
 
   const { error } = await admin
@@ -117,6 +112,9 @@ export default async function AdminReassignParticipantPage({
     .eq("status", "authorized");
   const guideOptions: GuideOption[] = [];
   for (const row of authRows ?? []) {
+    // Only actively certified Guides are legitimate targets; an inactive
+    // Guide keeps their authorization row (history) but is not offered.
+    if (!(await isToolkitAuthorized(admin, row.host_id))) continue;
     const { data: u } = await admin.auth.admin.getUserById(row.host_id);
     guideOptions.push({ id: row.host_id, email: u?.user?.email ?? null });
   }

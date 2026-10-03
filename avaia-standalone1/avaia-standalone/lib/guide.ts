@@ -27,49 +27,63 @@ export async function isGuide(supabase: SupabaseClient, userId: string): Promise
 }
 
 /** True if this Host currently holds an active Toolkit platform
- *  authorization (Phase D), mirrors isMember() (lib/membership.ts)
- *  exactly: one small, live-checked table, no caching, no role fallback.
- *  This is now the real Toolkit authorization source (see
+ *  authorization (Phase D) AND an ACTIVE Guide certification. Mirrors
+ *  isMember() (lib/membership.ts): small, live-checked tables, no caching,
+ *  no role fallback. This is the real Toolkit authorization source (see
  *  app/toolkit/layout.tsx), profiles.role = 'guide' alone is no longer
- *  sufficient to reach the Toolkit. Certification (guide_certifications)
- *  is a separate institutional fact this function never reads; whether a
- *  host was ever grantable in the first place was already enforced at
- *  grant time (Phase D.2), not re-checked here. */
+ *  sufficient to reach the Toolkit.
+ *
+ *  Certification is now read here too (it was not, originally): a
+ *  certification can become INACTIVE (see lib/certification-renewal.ts,
+ *  migration 0082) when a Guide's 365-day period ends without renewal, and
+ *  an inactive Guide must not occupy the active Guide seat. The
+ *  authorization row itself is deliberately left alone when that happens,
+ *  earned Program Authorization history stays attached to the Guide, it is
+ *  simply not honored while certification is not active, and honored again
+ *  the moment certification is active again. Whether a host was grantable
+ *  in the first place is still enforced at grant time (Phase D.2). */
 export async function isToolkitAuthorized(supabase: SupabaseClient, userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("guide_platform_authorizations")
-    .select("id")
-    .eq("host_id", userId)
-    .eq("capability", "toolkit")
-    .eq("status", "authorized")
-    .limit(1)
-    .maybeSingle();
-  return data !== null;
+  const [authorization, certified] = await Promise.all([
+    supabase
+      .from("guide_platform_authorizations")
+      .select("id")
+      .eq("host_id", userId)
+      .eq("capability", "toolkit")
+      .eq("status", "authorized")
+      .limit(1)
+      .maybeSingle(),
+    isActivelyCertified(supabase, userId),
+  ]);
+  return authorization.data !== null && certified;
 }
 
 /** True if this Guide currently holds an active Guided Journey
- *  Facilitation platform authorization (Phase E.1), same shape as
- *  isToolkitAuthorized() above, deliberately not reused for it: Toolkit
- *  and Guided Journey Facilitation are independent capabilities, and this
- *  is never a substitute for the other. Used to gate app/guided-journeys/
- *  (its own route, deliberately separate from /toolkit, see that
- *  layout's comment) and for the small link-out shown on /toolkit itself.
- *  The actual data access on journeys/conversations/messages/referrals is
- *  enforced by RLS itself (see 0029_guide_journey_read_access.sql), not by
- *  this function. */
+ *  Facilitation platform authorization (Phase E.1) AND an active Guide
+ *  certification, same shape as isToolkitAuthorized() above, deliberately
+ *  not reused for it: Toolkit and Guided Journey Facilitation are
+ *  independent capabilities, and this is never a substitute for the other.
+ *  Used to gate app/guided-journeys/ (its own route, deliberately separate
+ *  from /toolkit, see that layout's comment) and for the small link-out
+ *  shown on /toolkit itself. The actual data access on journeys/
+ *  conversations/messages/referrals is enforced by RLS itself (see
+ *  0029_guide_journey_read_access.sql, which already required an active
+ *  certification), not by this function. */
 export async function isGuidedJourneyFacilitationAuthorized(
   supabase: SupabaseClient,
   userId: string
 ): Promise<boolean> {
-  const { data } = await supabase
-    .from("guide_platform_authorizations")
-    .select("id")
-    .eq("host_id", userId)
-    .eq("capability", "guided_journey_facilitation")
-    .eq("status", "authorized")
-    .limit(1)
-    .maybeSingle();
-  return data !== null;
+  const [authorization, certified] = await Promise.all([
+    supabase
+      .from("guide_platform_authorizations")
+      .select("id")
+      .eq("host_id", userId)
+      .eq("capability", "guided_journey_facilitation")
+      .eq("status", "authorized")
+      .limit(1)
+      .maybeSingle(),
+    isActivelyCertified(supabase, userId),
+  ]);
+  return authorization.data !== null && certified;
 }
 
 /** True if this Guide's guide_certifications standing is currently

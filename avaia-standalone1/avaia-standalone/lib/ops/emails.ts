@@ -62,6 +62,47 @@ export function guideOperationsWaitingNotificationEmailHtml({
   `.trim();
 }
 
+/** Renewal reminder to the Guide themselves (90/60/30/14/7 days before
+ *  their individual 365-day certification period ends). Shows only the
+ *  Guide's own certification standing -- expiration, days remaining, CE
+ *  progress, Ethics, renewal payment -- never Host, Journey, or participant
+ *  content. Nothing here renews anything or implies renewal is automatic:
+ *  payment alone and CE alone are each not renewal, and a human confirms it. */
+export function certificationRenewalReminderEmailHtml({
+  daysRemaining,
+  expiresOn,
+  ceApproved,
+  ceRequired,
+  ethicsLine,
+  paymentLine,
+  statusUrl,
+}: {
+  daysRemaining: number;
+  expiresOn: string;
+  ceApproved: number;
+  ceRequired: number;
+  ethicsLine: string;
+  paymentLine: string;
+  statusUrl: string;
+}): string {
+  return `
+    <h2>Your AVAIA Certified Guide period ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}</h2>
+    <p>Your current 365-day certification period ends on <strong>${escapeHtml(expiresOn)}</strong>.
+    To stay actively certified for the next period, three things all need to be complete before then:
+    your approved continuing education credits, any required Ethics coursework, and the annual
+    renewal fee. Any one of them on its own is not renewal.</p>
+    <ul>
+      <li><strong>Continuing education:</strong> ${ceApproved} of ${ceRequired} approved credits this period</li>
+      <li><strong>Ethics:</strong> ${escapeHtml(ethicsLine)}</li>
+      <li><strong>Renewal fee:</strong> ${escapeHtml(paymentLine)}</li>
+    </ul>
+    <p><a href="${statusUrl}">See your full certification status</a></p>
+    <p style="color:#888">If your period ends without renewal, your certification is not deleted. It
+    becomes inactive, your record and any Program Authorization history are kept, and it can be
+    reactivated within five years. While inactive, the Guide Toolkit is not available.</p>
+  `.trim();
+}
+
 /** Mirrors the original invite email's own copy and accept-link shape
  *  (app/api/family/invite/route.ts) -- same destination, same tone, just
  *  a reminder rather than the first ask. */
