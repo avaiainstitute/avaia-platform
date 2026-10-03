@@ -8,6 +8,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const STALL_DAYS = Number(process.env.ONBOARDING_STALL_DAYS ?? 4);
 const REMINDER_COOLDOWN_DAYS = Number(process.env.ONBOARDING_REMINDER_COOLDOWN_DAYS ?? 14);
 
+/** Thrown by a reminder sender when the person has no email address on their
+ *  account (for example someone who started the free IAP without saving an
+ *  email). That is not a failure of the system: there is simply nobody to
+ *  write to. It is counted as "unreachable", kept visible in the job's
+ *  recorded detail, and never raises an alert. A real send failure (the email
+ *  service rejecting a message) is still counted as a failure. */
+export class NoEmailOnFileError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NoEmailOnFileError";
+  }
+}
+
 export type HostOnboardingState =
   | "new_host"
   | "iap_started"
@@ -105,13 +118,14 @@ export async function getHostOnboardingSnapshot(): Promise<{
 
 export async function sendStalledOnboardingReminders(
   sendFn: (hostId: string, reminderType: ReminderType) => Promise<void>
-): Promise<{ sent: number; skippedCooldown: number; failed: number }> {
+): Promise<{ sent: number; skippedCooldown: number; failed: number; unreachable: number }> {
   const admin = createAdminClient();
   const { stalledHosts } = await getHostOnboardingSnapshot();
 
   let sent = 0;
   let skippedCooldown = 0;
   let failed = 0;
+  let unreachable = 0;
 
   for (const { hostId, reminderType } of stalledHosts) {
     const { data: lastReminder } = await admin
@@ -139,6 +153,12 @@ export async function sendStalledOnboardingReminders(
     try {
       await sendFn(hostId, reminderType);
     } catch (err) {
+      if (err instanceof NoEmailOnFileError) {
+        // Nobody to write to; not a failure. Retried (cheaply) each run in case
+        // the person later saves an email, and recorded in the job detail.
+        unreachable += 1;
+        continue;
+      }
       failed += 1;
       console.error("[host-onboarding] reminder send failed", {
         hostId,
@@ -151,5 +171,5 @@ export async function sendStalledOnboardingReminders(
     sent += 1;
   }
 
-  return { sent, skippedCooldown, failed };
+  return { sent, skippedCooldown, failed, unreachable };
 }

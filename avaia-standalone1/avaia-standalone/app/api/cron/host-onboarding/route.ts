@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
-import { sendStalledOnboardingReminders } from "@/lib/ops/host-onboarding";
+import { sendStalledOnboardingReminders, NoEmailOnFileError } from "@/lib/ops/host-onboarding";
 import { sendEmail } from "@/lib/resend";
 import { hostOnboardingReminderEmailHtml } from "@/lib/ops/emails";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       const email = userData?.user?.email;
       // Throw rather than silently no-op -- see the matching comment in
       // sendStalledOnboardingReminders for why this matters.
-      if (!email) throw new Error(`Host ${hostId} has no email on file.`);
+      if (!email) throw new NoEmailOnFileError(`Host ${hostId} has no email on file.`);
 
       await sendEmail({
         to: email,
