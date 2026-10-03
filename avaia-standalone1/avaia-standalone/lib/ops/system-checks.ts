@@ -45,16 +45,29 @@ async function fetchStatus(url: string): Promise<{ ok: boolean; status: number |
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    // Follow redirects to the final answer. The canonical address is
-    // www.avaiainstitute.com and the bare domain redirects to it (HTTP 308); a
-    // check that stops at that redirect would call every route "unexpected".
-    // Following also means a real redirect LOOP (the August 2026 incident) now
-    // fails the check instead of slipping past it.
-    const res = await fetch(url, { method: "GET", redirect: "follow", signal: controller.signal });
-    // A 2xx/3xx (including an intentional sign-in redirect on a gated page)
-    // counts as "the route is alive and responding as designed." Only a
-    // 5xx, or no response at all, is treated as a real operational problem.
-    return { ok: res.status < 500, status: res.status, error: null };
+    // Follow redirects ourselves, hop by hop, to the final answer. The
+    // canonical address is www.avaiainstitute.com and the bare domain
+    // redirects to it (HTTP 308); a check that stopped at that redirect would
+    // call every route "unexpected". Doing it explicitly (rather than trusting
+    // the runtime's default) also bounds a redirect LOOP, such as the August
+    // 2026 incident, so it fails the check instead of passing it.
+    let current = url;
+    for (let hop = 0; hop < 6; hop++) {
+      const res = await fetch(current, { method: "GET", redirect: "manual", signal: controller.signal });
+      const location = res.headers.get("location");
+      if (res.status >= 300 && res.status < 400 && location && hop < 5) {
+        current = new URL(location, current).toString();
+        continue;
+      }
+      if (res.status >= 300 && res.status < 400 && location) {
+        return { ok: false, status: res.status, error: "too many redirects" };
+      }
+      // A 2xx/3xx (including an intentional sign-in redirect on a gated page)
+      // counts as "the route is alive and responding as designed." Only a
+      // 5xx, or no response at all, is treated as a real operational problem.
+      return { ok: res.status < 500, status: res.status, error: null };
+    }
+    return { ok: false, status: null, error: "too many redirects" };
   } catch (e: any) {
     return { ok: false, status: null, error: e?.name === "AbortError" ? "timed out" : String(e?.message ?? e) };
   } finally {
