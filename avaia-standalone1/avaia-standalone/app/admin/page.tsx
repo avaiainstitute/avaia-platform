@@ -27,7 +27,7 @@ const ADMIN_SECTIONS: AdminSection[] = [
   {
     href: "/admin/inquiries",
     label: "Inquiries",
-    description: "Every open AVAIA and Pink Shoelace contact/participation submission -- acknowledge or resolve to stop the daily repeat.",
+    description: "Every open AVAIA contact submission -- acknowledge or resolve to stop the daily repeat.",
   },
   {
     href: "/admin/opportunities",

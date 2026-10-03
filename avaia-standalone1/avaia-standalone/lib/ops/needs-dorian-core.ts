@@ -79,11 +79,10 @@ export type NeedsDorianSnapshot = {
 const bucket = (items: NeedsItem[]): NeedsBucket => ({ count: items.length, items });
 
 export const AUTOMATIC_SUMMARY: string[] = [
-  "Every new AVAIA and Pink Shoelace form submission is saved and acknowledged automatically.",
+  "Every new AVAIA form submission is saved and acknowledged automatically.",
   "Routine submissions (no flagged review needed) receive an automatic reply -- nothing further is required.",
   "Hosts who stall mid-conversation receive a gentle, rate-limited reminder automatically (no more than one per stage per reminder window).",
-  "Pink Shoelace contact messages that read as a partnership or volunteer/donate inquiry automatically open a trackable follow-up record.",
-  "Partnership, donor/sponsor, Programs & Experiences, and speaking/conference prospects are researched automatically once a week -- never contacted automatically, only discovered and described for your review.",
+  "Partnership, Programs & Experiences, and speaking/conference prospects are researched automatically once a week -- never contacted automatically, only discovered and described for your review.",
   "The website, Journey, Shared Room, database, scheduled jobs, and the live deployment are checked automatically every six hours -- you only hear about it when something needs your attention.",
   "Stripe subscription state is checked against AVAIA's own access records daily -- an entitlement that should have ended is revoked automatically; anything else is only ever surfaced, never auto-granted.",
   "Guardian consents that stall are reminded to the owning Guide automatically, rate-limited so nobody is chased more than once every two weeks.",

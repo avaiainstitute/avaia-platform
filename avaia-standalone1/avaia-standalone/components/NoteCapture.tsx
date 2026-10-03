@@ -43,11 +43,22 @@ const EXPERIENCE_OPTIONS = [
 
 type Kind = (typeof KIND_OPTIONS)[number]["value"];
 
-export default function NoteCapture({ saveAction }: { saveAction: (formData: FormData) => void }) {
+export default function NoteCapture({
+  saveAction,
+  scope = "avaia",
+}: {
+  saveAction: (formData: FormData) => void;
+  /** Which organization this note belongs to; limits the category choices. */
+  scope?: "avaia" | "pink";
+}) {
+  const categoryOptions =
+    scope === "pink"
+      ? CATEGORY_OPTIONS.filter((c) => c.value === "pink_shoelace")
+      : CATEGORY_OPTIONS.filter((c) => c.value !== "pink_shoelace");
   const [kind, setKind] = useState<Kind>("idea");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(scope === "pink" ? "pink_shoelace" : "");
   const [personName, setPersonName] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
@@ -96,6 +107,7 @@ export default function NoteCapture({ saveAction }: { saveAction: (formData: For
 
   return (
     <form action={saveAction} className="space-y-3 rounded-lg border border-rule bg-white/[0.04] p-5">
+      <input type="hidden" name="scope" value={scope} />
       <div className="flex flex-wrap gap-2">
         {KIND_OPTIONS.map((k) => (
           <button
@@ -166,7 +178,7 @@ export default function NoteCapture({ saveAction }: { saveAction: (formData: For
         <div>
           <label className="label mb-1 block text-xs">Category</label>
           <select name="category" value={category} onChange={(e) => setCategory(e.target.value)} className={fieldClass}>
-            {CATEGORY_OPTIONS.map((c) => (
+            {categoryOptions.map((c) => (
               <option key={c.value} value={c.value} className="bg-[#05060b] text-ink">
                 {c.label}
               </option>

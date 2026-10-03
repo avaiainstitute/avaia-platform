@@ -77,3 +77,33 @@ export function pinkParticipationNotificationEmailHtml({
     ${note ? `<p><strong>Note:</strong></p><p style="white-space:pre-wrap">${escapeHtml(note)}</p>` : ""}
   `.trim();
 }
+
+/** The Pink Shoelace Foundation's own daily summary. Separate from AVAIA's
+ *  Founder Digest: nothing about AVAIA appears here. */
+export function pinkDailySummaryEmailHtml({
+  dateLabel,
+  whatHappened,
+  needs,
+  opportunities,
+}: {
+  dateLabel: string;
+  whatHappened: string[];
+  needs: string[];
+  opportunities: string[];
+}): string {
+  const section = (title: string, lines: string[], emptyLabel: string) => `
+    <h2 style="margin-bottom:4px">${escapeHtml(title)}</h2>
+    ${
+      lines.length
+        ? `<ul style="margin-top:4px">${lines.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>`
+        : `<p style="color:#888;margin-top:4px">${escapeHtml(emptyLabel)}</p>`
+    }
+  `;
+  return `
+    <h1>Pink Shoelace Foundation -- Daily Summary</h1>
+    <p style="color:#888">${escapeHtml(dateLabel)}</p>
+    ${section("WHAT HAPPENED", whatHappened, "Nothing new since the last summary.")}
+    ${section("OPPORTUNITIES", opportunities, "No new research-found opportunities today.")}
+    ${section("WHAT NEEDS ATTENTION", needs, "Nothing needs your attention today.")}
+  `.trim();
+}

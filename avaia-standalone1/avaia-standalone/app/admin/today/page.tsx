@@ -109,7 +109,7 @@ export default async function WhatNeedsDorianPage() {
           ← Back to Admin
         </Link>
       </p>
-      <p className="label mb-3">AVAIA + Pink Shoelace Admin</p>
+      <p className="label mb-3">AVAIA Admin</p>
       <h1 className="font-serif text-4xl text-ink">What Needs Dorian Today</h1>
       <p className="mt-4 text-lg text-muted">
         {snapshot.totalNeeded === 0

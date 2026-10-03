@@ -148,8 +148,8 @@ async function qualityChecks(): Promise<CheckResult[]> {
     postOnlyRouteExistsCheck("route_stripe_webhook_exists", "Stripe webhook endpoint is deployed", `${AVAIA_SITE}/api/stripe/webhook`),
     postOnlyRouteExistsCheck("route_contact_exists", "AVAIA contact form endpoint is deployed", `${AVAIA_SITE}/api/contact`),
     postOnlyRouteExistsCheck("route_experiences_inquiry_exists", "Experiences inquiry endpoint is deployed", `${AVAIA_SITE}/api/experiences/inquiry`),
-    postOnlyRouteExistsCheck("route_pink_participation_exists", "Pink participation endpoint is deployed", `${AVAIA_SITE}/api/pink/participation`),
-    postOnlyRouteExistsCheck("route_pink_contact_exists", "Pink contact endpoint is deployed", `${AVAIA_SITE}/api/pink/contact`),
+    postOnlyRouteExistsCheck("pink_route_participation_exists", "Pink participation endpoint is deployed", `${AVAIA_SITE}/api/pink/participation`),
+    postOnlyRouteExistsCheck("pink_route_contact_exists", "Pink contact endpoint is deployed", `${AVAIA_SITE}/api/pink/contact`),
   ]);
 }
 
@@ -289,6 +289,8 @@ export async function runSystemChecks(): Promise<{
     pipelineChecks(),
     // Proof that each operational capability is evaluated and operating.
     capabilityChecks(),
+    // Proof that no Pink Shoelace Foundation item appears in AVAIA's operations.
+    import("@/lib/pink/separation").then((m) => m.pinkSeparationChecks()),
   ]);
   const results: CheckResult[] = [];
   for (const g of groups) {
@@ -296,7 +298,8 @@ export async function runSystemChecks(): Promise<{
     else results.push({ category: "quality", checkKey: "check_group_failed", label: "A check group failed to run", status: "problem", detail: String(g.reason) });
   }
 
-  const overall = summarize(results);
+  // Pink Shoelace Foundation checks are reported in the Pink admin and never move AVAIA's overall status.
+  const overall = summarize(results.filter((r) => !r.checkKey.startsWith("pink_")));
   const launchStatus: "still_good" | "something_broke" | "needs_attention" =
     overall === "problem" ? "something_broke" : overall === "needs_dorian" ? "needs_attention" : "still_good";
 

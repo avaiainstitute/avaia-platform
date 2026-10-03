@@ -136,7 +136,7 @@ export function founderDigestEmailHtml({
   `;
 
   return `
-    <h1>AVAIA + Pink Shoelace -- Daily Operating Summary</h1>
+    <h1>AVAIA -- Daily Operating Summary</h1>
     <p style="color:#888">${escapeHtml(dateLabel)}</p>
     ${section("WHAT HAPPENED", whatHappened, "Nothing new since the last summary.")}
     ${section("WHAT IS BEING HANDLED AUTOMATICALLY", automatic, "Nothing currently in automated handling.")}

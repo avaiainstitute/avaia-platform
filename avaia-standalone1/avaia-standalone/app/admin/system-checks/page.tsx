@@ -80,7 +80,9 @@ export default async function AdminSystemChecksPage({
   // are stored under the existing Testing/QC category and told apart by their
   // key prefix, so they can be shown as their own readable sections.
   type Row = { check_key: string; label: string; status: string; detail: string | null };
-  const qualityRows = (byCategory.get("quality") ?? []) as unknown as Row[];
+  // Pink Shoelace Foundation checks are shown in the Pink Shoelace Foundation admin, not here.
+  const notPink = (r: Row) => !r.check_key.startsWith("pink_");
+  const qualityRows = ((byCategory.get("quality") ?? []) as unknown as Row[]).filter(notPink);
   const withPrefix = (prefix: string) => qualityRows.filter((r) => r.check_key.startsWith(prefix));
   const otherQuality = qualityRows.filter((r) => !/^(schema_|schedule_|deploy_|pipeline_|capability_)/.test(r.check_key));
   const sections: { key: string; label: string; items: Row[] }[] = [
@@ -90,7 +92,7 @@ export default async function AdminSystemChecksPage({
     { key: "truth_deploy", label: "Deployment: is the latest version live and configured?", items: withPrefix("deploy_") },
     { key: "truth_pipeline", label: "Needs Dorian: does the pipeline behave as designed?", items: withPrefix("pipeline_") },
     { key: "truth_capabilities", label: "Operational capabilities: is each one actually operating?", items: withPrefix("capability_") },
-    { key: "website", label: CATEGORY_LABEL.website, items: (byCategory.get("website") ?? []) as unknown as Row[] },
+    { key: "website", label: CATEGORY_LABEL.website, items: ((byCategory.get("website") ?? []) as unknown as Row[]).filter(notPink) },
     { key: "quality", label: CATEGORY_LABEL.quality, items: otherQuality },
     { key: "journey", label: CATEGORY_LABEL.journey, items: (byCategory.get("journey") ?? []) as unknown as Row[] },
     { key: "shared_room", label: CATEGORY_LABEL.shared_room, items: (byCategory.get("shared_room") ?? []) as unknown as Row[] },
@@ -103,7 +105,7 @@ export default async function AdminSystemChecksPage({
           ← Back to Admin
         </Link>
       </p>
-      <p className="label mb-3">AVAIA + Pink Shoelace Admin</p>
+      <p className="label mb-3">AVAIA Admin</p>
       <h1 className="font-serif text-4xl text-ink">System Checks</h1>
       <p className="mt-4 text-lg text-muted">
         Website Watcher, Journey Watcher, Shared Room Operations Watcher, Launch Readiness, and
