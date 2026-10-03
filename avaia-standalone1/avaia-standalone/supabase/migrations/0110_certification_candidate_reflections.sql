@@ -81,16 +81,24 @@ comment on table certification_candidate_reflections is
 -- work adds (certification-operations, certification-companion). Widens the
 -- same check 0074/0076/0079 widened; it only accepts the two new names and
 -- changes no existing row.
-alter table public.cron_runs
-  drop constraint if exists cron_runs_cron_name_check;
-alter table public.cron_runs
-  add constraint cron_runs_cron_name_check
-  check (cron_name in (
-    'host-onboarding', 'guide-operations', 'founder-digest',
-    'entitlement-reconciliation', 'guardian-consent-reminder',
-    'family-invite-reminder',
-    'certification-operations', 'certification-companion'
-  ));
+--
+-- Guarded: if the cron_runs table does not exist in a given database (its
+-- own migration, 0074, was never applied there), this step does nothing
+-- instead of failing the whole script. Nothing in the classroom depends on it.
+do $$
+begin
+  if to_regclass('public.cron_runs') is not null then
+    alter table public.cron_runs drop constraint if exists cron_runs_cron_name_check;
+    alter table public.cron_runs
+      add constraint cron_runs_cron_name_check
+      check (cron_name in (
+        'host-onboarding', 'guide-operations', 'founder-digest',
+        'entitlement-reconciliation', 'guardian-consent-reminder',
+        'family-invite-reminder',
+        'certification-operations', 'certification-companion'
+      ));
+  end if;
+end $$;
 
 -- Verification (read-only): the table exists, RLS is on, and there is no
 -- admin policy on it.
