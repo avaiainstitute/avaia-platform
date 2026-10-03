@@ -45,7 +45,12 @@ async function fetchStatus(url: string): Promise<{ ok: boolean; status: number |
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, { method: "GET", redirect: "manual", signal: controller.signal });
+    // Follow redirects to the final answer. The canonical address is
+    // www.avaiainstitute.com and the bare domain redirects to it (HTTP 308); a
+    // check that stops at that redirect would call every route "unexpected".
+    // Following also means a real redirect LOOP (the August 2026 incident) now
+    // fails the check instead of slipping past it.
+    const res = await fetch(url, { method: "GET", redirect: "follow", signal: controller.signal });
     // A 2xx/3xx (including an intentional sign-in redirect on a gated page)
     // counts as "the route is alive and responding as designed." Only a
     // 5xx, or no response at all, is treated as a real operational problem.
