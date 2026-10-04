@@ -74,3 +74,16 @@ certification. Production: `f1d2e35` (migration `0116` applied and verified firs
 Intentionally held: lessons 6.12, 6.16, 7.13; denial/reapplication messaging and refund policy;
 evaluators other than the owner; Youth Guide facilitation. Lab 12 Scenario C wording was derived
 from the owner's immediate-safety clarification.
+
+### Move 6 proof (System Checks run 2026-10-04 04:39 UTC, production `c289797`)
+
+Triggered manually from `/admin/system-checks` (the same production check the schedule runs; the
+owner pressed "Run checks now"). `deploy_matches_branch` confirmed the run evaluated `c289797`, the
+latest commit of `defying-grief-v2` (code identical to `f1d2e35`; the later commit is docs only).
+
+- `pipeline_certification_admissions`, `pipeline_certification_path`, `pipeline_certification_practice`: pass.
+- `capability_certification_admissions`: pass (0 applications exist yet, so 0 records examined).
+- `schema_tables`: pass (all 107 tables present); `schema_rules`: pass (includes the AI-practice privacy,
+  admin-only evaluation records, evidence-vocabulary and candidacy-access rules).
+- Still reads NEEDS DORIAN, unrelated to Move 6: `schedule_jobs` (the `host-onboarding` partial run noted above).
+- `capability_digest_evidence` records the proof for this capability on the next 12:30 UTC digest run.
