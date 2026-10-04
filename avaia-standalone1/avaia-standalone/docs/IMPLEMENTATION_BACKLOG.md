@@ -23,3 +23,13 @@ a participant who is not an AVAIA account holder signs in, or is otherwise recog
 such a link). The original build left this out for the same reason. When that participant-facing
 functionality exists, delivery extends lib/host-operations.ts and
 lib/ops/host-participant-operations.ts.
+
+## Guide certification: decisions deliberately not made (Move 6)
+
+Held on purpose, not built, not designed: what a person who is not admitted is told, whether
+they may reapply, and any refund policy (the application stays in What Needs Dorian until
+marked handled); evaluators other than the owner (today only an admin records evidence); Youth
+Guide facilitation; lessons 6.12, 6.16 and 7.13 (held, never certification blockers); the
+legal confirmation of the immediate-safety wording (decision 0005; it does not hold
+certification). Toolkit/experience assembly is a specialty authorization (lesson 7.10), not a
+core certification requirement.

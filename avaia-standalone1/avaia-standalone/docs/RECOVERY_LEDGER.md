@@ -55,3 +55,22 @@ Guide read access to the Library now follows certification and Toolkit authoriza
 profile role label (migration 0115, applied and verified by a self-rolling-back test: a certified,
 Toolkit-authorized Guide with no membership went from 25 to 59 visible entries). `schema_rules`
 now fails if that rule ever depends on the role label again.
+
+## Move 6: Guide certification completion (2026-10-04)
+
+Two gates, never one (decisions 0004, 0005): the admission decision makes a Candidate; the
+certification decision makes an AVAIA Certified Guide. Admission is not a promise of
+certification. Production: `f1d2e35` (migration `0116` applied and verified first, 2026-10-04).
+
+| Capability | Implemented | Connected | Production | Trigger / Input | Tested (simulated records) | System Check | Operational |
+|---|---|---|---|---|---|---|---|
+| Front door: apply (no fee), save a payment method (no charge), human admission decision, charge only after admission | yes | Stripe setup mode + webhook; `/admin/certification-applications`; What Needs Dorian | `f1d2e35` | `/certified-guide/apply`; admin decision | `pipeline_certification_admissions` | `capability_certification_admissions` | the first real charge cannot be exercised before the first real admission (no Stripe test environment); every other step is proven by the self-test |
+| Candidacy access (`candidacy` entitlement; ends with candidacy or certification; a membership is never touched) | yes | admission, every status change, certification grant, daily backstop in the entitlement-reconciliation cron | `f1d2e35` | admission / status change / 12:15 UTC cron | `pipeline_certification_admissions` | `capability_certification_admissions` (access mismatches) | yes |
+| The path: seven required steps in order; toolkit assembly relocated to specialty authorization | yes | candidate dashboard, admin candidate page, Needs Dorian | `f1d2e35` | evidence recorded by an admin | `pipeline_certification_path` | `capability_guide_operations`, `schema_rules` | yes |
+| Human evaluations: ten-item Gate, Universal Practice Lab Evaluation (15 labs), eleven-row Practicum; the system only adds up | yes | admin candidate page writes the matching evidence rows | `f1d2e35` | admin forms | `pipeline_certification_path` | `schema_rules` (admin-only tables) | yes |
+| Labs 12 (Scenarios A, B, C) and 14; evaluator-only material isolated | yes | classroom labs; evaluator reference imported only by admin screens | `f1d2e35` | build-time `scripts/evaluator-isolation.sh` | `pipeline_certification_practice` | build fails on a violation | yes |
+| AI Host practice (Host Card only; never evaluates, scores or hints) | yes | `/certification/practice` | `f1d2e35` | candidate | `pipeline_certification_practice` | `schema_rules` (candidate-private tables) | yes |
+
+Intentionally held: lessons 6.12, 6.16, 7.13; denial/reapplication messaging and refund policy;
+evaluators other than the owner; Youth Guide facilitation. Lab 12 Scenario C wording was derived
+from the owner's immediate-safety clarification.
