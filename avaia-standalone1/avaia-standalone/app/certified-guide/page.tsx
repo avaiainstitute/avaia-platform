@@ -33,7 +33,7 @@ export default function CertifiedGuidePage() {
 
       <div className="mt-8">
         <Link
-          href="/contact?reason=certification"
+          href="/certified-guide/apply"
           className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
         >
           I&rsquo;m Interested in Becoming a Guide
@@ -148,23 +148,34 @@ export default function CertifiedGuidePage() {
           core AVAIA architecture responsibly. It does not certify charisma. It certifies
           stewardship.
         </p>
-        <p className="mt-4 text-muted">The candidate pathway moves through:</p>
+        <p className="mt-4 text-muted">Every candidate, whether an individual or part of an organization, meets the same standard:</p>
         <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-ink">
-          <li>Orientation, what Guide permission means, and does not mean</li>
-          <li>Foundations, AVAIA architecture, Journey, roles, governing distinctions</li>
-          <li>Conversation Stewardship, adaptive listening, IAP/CAT/InnerCompass discipline</li>
-          <li>Table Stewardship, Room, Table, seats, Witness, evidence</li>
-          <li>Recognition Systems, Chemistry of Virtue and Secondary Losses</li>
-          <li>Facilitation, groups, classes, Experiences, privacy, capacity</li>
-          <li>Toolkit Assembly, using approved AVAIA components without redesigning them</li>
-          <li>Boundary Gate, privacy, capacity, scope, non-therapy posture</li>
-          <li>Practicum, real-time stewardship, observed</li>
-          <li>Certification Decision, the full evidence portfolio is reviewed</li>
+          <li>The classroom education: seven modules on AVAIA&rsquo;s foundations, the Journey, the Guide seat, capacity, recognition, boundaries and the platform</li>
+          <li>Your own experience in the Host seat, so you know the Journey from the inside</li>
+          <li>The Boundary Gate: ownership, privacy, scope, consent, safety, non-diagnosis, non-prescription, capacity, Guide authority, and consultation or referral judgment</li>
+          <li>Practice before independent Guide work: all fifteen Practice Labs, with feedback from people</li>
+          <li>The Table-building exercise</li>
+          <li>The Observed Practicum: your real-time stewardship, observed by a person</li>
+          <li>The certification decision, made by a person who reviews your full record</li>
         </ol>
         <p className="mt-6 text-lg leading-relaxed text-ink">
           Completing coursework is not, by itself, certification. A candidate must demonstrate
           actual Guide competency, through observed practicum work, before final certification
-          is granted.
+          is granted. AI may help you practice. It never evaluates you and never certifies anyone.
+        </p>
+      </section>
+
+      {/* Two decisions */}
+      <section className="rule-t mt-16 border-t border-rule pt-12">
+        <p className="label mb-2">Two Separate Decisions</p>
+        <h2 className="font-serif text-3xl text-ink">Admission is not certification</h2>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          First, AVAIA decides whether to <strong>admit</strong> you as a Certification Candidate. Admission gives you candidacy and the
+          access you need to work through the path. It is not a promise that you will be certified.
+        </p>
+        <p className="mt-4 text-lg leading-relaxed text-ink">
+          Later, and separately, AVAIA decides whether to <strong>certify</strong> you as an AVAIA Certified Guide, from what you have
+          demonstrated. Each decision is made by a person.
         </p>
       </section>
 
@@ -179,15 +190,21 @@ export default function CertifiedGuidePage() {
           </p>
           <p className="mt-4 text-ink">
             <span className="font-serif text-lg">Admission is by AVAIA&rsquo;s review.</span> There is
-            no instant enrollment or pay-to-join step. If you are interested in the Guide pathway,
-            reach out and AVAIA will talk with you about it directly.
+            no application fee. You apply and save a payment method; <strong>nothing is charged then.</strong> A person at AVAIA reviews
+            your application and decides on admission. Only if you are admitted is the $1,495 certification payment charged, once, to the
+            method you saved. If you are not admitted, you are not charged and the saved method is removed.
           </p>
-          <Link
-            href="/contact?reason=certification"
-            className="mt-5 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-          >
-            Contact AVAIA About the Guide Pathway
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center gap-4">
+            <Link
+              href="/certified-guide/apply"
+              className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Apply
+            </Link>
+            <Link href="/contact?reason=certification" className="font-sans text-sm text-muted hover:text-seal">
+              Questions? Contact AVAIA
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -251,7 +268,7 @@ export default function CertifiedGuidePage() {
         </p>
         <div className="mt-8">
           <Link
-            href="/contact?reason=certification"
+            href="/certified-guide/apply"
             className="inline-block rounded-md bg-seal px-6 py-3 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
           >
             I&rsquo;m Interested in Becoming a Guide

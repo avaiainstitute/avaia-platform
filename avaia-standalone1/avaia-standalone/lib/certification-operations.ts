@@ -39,25 +39,42 @@ export const EVIDENCE_TYPE_ORDER = [
   "observed_practicum",
   "guides_record_sample",
   "reflection_debrief",
+  "host_seat_experience",
 ] as const;
 
 export type EvidenceType = (typeof EVIDENCE_TYPE_ORDER)[number];
 
-/** Items 1-6 of the established order: everything administratively prior to
- *  Practice Facilitation itself. */
-const PRE_PRACTICE_TYPES: EvidenceType[] = [
+/** The certification backbone (Decision 0004). A human certification decision
+ *  is recommended only once every one of these has a competent record:
+ *  candidate agreement (at admission), Tier 1 foundations check, personal
+ *  Host-seat experience, the Table-building exercise, the Boundary Gate,
+ *  Practice Lab completion (all 15 labs), and the Observed Practicum.
+ *  The other evidence types stay valid in the record (earlier rows exist and
+ *  stay readable) but are no longer required: judgment scenarios,
+ *  recognition assessment, conversation review and reflection debrief are
+ *  consolidated into Practice Lab completion; the Guide's Record sample into
+ *  the Tier 1 check; toolkit/experience assembly is a specialty authorization
+ *  (lesson 7.10), not a certification requirement. */
+export const REQUIRED_EVIDENCE_TYPES: readonly EvidenceType[] = [
   "candidate_agreement",
   "foundations_knowledge_check",
-  "judgment_scenarios",
+  "host_seat_experience",
   "table_building_exercise",
-  "recognition_assessment",
-  "conversation_review",
+  "boundary_gate",
+  "practice_facilitation",
+  "observed_practicum",
 ];
 
-/** Items 1-8: everything administratively prior to Boundary Gate, i.e.
- *  PRE_PRACTICE_TYPES plus Practice Facilitation and Toolkit Experience
- *  Assembly (both already-established evidence types, not invented here). */
-const PRE_GATE_TYPES: EvidenceType[] = [...PRE_PRACTICE_TYPES, "practice_facilitation", "toolkit_experience_assembly"];
+/** Everything that must be on file before the Boundary Gate is administered:
+ *  the classroom stage (agreement, Tier 1 check, Table-building exercise) and
+ *  the candidate's own Host-seat experience. Order of the path:
+ *  Classroom -> Host experience -> Gate -> Practice -> Practicum -> decision. */
+const PRE_GATE_TYPES: EvidenceType[] = [
+  "candidate_agreement",
+  "foundations_knowledge_check",
+  "host_seat_experience",
+  "table_building_exercise",
+];
 
 const OPEN_CANDIDACY_STATUSES = ["admitted", "in_training", "development_required", "paused", "hold"];
 const CLOSED_CANDIDACY_STATUSES = ["withdrawn", "not_certified"];
@@ -112,9 +129,10 @@ export type ProgressSummary = {
 export const OPERATIONAL_STATES = [
   "agreement_pending",
   "training_active",
-  "practice_eligible",
   "boundary_gate_eligible",
   "boundary_gate_waiting",
+  "practice_eligible",
+  "practice_waiting",
   "practicum_eligible",
   "practicum_waiting",
   "portfolio_incomplete",
@@ -177,7 +195,7 @@ export type CertificationOperationsRecord = {
   exceptions: CertificationException[];
 };
 
-function latestByType(rows: EvidenceRow[]): Partial<Record<EvidenceType, EvidenceRow>> {
+export function latestByType(rows: EvidenceRow[]): Partial<Record<EvidenceType, EvidenceRow>> {
   const out: Partial<Record<EvidenceType, EvidenceRow>> = {};
   for (const row of rows) {
     const existing = out[row.evidence_type];
@@ -211,31 +229,50 @@ export function boundaryGateEligibility(latest: Partial<Record<EvidenceType, Evi
   return { eligible: missing.length === 0 && !alreadyAttempted, missing, alreadyAttempted };
 }
 
-/** Practicum ADMINISTRATIVE eligibility only -- requires a recorded Boundary
- *  Gate pass (the human evaluator's own evidence row, rating: 'competent')
- *  plus nothing else invented. No practicum count or additional requirement
- *  exists in the current certification records, so none is added here. */
-export function practicumEligibility(latest: Partial<Record<EvidenceType, EvidenceRow>>): {
+/** Practice Lab ADMINISTRATIVE eligibility only -- practice begins once the
+ *  Boundary Gate is recorded competent (a human evaluator's own evidence row).
+ *  Practice completion (all 15 labs) is likewise a human-recorded evidence row
+ *  ('practice_facilitation'), read here, never computed here. AI may support
+ *  practice but never evaluates it. */
+export function practiceEligibility(latest: Partial<Record<EvidenceType, EvidenceRow>>): {
   eligible: boolean;
   boundaryGatePassed: boolean;
+  practiceComplete: boolean;
   alreadyAttempted: boolean;
 } {
   const boundaryGatePassed = isCompetent(latest, "boundary_gate");
+  const practiceComplete = isCompetent(latest, "practice_facilitation");
+  const alreadyAttempted = !!latest.practice_facilitation;
+  return { eligible: boundaryGatePassed && !practiceComplete, boundaryGatePassed, practiceComplete, alreadyAttempted };
+}
+
+/** Practicum ADMINISTRATIVE eligibility only -- practice before independent
+ *  Guide work: requires a recorded Boundary Gate pass AND recorded Practice Lab
+ *  completion (both human evaluators' own evidence rows, rating 'competent'),
+ *  plus nothing else invented. */
+export function practicumEligibility(latest: Partial<Record<EvidenceType, EvidenceRow>>): {
+  eligible: boolean;
+  boundaryGatePassed: boolean;
+  practiceComplete: boolean;
+  alreadyAttempted: boolean;
+} {
+  const boundaryGatePassed = isCompetent(latest, "boundary_gate");
+  const practiceComplete = isCompetent(latest, "practice_facilitation");
   const alreadyAttempted = !!latest.observed_practicum;
-  return { eligible: boundaryGatePassed && !alreadyAttempted, boundaryGatePassed, alreadyAttempted };
+  return { eligible: boundaryGatePassed && practiceComplete && !alreadyAttempted, boundaryGatePassed, practiceComplete, alreadyAttempted };
 }
 
 /** Portfolio completeness -- presence of a competent record for every
- *  established evidence_type, nothing more. If this is true, the only thing
- *  this module will ever say is that the portfolio is administratively
- *  complete and ready for a human to review -- never that the candidate is
- *  ready to be certified, which is a human judgment this module cannot and
- *  does not make. */
+ *  REQUIRED evidence type (see REQUIRED_EVIDENCE_TYPES), nothing more. If this
+ *  is true, the only thing this module will ever say is that the portfolio is
+ *  administratively complete and ready for a human to review -- never that the
+ *  candidate is ready to be certified, which is a human judgment this module
+ *  cannot and does not make. */
 export function portfolioCompleteness(latest: Partial<Record<EvidenceType, EvidenceRow>>): {
   complete: boolean;
   missing: EvidenceType[];
 } {
-  const missing = missingFromList(latest, [...EVIDENCE_TYPE_ORDER]);
+  const missing = missingFromList(latest, [...REQUIRED_EVIDENCE_TYPES]);
   return { complete: missing.length === 0, missing };
 }
 
@@ -333,7 +370,7 @@ export function deriveOperationalState(args: {
   }
 
   const practicum = practicumEligibility(latest);
-  if (practicum.boundaryGatePassed) {
+  if (practicum.boundaryGatePassed && practicum.practiceComplete) {
     if (practicum.alreadyAttempted) {
       const rating = latest.observed_practicum?.rating;
       return {
@@ -346,7 +383,26 @@ export function deriveOperationalState(args: {
     return {
       state: "practicum_eligible",
       missingPrerequisites: [],
-      nextAction: "Candidate is administratively eligible for Observed Practicum; schedule when ready.",
+      nextAction: "Candidate has completed the Boundary Gate and Practice Labs and is administratively eligible for the Observed Practicum; schedule when ready.",
+      humanActionRequired: false,
+    };
+  }
+
+  const practice = practiceEligibility(latest);
+  if (practice.boundaryGatePassed) {
+    if (practice.alreadyAttempted) {
+      const rating = latest.practice_facilitation?.rating;
+      return {
+        state: "practice_waiting",
+        missingPrerequisites: ["practice_facilitation"],
+        nextAction: `Practice Lab evaluation recorded (${rating}), not yet complete -- the candidate continues practice (targeted retries) until all 15 labs are complete.`,
+        humanActionRequired: false,
+      };
+    }
+    return {
+      state: "practice_eligible",
+      missingPrerequisites: ["practice_facilitation"],
+      nextAction: "Boundary Gate recorded competent; the candidate is working through the 15 Practice Labs.",
       humanActionRequired: false,
     };
   }
@@ -370,7 +426,7 @@ export function deriveOperationalState(args: {
     };
   }
 
-  // Still working through pre-Gate evidence.
+  // Still working through the classroom stage and Host-seat experience.
   if (!isCompetent(latest, "candidate_agreement")) {
     return {
       state: "agreement_pending",
@@ -379,20 +435,10 @@ export function deriveOperationalState(args: {
       humanActionRequired: false,
     };
   }
-  const missingPrePractice = missingFromList(latest, PRE_PRACTICE_TYPES);
-  if (missingPrePractice.length > 0) {
-    return {
-      state: "training_active",
-      missingPrerequisites: missingPrePractice,
-      nextAction: `Candidate in training; outstanding pre-practice evidence: ${describeMissing(missingPrePractice)}.`,
-      humanActionRequired: false,
-    };
-  }
-  const missingPreGate = missingFromList(latest, PRE_GATE_TYPES);
   return {
-    state: "practice_eligible",
-    missingPrerequisites: missingPreGate,
-    nextAction: `Candidate is eligible for Practice Facilitation / Toolkit Experience Assembly evidence; outstanding: ${describeMissing(missingPreGate)}.`,
+    state: "training_active",
+    missingPrerequisites: gate.missing,
+    nextAction: `Candidate in the classroom stage; outstanding before the Boundary Gate: ${describeMissing(gate.missing)}.`,
     humanActionRequired: false,
   };
 }
@@ -408,6 +454,7 @@ const STATES_CONSIDERED_ACTIVE: OperationalState[] = [
   "agreement_pending",
   "training_active",
   "practice_eligible",
+  "practice_waiting",
   "portfolio_incomplete",
 ];
 
@@ -741,7 +788,10 @@ export function classroomCurriculumCounts(): { lessonsTotal: number; labsTotal: 
 export type StageState = "not_yet" | "reached" | "recorded";
 
 export type CandidateStageSummary = {
+  hostSeat: StageState;
+  tableBuilding: StageState;
   boundaryGate: StageState;
+  practice: StageState;
   observedPracticum: StageState;
   decision: StageState;
 };
@@ -753,11 +803,15 @@ export type CandidateStageSummary = {
  *  only the mechanical record a human evaluator already entered; it never
  *  advances, passes, or schedules anything. */
 export function describeCandidateStages(record: CertificationOperationsRecord | null): CandidateStageSummary {
-  if (!record) return { boundaryGate: "not_yet", observedPracticum: "not_yet", decision: "not_yet" };
+  if (!record) return { hostSeat: "not_yet", tableBuilding: "not_yet", boundaryGate: "not_yet", practice: "not_yet", observedPracticum: "not_yet", decision: "not_yet" };
   const latest = record.latestEvidenceByType;
   const gate = boundaryGateEligibility(latest);
+  const practice = practiceEligibility(latest);
   const practicum = practicumEligibility(latest);
   return {
+    hostSeat: latest.host_seat_experience ? "recorded" : "not_yet",
+    tableBuilding: latest.table_building_exercise ? "recorded" : "not_yet",
+    practice: latest.practice_facilitation ? "recorded" : practice.eligible ? "reached" : "not_yet",
     boundaryGate: latest.boundary_gate ? "recorded" : gate.eligible ? "reached" : "not_yet",
     observedPracticum: latest.observed_practicum ? "recorded" : practicum.eligible ? "reached" : "not_yet",
     decision: record.decision ? "recorded" : "not_yet",

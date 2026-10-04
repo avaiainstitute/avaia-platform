@@ -267,6 +267,38 @@ export async function schemaChecks(): Promise<CheckResult[]> {
     if (adminPolicy) failures.push(`certification_candidate_reflections has an admin-access policy ("${adminPolicy.name}"); candidate reflections are meant to be private to the candidate`);
   }
 
+  // Guide certification (migration 0116). Practice with an AI Host belongs to the candidate (no
+  // admin policy, like reflections). The human evaluation records are admin-only: no policy may
+  // let anyone but an admin read them (a candidate hears outcomes from a person). The evidence
+  // vocabulary and the entitlement sources accept what the certification path writes.
+  for (const table of ["certification_practice_sessions", "certification_practice_messages"]) {
+    const t = need(table);
+    if (!t) continue;
+    if (t.policies.length === 0) failures.push(`${table} has no access policy`);
+    const adminPolicy = t.policies.find((p) => /admin/i.test(`${p.name} ${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (adminPolicy) failures.push(`${table} has an admin-access policy ("${adminPolicy.name}"); AI Host practice is meant to be private to the candidate`);
+  }
+  for (const table of ["certification_gate_evaluations", "certification_lab_evaluations", "certification_practicum_evaluations"]) {
+    const t = need(table);
+    if (!t) continue;
+    if (t.policies.length === 0) failures.push(`${table} has no access policy`);
+    const open = t.policies.find((p) => !/admin/i.test(`${p.name} ${p.qual ?? ""} ${p.with_check ?? ""}`) || /host_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""}`));
+    if (open) failures.push(`${table} has a policy ("${open.name}") that is not admin-only; human evaluation records must not be readable by candidates`);
+  }
+  const evidenceTable = need("guide_candidate_evidence");
+  if (evidenceTable && !(evidenceTable.checks["guide_candidate_evidence_evidence_type_check"] ?? "").includes("host_seat_experience")) {
+    failures.push(`guide_candidate_evidence does not accept 'host_seat_experience' (migration 0116): the Host-seat experience cannot be recorded`);
+  }
+  const entitlementsTable = need("entitlements");
+  if (entitlementsTable && !(entitlementsTable.checks["entitlements_source_check"] ?? "").includes("candidacy")) {
+    failures.push(`entitlements does not accept the 'candidacy' source (migration 0116): admitting a candidate cannot open their access`);
+  }
+  const applicationsTable = need("certification_applications");
+  if (applicationsTable) {
+    const hasAdmin = applicationsTable.policies.some((p) => /admin/i.test(`${p.name} ${p.qual ?? ""}`));
+    if (!hasAdmin) failures.push(`certification_applications has no admin policy: admission decisions cannot be recorded`);
+  }
+
   // A person must not be able to grant themselves authority by editing their own
   // profile (migration 0112). The rule that stops it is a trigger on profiles.
   // Guide access to the Library follows certification and Toolkit authorization (migration
@@ -289,7 +321,7 @@ export async function schemaChecks(): Promise<CheckResult[]> {
 
   results.push(
     failures.length === 0
-      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection privacy, the rule that stops anyone from editing their own role, and Guide access to the Library by certification are all as designed.")
+      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection and AI-practice privacy, admin-only human evaluation records, the certification evidence and candidacy-access rules, the rule that stops anyone from editing their own role, and Guide access to the Library by certification are all as designed.")
       : row("schema_rules", "Protective database rules are in place", "problem", failures.join("; ") + ".")
   );
 

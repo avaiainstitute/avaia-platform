@@ -23,7 +23,8 @@ export type AiUsageFeature =
   | "room_bring_forward_suggestion"
   | "unsaid_conversation"
   | "prospect_research"
-  | "founder_note_extraction";
+  | "founder_note_extraction"
+  | "certification_practice_host";
 
 /** The subset of an Anthropic Message's `usage` field this records, same
  *  shape whether it came from `messages.create()` directly or from

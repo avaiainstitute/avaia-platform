@@ -36,9 +36,15 @@ export default async function CertifiedGuideEnrollPage() {
       <p className="label mb-3 mt-6">Certified AVAIA Guide</p>
       <h1 className="font-serif text-4xl text-ink">Enrollment is not open on this page</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink">
-        The Guide pathway no longer begins with an online payment. Admission is by AVAIA&rsquo;s review,
-        and nothing here charges you or enrolls you.
+        The Guide pathway no longer begins with a payment. You apply, AVAIA reviews, and only if you are admitted is the
+        certification payment charged. Nothing on this page charges you or enrolls you.
       </p>
+      <Link
+        href="/certified-guide/apply"
+        className="mt-6 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+      >
+        Apply
+      </Link>
 
       {existingPayment && (
         <div className="mt-8 rounded-lg border border-seal/40 bg-seal/[0.06] px-5 py-6">

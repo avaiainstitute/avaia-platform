@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
 import { runEntitlementReconciliation } from "@/lib/ops/entitlement-reconciliation";
 import { recordCronRun } from "@/lib/ops/cron-runs";
+import { reconcileCandidacyAccess } from "@/lib/ops/certification-admissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,14 +19,17 @@ export async function GET(request: Request) {
   const startedAt = new Date();
   try {
     const result = await runEntitlementReconciliation();
+    // Backstop for candidacy access (granted/ended synchronously at admission and on every
+    // status change): catches anything a missed step left behind.
+    const candidacyAccess = await reconcileCandidacyAccess();
     const hasUncorrectedFailure = result.findings.some((f) => !f.corrected && f.correctionError);
     await recordCronRun({
       cronName: "entitlement-reconciliation",
       startedAt,
       status: hasUncorrectedFailure ? "partial" : "success",
-      detail: { ...result },
+      detail: { ...result, candidacyAccess },
     });
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, ...result, candidacyAccess });
   } catch (err) {
     await recordCronRun({
       cronName: "entitlement-reconciliation",

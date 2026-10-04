@@ -121,11 +121,16 @@ async function grantFamilyEntitlement(
 ): Promise<void> {
   const { data: existing } = await admin
     .from("entitlements")
-    .select("id")
+    .select("id, source")
     .eq("host_id", hostId)
     .eq("status", "active")
     .maybeSingle();
-  if (existing) return;
+  if (existing && existing.source !== "candidacy") return;
+  if (existing) {
+    // A certification candidate joining a Family plan: the candidacy access
+    // steps aside so the family seat (which does not end with candidacy) holds.
+    await admin.from("entitlements").update({ status: "revoked", updated_at: new Date().toISOString() }).eq("id", existing.id);
+  }
   const { error } = await admin.from("entitlements").insert({
     host_id: hostId,
     status: "active",

@@ -292,6 +292,8 @@ export async function runSystemChecks(): Promise<{
     capabilityChecks(),
     // Each capability's rules, proven on simulated records.
     Promise.resolve(capabilityRuleChecks()),
+    // Guide certification: the front door, the path, human evaluations, AI practice, evaluator isolation.
+    import("@/lib/ops/certification-selftests").then((m) => m.certificationPathChecks()),
     // Proof that no Pink Shoelace Foundation item appears in AVAIA's operations.
     import("@/lib/pink/separation").then((m) => m.pinkSeparationChecks()),
   ]);

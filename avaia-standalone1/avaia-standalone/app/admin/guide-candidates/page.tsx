@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { syncCandidacyAccess } from "@/lib/ops/certification-admissions";
 
 export const metadata = { title: "Certified Guide Candidates, AVAIA Admin" };
 export const dynamic = "force-dynamic";
@@ -124,6 +125,9 @@ async function admitCandidate(formData: FormData) {
     recorded_by: user.id,
   });
 
+  // Candidacy gives the access needed to certify (a membership is untouched).
+  await syncCandidacyAccess(hostId);
+
   redirect(`/admin/guide-candidates/${candidate.id}?admitted=1`);
 }
 
@@ -202,8 +206,16 @@ export default async function AdminGuideCandidatesPage({
       <p className="label mb-3">AVAIA Admin</p>
       <h1 className="font-serif text-4xl text-ink">Certified Guide Candidates</h1>
       <p className="mt-4 text-lg text-muted">
-        Admitting a candidate here is an intentional AVAIA decision, separate from a Certification
-        contact submission. The person must already have an AVAIA account.
+        Two separate decisions: admission makes a Candidate; certification (decided later on each candidate&rsquo;s page, from
+        recorded evidence) makes a Certified Guide. Admission is not a promise of certification.
+      </p>
+      <p className="mt-3 text-muted">
+        People who applied are reviewed at{" "}
+        <Link href="/admin/certification-applications" className="text-seal hover:underline">
+          Certification Applications
+        </Link>
+        , where the admission decision and the payment happen together. The form below admits someone directly with no application and
+        no payment, as a deliberate AVAIA decision. The person must already have an AVAIA account.
       </p>
 
       {errorMessage && (

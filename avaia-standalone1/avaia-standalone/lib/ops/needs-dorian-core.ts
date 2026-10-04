@@ -164,7 +164,7 @@ export function classifyCertificationRecords(
   }
 
   const open = records.filter((r) => r.derivedState !== "lifecycle_closed");
-  const inTraining = open.filter((r) => r.derivedState === "training_active" || r.derivedState === "practice_eligible").length;
+  const inTraining = open.filter((r) => r.derivedState === "training_active" || r.derivedState === "practice_eligible" || r.derivedState === "practice_waiting").length;
   if (inTraining > 0) {
     watching.push({ key: "cert:aggregate:in_training", text: `${inTraining} certification candidate(s) currently working through the classroom and evidence steps.` });
   }

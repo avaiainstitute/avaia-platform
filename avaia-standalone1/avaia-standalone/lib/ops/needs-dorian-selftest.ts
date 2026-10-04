@@ -55,12 +55,8 @@ export async function pipelineChecks(): Promise<CheckResult[]> {
   const preGate: EvidenceType[] = [
     "candidate_agreement",
     "foundations_knowledge_check",
-    "judgment_scenarios",
+    "host_seat_experience",
     "table_building_exercise",
-    "recognition_assessment",
-    "conversation_review",
-    "practice_facilitation",
-    "toolkit_experience_assembly",
   ];
 
   const candidate = (id: string, admittedDaysAgo: number, flagged = false) => ({

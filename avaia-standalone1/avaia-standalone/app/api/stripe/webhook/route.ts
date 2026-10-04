@@ -6,6 +6,7 @@ import { sendEmail, memberWelcomeEmailHtml } from "@/lib/resend";
 import { createFamilyMembership, cancelFamilyMembership } from "@/lib/family-membership";
 import { revokeIndividualEntitlement } from "@/lib/membership";
 import { alertOps } from "@/lib/ops/alerts";
+import { completePaymentMethodSetup } from "@/lib/ops/certification-admissions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,10 +77,30 @@ async function grantEntitlement(hostId: string | null | undefined, origin: strin
   const admin = createAdminClient();
   const { data: existing } = await admin
     .from("entitlements")
-    .select("id")
+    .select("id, source")
     .eq("host_id", hostId)
     .eq("status", "active")
     .maybeSingle();
+  if (existing && existing.source === "candidacy") {
+    // A certification candidate who now pays for a membership: convert their
+    // candidacy access into the membership entitlement, so it no longer ends
+    // with candidacy (that rule only ever touches source 'candidacy').
+    const { error: convertError } = await admin
+      .from("entitlements")
+      .update({ source: "individual", updated_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    if (convertError) {
+      console.error("AVAIA Stripe webhook: failed to convert candidacy access to membership:", convertError);
+      await alertOps("Payment succeeded but membership could not replace candidacy access", [
+        `Host ID: ${hostId}`,
+        `Error: ${convertError.message}`,
+        "This certification candidate paid for a membership but their access is still the candidacy kind, which ends with candidacy. Check Stripe and the entitlements table.",
+      ]);
+      return;
+    }
+    await sendMemberWelcomeEmail(admin, hostId, origin);
+    return;
+  }
   if (existing) return;
   const { error } = await admin
     .from("entitlements")
@@ -227,7 +248,11 @@ export async function POST(request: Request) {
     // AVAIA's own live domain, the same value the checkout route itself
     // would compute, used only for the welcome email's Journey link.
     const origin = new URL(request.url).origin;
-    if (session.metadata?.product === "guide_certification") {
+    if (session.mode === "setup" && session.metadata?.product === "certification_application_setup") {
+      // A certification applicant saved a payment method. Nothing is charged:
+      // the $1,495 is charged only after a human admission decision.
+      await completePaymentMethodSetup(session);
+    } else if (session.metadata?.product === "guide_certification") {
       await recordGuideCertificationPayment(hostId, session);
     } else if (session.metadata?.tier === "family") {
       await grantFamilyMembership(hostId, session, origin);

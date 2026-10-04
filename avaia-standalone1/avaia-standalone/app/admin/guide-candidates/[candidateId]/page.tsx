@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { loadPolicy, addMonthsUtc } from "@/lib/certification-renewal";
 import { buildClassroomSummary } from "@/lib/certification-classroom";
 import { getCertificationOperationsRecordForCandidate } from "@/lib/certification-operations";
+import { syncCandidacyAccess } from "@/lib/ops/certification-admissions";
+import EvaluationSections from "./evaluation-sections";
 import type { CandidateProgressRow } from "@/lib/certification";
 
 export const metadata = { title: "Guide Candidate, AVAIA Admin" };
@@ -44,38 +46,45 @@ const STATUS_ERROR_MESSAGE: Record<string, string> = {
   update_failed: "Could not update this candidate's status. Please try again.",
 };
 
-// Exactly the 12 evidence_type values live in guide_candidate_evidence
-// (0023), never change these without a schema change. Labels are
-// display-only; the stored value is always the plain enum string.
-const EVIDENCE_TYPES = [
+// The evidence_type values allowed in guide_candidate_evidence (0023, widened
+// by 0116). Labels are display-only; the stored value is always the plain enum
+// string. REQUIRED types are the certification backbone (Decision 0004), in
+// path order; the rest are earlier record types that stay readable but are no
+// longer required for a recommendation.
+const REQUIRED_TYPES = [
   "candidate_agreement",
   "foundations_knowledge_check",
-  "judgment_scenarios",
+  "host_seat_experience",
   "table_building_exercise",
+  "boundary_gate",
+  "practice_facilitation",
+  "observed_practicum",
+] as const;
+const EARLIER_TYPES = [
+  "judgment_scenarios",
   "recognition_assessment",
   "conversation_review",
-  "practice_facilitation",
   "toolkit_experience_assembly",
-  "boundary_gate",
-  "observed_practicum",
   "guides_record_sample",
   "reflection_debrief",
 ] as const;
+const EVIDENCE_TYPES = [...REQUIRED_TYPES, ...EARLIER_TYPES] as const;
 type EvidenceType = (typeof EVIDENCE_TYPES)[number];
 
 const EVIDENCE_TYPE_LABEL: Record<EvidenceType, string> = {
-  candidate_agreement: "Candidate Agreement",
-  foundations_knowledge_check: "Foundations Knowledge Check",
-  judgment_scenarios: "Guide Judgment Scenarios",
+  candidate_agreement: "Candidate Agreement (at admission)",
+  foundations_knowledge_check: "Foundations Knowledge Check (Tier 1)",
+  host_seat_experience: "Personal Host-Seat Experience",
   table_building_exercise: "Table-Building Exercise",
-  recognition_assessment: "Recognition Without Diagnosis",
-  conversation_review: "Conversation Review",
-  practice_facilitation: "Practice Facilitation Evaluation",
-  toolkit_experience_assembly: "Toolkit / Experience Assembly Assessment",
-  boundary_gate: "Boundary Gate",
-  observed_practicum: "Observed Practicum Evaluation",
-  guides_record_sample: "Guide's Record / Documentation Sample",
-  reflection_debrief: "Candidate Reflection + Debrief",
+  boundary_gate: "Boundary Gate (all 10 items)",
+  practice_facilitation: "Practice Lab Completion (all 15 labs)",
+  observed_practicum: "Observed Practicum (11-row rubric)",
+  judgment_scenarios: "Guide Judgment Scenarios (earlier record)",
+  recognition_assessment: "Recognition Without Diagnosis (earlier record)",
+  conversation_review: "Conversation Review (earlier record)",
+  toolkit_experience_assembly: "Toolkit / Experience Assembly (specialty authorization)",
+  guides_record_sample: "Guide's Record Sample (earlier record)",
+  reflection_debrief: "Candidate Reflection + Debrief (earlier record)",
 };
 
 const RATINGS = ["competent", "development_required", "critical_fail"] as const;
@@ -233,7 +242,7 @@ async function updateCandidateStatus(formData: FormData) {
 
   const { data: current } = await supabase
     .from("guide_candidates")
-    .select("status")
+    .select("status, host_id")
     .eq("id", candidateId)
     .maybeSingle();
   if (!current) {
@@ -266,6 +275,10 @@ async function updateCandidateStatus(formData: FormData) {
     body,
     recorded_by: user.id,
   });
+
+  // Candidacy access follows candidacy: pausing, holding or closing it closes
+  // the access, and reopening it restores it (daily reconciliation is the backstop).
+  await syncCandidacyAccess(current.host_id);
 
   redirect(`/admin/guide-candidates/${candidateId}?statusUpdated=1`);
 }
@@ -610,6 +623,10 @@ async function grantGuideCertification(formData: FormData) {
     recorded_by: user.id,
   });
 
+  // The person is now a Guide: their access follows certification and Toolkit
+  // authorization, so candidacy access ends here (a membership is untouched).
+  await syncCandidacyAccess(candidate.host_id);
+
   redirect(`/admin/guide-candidates/${candidateId}?certificationGranted=1`);
 }
 
@@ -881,6 +898,8 @@ export default async function AdminGuideCandidateDetailPage({
     guidedJourneyAuthError?: string;
     guideNameUpdated?: string;
     guideNameError?: string;
+    evalSaved?: string;
+    evalError?: string;
   };
 }) {
   const supabase = createClient();
@@ -1121,6 +1140,14 @@ export default async function AdminGuideCandidateDetailPage({
         </p>
       )}
 
+      {searchParams?.evalSaved && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">{searchParams.evalSaved}</p>
+      )}
+
+      {searchParams?.evalError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">{searchParams.evalError}</p>
+      )}
+
       {searchParams?.toolkitAuthError && (
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
           {TOOLKIT_AUTH_ERROR_MESSAGE[searchParams.toolkitAuthError] ?? "Something went wrong."}
@@ -1277,13 +1304,14 @@ export default async function AdminGuideCandidateDetailPage({
         <p className="label mb-3 text-muted">Certification Evidence</p>
 
         {/* Evidence Review, current/latest finding per required evidence
-            type, always all 12, review only. Deliberately no readiness
+            type (the seven-step certification backbone, Decision 0004), plus
+            any earlier record type that has a row, review only. Deliberately no readiness
             calculation, no percentage, no pass/fail language, just the
             most recent human finding, or that none exists yet. */}
         <div className="mb-8">
           <p className="label mb-3 text-muted">Evidence Review</p>
           <div className="rounded-lg border border-rule bg-white/[0.04] px-4">
-            {EVIDENCE_TYPES.map((t) => {
+            {[...REQUIRED_TYPES, ...EARLIER_TYPES.filter((t) => latestByType.has(t))].map((t) => {
               const latest = latestByType.get(t);
               return (
                 <div
@@ -1358,11 +1386,20 @@ export default async function AdminGuideCandidateDetailPage({
                 <option value="" disabled className="bg-[#05060b] text-ink">
                   Select an evidence type
                 </option>
-                {EVIDENCE_TYPES.map((t) => (
-                  <option key={t} value={t} className="bg-[#05060b] text-ink">
-                    {EVIDENCE_TYPE_LABEL[t]}
-                  </option>
-                ))}
+                <optgroup label="Required for a certification recommendation">
+                  {REQUIRED_TYPES.map((t) => (
+                    <option key={t} value={t} className="bg-[#05060b] text-ink">
+                      {EVIDENCE_TYPE_LABEL[t]}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Earlier record types (no longer required)">
+                  {EARLIER_TYPES.map((t) => (
+                    <option key={t} value={t} className="bg-[#05060b] text-ink">
+                      {EVIDENCE_TYPE_LABEL[t]}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </div>
             <div className="mt-4">
@@ -1412,8 +1449,14 @@ export default async function AdminGuideCandidateDetailPage({
         )}
       </section>
 
+      <EvaluationSections candidateId={candidate.id} hostId={candidate.host_id} closed={isClosed} />
+
       <section className="rule-t mt-14 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Certification Decisions</p>
+        <p className="mb-3 text-sm text-muted">
+          Gate 2 of two. Admission (Gate 1) made this person a Candidate; it did not promise certification. This decision is yours alone, from the
+          recorded evidence: it is recommended once every required step has a competent record, and the system never makes it for you.
+        </p>
         <p className="mb-3 text-sm text-muted">
           Certification Decision History, these are append-only institutional records. Prior
           decisions are never edited or overwritten.

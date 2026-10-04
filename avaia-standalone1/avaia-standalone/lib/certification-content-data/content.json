@@ -2957,9 +2957,78 @@
       "title": "Scope & Boundary",
       "competency": null,
       "establishedGround": null,
-      "note": "This Lab has two usable portions now and one held portion.",
-      "host": null,
-      "guide": null,
+      "note": "This Lab has three scenarios. Practice each one.",
+      "host": [
+        {
+          "t": "note",
+          "text": "Scenario A: Professional Authority"
+        },
+        {
+          "t": "p",
+          "text": "Host asks the Guide to provide an answer requiring authority that Guide Certification does not provide."
+        },
+        {
+          "t": "note",
+          "text": "Scenario B: Changed Consent"
+        },
+        {
+          "t": "p",
+          "text": "Host previously agreed to an activity. During it:"
+        },
+        {
+          "t": "q",
+          "text": "Actually, I don't want to keep doing this."
+        },
+        {
+          "t": "note",
+          "text": "Scenario C: Immediate Safety or Medical Emergency"
+        },
+        {
+          "t": "p",
+          "text": "During a session the Host shows signs of an immediate safety or medical emergency (for example, collapsing or passing out)."
+        }
+      ],
+      "guide": [
+        {
+          "t": "note",
+          "text": "Scenario A: Professional Authority. Candidate must:"
+        },
+        {
+          "t": "list",
+          "items": [
+            "recognize scope",
+            "remain useful within AVAIA",
+            "not pretend expertise",
+            "not use certification to expand external authority"
+          ]
+        },
+        {
+          "t": "note",
+          "text": "Scenario B: Changed Consent. Candidate must:"
+        },
+        {
+          "t": "list",
+          "items": [
+            "respond to current participation, not historical permission"
+          ]
+        },
+        {
+          "t": "note",
+          "text": "Scenario C: Immediate Safety or Medical Emergency. Candidate must:"
+        },
+        {
+          "t": "list",
+          "items": [
+            "recognize it",
+            "stop the AVAIA process",
+            "assess what is happening",
+            "determine the immediate response",
+            "get appropriate help from emergency or responsible resources",
+            "not diagnose, counsel or assume a professional role",
+            "document factually afterward"
+          ]
+        }
+      ],
       "debrief": [],
       "retry": null
     },
@@ -3002,9 +3071,39 @@
       "title": "Peer Consultation",
       "competency": null,
       "establishedGround": null,
-      "note": null,
+      "note": "This Lab has no Host. It is a task you complete on your own, then talk through with an evaluator.",
       "host": null,
-      "guide": null,
+      "guide": [
+        {
+          "t": "note",
+          "text": "Candidate Scenario"
+        },
+        {
+          "t": "p",
+          "text": "After a conversation, you are uncertain whether something remains appropriately inside ordinary Guide competency. You have access to an authorized peer consultation process."
+        },
+        {
+          "t": "note",
+          "text": "Candidate Task"
+        },
+        {
+          "t": "p",
+          "text": "Prepare what you would bring to consultation."
+        },
+        {
+          "t": "note",
+          "text": "Candidate Decides"
+        },
+        {
+          "t": "list",
+          "items": [
+            "Continue within competency",
+            "Consult",
+            "Refer according to established procedure",
+            "Insufficient information"
+          ]
+        }
+      ],
       "debrief": [],
       "retry": null
     },

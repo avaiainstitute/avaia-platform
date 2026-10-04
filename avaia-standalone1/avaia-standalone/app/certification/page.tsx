@@ -155,15 +155,39 @@ export default async function CertificationHomePage() {
 
       {/* After the education */}
       <section className="mt-12">
-        <p className="label mb-2 text-muted">After the education</p>
+        <p className="label mb-2 text-muted">The rest of the path</p>
         <p className="mb-4 text-sm leading-relaxed text-muted">
-          Finishing the lessons does not make anyone a Certified AVAIA Guide, and it does not move you through the steps below
-          automatically. Each of these is arranged, observed, and decided by people at AVAIA.
+          You were admitted as a Certification Candidate. Admission is not certification: certification is a separate decision AVAIA
+          makes later, from what you demonstrate. Finishing the lessons does not make anyone a Certified AVAIA Guide, and it does not move
+          you through the steps below automatically. Each of these is arranged, observed, and decided by people at AVAIA.
         </p>
         <ol className="space-y-3">
           <li className="rounded-lg border border-rule bg-white/[0.04] p-5">
+            <p className="font-serif text-lg text-ink">Your own experience in the Host seat</p>
+            <p className="mt-1 text-sm text-muted">
+              Going through the AVAIA Journey yourself, as a Host, before you guide anyone else. {STAGE_TEXT[stages.hostSeat]}
+            </p>
+          </li>
+          <li className="rounded-lg border border-rule bg-white/[0.04] p-5">
+            <p className="font-serif text-lg text-ink">Table-building exercise</p>
+            <p className="mt-1 text-sm text-muted">{STAGE_TEXT[stages.tableBuilding]}</p>
+          </li>
+          <li className="rounded-lg border border-rule bg-white/[0.04] p-5">
             <p className="font-serif text-lg text-ink">Boundary Gate</p>
             <p className="mt-1 text-sm text-muted">{STAGE_TEXT[stages.boundaryGate]}</p>
+          </li>
+          <li className="rounded-lg border border-rule bg-white/[0.04] p-5">
+            <p className="font-serif text-lg text-ink">Practice Labs, with feedback from people</p>
+            <p className="mt-1 text-sm text-muted">
+              {stages.practice === "recorded"
+                ? "AVAIA has recorded your Practice Lab completion."
+                : stages.practice === "reached"
+                  ? "Open. Practice happens before any independent Guide work, with feedback from people at AVAIA. You can also rehearse with an AI Host."
+                  : "Opens once you have met the Boundary Gate. Lab 12 Scenarios A and B can be rehearsed with an AI Host sooner."}
+            </p>
+            <Link href="/certification/practice" className="mt-2 inline-block label text-seal hover:opacity-80">
+              Rehearse with an AI Host →
+            </Link>
           </li>
           <li className="rounded-lg border border-rule bg-white/[0.04] p-5">
             <p className="font-serif text-lg text-ink">Observed Practicum</p>
