@@ -87,3 +87,28 @@ latest commit of `defying-grief-v2` (code identical to `f1d2e35`; the later comm
   admin-only evaluation records, evidence-vocabulary and candidacy-access rules).
 - Still reads NEEDS DORIAN, unrelated to Move 6: `schedule_jobs` (the `host-onboarding` partial run noted above).
 - `capability_digest_evidence` records the proof for this capability on the next 12:30 UTC digest run.
+
+## Move 7: Keep this (2026-10-04)
+
+A Host can intentionally carry something from an AVAIA experience into their own continuing record.
+A Guide may OFFER something back; a Guide may never decide that it belongs in the Host's record
+(decision 0006). Production: `e5459b3` (migration `0117` applied and behavior-tested first).
+
+| Capability | Implemented | Connected | Production | Trigger / Input | Tested | System Check | Operational |
+|---|---|---|---|---|---|---|---|
+| Host-owned kept items (`kept_items`), Workbook "Kept" section and text export | yes | Workbook; Journey completion card ("In your own words"); Unsung Heroes recognition | `e5459b3` | the Host's own click | `pipeline_keep_this` | `schema_rules` (Host-only policies, no forged provenance, immutable content) | yes |
+| Guide offer, then Host confirmation, then Host sees the item, then Keep or Decline | yes | Guide participant record (offer); Workbook "From your Guides" | `e5459b3` | the Guide's offer; the Host's confirm and choice | `pipeline_keep_this` | `schema_rules` (offer is a pointer, no Guide update policy, Guide sees only waiting offers) | yes for linked or verified-email participants; none exist yet (0 offers) |
+| A Guide can no longer write a participant's Virtue Signature | yes | route refuses it; function removed; database policy dropped | `e5459b3` | n/a | `pipeline_keep_this` | `schema_rules` | yes |
+
+Proof: System Checks run 2026-10-04 05:09 UTC on production `e5459b3` (`deploy_matches_branch` confirmed),
+triggered manually from `/admin/system-checks`: `pipeline_keep_this`, `schema_rules`, `schema_tables`
+(109 of 109) and every Move 6 check pass. Before deploy, a self-rolling-back test against the live database
+confirmed: a Guide can create only a waiting offer for their own participant and session, cannot create a
+confirmed or kept one, has no update right, cannot see an offer once the Host decided, cannot see kept
+items; a Host cannot forge a "came through a Guide" item, cannot keep into another Host's record, and
+cannot rewrite kept content; a non-admin Guide cannot write a participant's Virtue Signature. (The admin
+account, which holds the pre-existing admin-all policy on the Signature table, is the only exception.)
+
+Intentionally held: Rooms, estate/legacy functionality, a major export system, any Workbook redesign,
+offers to Youth participants (Youth Guide facilitation stays on hold), a participant with no email on file
+(no account an offer could reach).
