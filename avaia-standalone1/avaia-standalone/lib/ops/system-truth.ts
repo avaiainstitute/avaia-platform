@@ -269,6 +269,19 @@ export async function schemaChecks(): Promise<CheckResult[]> {
 
   // A person must not be able to grant themselves authority by editing their own
   // profile (migration 0112). The rule that stops it is a trigger on profiles.
+  // Guide access to the Library follows certification and Toolkit authorization (migration
+  // 0115), never the profile role label: a 'guide' role without certification must not read
+  // it, and a certified Guide must not need the label.
+  const libraryEntries = need("library_entries");
+  if (libraryEntries) {
+    const guideRead = libraryEntries.policies.find((p) => p.name === "library entries guide read");
+    const text = `${guideRead?.qual ?? ""}`;
+    if (!guideRead) failures.push(`library_entries has no Guide read rule, so certified Guides cannot read the Library`);
+    else if (/role\s*=\s*'guide'/.test(text) || !text.includes("guide_certifications")) {
+      failures.push(`library_entries' Guide read rule depends on the profile role label instead of certification and Toolkit authorization (migration 0115)`);
+    }
+  }
+
   const profilesTable = need("profiles");
   if (profilesTable && !profilesTable.triggers.includes("profiles_protect_authority")) {
     failures.push(`profiles is missing the protective rule "profiles_protect_authority" (migration 0112): without it a signed-in person can change their own role`);
@@ -276,7 +289,7 @@ export async function schemaChecks(): Promise<CheckResult[]> {
 
   results.push(
     failures.length === 0
-      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection privacy, and the rule that stops anyone from editing their own role are all as designed.")
+      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection privacy, the rule that stops anyone from editing their own role, and Guide access to the Library by certification are all as designed.")
       : row("schema_rules", "Protective database rules are in place", "problem", failures.join("; ") + ".")
   );
 

@@ -38,4 +38,5 @@ cannot be added to the code without the checks learning about it.
 
 * `0063` and `0064` each exist twice (two unrelated migrations that share a number). Both are live.
 * `0100`–`0103` came from the `main` branch and are live; production code depends on them (the certification classroom, Companion, and Certification Operations), so their files are kept here verbatim.
-* `0104`–`0109` exist only on `main`. Their tables are live in the database but no production code uses them yet.
+* `0104`-`0109` were first written on `main` and applied to the database by hand. Production now uses the tables of `0107` (program authorization), `0108` (Toolkit support) and `0109` (conversation integrity flags) through the operational capabilities (see docs/RECOVERY_LEDGER.md). The tables of `0104`, `0105` and `0106` (exception ledgers, and the Pink Shoelace Legacy records) are preserved without code and are listed with reasons in `lib/ops/system-truth.ts`; nothing is ever dropped.
+* `0110`-`0115`: `0110` reflections and cron names, `0111` the schema snapshot function, `0112` protects `profiles.role` and the Guide fields from browser edits, `0113` lets `cron_runs` record the Pink daily summary, `0114` lets Toolkit support items name all 16 registry tools, `0115` makes Guide read access to the Library follow certification and Toolkit authorization instead of the role label.
