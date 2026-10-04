@@ -58,36 +58,11 @@ export async function addSignatureEntryForHost(
   return { error: error?.message ?? null };
 }
 
-/** Same as addSignatureEntryForHost, for a Guide-facilitated participant.
- *  `supabase` must be the Guide's own RLS-scoped client, RLS enforces
- *  the participant belongs to this Guide. */
-export async function addSignatureEntryForParticipant(
-  supabase: SupabaseClient,
-  participantId: string,
-  layer: SignatureLayer,
-  family: string,
-  element: string | null,
-  note: string | null,
-  sourceType: SignatureSourceType,
-  sourceReference: string | null
-): Promise<{ error: string | null }> {
-  if (!isValidVirtueFamily(family)) return { error: "Not a real Chemistry of Virtue family." };
-  if (element && !isValidVirtueElement(family, element)) {
-    return { error: "Not a real Chemistry of Virtue element for that family." };
-  }
-  const { error } = await supabase.from("virtue_signature_entries").insert({
-    guide_participant_id: participantId,
-    layer,
-    family,
-    element,
-    note,
-    source_type: sourceType,
-    source_reference: sourceReference,
-  });
-  return { error: error?.message ?? null };
-}
-
-/** The Host deciding something no longer belongs, a status flip, not a
+/** A Guide cannot write a participant's Signature (Move 7): there is no function for it and
+ *  the database has no Guide write policy. A Guide can only offer an item back to the
+ *  participant (lib/ops/kept-items.ts), and the participant decides what to keep.
+ *
+ *  The Host deciding something no longer belongs, a status flip, not a
  *  delete, so their own history of what they once recognized and later
  *  revised isn't erased. RLS (host_id or guide_participant_id ownership)
  *  is the only access check; this function trusts the caller's own

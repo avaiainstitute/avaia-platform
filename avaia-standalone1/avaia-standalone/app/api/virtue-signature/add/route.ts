@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   addSignatureEntryForHost,
-  addSignatureEntryForParticipant,
   type SignatureLayer,
   type SignatureSourceType,
 } from "@/lib/virtue-signature";
-import { isAuthorizedGuideRoom } from "@/lib/guide";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,16 +27,11 @@ const VALID_SOURCES: SignatureSourceType[] = [
 
 /** The "Consider for My Virtue Signature" action, components/
  *  WhatBecameVisible.tsx (Journey completion card, Unsung Heroes) posts
- *  here, both from a self-serve Host's own conversation and from a
- *  Guide-facilitated one. An optional participantId in the body routes to
- *  the participant's own Signature (addSignatureEntryForParticipant,
- *  ownership re-checked here rather than trusted from the client) instead
- *  of the signed-in user's, without it, a Guide running a session on a
- *  Youth participant's behalf would otherwise have the recognition land in
- *  the Guide's own personal Signature, which is what this route did before
- *  this check existed. Nothing here is ever automatic, this route only
- *  ever runs from the Host's (or Guide's, on the participant's behalf) own
- *  explicit click. */
+ *  here from a Host's own conversation, and only ever lands on the signed-in
+ *  Host's OWN Signature. A request that names a participant (a Guide acting
+ *  for someone else) is refused: a Guide must never place a participant's
+ *  material in a record the Guide controls. Nothing here is ever automatic,
+ *  this route only ever runs from the Host's own explicit click. */
 export async function POST(request: Request) {
   const supabase = createClient();
   const {
@@ -65,34 +58,16 @@ export async function POST(request: Request) {
   }
   const resolvedSource: SignatureSourceType = VALID_SOURCES.includes(sourceType) ? sourceType : "self";
 
+  // A Guide may never place a participant's material in a Virtue Signature (Move 7). That
+  // would put the participant's recognition in a record the Guide controls, as though it were
+  // the participant's own continuity. A Guide can only OFFER an item back to the participant
+  // (Keep this); the participant builds their own Signature. The database has no Guide write
+  // policy on the participant's Signature either, so this is refused in two places.
   if (participantId) {
-    const { data: participant } = await supabase
-      .from("guide_participants")
-      .select("id, guide_id")
-      .eq("id", participantId)
-      .maybeSingle();
-    if (!participant || participant.guide_id !== user.id) {
-      return NextResponse.json({ error: "Not authorized for this participant." }, { status: 403 });
-    }
-    // Automation audit finding #3.8: ownership alone isn't enough -- a
-    // Guide whose certification or Toolkit authorization has since been
-    // revoked must lose this write too, the same live re-check
-    // isAuthorizedGuideRoom already enforces for Room actions.
-    if (!(await isAuthorizedGuideRoom(supabase, user.id))) {
-      return NextResponse.json({ error: "Not authorized for this participant." }, { status: 403 });
-    }
-    const { error } = await addSignatureEntryForParticipant(
-      supabase,
-      participantId,
-      layer,
-      family,
-      element,
-      note,
-      resolvedSource,
-      sourceReference
+    return NextResponse.json(
+      { error: "A Guide cannot add to a participant's Virtue Signature. Offer the item to them instead, and they decide what to keep." },
+      { status: 403 }
     );
-    if (error) return NextResponse.json({ error }, { status: 400 });
-    return NextResponse.json({ ok: true });
   }
 
   const { error } = await addSignatureEntryForHost(

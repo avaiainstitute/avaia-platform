@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { VIRTUE_FAMILIES, isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
 import { isValidSecondaryLoss } from "@/lib/institution";
 import type { Stage } from "@/lib/engine/prompts";
+import { hostVoiceItems } from "@/lib/kept-items";
 
 // One authoritative mapping of referral field -> epistemic/provenance role,
 // per stage. Built once so completion rendering, Workbook rendering, and
@@ -320,6 +321,10 @@ export type CompletionSummary = {
    *  Signature. Not a new generation, the exact data Workbook already
    *  renders, just reaching the Host at the moment it's freshest. */
   virtues?: VirtueClassification[];
+  /** The Host's own words and chosen direction from this referral (the same fields the
+   *  Workbook calls "In your own words"), each addressed by field and position so the Host
+   *  can intentionally "Keep this" on one. Offered to the Host only; never kept automatically. */
+  hostVoice?: { field: string; index: number; text: string }[];
 };
 
 // A short established-direction field exists for some stages, not others,
@@ -389,6 +394,9 @@ export function getCompletionSummary(
     const classifications = normalizeVirtueClassifications(content[virtueKey]);
     if (classifications.length > 0) summary.virtues = classifications;
   }
+
+  const hostVoice = hostVoiceItems(content);
+  if (hostVoice.length > 0) summary.hostVoice = hostVoice;
 
   return summary;
 }

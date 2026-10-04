@@ -23,9 +23,12 @@ export default function WhatBecameVisible({
   virtues: VirtueClassification[];
   sourceType: "conversation_referral" | "unsung_heroes";
   sourceReference?: string | null;
-  /** Set only inside a Guide-facilitated session, routes the entry to
-   *  this participant's own Signature instead of the signed-in Guide's.
-   *  Omitted (self-serve), it lands on the Host's own Signature as before. */
+  /** Set only inside a Guide-facilitated session. There, "Consider for My Virtue
+   *  Signature" is not offered at all: a Guide must never place a participant's
+   *  material in a record the Guide controls. The participant's own Signature is
+   *  theirs to build; what a Guide may do is offer an item back to them from the
+   *  participant record (Keep this), and the participant decides. Omitted
+   *  (self-serve), it lands on the Host's own Signature as before. */
   participantId?: string | null;
 }) {
   const [added, setAdded] = useState<Set<number>>(new Set());
@@ -45,7 +48,6 @@ export default function WhatBecameVisible({
           element: v.element,
           sourceType,
           sourceReference: sourceReference ?? null,
-          participantId: participantId ?? null,
         }),
       });
       if (res.ok) setAdded((prev) => new Set(prev).add(index));
@@ -70,7 +72,7 @@ export default function WhatBecameVisible({
               </a>
               {added.has(i) ? (
                 <span className="text-xs text-muted">Added to your Signature</span>
-              ) : (
+              ) : participantId ? null : (
                 <button
                   type="button"
                   onClick={() => consider(v, i)}

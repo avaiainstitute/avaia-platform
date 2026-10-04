@@ -12,6 +12,9 @@ import {
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import { VirtueLink } from "@/components/VirtueLink";
 import { getViewFromAboveClass } from "@/lib/view-from-above";
+import { HOST_VOICE_LABEL, hostVoiceItems, offerSourceKey, participantIsReachable } from "@/lib/kept-items";
+import { waitingOfferKeys } from "@/lib/ops/kept-items";
+import { offerItemsAction, withdrawOfferAction } from "./offer-actions";
 
 export const metadata = { title: "Participant Record, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -43,7 +46,125 @@ function sessionTitle(record: ParticipantSessionRecord): string {
   return base;
 }
 
-function SessionCard({ record }: { record: ParticipantSessionRecord }) {
+/** The Guide's way of giving something back. A Guide may OFFER an item from this session to the
+ *  participant; a Guide may never decide that it belongs in the participant's record. The
+ *  participant confirms the session is theirs, sees the item, and chooses whether to keep it,
+ *  and the Guide is never told what they chose. An offer is a pointer, never a copy. */
+function OfferPanel({
+  record,
+  participantId,
+  participantName,
+  reachable,
+  waiting,
+}: {
+  record: ParticipantSessionRecord;
+  participantId: string;
+  participantName: string;
+  reachable: boolean;
+  waiting: Map<string, string>;
+}) {
+  const { session, referral, recognition } = record;
+  const referralItems = referral ? hostVoiceItems(referral.content) : [];
+  const hasAnything = referralItems.length > 0 || !!recognition;
+  if (!hasAnything) return null;
+
+  type Row = { value: string; label: string; text: string; key: string };
+  const rows: Row[] = [
+    ...referralItems.map((i) => ({
+      value: `field:${i.field}:${i.index}`,
+      label: HOST_VOICE_LABEL[i.field],
+      text: i.text,
+      key: offerSourceKey({ sessionId: session.id, sourceType: "referral_field", field: i.field, index: i.index }),
+    })),
+    ...(recognition && session.tool === "unsung-heroes"
+      ? [
+          {
+            value: `recognition:${recognition.id}`,
+            label: "Recognition",
+            text: recognition.title,
+            key: offerSourceKey({ sessionId: session.id, sourceType: "recognition", recognitionId: recognition.id }),
+          },
+        ]
+      : []),
+  ];
+  if (rows.length === 0) return null;
+  const open = rows.filter((r) => !waiting.has(r.key));
+  const pending = rows.filter((r) => waiting.has(r.key));
+
+  return (
+    <div className="mt-5 rounded-lg border border-rule bg-white/[0.03] p-4">
+      <p className="label text-muted">Offer something back to {participantName}</p>
+      <p className="mt-1 text-xs text-muted">
+        Offering is not deciding. They confirm this session was theirs, see the item, and choose whether to keep it. You will not be told what
+        they choose, and nothing is kept for them.
+      </p>
+      {!reachable ? (
+        <p className="mt-3 text-sm text-muted">
+          There is no email on file for this person, so there is no account an offer could reach. Add their email to offer anything.
+        </p>
+      ) : (
+        <>
+          {pending.length > 0 && (
+            <ul className="mt-3 space-y-2">
+              {pending.map((r) => (
+                <li key={r.key} className="flex flex-wrap items-center justify-between gap-3 text-sm text-ink">
+                  <span>
+                    <span className="label mr-2 text-muted">{r.label}</span>
+                    {r.text}
+                  </span>
+                  <form action={withdrawOfferAction} className="flex items-center gap-2">
+                    <input type="hidden" name="participantId" value={participantId} />
+                    <input type="hidden" name="offerId" value={waiting.get(r.key)} />
+                    <span className="text-xs text-muted">Offered, waiting</span>
+                    <button type="submit" className="rounded-md border border-rule px-2.5 py-1 text-xs text-ink hover:border-seal">
+                      Withdraw
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
+          {open.length > 0 && (
+            <form action={offerItemsAction} className="mt-3">
+              <input type="hidden" name="participantId" value={participantId} />
+              <input type="hidden" name="sessionId" value={session.id} />
+              <ul className="space-y-2">
+                {open.map((r) => (
+                  <li key={r.key}>
+                    <label className="flex items-start gap-3 text-sm text-ink">
+                      <input type="checkbox" name="item" value={r.value} className="mt-1" />
+                      <span>
+                        <span className="label mr-2 text-muted">{r.label}</span>
+                        {r.text}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <button type="submit" className="mt-3 rounded-md border border-rule px-4 py-2 font-sans text-sm text-ink transition-colors hover:border-seal">
+                Offer the ones I have ticked
+              </button>
+            </form>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function SessionCard({
+  record,
+  participantId,
+  participantName,
+  reachable,
+  waiting,
+}: {
+  record: ParticipantSessionRecord;
+  participantId: string;
+  participantName: string;
+  reachable: boolean;
+  waiting: Map<string, string>;
+}) {
   const { session, conversation, referral, unsungHeroesConversation, recognition } = record;
   const status = conversation?.status ?? unsungHeroesConversation?.status ?? session.status;
   const createdAt = conversation?.created_at ?? unsungHeroesConversation?.created_at ?? session.created_at;
@@ -134,6 +255,8 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
         </div>
       )}
 
+      <OfferPanel record={record} participantId={participantId} participantName={participantName} reachable={reachable} waiting={waiting} />
+
       {!referral && !recognition && (
         <p className="mt-3 text-sm text-muted">
           {status === "complete"
@@ -156,8 +279,10 @@ function SessionCard({ record }: { record: ParticipantSessionRecord }) {
 
 export default async function ParticipantRecordPage({
   params,
+  searchParams,
 }: {
   params: { participantId: string };
+  searchParams: { offered?: string; offerError?: string };
 }) {
   const supabase = createClient();
   const {
@@ -168,6 +293,8 @@ export default async function ParticipantRecordPage({
   const history = await getParticipantHistory(supabase, user.id, params.participantId);
   if (!history) notFound();
   const { participant, sessions } = history;
+  const reachable = participantIsReachable({ linked_host_id: participant.linked_host_id, email: participant.email });
+  const waiting = await waitingOfferKeys(supabase, user.id, participant.id);
 
   return (
     <div>
@@ -193,12 +320,26 @@ export default async function ParticipantRecordPage({
         </Link>
       </div>
 
+      {searchParams?.offered && (
+        <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">{searchParams.offered}</p>
+      )}
+      {searchParams?.offerError && (
+        <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">{searchParams.offerError}</p>
+      )}
+
       {sessions.length === 0 ? (
         <p className="mt-12 text-muted">No sessions yet for this participant.</p>
       ) : (
         <div className="mt-10 space-y-4">
           {sessions.map((record) => (
-            <SessionCard key={record.session.id} record={record} />
+            <SessionCard
+              key={record.session.id}
+              record={record}
+              participantId={participant.id}
+              participantName={participant.name}
+              reachable={reachable}
+              waiting={waiting}
+            />
           ))}
         </div>
       )}

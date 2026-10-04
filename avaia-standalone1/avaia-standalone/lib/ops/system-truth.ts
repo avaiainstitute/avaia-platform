@@ -299,6 +299,39 @@ export async function schemaChecks(): Promise<CheckResult[]> {
     if (!hasAdmin) failures.push(`certification_applications has no admin policy: admission decisions cannot be recorded`);
   }
 
+  // Keep this (migration 0117). Kept items belong to the Host alone: every policy on them is the
+  // Host's own (no Guide, admin or operational policy may exist), a Host cannot forge a
+  // "from a Guide" item from a browser, and what was kept cannot be rewritten. A Guide's offer is a
+  // pointer a Guide can create and withdraw but never update, and the Guide can see it only while it
+  // is waiting. A Guide must have no write policy on a participant's Virtue Signature.
+  const kept = need("kept_items");
+  if (kept) {
+    if (kept.policies.length === 0) failures.push(`kept_items has no access policy`);
+    const reachable = kept.policies.find((p) => /admin|guide|participant|profiles/i.test(`${p.name} ${p.qual ?? ""}`));
+    if (reachable) failures.push(`kept_items has a policy ("${reachable.name}") that reaches beyond the Host; kept items belong to the Host alone`);
+    const notOwn = kept.policies.find((p) => !/host_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (notOwn) failures.push(`kept_items has a policy ("${notOwn.name}") that is not the Host's own`);
+    const insert = kept.policies.find((p) => p.name === "kept items own insert");
+    if (!insert || !/guide_offer/.test(`${insert.with_check ?? ""}`)) failures.push(`kept_items lets a Host insert a row claiming to have come through a Guide, so provenance could be forged`);
+    if (!kept.triggers.includes("kept_items_protect_content")) failures.push(`kept_items is missing the protective rule "kept_items_protect_content": what was kept could be rewritten`);
+  }
+  const offers = need("guide_item_offers");
+  if (offers) {
+    // polcmd: 'w' is update and '*' is all; neither may exist for a Guide on an offer.
+    if (offers.policies.some((p) => p.cmd === "w" || p.cmd === "*")) failures.push(`guide_item_offers has an update policy; only the Host's verified action may move an offer on`);
+    const read = offers.policies.find((p) => p.cmd === "r");
+    const readText = `${read?.qual ?? ""}`;
+    if (!read || !readText.includes("offered") || !readText.includes("confirmed") || readText.includes("kept") || readText.includes("declined")) {
+      failures.push(`guide_item_offers' Guide read rule does not limit a Guide to offers that are still waiting, so a Guide could learn what a Host decided`);
+    }
+    const notGuideOwned = offers.policies.find((p) => !/guide_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (notGuideOwned) failures.push(`guide_item_offers has a policy ("${notGuideOwned.name}") that is not the offering Guide's own`);
+  }
+  const signatureTable = need("virtue_signature_entries");
+  if (signatureTable && signatureTable.policies.some((p) => p.name === "virtue signature guide write")) {
+    failures.push(`virtue_signature_entries still lets a Guide write into a participant's Virtue Signature (migration 0117 removes it)`);
+  }
+
   // A person must not be able to grant themselves authority by editing their own
   // profile (migration 0112). The rule that stops it is a trigger on profiles.
   // Guide access to the Library follows certification and Toolkit authorization (migration
@@ -321,7 +354,7 @@ export async function schemaChecks(): Promise<CheckResult[]> {
 
   results.push(
     failures.length === 0
-      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection and AI-practice privacy, admin-only human evaluation records, the certification evidence and candidacy-access rules, the rule that stops anyone from editing their own role, and Guide access to the Library by certification are all as designed.")
+      ? row("schema_rules", "Protective database rules are in place", "pass", "Renewal and 60-month rules, the scheduled-job-name rule, candidate-reflection and AI-practice privacy, the Host-only privacy of kept items and the Guide-offer rules, admin-only human evaluation records, the certification evidence and candidacy-access rules, the rule that stops anyone from editing their own role, and Guide access to the Library by certification are all as designed.")
       : row("schema_rules", "Protective database rules are in place", "problem", failures.join("; ") + ".")
   );
 

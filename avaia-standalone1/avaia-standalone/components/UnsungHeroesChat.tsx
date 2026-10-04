@@ -8,6 +8,7 @@ import SpeakButton from "@/components/SpeakButton";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
 import { familyOf, type VirtueFamilyKey } from "@/lib/virtues";
 import WhatBecameVisible from "@/components/WhatBecameVisible";
+import KeepButton from "@/components/KeepButton";
 
 type Msg = { role: "host" | "guide"; content: string };
 type ContextType = "school" | "community" | "family";
@@ -54,6 +55,7 @@ export default function UnsungHeroesChat({
   const [eventName, setEventName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<{
+    id: string;
     title: string;
     whoBecameVisible: string;
     virtueFamily: string;
@@ -172,6 +174,7 @@ export default function UnsungHeroesChat({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not save the workbook entry.");
       setSaved({
+        id: data.recognition.id,
         title: data.recognition.title,
         whoBecameVisible: data.recognition.who_became_visible,
         virtueFamily: data.recognition.virtue_family,
@@ -270,6 +273,16 @@ export default function UnsungHeroesChat({
             sourceReference={conversationId}
             participantId={participantId}
           />
+        )}
+
+        {/* "Keep this": the Host's own choice to carry this recognition into their
+            continuing record. Not shown in a Guide-run session, where the recognition
+            reaches the participant only as an offer they confirm themselves. */}
+        {!participantId && saved.id && (
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <KeepButton body={{ source: "recognition", recognitionId: saved.id }} />
+            <span className="text-xs text-muted">Nothing is kept unless you choose to keep it.</span>
+          </div>
         )}
 
         <div className="mt-6 flex flex-wrap gap-3">

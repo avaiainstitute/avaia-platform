@@ -8,6 +8,7 @@ import SpeakButton from "@/components/SpeakButton";
 import RichText from "@/components/RichText";
 import { extractFocus, resolveFocus, type ResolvedFocus } from "@/lib/virtue-focus";
 import WhatBecameVisible from "@/components/WhatBecameVisible";
+import KeepButton from "@/components/KeepButton";
 // Type-only, referral-provenance.ts is "server-only", but a type-only
 // import is fully erased before bundling, so nothing server-only actually
 // ships to the client. Reused so the card's shape can't drift from what
@@ -324,6 +325,28 @@ export default function JourneyChat({
                 sourceReference={conversationId}
                 participantId={participantId}
               />
+            )}
+
+            {/* "Keep this": the Host's own words from this conversation, each one
+                offered for the Host to intentionally carry into their continuing
+                record. Never automatic. Not shown inside a Guide-run session: the
+                Guide is not the Host, and a participant's items reach them only as
+                an offer they confirm themselves. */}
+            {!participantId && finished.summary.hostVoice && finished.summary.hostVoice.length > 0 && (
+              <div className="mt-4 rounded-lg border border-rule bg-white/[0.03] p-4">
+                <p className="label mb-1 text-muted">In your own words</p>
+                <p className="mb-3 text-xs text-muted">
+                  Nothing here is kept unless you choose to keep it.
+                </p>
+                <ul className="space-y-3">
+                  {finished.summary.hostVoice.map((item) => (
+                    <li key={`${item.field}:${item.index}`} className="flex flex-wrap items-start justify-between gap-3 text-sm text-ink">
+                      <span className="max-w-prose flex-1 font-serif italic leading-relaxed">&ldquo;{item.text}&rdquo;</span>
+                      <KeepButton body={{ source: "journey", conversationId, field: item.field, index: item.index }} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <p className="mt-4 text-sm text-muted">

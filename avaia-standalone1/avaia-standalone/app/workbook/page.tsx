@@ -24,6 +24,38 @@ import {
   SIGNATURE_LAYER_LABEL,
   SIGNATURE_LAYER_ORDER,
 } from "@/lib/virtue-signature";
+import { hostIdentityFrom, listKeptItems, listOfferGroupsForHost, setKeptStatus, type KeptItem } from "@/lib/ops/kept-items";
+
+/** The Host's own kept items as a plain-text download. Only what the Host chose to keep. */
+function buildKeptText(items: KeptItem[], exportedOn: string): string {
+  const bar = "=".repeat(60);
+  const out: string[] = ["WHAT I HAVE KEPT, MY AVAIA WORKBOOK", `Exported: ${exportedOn}`, "", "Each item below is something I chose to keep.", ""];
+  for (const item of items) {
+    out.push(bar, item.label.toUpperCase(), bar, item.content, "");
+    const from =
+      item.source_type === "guide_offer"
+        ? `Offered by ${item.from_guide_name ?? "a Guide"}${item.from_session_date ? ` from a session on ${item.from_session_date.slice(0, 10)}` : ""}; I chose to keep it.`
+        : item.source_type === "unsung_heroes_recognition"
+          ? "From my Unsung Heroes recognition."
+          : "From my own Journey.";
+    out.push(`(${from} Kept ${item.created_at.slice(0, 10)}.)`, "");
+  }
+  return out.join("\n");
+}
+
+/** The Host taking one kept item back out of their record, or putting it back. Their own
+ *  RLS-bound client is the only access check. */
+async function setKeptItemStatus(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in?from=/workbook");
+  const status = String(formData.get("status") ?? "") === "active" ? "active" : "removed";
+  await setKeptStatus(supabase, String(formData.get("itemId") ?? ""), status);
+  redirect("/workbook#kept");
+}
 
 export const metadata = { title: "Your Workbook, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -329,6 +361,14 @@ export default async function WorkbookPage({
   const lastProgram: Program = conversations[conversations.length - 1]?.program ?? "general";
   const exportedOn = new Date().toISOString().slice(0, 10);
 
+  // What the Host has intentionally kept (Keep this), and how many offers from Guides are
+  // waiting. Neither ever includes anything the Host did not choose; a failure here must not
+  // take the rest of the Workbook down.
+  const keptAll = await listKeptItems(supabase, user.id).catch(() => [] as KeptItem[]);
+  const keptActive = keptAll.filter((k) => k.status === "active");
+  const keptRemoved = keptAll.filter((k) => k.status === "removed");
+  const waitingOffers = await listOfferGroupsForHost(hostIdentityFrom(user)).then((g) => g.length).catch(() => 0);
+
   // Group conversations into journeys. Each IAP begins a new journey; the CAT and
   // InnerCompass that follow belong to it. Referrals are matched to a journey by
   // the time window in which they were created.
@@ -486,6 +526,79 @@ export default async function WorkbookPage({
         referrals that carried you forward. Open any journey below to read, save, or print it.
         It&rsquo;s yours, and only yours.
       </p>
+
+      {(keptAll.length > 0 || waitingOffers > 0) && (
+        <section id="kept" className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label text-seal">What you chose to keep</p>
+          <h2 className="mt-1 font-serif text-2xl text-ink">Kept</h2>
+          <p className="mt-1 text-sm text-muted">
+            Only what you chose. Nothing here was kept for you, by AVAIA or by a Guide, and you can take any of it back out.
+          </p>
+
+          {waitingOffers > 0 && (
+            <p className="mt-4 text-sm">
+              <Link href="/workbook/from-guides" className="text-seal underline-offset-2 hover:underline">
+                A Guide has offered you {waitingOffers === 1 ? "something" : "things"} from {waitingOffers === 1 ? "a session" : `${waitingOffers} sessions`}. Look at it, and decide →
+              </Link>
+            </p>
+          )}
+
+          {keptActive.length > 0 && (
+            <ul className="mt-4 space-y-3">
+              {keptActive.map((k) => (
+                <li key={k.id} className="rounded-lg border border-rule bg-white/[0.03] p-4">
+                  <p className="label text-muted">{k.label}</p>
+                  <p className="mt-2 whitespace-pre-wrap border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink">{k.content}</p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-muted">
+                      {k.source_type === "guide_offer"
+                        ? `Offered by ${k.from_guide_name ?? "a Guide"}${k.from_session_date ? ` from a session on ${new Date(k.from_session_date).toLocaleDateString()}` : ""}. You chose to keep it.`
+                        : k.source_type === "unsung_heroes_recognition"
+                          ? "From your Unsung Heroes recognition."
+                          : "From your own Journey."}{" "}
+                      Kept {new Date(k.created_at).toLocaleDateString()}.
+                    </p>
+                    <form action={setKeptItemStatus}>
+                      <input type="hidden" name="itemId" value={k.id} />
+                      <input type="hidden" name="status" value="removed" />
+                      <button type="submit" className="text-xs text-muted underline hover:text-seal">
+                        Take this out
+                      </button>
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {keptActive.length > 0 && (
+            <div className="mt-4">
+              <WorkbookExport text={buildKeptText(keptActive, exportedOn)} filename={`AVAIA-Kept-${exportedOn}.txt`} />
+            </div>
+          )}
+
+          {keptRemoved.length > 0 && (
+            <details className="mt-4">
+              <summary className="cursor-pointer text-sm text-muted">Taken out ({keptRemoved.length})</summary>
+              <ul className="mt-3 space-y-2">
+                {keptRemoved.map((k) => (
+                  <li key={k.id} className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
+                    <span className="max-w-prose flex-1 italic">{k.content.length > 140 ? `${k.content.slice(0, 140)}…` : k.content}</span>
+                    <form action={setKeptItemStatus}>
+                      <input type="hidden" name="itemId" value={k.id} />
+                      <input type="hidden" name="status" value="active" />
+                      <button type="submit" className="text-xs underline hover:text-seal">
+                        Put back
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </section>
+      )}
+
       {signatureEntries.length > 0 && (
         <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
           <p className="label text-seal">The Chemistry of Virtue</p>
