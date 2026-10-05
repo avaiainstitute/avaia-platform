@@ -34,6 +34,10 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
     getRoomWorkbookForGuide(supabase, room.id),
   ]);
 
+  const hostName = room.host_participant_id
+    ? roster.find((r) => r.id === room.host_participant_id)?.name ?? null
+    : null;
+
   return (
     <div>
       <p className="mb-6">
@@ -43,6 +47,11 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
       </p>
       <p className="label mb-3">Shared Room</p>
       <h1 className="font-serif text-3xl text-ink">{room.title ?? "This Room hasn't found its name yet."}</h1>
+      {hostName && (
+        <p className="mt-2 text-muted">
+          {hostName}&rsquo;s Room. You are facilitating it; it is theirs.
+        </p>
+      )}
 
       <div className="mt-8">
         <RoomView
@@ -52,6 +61,7 @@ export default async function RoomDetailPage({ params }: { params: { roomId: str
             status: room.status,
             program: room.program,
             floor_participant_id: room.floor_participant_id,
+            host_participant_id: room.host_participant_id,
           }}
           initialParticipants={participants}
           initialMessages={messages}

@@ -43,7 +43,6 @@ export default function WhatBecameVisible({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          layer: "recognize_in_myself",
           family: v.family,
           element: v.element,
           sourceType,

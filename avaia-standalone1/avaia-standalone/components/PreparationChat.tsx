@@ -8,8 +8,8 @@ import { useState } from "react";
  *  actually asking Preparation things. Turn by turn, bounded calls (see
  *  generatePreparationChatReply's own comment for why), never a streamed
  *  live conversation, never persisted, this is Guide-only scratch work
- *  for preparing the next Host conversation, not itself part of any
- *  continuity record. Sits below PreparationSnapshot on the same page. */
+ *  used while the Guide is actively working with the Host, not itself part
+ *  of any continuity record. Sits below PreparationSnapshot on the same page. */
 
 type Turn = { role: "guide" | "preparation"; content: string };
 
@@ -19,7 +19,7 @@ const SUGGESTED_PROMPTS = [
   "Any existing activities that might fit what became visible?",
   "What Chemistry elements became visible, and why?",
   "Any Secondary Losses that might be worth asking about?",
-  "Give me a few different ways to approach the next conversation.",
+  "Give me a few different ways to work with what is happening right now.",
   "What should I be careful not to take over?",
 ];
 
@@ -58,7 +58,10 @@ export default function PreparationChat({ participantId }: { participantId: stri
       <p className="label text-muted">Ask Preparation</p>
       <p className="mt-1 text-sm text-muted">
         This is for you, not the Host, nothing here reaches their conversation or Workbook.
-        Preparation only reasons from what&rsquo;s already, legitimately on record above.
+        Use it while you are working with the Host: tell it what is happening right now, and it
+        helps you find useful activities and practical applications. It reasons from your account
+        and from what&rsquo;s already, legitimately on record above, and it never goes past the
+        Host&rsquo;s capacity.
       </p>
 
       {turns.length === 0 && (
@@ -101,7 +104,7 @@ export default function PreparationChat({ participantId }: { participantId: stri
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask Preparation anything about this participant's record…"
+          placeholder="What is happening in the work right now, or ask about this participant's record…"
           disabled={sending}
           className="min-w-[16rem] flex-1 rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-sm text-ink outline-none backdrop-blur-sm focus:border-seal"
         />

@@ -2,29 +2,25 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
 import {
-  type SignatureLayer,
-  SIGNATURE_LAYER_LABEL,
-  SIGNATURE_LAYER_ORDER,
   type SignatureSourceType,
+  type SignatureElement,
   type VirtueSignatureEntry,
   IDENTITY_FIRST_RING,
+  NEXT_RING_CAPACITY,
+  groupByElement,
 } from "@/lib/virtue-signature-constants";
 
-// AVAIA Virtue Signature, source-based implementation. See migration
-// 0044's own header for the full provenance trail (original AVAIA source
-// material, recovered and read directly, not invented). This module owns
-// the record/query helpers; the six layers, "other people can provide
-// evidence, not identity," and "living record, not frozen" are the
-// governing facts everything here protects. Plain types/constants live in
+// AVAIA Virtue Signature. This module owns the record/query helpers. The governing
+// facts everything here protects: the Host authors it, "other people can provide
+// evidence, not identity," it is a living record (not frozen), and it becomes visible
+// through repeated experiences, repeated expressions and different scenarios. See the
+// header of lib/virtue-signature-constants.ts for the Founder-governed structure and for
+// why the old six "layers" were removed. Plain types/constants live in
 // lib/virtue-signature-constants.ts (not server-only) and are re-exported
 // here for server code's convenience, see that file's own header for why.
 
-export {
-  SIGNATURE_LAYER_LABEL,
-  SIGNATURE_LAYER_ORDER,
-  IDENTITY_FIRST_RING,
-};
-export type { SignatureLayer, SignatureSourceType, VirtueSignatureEntry };
+export { IDENTITY_FIRST_RING, NEXT_RING_CAPACITY, groupByElement };
+export type { SignatureSourceType, SignatureElement, VirtueSignatureEntry };
 
 /** Adds one entry to a self-serve Host's own Signature. `supabase` must be
  *  the caller's own RLS-scoped client, RLS enforces host_id = auth.uid()
@@ -35,7 +31,6 @@ export type { SignatureLayer, SignatureSourceType, VirtueSignatureEntry };
 export async function addSignatureEntryForHost(
   supabase: SupabaseClient,
   hostId: string,
-  layer: SignatureLayer,
   family: string,
   element: string | null,
   note: string | null,
@@ -48,7 +43,6 @@ export async function addSignatureEntryForHost(
   }
   const { error } = await supabase.from("virtue_signature_entries").insert({
     host_id: hostId,
-    layer,
     family,
     element,
     note,
@@ -97,16 +91,3 @@ export async function listSignatureEntriesForParticipant(supabase: SupabaseClien
   return listEntries(supabase, "guide_participant_id", participantId);
 }
 
-/** Groups active entries by their six layers, in the source material's own
- *  order, what components/VirtueSignatureRecord.tsx and the Noble Gas
- *  visual both read from. */
-export function groupByLayer(entries: VirtueSignatureEntry[]): Record<SignatureLayer, VirtueSignatureEntry[]> {
-  const grouped = Object.fromEntries(SIGNATURE_LAYER_ORDER.map((l) => [l, [] as VirtueSignatureEntry[]])) as Record<
-    SignatureLayer,
-    VirtueSignatureEntry[]
-  >;
-  for (const e of entries) {
-    if (grouped[e.layer]) grouped[e.layer].push(e);
-  }
-  return grouped;
-}

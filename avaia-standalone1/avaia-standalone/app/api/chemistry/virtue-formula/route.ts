@@ -10,6 +10,19 @@ export const dynamic = "force-dynamic";
 // Public, no sign-in, same posture as the rest of the Chemistry of Virtue
 // page. Nothing here is saved; a formula is generated and shown, not
 // persisted anywhere.
+//
+// FOUNDER DECISIONS THIS ROUTE FOLLOWS (2026-10-04):
+//   * The governing term is DESIRED OUTCOME, and the Desired Outcome belongs to the
+//     person: it is returned exactly as the person wrote it, never rewritten by the AI.
+//   * The direction is: what is my desired outcome -> what virtue elements already within
+//     me can I draw upon, within my capacity, toward it.
+//
+// OPEN FOUNDER DECISION (deliberately NOT decided here): how the virtue elements become
+// visible or selected. The options under consideration are the person recognizing them,
+// AVAIA/AI helping them become visible, existing established formulas, or some
+// combination. Today this route has the AI choose the elements. That is the current
+// behavior, isolated in this one function (the model call below), and is NOT a settled
+// rule; when the Founder decides, this is the single place that changes.
 
 const FORMULA_SCHEMA = {
   type: "object",
@@ -17,9 +30,8 @@ const FORMULA_SCHEMA = {
     primaryVirtue: { type: "string" },
     supportingVirtues: { type: "array", items: { type: "string" } },
     balancingVirtues: { type: "array", items: { type: "string" } },
-    desiredOutcome: { type: "string" },
   },
-  required: ["primaryVirtue", "supportingVirtues", "balancingVirtues", "desiredOutcome"],
+  required: ["primaryVirtue", "supportingVirtues", "balancingVirtues"],
   additionalProperties: false,
 } as const;
 
@@ -36,21 +48,22 @@ export async function POST(request: Request) {
   const description = typeof body?.description === "string" ? body.description.trim() : "";
 
   if (!description) {
-    return NextResponse.json({ error: "Describe a role or situation first." }, { status: 400 });
+    return NextResponse.json({ error: "Name your desired outcome first." }, { status: 400 });
   }
   if (description.length > 600) {
     return NextResponse.json({ error: "That's a bit long, try a shorter description." }, { status: 400 });
   }
 
-  const system = `You assemble a Virtue Formula for AVAIA's Chemistry of Virtue: a Primary Virtue, one or more Supporting Virtues, and one or more Balancing Virtues, that together support a person in the role or situation they describe.
+  const system = `You help a person see a Virtue Formula for AVAIA's Chemistry of Virtue: a Primary Virtue, one or more Supporting Virtues, and one or more Balancing Virtues, that together bear on the Desired Outcome the person has named.
+
+The Desired Outcome is the person's own. Every virtue element named is already within this person, within whatever capacity they have right now; never imply that any element is missing from them, and never present the result as who they should become.
 
 Use ONLY element names from this official list, never invent one, never alter a name's spelling or wording:
 ${VIRTUE_REFERENCE}
 
-Primary Virtue: the single element most central to what they described.
+Primary Virtue: the single element most central to the outcome they named.
 Supporting Virtues: elements that reinforce the primary one in this context (1-3).
-Balancing Virtues: elements that keep the primary one from tipping into excess or imbalance, e.g. Fortitude without a balancing element can become rigidity; Positive Attitude without one can become denial (1-2).
-Desired Outcome: one sentence, in plain language, describing what this combination supports, not a virtue name, a real-life outcome.
+Balancing Virtues: elements that balance the primary one in this context (1-2).
 
 Every virtue name you output must exactly match an entry in the list above.`;
 
@@ -58,7 +71,6 @@ Every virtue name you output must exactly match an entry in the list above.`;
     primaryVirtue: string;
     supportingVirtues: string[];
     balancingVirtues: string[];
-    desiredOutcome: string;
   };
   try {
     const client = anthropic();
@@ -105,6 +117,7 @@ Every virtue name you output must exactly match an entry in the list above.`;
     primaryVirtue: realName(content.primaryVirtue),
     supportingVirtues: content.supportingVirtues.filter(isReal).map(realName),
     balancingVirtues: content.balancingVirtues.filter(isReal).map(realName),
-    desiredOutcome: content.desiredOutcome,
+    // The Desired Outcome is the person's own words, returned exactly as written.
+    desiredOutcome: description,
   });
 }

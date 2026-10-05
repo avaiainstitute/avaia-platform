@@ -106,16 +106,16 @@
       "tag": null,
       "purpose": "Establish the Table as AVAIA's core structural metaphor, and fix the standing seats, their ownership, and their boundaries before any seat is occupied in practice.",
       "outcomes": [
-        "Name the three standing seats at the Table — Host, Guide, Witness — and the responsibilities of each.",
+        "Name the standing presences at the Table — the Host, the Guide, and the Witness function — and the responsibilities of each. The Witness is a function, not a person.",
         "State and explain 'Host owns the Table' and 'Guide protects the Table, not the outcome.'",
-        "Explain the Witness's function, including the principle that nothing leaves the Table unwitnessed.",
+        "Explain the Witness's function: making sure every relevant voice at the Table can have a voice and that no single voice takes over, including the principle that nothing leaves the Table unwitnessed.",
         "Explain how and why additional seats may be added, and that they are always invitations, never defaults."
       ],
       "teaching": [
-        "The Table is AVAIA's structural metaphor for every guided conversation. Three standing seats are present: the Host, whose experience the Table exists to serve; the Guide, who stewards the process; and the Witness, who certifies that what happens at the Table is seen.",
+        "The Table is AVAIA's structural metaphor for every guided conversation. Three standing presences are there: the Host, whose experience established the Room and who owns the Table; the Guide, who facilitates within the Host's Room and stewards the process but never owns it; and the Witness, which is not a person but a standing function at the Table that makes sure every relevant voice can have a voice and that no single voice takes over.",
         "'Host owns the Table' is not a figure of speech — it is an operating rule. The Host decides what is discussed, how far it goes, and when it stops. Nothing about certification, Guide experience, or AVAIA's structure transfers that ownership to anyone else.",
         "'Guide protects the Table, not the outcome' draws the boundary of the Guide's job precisely. The Guide is responsible for the conditions of the conversation — safety, pace, structure, whether the Host's words are being accurately reflected — and is explicitly not responsible for where the Host ends up, what they decide, or how they feel afterward. Confusing these two jobs is one of the most common and most serious failure modes for new Guides.",
-        "The Witness certifies visibility: nothing that happens at the Table disappears unseen. In practice this often means the Guide themselves also holds Witness function, or a witnessing structure built into the platform — the operational mechanics are covered in Module 7. What matters here is the principle: an AVAIA conversation is not private in the sense of being unaccountable to its own record: what was said was actually witnessed, not silently lost.",
+        "The Witness is a standing function, not a person and not another participant. The voices it safeguards may be people, and may also be virtue elements, fear, doubt, guilt, shame, a younger or future self, a Secondary Loss, or an Empty Chair perspective. It certifies visibility and balanced participation without controlling the outcome: nothing that happens at the Table disappears unseen, and no single voice takes over. Grief requires a witness. What matters here is the principle: an AVAIA conversation is not private in the sense of being unaccountable to its own record; what was said was actually witnessed, not silently lost.",
         "Additional seats — a second Host in a shared-loss conversation, a support person, a co-Guide — can be added, but always as an invitation extended by the Host, never as a default configuration a Guide introduces on their own authority."
       ],
       "language": [
@@ -1516,25 +1516,27 @@
       "module_num": 5,
       "title": "Virtue Formula",
       "tag": null,
-      "purpose": "Teach the Virtue Formula — Primary + Supporting + Balancing → Observable Outcome — as the mechanism by which virtue becomes visible in a Host's actual behavior.",
+      "purpose": "Teach the Virtue Formula — Primary + Supporting + Balancing → Desired Outcome — as a way for a person to start from an outcome they want or need and ask what virtue elements already within them they can draw upon, within their capacity, toward it.",
       "outcomes": [
-        "State the Virtue Formula: Primary + Supporting + Balancing → Observable Outcome.",
-        "Identify virtue clusters where more than one virtue combines in an observable outcome."
+        "State the Virtue Formula: Primary + Supporting + Balancing → Desired Outcome.",
+        "Explain that the Desired Outcome belongs to the person, and that the formula asks what virtue elements already within them they can draw upon, within their capacity, toward that outcome — not which virtues they lack."
       ],
       "teaching": [
-        "Virtue rarely shows up as a single trait acting alone. The Virtue Formula — Primary + Supporting + Balancing → Observable Outcome — describes how a primary virtue combines with supporting virtues and a balancing element to produce what's actually observable in behavior.",
-        "A Host's patience with a difficult family member, for instance, might combine a primary virtue (Self-Control) with a supporting virtue (Love) and a balancing element (Humility) to produce the observable outcome of staying present without becoming resentful.",
-        "Recognizing virtue clusters — rather than forcing every observed behavior into a single virtue label — keeps this recognition system accurate to how virtue actually operates in a real person's life."
+        "The Virtue Formula starts with an outcome the person wants or needs, not with a virtue. The question is: what is my desired outcome, and what virtue elements already within me can I draw upon, within my capacity, toward that outcome?",
+        "Every virtue element is already within the person. The formula is not a list of what someone lacks and not a prescription for who they should become. It is a way of waking up, within the capacity the person has right now, enough of what is already there to take the next step. The Desired Outcome belongs to the Host, and the formula is never a verdict about who the Host is.",
+        "Virtue rarely shows up as a single trait acting alone, which is why a formula can name a Primary virtue element, Supporting elements and Balancing elements together."
       ],
       "language": [
-        "Primary + Supporting + Balancing → Observable Outcome",
-        "Virtue clusters"
+        "Primary + Supporting + Balancing → Desired Outcome",
+        "Desired Outcome",
+        "Already within me, within my capacity"
       ],
       "examples": [
-        "A Host who forgives a sibling while still holding them accountable may show a cluster: Love (primary), Justice (supporting), Self-Control (balancing)."
+        "A Host whose desired outcome is to stay present with a difficult family member without becoming resentful might draw on Self-Control (primary), Love (supporting) and Humility (balancing).",
+        "A Host whose desired outcome is to forgive a sibling while still holding them accountable might draw on Love (primary), Justice (supporting) and Self-Control (balancing)."
       ],
-      "activity": "Candidates take a sample observable Host behavior and work backward to identify a plausible Primary + Supporting + Balancing combination.",
-      "workbook": "Identify an observable behavior of your own and work out, using the formula, what virtue cluster might produce it."
+      "activity": "Candidates practice holding a Host's Desired Outcome as the Host's own, and checking the Host's capacity before anything else, using the question: what is your desired outcome, and what virtue elements already within you could you draw upon, within your capacity right now?",
+      "workbook": "Name an outcome you want or need right now. What virtue elements already within you could you draw upon, within the capacity you have today, toward it?"
     },
     {
       "item_key": "lesson-5.15",

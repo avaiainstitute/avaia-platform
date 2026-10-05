@@ -296,6 +296,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/certification-selftests").then((m) => m.certificationPathChecks()),
     // Keep this (Move 7): a Guide may offer, never decide; only the Host's own choice keeps anything.
     import("@/lib/ops/kept-selftests").then((m) => m.keepThisChecks()),
+    // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
+    import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
     // Proof that no Pink Shoelace Foundation item appears in AVAIA's operations.
     import("@/lib/pink/separation").then((m) => m.pinkSeparationChecks()),
   ]);

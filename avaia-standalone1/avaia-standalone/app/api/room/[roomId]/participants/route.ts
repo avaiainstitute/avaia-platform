@@ -50,6 +50,7 @@ export async function DELETE(request: Request, { params }: { params: { roomId: s
     return NextResponse.json({ error: "Missing participantId." }, { status: 400 });
   }
 
-  await removeParticipantFromRoom(supabase, params.roomId, participantId);
+  const result = await removeParticipantFromRoom(supabase, params.roomId, participantId);
+  if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
   return NextResponse.json({ ok: true });
 }

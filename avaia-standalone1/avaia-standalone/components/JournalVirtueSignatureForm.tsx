@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { VIRTUE_FAMILIES, virtuesByFamily } from "@/lib/virtues";
-import { SIGNATURE_LAYER_LABEL, SIGNATURE_LAYER_ORDER, type SignatureLayer } from "@/lib/virtue-signature-constants";
 
 /** "Journal -> Virtue Signature", entirely the Host's own choice, entirely
- *  the Host's own classification. AVAIA never decides which layer, family,
+ *  the Host's own classification. AVAIA never decides which family,
  *  or element a journal entry demonstrates -- there is no AI call anywhere
  *  in this component. Posts to the existing /api/virtue-signature/add
  *  route unchanged, with sourceType "journal" and sourceReference set to
@@ -14,7 +13,6 @@ import { SIGNATURE_LAYER_LABEL, SIGNATURE_LAYER_ORDER, type SignatureLayer } fro
  *  pre-classified virtue to offer, since nothing here was ever classified. */
 export default function JournalVirtueSignatureForm({ entryId }: { entryId: string }) {
   const [open, setOpen] = useState(false);
-  const [layer, setLayer] = useState<SignatureLayer>("recognize_in_myself");
   const [familyName, setFamilyName] = useState(VIRTUE_FAMILIES[0].name);
   const [elementName, setElementName] = useState("");
   const [note, setNote] = useState("");
@@ -36,7 +34,6 @@ export default function JournalVirtueSignatureForm({ entryId }: { entryId: strin
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          layer,
           family: familyName,
           element: elementName || null,
           note: note || null,
@@ -78,24 +75,6 @@ export default function JournalVirtueSignatureForm({ entryId }: { entryId: strin
       </p>
 
       <div className="space-y-4">
-        <div>
-          <label className="label mb-2 block" htmlFor="js-layer">
-            Which part of your Signature?
-          </label>
-          <select
-            id="js-layer"
-            value={layer}
-            onChange={(e) => setLayer(e.target.value as SignatureLayer)}
-            className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
-          >
-            {SIGNATURE_LAYER_ORDER.map((l) => (
-              <option key={l} value={l} className="bg-[#05060b] text-ink">
-                {SIGNATURE_LAYER_LABEL[l]}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div>
           <label className="label mb-2 block" htmlFor="js-family">
             Virtue Family
@@ -140,7 +119,7 @@ export default function JournalVirtueSignatureForm({ entryId }: { entryId: strin
 
         <div>
           <label className="label mb-2 block" htmlFor="js-note">
-            In your own words <span className="text-muted">(optional)</span>
+            In your own words: the experience or scenario where this showed up <span className="text-muted">(optional)</span>
           </label>
           <textarea
             id="js-note"

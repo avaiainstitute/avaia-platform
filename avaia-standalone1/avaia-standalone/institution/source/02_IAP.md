@@ -8,7 +8,7 @@ Host for deeper understanding.
 
 ## Position
 
-Preparation GPT → IAP → CAT
+IAP → CAT
 
 ## Primary Objectives
 

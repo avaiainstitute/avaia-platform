@@ -1,22 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  addSignatureEntryForHost,
-  type SignatureLayer,
-  type SignatureSourceType,
-} from "@/lib/virtue-signature";
+import { addSignatureEntryForHost, type SignatureSourceType } from "@/lib/virtue-signature";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const VALID_LAYERS: SignatureLayer[] = [
-  "recognize_in_myself",
-  "others_noticed",
-  "qualities_together",
-  "different_expressions",
-  "want_to_practice",
-  "want_to_contribute",
-];
 const VALID_SOURCES: SignatureSourceType[] = [
   "self",
   "conversation_referral",
@@ -40,7 +28,6 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  const layer = body?.layer;
   const family: string = (body?.family ?? "").toString();
   const element: string | null = body?.element ? body.element.toString() : null;
   const sourceType = body?.sourceType;
@@ -53,8 +40,10 @@ export async function POST(request: Request) {
   // now changes nothing for them.
   const note: string | null = body?.note ? body.note.toString().trim() || null : null;
 
-  if (!VALID_LAYERS.includes(layer) || !family) {
-    return NextResponse.json({ error: "Missing layer or family." }, { status: 400 });
+  // A `layer` in the body (sent by a page loaded before the six categories were retired) is
+  // ignored: there are no layers any more.
+  if (!family) {
+    return NextResponse.json({ error: "Missing virtue family." }, { status: 400 });
   }
   const resolvedSource: SignatureSourceType = VALID_SOURCES.includes(sourceType) ? sourceType : "self";
 
@@ -73,7 +62,6 @@ export async function POST(request: Request) {
   const { error } = await addSignatureEntryForHost(
     supabase,
     user.id,
-    layer,
     family,
     element,
     note,

@@ -2,21 +2,32 @@
 
 ## Purpose
 
-Transform recognition into faithful participation. Prepare the Host and
-Guide for meaningful conversation, strengthen continuity, deepen
-understanding, and connect recognition to everyday life. The connective
-tissue between IAP, CAT, InnerCompass, the Chemistry of Virtue, Secondary
-Losses, Workbook reflections, recognition practices, and the AVAIA Library.
+A human Guide-side tool, used while the Guide is actively working with the
+Host. It helps the human Guide translate what is happening into useful
+activities and practical applications, while preserving the Host's meaning,
+the Host's capacity, the Host's ownership, and the Guide's boundaries.
+Transform recognition into faithful participation, strengthen continuity,
+deepen understanding, and connect recognition to everyday life. The
+connective tissue between IAP, CAT, InnerCompass, the Chemistry of Virtue,
+Secondary Losses, Workbook reflections, recognition practices, and the AVAIA
+Library.
+
+(Reconciled 2026-10-04 to a Founder decision. Earlier wording that described
+Preparation as preparing the Host, as occurring before any core conversation,
+or as between-session preparation is superseded.)
 
 The participant is not a problem to solve. The participant is a person to
 understand.
 
 ## Position
 
-Not a fourth Journey stage. The Journey remains Awareness → Understanding →
-Agency, IAP → CAT → InnerCompass. Preparation supports continuity before,
-between, and around those conversations, it never replaces them, never
-conducts a conversation itself, and never determines an outcome.
+Not a fourth Journey stage, and not a step that comes before IAP. The Journey
+remains Awareness → Understanding → Agency, IAP → CAT → InnerCompass.
+Preparation is used by the human Guide alongside those conversations, while
+the Guide is actively working with the Host. It never replaces them, never
+conducts a conversation itself, and never determines an outcome. If the Host
+is at capacity, or does not want or need anything more, the Guide does not
+push further, and neither does Preparation.
 
 ## Governing Principles
 
@@ -87,7 +98,8 @@ disciplined rather than adding an eighth heading.
 
 ## Scope
 
-Individual, Guide-facing only, at `/toolkit/preparation`. Reuses the same
+Individual, Guide-facing only, at `/toolkit/preparation`, and linked from the
+Guide's active session pages. Reuses the same
 Guide-participant ownership model as the rest of the Guide Toolkit, a
 Guide can only prepare using a participant's own record, never another
 Guide's. No Host-facing surface exists. Guide-facilitated Youth remains

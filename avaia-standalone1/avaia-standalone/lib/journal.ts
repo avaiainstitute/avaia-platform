@@ -76,17 +76,12 @@ export async function getJournalEntry(supabase: SupabaseClient, entryId: string)
 /** A small, fixed set of optional ponder prompts, reusing already-
  *  established, named AVAIA reflection categories rather than inventing
  *  new ones (per the explicit instruction not to build a large new prompt
- *  library in this pass): the Virtue Signature's own six layers, and the
- *  Unsung Heroes Recognition Cycle's five stages. Each is offered only as
+ *  library in this pass): the Unsung Heroes Recognition Cycle's stages. (The
+ *  six Virtue Signature "layers" that used to be offered here were retired
+ *  2026-10-04: they came only from AI-generated documents, not a Founder source.) Each is offered only as
  *  a one-line hint shown above a blank composer -- never sent to any
  *  model, never a question AVAIA asks or follows up on. */
 export const JOURNAL_PROMPTS: { label: string; hint: string }[] = [
-  { label: "What I Recognize in Myself", hint: "Something you recognize in yourself." },
-  { label: "What Other People Have Noticed", hint: "Something someone else has noticed in you." },
-  { label: "How My Qualities Work Together", hint: "How a few of your qualities showed up together." },
-  { label: "Different Ways the Same Quality Can Show Up", hint: "A different way a familiar quality showed up this time." },
-  { label: "What I Want to Practice", hint: "Something you want to practice." },
-  { label: "How I Want to Contribute", hint: "Something you want to contribute." },
   { label: "Observe", hint: "Something you noticed, in yourself or someone else." },
   { label: "Reflect", hint: "Something you're still thinking about." },
 ];

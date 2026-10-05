@@ -36,6 +36,15 @@ export async function POST(request: Request) {
     ? body.program
     : "general";
 
-  const room = await createRoom(supabase, user.id, program);
-  return NextResponse.json({ room });
+  const hostParticipantId: string | undefined = body?.hostParticipantId;
+  if (!hostParticipantId) {
+    return NextResponse.json({ error: "Choose the Host whose Room this is." }, { status: 400 });
+  }
+
+  try {
+    const room = await createRoom(supabase, user.id, hostParticipantId, program);
+    return NextResponse.json({ room });
+  } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Could not open the Room." }, { status: 409 });
+  }
 }

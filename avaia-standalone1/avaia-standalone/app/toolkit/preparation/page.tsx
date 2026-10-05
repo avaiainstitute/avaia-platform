@@ -28,11 +28,12 @@ export default async function PreparationPickerPage() {
         </Link>
       </p>
       <p className="label mb-3">Preparation</p>
-      <h1 className="font-serif text-4xl text-ink">Who are you preparing for?</h1>
+      <h1 className="font-serif text-4xl text-ink">Who are you working with?</h1>
       <p className="mt-4 text-lg text-muted">
-        Organizes what&rsquo;s already on record for a participant before a session. It never
-        interprets, diagnoses, or decides what the conversation should discover, only what has
-        already, explicitly, been recorded.
+        A tool for you, the Guide, to use while you are working with a Host. Tell it what is
+        happening, and it helps you find useful activities and practical applications. It
+        never interprets, diagnoses, or decides what the conversation should discover, and it
+        never goes past the Host&rsquo;s capacity.
       </p>
 
       {participants.length === 0 ? (
@@ -51,7 +52,7 @@ export default async function PreparationPickerPage() {
                 <p className="text-ink">{p.name}</p>
                 <p className="text-xs text-muted">{p.email ?? "No email on file"}</p>
               </div>
-              <span className="label text-muted">Prepare →</span>
+              <span className="label text-muted">Open →</span>
             </Link>
           ))}
         </div>

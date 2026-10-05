@@ -75,9 +75,9 @@ institution.
 
 # Core Conversation Flow
 
-Preparation GPT
-
-↓
+(Preparation GPT is a human Guide-side tool used alongside these conversations,
+while the Guide is actively working with the Host; it is not a stage that
+precedes them.)
 
 Individual Awareness Profile (IAP)
 

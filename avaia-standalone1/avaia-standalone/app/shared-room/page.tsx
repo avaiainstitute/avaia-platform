@@ -117,7 +117,9 @@ export default function SharedRoomPage() {
 
       <section className="rule-t mt-12 border-t border-rule pt-10">
         <p className="text-muted">
-          A Shared Room is facilitated by a Certified AVAIA Guide, using the same Awareness →
+          A Shared Room belongs to the Host whose experience it is; everyone else is invited to
+          that Host&rsquo;s Table. It is facilitated by a Certified AVAIA Guide, who never owns it,
+          using the same Awareness →
           Understanding → Agency Journey that carries every AVAIA conversation, individual or
           shared.
         </p>

@@ -2,36 +2,40 @@
 
 import { useState } from "react";
 import { familyByName } from "@/lib/virtues";
-import { IDENTITY_FIRST_RING, type VirtueSignatureEntry } from "@/lib/virtue-signature-constants";
+import {
+  IDENTITY_FIRST_RING,
+  NEXT_RING_CAPACITY,
+  groupByElement,
+  type VirtueSignatureEntry,
+} from "@/lib/virtue-signature-constants";
 
-type Node = { family: string; element: string | null; entryId?: string };
+type Node = { family: string; element: string | null };
 
-// AVAIA Noble Gas / Identity visual, source-based, from the recovered
-// VIRTUOUS NOBLE GAS.pptx (center "YOU," a first ring of two, growing
-// outer rings) and Dorian's own Atom video transcript: "that nucleus is
-// the identity of that atom. It doesn't change." / "those two are
-// protecting our identity... the two elements of integrity that keep us
-// who we are." Outer rings are NOT a fixed inventory implying what's
-// missing, the transcript is explicit that every capacity is already
-// available to "wake up," so an empty or sparse outer ring reads as
-// "not yet added," never as absence.
+// AVAIA Noble Gas / Identity visual, from the Founder's own account (the recovered
+// VIRTUOUS NOBLE GAS.pptx and the Atom video transcript): the nucleus is the person's
+// identity ("YOU"), "that nucleus is the identity of that atom. It doesn't change." The
+// first ring is Vulnerability + Authenticity, "the two elements of integrity that keep us
+// who we are."
 //
-// Ring capacity loosely echoes the transcript's own electron-shell
-// figures (first ring 2, second ring up to 8, third ring larger) as a
-// thematic nod, not a literal chemistry rule enforced anywhere else in
-// the app.
-const RING_CAPACITY = [2, 8, 12, 16];
+// Reconciled 2026-10-04 to the Founder's decisions:
+//   * the NEXT ring may hold up to eight virtue elements that become visible;
+//   * additional rings let the Signature keep becoming visible as more elements and
+//     patterns emerge;
+//   * capacities for later rings are NOT established, and none is invented here. The
+//     earlier 2/8/12/16 figures were only a "thematic nod" and have been removed. Anything
+//     beyond the first eight elements is shown together on one further ring, with no fixed
+//     size. How later rings should be divided is an open Founder question.
+//
+// One node per distinct virtue. A virtue the person has recognized again, in another
+// experience or scenario, is the same node with more entries behind it (see the list on
+// /signature); repetition is the pattern, and nothing here counts or scores it.
+// Outer rings are NOT a fixed inventory implying what's missing: every capacity is already
+// available to "wake up," so a sparse ring reads as "not yet added," never as absence.
 
 function ringsFor(nodes: Node[]): Node[][] {
-  const rings: Node[][] = [];
-  let i = 0;
-  let ringIndex = 0;
-  while (i < nodes.length) {
-    const capacity = RING_CAPACITY[Math.min(ringIndex, RING_CAPACITY.length - 1)];
-    rings.push(nodes.slice(i, i + capacity));
-    i += capacity;
-    ringIndex++;
-  }
+  if (nodes.length === 0) return [];
+  const rings: Node[][] = [nodes.slice(0, NEXT_RING_CAPACITY)];
+  if (nodes.length > NEXT_RING_CAPACITY) rings.push(nodes.slice(NEXT_RING_CAPACITY));
   return rings;
 }
 
@@ -44,7 +48,7 @@ export default function VirtueSignatureVisual({
 }) {
   const [hovered, setHovered] = useState<Node | null>(null);
 
-  const outerNodes: Node[] = entries.map((e) => ({ family: e.family, element: e.element, entryId: e.id }));
+  const outerNodes: Node[] = groupByElement(entries).map((g) => ({ family: g.family, element: g.element }));
   const firstRing: Node[] = IDENTITY_FIRST_RING.map((r) => ({ family: r.family, element: r.element }));
   const outerRings = ringsFor(outerNodes);
 
@@ -61,11 +65,7 @@ export default function VirtueSignatureVisual({
   }
 
   // Vulnerability (index 0 of IDENTITY_FIRST_RING) at 9 o'clock, Authenticity
-  // (index 1) at 3 o'clock, a deliberate visual correction from the
-  // default top/bottom placement positionsFor would give a 2-node ring
-  // (angle -90deg then +90deg). Purely a layout choice for these two fixed
-  // nodes; outer rings still use positionsFor's own top-start distribution,
-  // untouched, and the underlying first-ring data/meaning is unchanged.
+  // (index 1) at 3 o'clock. Purely a layout choice for these two fixed nodes.
   const FIRST_RING_ANGLES = [Math.PI, 0];
   const firstRingPositions = firstRing.map((_, i) => {
     const angle = FIRST_RING_ANGLES[i] ?? 0;
@@ -116,7 +116,7 @@ export default function VirtueSignatureVisual({
           );
         })}
 
-        {/* Outer rings, the Host's own living entries */}
+        {/* Outer rings, the virtues that have become visible in this person */}
         {outerRings.map((ring, ri) => {
           const radius = baseRadius + ringGap * (ri + 1);
           const positions = positionsFor(ring, radius);

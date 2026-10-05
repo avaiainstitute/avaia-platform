@@ -20,9 +20,7 @@ import {
 import { VirtueLink } from "@/components/VirtueLink";
 import {
   listSignatureEntriesForHost,
-  groupByLayer,
-  SIGNATURE_LAYER_LABEL,
-  SIGNATURE_LAYER_ORDER,
+  groupByElement,
 } from "@/lib/virtue-signature";
 import { hostIdentityFrom, listKeptItems, listOfferGroupsForHost, setKeptStatus, type KeptItem } from "@/lib/ops/kept-items";
 
@@ -344,11 +342,10 @@ export default async function WorkbookPage({
       })
   );
 
-  // Real Virtue Signature data, not just a link to it, the six-layer
-  // Signature this Host has actually accumulated (lib/virtue-signature.ts,
-  // already the established data-access layer, categories unchanged).
+  // Real Virtue Signature data, not just a link to it: the virtues that have become
+  // visible in this Host, with every experience behind each (lib/virtue-signature.ts).
   const signatureEntries = await listSignatureEntriesForHost(supabase, user.id);
-  const signatureByLayer = groupByLayer(signatureEntries);
+  const signatureElements = groupByElement(signatureEntries);
 
   const transcripts = await Promise.all(
     conversations.map((c) => loadMessages(supabase, c.id))
@@ -604,25 +601,19 @@ export default async function WorkbookPage({
           <p className="label text-seal">The Chemistry of Virtue</p>
           <h2 className="mt-1 font-serif text-2xl text-ink">Your Virtue Signature</h2>
           <p className="mt-1 text-sm text-muted">
-            What has actually accumulated in your Signature, across all six layers.
+            The virtues that have become visible in you, through your own repeated experiences
+            and expressions.
           </p>
-          <div className="mt-5 space-y-4">
-            {SIGNATURE_LAYER_ORDER.filter((layer) => signatureByLayer[layer].length > 0).map((layer) => (
-              <div key={layer}>
-                <p className="label text-muted">{SIGNATURE_LAYER_LABEL[layer]}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {signatureByLayer[layer].map((entry) => (
-                    <VirtueLink
-                      key={entry.id}
-                      family={entry.family}
-                      virtue={entry.element}
-                      className="rounded-full border border-rule px-3 py-1 text-sm text-ink transition-colors hover:border-seal"
-                    >
-                      {entry.element ? `${entry.family}, ${entry.element}` : entry.family}
-                    </VirtueLink>
-                  ))}
-                </div>
-              </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {signatureElements.map((g) => (
+              <VirtueLink
+                key={g.key}
+                family={g.family}
+                virtue={g.element}
+                className="rounded-full border border-rule px-3 py-1 text-sm text-ink transition-colors hover:border-seal"
+              >
+                {g.element ? `${g.family}, ${g.element}` : g.family}
+              </VirtueLink>
             ))}
           </div>
           <div className="mt-5">

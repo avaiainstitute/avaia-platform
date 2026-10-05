@@ -48,6 +48,14 @@ export default async function ToolkitUnsungHeroesSessionPage({
         <Link href="/toolkit" className="label hover:text-seal">
           ← Back to Dashboard
         </Link>
+        <Link
+          href={`/toolkit/preparation/${session.participant_id}`}
+          target="_blank"
+          rel="noopener"
+          className="ml-4 text-sm text-muted hover:text-seal"
+        >
+          Open Preparation for this participant (Guide only)
+        </Link>
       </p>
       <p className="label mb-3 mt-8">Unsung Heroes</p>
       <h1 className="font-serif text-3xl text-ink">{UNSUNG_HEROES_PATH_LABEL[convo.path]}</h1>

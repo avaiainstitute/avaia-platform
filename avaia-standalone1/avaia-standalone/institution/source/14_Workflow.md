@@ -6,8 +6,11 @@ Defines the end-to-end operational flow of AVAIA.
 
 ## Primary Workflow
 
-Preparation GPT → Individual Awareness Profile (IAP) → Conversations
-Across Time (CAT) → InnerCompass → Workbook → Continued Participation
+Individual Awareness Profile (IAP) → Conversations Across Time (CAT) →
+InnerCompass → Workbook → Continued Participation
+
+Preparation GPT is not a step in this sequence. It is a human Guide-side tool used
+while the Guide is actively working with the Host (see 05_PreparationGPT.md).
 
 ## Supporting Systems
 

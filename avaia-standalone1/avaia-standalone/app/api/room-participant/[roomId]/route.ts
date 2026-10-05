@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  *  app/room-join, never from the Guide's cookie session. Bearer-authenticated
  *  the same way app/api/room-access/* already is; getRoomForParticipant does
  *  its own seated-participant check (admin client, resolveSeatedParticipant)
- *  since rooms/room_participants/room_messages are Guide-owned by RLS and
+ *  since rooms/room_participants/room_messages are reachable by RLS only through the facilitating Guide's account (the Room belongs to its Host) and
  *  this caller's own token could never pass that RLS directly. */
 export async function GET(request: Request, { params }: { params: { roomId: string } }) {
   const auth = await authenticateBearer(request);

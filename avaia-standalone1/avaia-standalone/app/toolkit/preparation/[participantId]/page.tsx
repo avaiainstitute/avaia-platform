@@ -226,10 +226,12 @@ export default async function PreparationPage({
 
       <div className="mt-5 rounded-lg border border-rule bg-white/[0.04] p-5">
         <p className="text-sm text-ink">
-          The Host isn&rsquo;t arriving to be examined. This page only organizes what they&rsquo;ve
-          already, explicitly brought forward, it doesn&rsquo;t interpret them, diagnose them, or
-          decide what this conversation should discover. It exists so nobody drops their story while
-          they walk from one room to the next.
+          The Host isn&rsquo;t here to be examined. This is a tool for you, the Guide, to use while you
+          are working with them. It organizes what they&rsquo;ve already, explicitly brought forward,
+          and helps you turn what is happening now into useful activities and practical applications.
+          It doesn&rsquo;t interpret them, diagnose them, or decide what the conversation should
+          discover, and the Host&rsquo;s meaning, capacity and ownership stay theirs. It exists so
+          nobody drops their story while the work moves forward.
         </p>
       </div>
 

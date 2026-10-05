@@ -119,7 +119,7 @@ export interface Role {
 export const ROLES: Role[] = [
   { key: "host", name: "Host", charge: "The person whose life, story, question, or situation is being explored. The Host owns the conversation and every decision, and determines what is shared, what stays private, and the pace." },
   { key: "guide", name: "Guide", charge: "A trained human Guide (or, in some implementations, an AI-supported guide function) who protects the process and facilitates understanding. The Guide never owns the outcome." },
-  { key: "witness", name: "Witness", charge: "The function that preserves visibility and continuity, human, system, or both. It records what became visible so each conversation begins where the last concluded." },
+  { key: "witness", name: "Witness", charge: "Not a person: a standing function and presence at the Table. It makes sure every relevant voice at the Table can have a voice and that no single voice takes over, and it preserves visibility and continuity, recording what became visible so each conversation begins where the last concluded. It does not control the outcome and does not become another participant. Grief requires a witness." },
   { key: "council", name: "Council", charge: "A structured set of perspectives that expands understanding. It advises, and never governs or overrides the Host." },
 ];
 
@@ -130,7 +130,7 @@ export interface Seat {
 export const SEATS: Seat[] = [
   { name: "Host", text: "The owner of the conversation." },
   { name: "Guide", text: "The facilitator who protects the process." },
-  { name: "Witness", text: "The keeper of continuity and visibility." },
+  { name: "Witness", text: "Not a person: the standing function at the Table that lets every relevant voice be heard and keeps any single voice from taking over, and that keeps continuity and visibility." },
   { name: "Council", text: "Invited perspectives that broaden understanding." },
   { name: "Self Seats", text: "Parts of the Host's own experience, younger self, present self, future self, wounded self, wise self, forgotten self." },
   { name: "Relationship Seats", text: "Important people or relationships connected to the Host's situation." },
@@ -234,21 +234,20 @@ export const CONVERSATIONS: ConversationManual[] = [
   {
     slug: "preparation",
     name: "Preparation GPT",
-    position: "Occurs before any core conversation.",
-    purpose: "Assists the Guide before a conversation by organizing available information, reviewing prior documentation, and identifying themes and areas to explore, without determining direction or outcome.",
-    objectives: ["Organize available information", "Review previous referrals", "Identify emerging themes", "Highlight possible areas for exploration", "Prepare the Guide for thoughtful engagement", "Promote consistency across conversations"],
-    structure: ["Review available documentation", "Summarize prior conversations", "Identify recurring themes", "Highlight possible virtues", "Identify possible secondary losses", "Suggest areas for exploration", "Prepare the Guide"],
-    hostDoes: "The Host is not present. Preparation is used by the Guide before a session.",
-    inputs: ["Prior workbook records", "Previous referrals"],
-    outputs: ["Preparation summary", "Conversation overview", "Significant themes", "Questions for exploration"],
-    boundaries: ["Does not replace the Guide", "Does not conduct conversations", "Does not make conclusions", "Does not predict outcomes"],
-    referralTo: "iap",
+    position: "A human Guide-side tool, used while the Guide is actively working with the Host. Not a stage that comes before IAP.",
+    purpose: "Helps the human Guide, during active work with the Host, translate what is happening into useful activities and practical applications, while preserving the Host's meaning, the Host's capacity, the Host's ownership, and the Guide's boundaries. It supports the Guide; it does not replace the Guide and does not decide direction or outcome.",
+    objectives: ["Help the Guide see what is becoming visible in the work", "Connect what is happening to existing activities and practical applications", "Honor the Host's capacity and ownership", "Keep the Guide's boundaries intact", "Reduce the burden on the Guide of working out everything alone", "Promote consistency across conversations"],
+    structure: ["The Guide describes what is happening in the work", "Preparation draws on what is already on record for the Host", "It offers possibilities: questions, activities, practical applications", "The Guide decides what, if anything, to use", "The Host remains the owner of meaning and of the pace"],
+    hostDoes: "The Host is in the work with the Guide. Preparation is used by the Guide, not the Host, and nothing it says is shown to the Host.",
+    inputs: ["The Guide's account of what is happening now", "Prior workbook records", "Previous referrals"],
+    outputs: ["Possible questions", "Possible activities and practical applications", "Themes becoming visible", "A Guide self-check"],
+    boundaries: ["Does not replace the Guide", "Does not conduct conversations", "Does not make conclusions", "Does not predict outcomes", "Does not prescribe an outcome", "Never overrides the Host's capacity"],
   },
   {
     slug: "iap",
     name: "Individual Awareness Profile",
     abbr: "IAP",
-    position: "Preparation GPT → IAP → CAT",
+    position: "IAP → CAT → InnerCompass",
     purpose: "The first core conversation. Establishes awareness by helping the Host describe their current experience, identify disruption, and recognize emerging patterns, without solving or interpreting prematurely.",
     objectives: ["Establish rapport and psychological safety", "Listen without premature interpretation", "Identify presenting concerns", "Recognize areas of fragmentation", "Observe emerging themes and patterns", "Identify possible secondary losses", "Recognize existing strengths and virtues"],
     structure: ["Establish connection", "Explore the presenting concern", "Increase awareness of significant experiences", "Observe patterns and relationships", "Identify areas requiring further understanding", "Summarize what has become visible", "Prepare a referral to CAT"],
@@ -316,7 +315,7 @@ export interface OperatingSystem {
 }
 export const OPERATING_SYSTEMS: OperatingSystem[] = [
   { slug: "guide", name: "Guide Operating System", abbr: "GOS", purpose: "Establishes the posture, responsibilities, and operational standards of every AVAIA Guide. The Guide is not the source of answers, but the steward of the conversation.", responsibilities: ["Protect the integrity of the conversation", "Maintain a posture of curiosity", "Increase visibility without directing conclusions", "Support understanding before action", "Preserve the Host's ownership of decisions", "Implement the GIVE Method"], boundaries: ["No diagnosis", "No prescribing", "No outcome control", "No replacing Host autonomy"] },
-  { slug: "witness", name: "Witness Operating System", abbr: "WOS", purpose: "Ensures that what becomes visible is acknowledged, preserved, and integrated without judgment or control. The Witness remembers without controlling.", responsibilities: ["Observe faithfully", "Preserve continuity", "Record meaningful developments", "Recognize progress", "Support integration over time"], boundaries: ["Does not direct", "Does not evaluate worth", "Does not make decisions"] },
+  { slug: "witness", name: "Witness Operating System", abbr: "WOS", purpose: "Ensures that what becomes visible is acknowledged, preserved, and integrated without judgment or control, and that every relevant voice at the Table can have a voice while no single voice takes over. The Witness is a standing function, not a person. It remembers without controlling.", responsibilities: ["Make room for every relevant voice at the Table", "Keep any single voice from taking over", "Observe faithfully", "Preserve continuity", "Record meaningful developments", "Recognize progress", "Support integration over time"], boundaries: ["Does not direct", "Does not evaluate worth", "Does not make decisions"] },
   { slug: "council", name: "Council Operating System", abbr: "COS", purpose: "Provides structured opportunities to consider additional perspectives that strengthen understanding, wisdom, and discernment. The Council exists to broaden awareness, not determine conclusions.", responsibilities: ["Offer perspective", "Expand understanding", "Encourage thoughtful reflection", "Reveal possibilities", "Challenge assumptions respectfully"], boundaries: ["Advisory only", "Does not govern", "Does not override the Host"] },
 ];
 

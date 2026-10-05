@@ -143,5 +143,5 @@ export const EXPECTED_COLUMNS: Record<string, string[]> = {
   recognitions: ["acknowledgment", "contribution", "conversation_id"],
   referrals: ["conversation_id"],
   room_participants: ["last_seen_at"],
-  rooms: ["floor_participant_id"],
+  rooms: ["floor_participant_id", "host_participant_id"],
 };

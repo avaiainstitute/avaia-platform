@@ -29,7 +29,12 @@ const ROOM_HISTORY_WINDOW = 40;
 
 export type DbRoom = {
   id: string;
+  /** The FACILITATING Guide (the account the Room is operated through). Not the owner:
+   *  the Room and its Table belong to the Host named by host_participant_id. */
   guide_id: string;
+  /** The Host whose experience establishes this Room. Owns the Room and the Table. Null only
+   *  for a Room opened before Host ownership was recorded. */
+  host_participant_id: string | null;
   title: string | null;
   program: Program;
   status: "active" | "paused" | "complete" | "archived";
@@ -94,21 +99,43 @@ const ROOM_REFERRAL_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-/** Creates a new, empty Shared Room. Title is set later, once the Room has
- *  found its own identity (see updateRoomTitle), never guessed at
- *  creation. */
+/** Opens a Shared Room for a Host. The Host always owns the Room and the Table; the Guide
+ *  facilitates within it and never owns it (Founder decision, 2026-10-04). The Host is seated
+ *  first, through the same consent gate every other seat uses, and cannot be removed by the
+ *  Guide afterwards (see removeParticipantFromRoom). Title is set later, once the Room has
+ *  found its own identity (see updateRoomTitle), never guessed at creation.
+ *
+ *  `supabase` is the facilitating Guide's own RLS-scoped client, so a participant who is not
+ *  the Guide's own cannot be named as the Host. */
 export async function createRoom(
   supabase: SupabaseClient,
   guideId: string,
+  hostParticipantId: string,
   program: Program = "general"
 ): Promise<DbRoom> {
+  const { data: host } = await supabase
+    .from("guide_participants")
+    .select("id")
+    .eq("id", hostParticipantId)
+    .eq("guide_id", guideId)
+    .maybeSingle();
+  if (!host) throw new Error("Choose one of your own participants as the Host of this Room.");
+
   const { data, error } = await supabase
     .from("rooms")
-    .insert({ guide_id: guideId, program })
+    .insert({ guide_id: guideId, host_participant_id: hostParticipantId, program })
     .select("*")
     .single();
   if (error) throw new Error(error.message);
-  return data as DbRoom;
+  const room = data as DbRoom;
+
+  const seated = await addParticipantToRoom(supabase, room.id, hostParticipantId);
+  if (!seated.ok) {
+    // A Room with no Host seated is not a Room: undo rather than leave an ownerless one.
+    await supabase.from("rooms").delete().eq("id", room.id);
+    throw new Error(seated.error);
+  }
+  return room;
 }
 
 export async function updateRoomTitle(
@@ -162,18 +189,24 @@ export async function addParticipantToRoom(
 
 /** Removes a seat, soft-removal only. Nothing this participant already
  *  said or brought back is deleted; they simply stop being addressed as
- *  present going forward. */
+ *  present going forward. The Host who owns the Room is never removed by the
+ *  facilitating Guide: it is the Host's Table. */
 export async function removeParticipantFromRoom(
   supabase: SupabaseClient,
   roomId: string,
   participantId: string
-): Promise<void> {
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { data: room } = await supabase.from("rooms").select("host_participant_id").eq("id", roomId).maybeSingle();
+  if (room?.host_participant_id && room.host_participant_id === participantId) {
+    return { ok: false, error: "This is the Host's Room. The Host stays seated at their own Table." };
+  }
   await supabase
     .from("room_participants")
     .update({ removed_at: new Date().toISOString() })
     .eq("room_id", roomId)
     .eq("guide_participant_id", participantId)
     .is("removed_at", null);
+  return { ok: true };
 }
 
 export async function listRoomParticipants(
@@ -216,6 +249,16 @@ export async function listRoomParticipants(
       last_seen_at: s.last_seen_at,
     };
   });
+}
+
+/** The name of the Host who owns this Room, or null for a Room opened before ownership was
+ *  recorded. Used only to tell the Room's AI who the Table belongs to. */
+async function hostNameFor(supabase: SupabaseClient, roomId: string): Promise<string | null> {
+  const { data: room } = await supabase.from("rooms").select("host_participant_id").eq("id", roomId).maybeSingle();
+  const hostId = room?.host_participant_id as string | null | undefined;
+  if (!hostId) return null;
+  const { data: person } = await supabase.from("guide_participants").select("name").eq("id", hostId).maybeSingle();
+  return (person?.name as string | undefined) ?? null;
 }
 
 export async function loadRoomMessages(
@@ -282,7 +325,8 @@ export async function postRoomMessage(
   const hasYouth = participants.some((p) => !!p.developmental_band);
   const system = roomSystemPromptFor(
     participants.map((p) => p.name),
-    hasYouth
+    hasYouth,
+    await hostNameFor(supabase, roomId)
   );
 
   const messages = await loadRoomMessages(supabase, roomId);
@@ -651,7 +695,7 @@ export async function suggestBringForward(
  *  this participant's own turn, through the same postRoomMessage every
  *  ordinary Room turn uses, nothing about how it re-enters the Room is a
  *  separate, hidden mechanism. The actual writes use the admin client
- *  (room_shared_items/room_messages are Guide-owned tables by RLS),
+ *  (room_shared_items/room_messages are reachable by RLS only through the facilitating Guide's account (the Room itself belongs to its Host)),
  *  reachable only after the ownership check above, not exposed to any
  *  unauthenticated or cross-participant caller. */
 export async function returnToRoomAsParticipant(
@@ -742,7 +786,8 @@ export async function closeRoom(
   const hasYouth = participants.some((p) => !!p.developmental_band);
   const system = `${roomSystemPromptFor(
     participants.map((p) => p.name),
-    hasYouth
+    hasYouth,
+    await hostNameFor(supabase, roomId)
   )}\n\n${"=".repeat(60)}\n\n${ROOM_REFERRAL_FORMAT}`;
 
   const history: Anthropic.MessageParam[] = messages.map((m) => ({
@@ -967,7 +1012,7 @@ async function resolveSeatedParticipant(
 /** Everything a participant's own Room view needs to render: the Room
  *  itself, its roster, the shared thread, and this participant's own
  *  identity within it. `supabase` here is always the admin client, since
- *  rooms/room_participants/room_messages are Guide-owned by RLS; the
+ *  rooms/room_participants/room_messages are reachable by RLS only through the facilitating Guide's account (the Room belongs to its Host); the
  *  explicit resolveSeatedParticipant check above is what stands in place
  *  of RLS for this caller. */
 export async function getRoomForParticipant(
@@ -1076,7 +1121,7 @@ export async function postRoomMessageAsParticipant(
  *  device via app/room-join. Reuses startPrivateProcessing verbatim,
  *  passing the ADMIN client as its `supabase` argument: every read inside
  *  that function (guardian consent, room_messages for origin context) is
- *  against Guide-owned rows this participant's own bearer-scoped client
+ *  against facilitating-Guide-scoped rows this participant's own bearer-scoped client
  *  could never pass RLS for, exactly like every other participant-facing
  *  function in this file, resolveSeatedParticipant stands in for RLS
  *  here instead. The participant chooses their own contextSelection, see
@@ -1291,7 +1336,7 @@ export async function findActiveRoomForHost(hostId: string): Promise<{ joinPath:
 //     existing, already-tested private step-out "brought forward" flow.
 //     Reading it here does not change what that flow does.
 //
-// Same ownership posture as every other Room table: guide-owner RLS for
+// Same access posture as every other Room table: facilitating-Guide RLS for
 // the Guide's own cookie-scoped client, admin-client-plus-
 // resolveSeatedParticipant for a participant, exactly like every other
 // participant-facing function above. Room authorization is the only gate;

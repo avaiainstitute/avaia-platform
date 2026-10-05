@@ -379,7 +379,7 @@ export default function ChemistryPage() {
         <p className="label mb-2 text-muted">What you can do here</p>
         <ul className="space-y-1 text-sm text-ink">
           <li>Browse the table above and tap any element to read its definition.</li>
-          <li>Generate a Virtue Formula for a role, feeling, or situation you name.</li>
+          <li>Start from a desired outcome and see a Virtue Formula toward it.</li>
           <li>Spell your name and see which elements it maps to.</li>
           <li>Explore it together, one element at a time, as a family.</li>
         </ul>
@@ -432,11 +432,12 @@ export default function ChemistryPage() {
         <p className="label mb-2">Generated live · Capacity</p>
         <h2 className="font-serif text-2xl text-ink">Virtue Formulas</h2>
         <p className="mt-2 max-w-prose text-muted">
-          Virtues rarely operate alone. Describe a role, a feeling, or a
-          situation, and AVAIA will assemble a purposeful combination, a
-          primary virtue, supporting virtues, and balancing virtues, using
-          only real Chemistry of Virtue elements. Nothing is invented; every
-          name shown is checked against the table above.
+          Virtues rarely operate alone. Start with an outcome you want or
+          need. The question is: what virtue elements already within you can
+          you draw upon, within your capacity right now, toward it? A formula
+          names a primary virtue, supporting virtues, and balancing virtues,
+          using only real Chemistry of Virtue elements. Nothing is invented;
+          every name shown is checked against the table above.
         </p>
         <p className="mt-3 text-center font-serif text-lg text-seal">
           Primary Virtue + Supporting Virtue(s) + Balancing Virtue(s) = Desired Outcome

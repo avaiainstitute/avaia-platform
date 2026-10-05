@@ -83,7 +83,7 @@ export default function VirtueFormulaGenerator({
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe a role, a feeling, or a situation, e.g. &ldquo;being a present dad&rdquo;"
+          placeholder="Your desired outcome, e.g. &ldquo;being a present dad&rdquo;"
           maxLength={600}
           className="flex-1 rounded-md border border-rule bg-white/[0.04] px-4 py-2.5 text-ink outline-none backdrop-blur-sm placeholder:text-muted focus:border-seal"
         />
@@ -92,7 +92,7 @@ export default function VirtueFormulaGenerator({
           disabled={!description.trim() || loading}
           className="shrink-0 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Assembling…" : "Generate"}
+          {loading ? "Working…" : "Generate"}
         </button>
       </form>
 
@@ -128,13 +128,13 @@ export default function VirtueFormulaGenerator({
             </div>
           )}
           <div className="border-t border-rule pt-4">
-            <p className="label mb-1 text-muted">What this supports</p>
+            <p className="label mb-1 text-muted">Your desired outcome</p>
             <p className="font-serif text-lg text-ink">{formula.desiredOutcome}</p>
           </div>
           <div className="border-t border-rule pt-4">
             <p className="text-ink">
-              These virtues are all around you. See if you can notice them becoming visible in
-              someone.
+              These virtue elements are already within you, within whatever capacity you have right
+              now. You can also notice them becoming visible in someone else.
             </p>
             <button
               type="button"

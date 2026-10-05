@@ -361,7 +361,7 @@ export default async function ToolkitDashboardPage() {
                     href={`/toolkit/preparation/${p.id}`}
                     className="rounded-md border border-rule px-4 py-2 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
                   >
-                    Prepare
+                    Preparation
                   </Link>
                   <form action={startIapSessionForExisting}>
                     <input type="hidden" name="participantId" value={p.id} />

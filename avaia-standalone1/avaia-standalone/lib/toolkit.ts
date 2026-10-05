@@ -45,7 +45,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "preparation",
     label: "Preparation",
-    description: "Organizes what's already on record for a participant before a session, never interprets, diagnoses, or prescribes what should happen next.",
+    description: "A Guide-side tool for use while you are working with a Host: helps you turn what is happening into useful activities and practical applications. Never interprets, diagnoses, or prescribes what should happen, and never goes past the Host's capacity.",
     status: "installed",
     href: "/toolkit/preparation",
   },

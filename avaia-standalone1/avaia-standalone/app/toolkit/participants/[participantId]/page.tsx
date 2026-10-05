@@ -316,7 +316,7 @@ export default async function ParticipantRecordPage({
           href={`/toolkit/preparation/${participant.id}`}
           className="inline-block rounded-md border border-rule px-5 py-2.5 font-sans text-sm font-medium text-ink transition-colors hover:border-seal"
         >
-          Prepare for next session
+          Open Preparation (while working with them)
         </Link>
       </div>
 

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listRooms, createRoom } from "@/lib/engine/room";
 import type { DbRoom } from "@/lib/engine/room";
-import { isAuthorizedGuideRoom } from "@/lib/guide";
+import { isAuthorizedGuideRoom, listGuideParticipants } from "@/lib/guide";
 
 export const metadata = { title: "Shared Rooms, Guide Toolkit, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -32,8 +32,19 @@ async function startRoom(formData: FormData) {
     ? (programRaw as "general" | "defying-grief" | "youth")
     : "general";
 
-  const room = await createRoom(supabase, user.id, program);
-  redirect(`/toolkit/rooms/${room.id}`);
+  const hostParticipantId = String(formData.get("hostParticipantId") ?? "");
+  if (!hostParticipantId) {
+    redirect(`/toolkit/rooms?error=${encodeURIComponent("Choose the Host whose Room this is.")}`);
+  }
+
+  let roomId: string;
+  try {
+    const room = await createRoom(supabase, user.id, hostParticipantId, program);
+    roomId = room.id;
+  } catch (e) {
+    redirect(`/toolkit/rooms?error=${encodeURIComponent(e instanceof Error ? e.message : "Could not open the Room.")}`);
+  }
+  redirect(`/toolkit/rooms/${roomId}`);
 }
 
 function statusLabel(room: DbRoom) {
@@ -52,6 +63,8 @@ export default async function RoomsListPage({
   if (!user) redirect("/sign-in?from=/toolkit/rooms");
 
   const rooms = await listRooms(supabase, user.id);
+  const roster = await listGuideParticipants(supabase, user.id);
+  const nameById = new Map(roster.map((p) => [p.id, p.name]));
 
   return (
     <div>
@@ -69,7 +82,7 @@ export default async function RoomsListPage({
       )}
       <p className="mt-4 text-lg text-muted">
         A Room is not who the people are in it. A room is where the shared conversation is
-        allowed to develop into whatever it needs to be. In a Shared Room, every participant
+        allowed to develop into whatever it needs to be, and it belongs to the Host whose experience it is. In a Shared Room, every participant
         keeps ownership of their own voice and story. When a person decides they need a private
         conversation, nothing moves from that conversation back into the Shared Room without the
         choice and permission of the person having that private conversation.
@@ -81,6 +94,28 @@ export default async function RoomsListPage({
           action={startRoom}
           className="rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm"
         >
+          <label className="label mb-2 block" htmlFor="hostParticipantId">
+            Whose Room is this?
+          </label>
+          <select
+            id="hostParticipantId"
+            name="hostParticipantId"
+            required
+            defaultValue=""
+            className="mb-4 w-full max-w-xs rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+          >
+            <option value="" disabled>
+              Choose the Host
+            </option>
+            {roster.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <p className="mb-4 text-sm text-muted">
+            The Room and its Table belong to the Host whose experience it is. You facilitate it.
+          </p>
           <label className="label mb-2 block" htmlFor="program">
             Program
           </label>
@@ -95,7 +130,7 @@ export default async function RoomsListPage({
             <option value="youth">Youth</option>
           </select>
           <p className="mt-2 text-sm text-muted">
-            You will invite participants to the Table on the next screen.
+            Other seats at the Table are invitations to the Host&rsquo;s Room, added on the next screen.
           </p>
           <button
             type="submit"
@@ -123,7 +158,7 @@ export default async function RoomsListPage({
                   <span className="label shrink-0 text-muted">{statusLabel(room)}</span>
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  {room.program} · opened {new Date(room.created_at).toLocaleDateString()}
+                  {room.host_participant_id && nameById.get(room.host_participant_id) ? `${nameById.get(room.host_participant_id)}’s Room · ` : ""}{room.program} · opened {new Date(room.created_at).toLocaleDateString()}
                 </p>
               </Link>
             ))}

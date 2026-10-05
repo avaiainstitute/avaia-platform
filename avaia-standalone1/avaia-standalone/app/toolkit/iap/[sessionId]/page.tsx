@@ -169,6 +169,14 @@ export default async function ToolkitIapSessionPage({
         <Link href="/toolkit" className="label hover:text-seal">
           ← Back to Dashboard
         </Link>
+        <Link
+          href={`/toolkit/preparation/${session.participant_id}`}
+          target="_blank"
+          rel="noopener"
+          className="ml-4 text-sm text-muted hover:text-seal"
+        >
+          Open Preparation for this participant (Guide only)
+        </Link>
       </p>
       <JourneyChat
         key={convo.id}

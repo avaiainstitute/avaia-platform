@@ -26,6 +26,8 @@ type Room = {
   status: "active" | "paused" | "complete" | "archived";
   program: string;
   floor_participant_id: string | null;
+  /** The Host who owns this Room and Table. The facilitating Guide never owns it. */
+  host_participant_id: string | null;
 };
 
 type RosterEntry = { id: string; name: string };
@@ -132,6 +134,7 @@ export default function RoomView({
   }
 
   async function removeParticipant(participantId: string) {
+    if (participantId === room.host_participant_id) return;
     await fetch(`/api/room/${room.id}/participants`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -364,7 +367,8 @@ export default function RoomView({
     <div>
       {/* Table roster */}
       <section className="rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
-        <p className="label mb-3 text-muted">Who Is Seated at This Table</p>
+        <p className="label mb-1 text-muted">Who Is Seated at This Table</p>
+        <p className="mb-3 text-xs text-muted">The Table belongs to its Host. You facilitate it; the other seats are invitations.</p>
         <div className="flex flex-wrap gap-2">
           {participants.map((p) => (
             <span
@@ -372,11 +376,14 @@ export default function RoomView({
               className="inline-flex items-center gap-2 rounded-full border border-rule bg-white/[0.04] px-3 py-1.5 text-sm text-ink"
             >
               {p.name}
+              {p.participant_id === room.host_participant_id && (
+                <span className="text-xs text-seal" title="This is the Host's Room and Table">Host</span>
+              )}
               {p.developmental_band && <span className="text-xs text-muted">({p.developmental_band})</span>}
               {floorParticipantId === p.participant_id && (
                 <span className="text-xs text-seal" title="Has the floor">●</span>
               )}
-              {room.status === "active" && (
+              {room.status === "active" && p.participant_id !== room.host_participant_id && (
                 <button
                   onClick={() => removeParticipant(p.participant_id)}
                   className="text-muted hover:text-seal"

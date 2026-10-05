@@ -8,26 +8,31 @@ import {
   addSignatureEntryForHost,
   removeSignatureEntry,
   listSignatureEntriesForHost,
-  groupByLayer,
-  SIGNATURE_LAYER_LABEL,
-  SIGNATURE_LAYER_ORDER,
-  type SignatureLayer,
+  groupByElement,
+  type SignatureSourceType,
 } from "@/lib/virtue-signature";
 import { VIRTUE_FAMILIES, virtuesByFamily } from "@/lib/virtues";
 
 export const metadata = { title: "My Virtue Signature, AVAIA" };
 export const dynamic = "force-dynamic";
 
-function isLayer(value: FormDataEntryValue | null): value is SignatureLayer {
-  return typeof value === "string" && (SIGNATURE_LAYER_ORDER as string[]).includes(value);
-}
+const SOURCE_LABEL: Record<SignatureSourceType, string> = {
+  self: "You added this",
+  conversation_referral: "From a conversation",
+  unsung_heroes: "From Unsung Heroes",
+  observation_offered: "Offered to you",
+  journal: "From your journal",
+};
 
-/** "A Virtue Signature is a living recognition record, not a ranked trait
- *  list." (AVAIA_My_Virtue_Signature_Master_Format_Kit.docx), a Host
- *  adding their own recognition directly, the same act "What Became
- *  Visible" (components/WhatBecameVisible.tsx) offers after a
- *  conversation or Unsung Heroes recognition, just self-initiated rather
- *  than sourced from one. */
+/** A Virtue Signature becomes visible through repeated experiences, repeated
+ *  expressions, and different scenarios; those patterns help reveal who the person
+ *  is. It is a living recognition record, not a ranked trait list and not a list
+ *  chosen once. This is a Host adding their own recognition directly, the same act
+ *  "What Became Visible" (components/WhatBecameVisible.tsx) offers after a
+ *  conversation or Unsung Heroes recognition, just self-initiated rather than
+ *  sourced from one. The same virtue can be added again, in its own words, whenever
+ *  it shows up in a different experience; there is deliberately no count, threshold
+ *  or score. */
 async function addEntry(formData: FormData) {
   "use server";
 
@@ -37,13 +42,12 @@ async function addEntry(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/signature");
 
-  const layer = formData.get("layer");
   const family = String(formData.get("family") ?? "");
   const element = String(formData.get("element") ?? "").trim() || null;
   const note = String(formData.get("note") ?? "").trim() || null;
-  if (!isLayer(layer) || !family) redirect("/signature");
+  if (!family) redirect("/signature");
 
-  const { error } = await addSignatureEntryForHost(supabase, user.id, layer, family, element, note, "self", null);
+  const { error } = await addSignatureEntryForHost(supabase, user.id, family, element, note, "self", null);
   if (error) redirect(`/signature?error=${encodeURIComponent(error)}`);
   redirect("/signature");
 }
@@ -62,6 +66,10 @@ async function removeEntry(formData: FormData) {
   redirect("/signature");
 }
 
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
 export default async function VirtueSignaturePage({
   searchParams,
 }: {
@@ -77,7 +85,7 @@ export default async function VirtueSignaturePage({
   if (!profile?.consent_at) redirect("/welcome");
 
   const entries = await listSignatureEntriesForHost(supabase, user.id);
-  const grouped = groupByLayer(entries);
+  const elements = groupByElement(entries);
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
@@ -91,12 +99,18 @@ export default async function VirtueSignaturePage({
       <p className="label mb-3 mt-8">Chemistry of Virtue</p>
       <h1 className="font-serif text-4xl text-ink">My Virtue Signature</h1>
       <p className="mt-4 text-lg text-muted">
-        Not a personality test. Not a score. A living recognition record, what keeps becoming
-        visible when you are being you. Other people can offer evidence. Only you author this.
+        Not a personality test. Not a score. Your Virtue Signature becomes visible through repeated
+        experiences, repeated expressions, and different scenarios, and those patterns help reveal
+        who you are. Other people can offer evidence. Only you author this.
       </p>
 
       <div className="mt-10 rounded-lg border border-rule bg-white/[0.03] p-6">
         <VirtueSignatureVisual entries={entries} />
+        <p className="mt-4 text-center text-sm text-muted">
+          At the center is you, your identity, which doesn&rsquo;t change. Vulnerability and
+          Authenticity surround and protect it. Around them, the virtues that keep becoming
+          visible in you.
+        </p>
       </div>
 
       {/* Wake It Up, Signature as orientation, not just record. Static
@@ -129,87 +143,79 @@ export default async function VirtueSignaturePage({
         </p>
       )}
 
-      {SIGNATURE_LAYER_ORDER.map((layer) => (
-        <section key={layer} className="mt-10 border-t border-rule pt-6">
-          <p className="label text-muted">{SIGNATURE_LAYER_LABEL[layer]}</p>
-          {grouped[layer].length > 0 ? (
-            <div className="mt-3 space-y-2">
-              {grouped[layer].map((e) => (
-                <div
-                  key={e.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-rule bg-white/[0.03] px-4 py-3"
+      <section className="mt-10 border-t border-rule pt-6">
+        <p className="label text-muted">What has become visible</p>
+        <p className="mt-1 text-sm text-muted">
+          Each virtue, with the experiences and scenarios where it showed up, in your own words.
+        </p>
+        {elements.length > 0 ? (
+          <div className="mt-4 space-y-4">
+            {elements.map((g) => (
+              <div key={g.key} className="rounded-md border border-rule bg-white/[0.03] px-4 py-3">
+                <VirtueLink
+                  family={g.family}
+                  virtue={g.element}
+                  className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
                 >
-                  <div>
-                    <VirtueLink
-                      family={e.family}
-                      virtue={e.element}
-                      className="text-sm text-ink underline decoration-rule underline-offset-2 hover:text-seal"
-                    >
-                      {e.element ? `${e.family}, ${e.element}` : e.family}
-                    </VirtueLink>
-                    {e.note && <p className="mt-1 text-sm text-muted">{e.note}</p>}
-                    <p className="mt-1">
-                      <Link
-                        href={`/library?virtue_family=${encodeURIComponent(e.family)}${e.element ? `&virtue_element=${encodeURIComponent(e.element)}` : ""}`}
-                        className="text-xs text-muted underline hover:text-seal"
-                      >
-                        Explore in the Library →
-                      </Link>
-                    </p>
-                  </div>
-                  <form action={removeEntry}>
-                    <input type="hidden" name="entryId" value={e.id} />
-                    <button type="submit" className="text-xs text-muted transition-colors hover:text-red-300">
-                      Remove
-                    </button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-muted">Nothing here yet.</p>
-          )}
-        </section>
-      ))}
+                  {g.element ? `${g.family}, ${g.element}` : g.family}
+                </VirtueLink>
+                <ul className="mt-2 space-y-2">
+                  {g.entries.map((e) => (
+                    <li key={e.id} className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        {e.note && <p className="text-sm text-ink">{e.note}</p>}
+                        <p className="text-xs text-muted">
+                          {SOURCE_LABEL[e.source_type] ?? "You added this"} · {fmtDate(e.created_at)}
+                        </p>
+                      </div>
+                      <form action={removeEntry}>
+                        <input type="hidden" name="entryId" value={e.id} />
+                        <button type="submit" className="text-xs text-muted transition-colors hover:text-red-300">
+                          Remove
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2">
+                  <Link
+                    href={`/library?virtue_family=${encodeURIComponent(g.family)}${g.element ? `&virtue_element=${encodeURIComponent(g.element)}` : ""}`}
+                    className="text-xs text-muted underline hover:text-seal"
+                  >
+                    Explore in the Library →
+                  </Link>
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-muted">Nothing here yet.</p>
+        )}
+      </section>
 
       <section className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
-        <p className="label mb-3 text-muted">Add to Your Signature</p>
+        <p className="label mb-1 text-muted">Add to Your Signature</p>
+        <p className="mb-3 text-sm text-muted">
+          When a virtue shows up in you, add it, even if it is one you have added before. The same
+          quality showing up in a different experience is how a pattern becomes visible.
+        </p>
         <form action={addEntry}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="label mb-2 block" htmlFor="layer">
-                Which layer
-              </label>
-              <select
-                id="layer"
-                name="layer"
-                required
-                className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
-              >
-                {SIGNATURE_LAYER_ORDER.map((l) => (
-                  <option key={l} value={l} className="bg-[#05060b]">
-                    {SIGNATURE_LAYER_LABEL[l]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label mb-2 block" htmlFor="family">
-                Family
-              </label>
-              <select
-                id="family"
-                name="family"
-                required
-                className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
-              >
-                {VIRTUE_FAMILIES.map((f) => (
-                  <option key={f.key} value={f.name} className="bg-[#05060b]">
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="label mb-2 block" htmlFor="family">
+              Family
+            </label>
+            <select
+              id="family"
+              name="family"
+              required
+              className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
+            >
+              {VIRTUE_FAMILIES.map((f) => (
+                <option key={f.key} value={f.name} className="bg-[#05060b]">
+                  {f.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mt-4">
             <label className="label mb-2 block" htmlFor="element">
@@ -231,12 +237,12 @@ export default async function VirtueSignaturePage({
           </div>
           <div className="mt-4">
             <label className="label mb-2 block" htmlFor="note">
-              In your own words (optional)
+              In your own words: the experience or scenario where this showed up (optional)
             </label>
             <textarea
               id="note"
               name="note"
-              rows={2}
+              rows={3}
               className="w-full rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-ink outline-none backdrop-blur-sm focus:border-seal"
             />
           </div>
