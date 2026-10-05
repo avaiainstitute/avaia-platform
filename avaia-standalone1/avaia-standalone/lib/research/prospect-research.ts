@@ -282,7 +282,8 @@ export async function runProspectResearch(
   vertical: ProspectVertical,
   maxResults: number = 5
 ): Promise<InsertResult> {
-  const admin = createAdminClient();\n  const table = vertical === "program" ? "avaia_experience_prospects" : "avaia_speaking_opportunities";
+  const admin = createAdminClient();
+  const table = vertical === "program" ? "avaia_experience_prospects" : "avaia_speaking_opportunities";
 
   const { data: existing } = await admin.from(table).select("organization_name").limit(500);
   const excludeNames = (existing ?? []).map((r: { organization_name: string }) => r.organization_name);
