@@ -15,7 +15,6 @@ export const RECORDED_CRON_NAMES = [
   "certification-companion",
   "system-checks",
   "prospect-research",
-  "pink-daily-summary",
 ] as const;
 
 export type CronName = (typeof RECORDED_CRON_NAMES)[number];

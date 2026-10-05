@@ -21,7 +21,6 @@ const KIND_OPTIONS = [
 const CATEGORY_OPTIONS = [
   { value: "", label: "--" },
   { value: "avaia", label: "AVAIA" },
-  { value: "pink_shoelace", label: "Pink Shoelace" },
   { value: "program", label: "Program" },
   { value: "experience", label: "Experience" },
   { value: "website", label: "Website" },
@@ -45,20 +44,14 @@ type Kind = (typeof KIND_OPTIONS)[number]["value"];
 
 export default function NoteCapture({
   saveAction,
-  scope = "avaia",
 }: {
   saveAction: (formData: FormData) => void;
-  /** Which organization this note belongs to; limits the category choices. */
-  scope?: "avaia" | "pink";
 }) {
-  const categoryOptions =
-    scope === "pink"
-      ? CATEGORY_OPTIONS.filter((c) => c.value === "pink_shoelace")
-      : CATEGORY_OPTIONS.filter((c) => c.value !== "pink_shoelace");
+  const categoryOptions = CATEGORY_OPTIONS;
   const [kind, setKind] = useState<Kind>("idea");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [category, setCategory] = useState(scope === "pink" ? "pink_shoelace" : "");
+  const [category, setCategory] = useState("");
   const [personName, setPersonName] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
@@ -107,7 +100,6 @@ export default function NoteCapture({
 
   return (
     <form action={saveAction} className="space-y-3 rounded-lg border border-rule bg-white/[0.04] p-5">
-      <input type="hidden" name="scope" value={scope} />
       <div className="flex flex-wrap gap-2">
         {KIND_OPTIONS.map((k) => (
           <button
@@ -257,7 +249,7 @@ export default function NoteCapture({
               value={decisionAffectedArea}
               onChange={(e) => setDecisionAffectedArea(e.target.value)}
               className={fieldClass}
-              placeholder="e.g. Guide certification, Pink participation form"
+              placeholder="e.g. Guide certification, Membership page"
             />
           </div>
           <div>

@@ -26,29 +26,22 @@ export async function sendEmail({
   subject,
   html,
   context,
-  from: fromOverride,
-  apiKey: apiKeyOverride,
 }: {
   to: string;
   subject: string;
   html: string;
-  /** A different sender, used by the Pink Shoelace Foundation (see lib/pink/mail.ts) so that
-   *  its email does not go out under AVAIA's name. Omitted, the AVAIA default below is used. */
-  from?: string;
-  /** A different Resend key, used only by the Pink Shoelace Foundation. Omitted, RESEND_API_KEY. */
-  apiKey?: string;
   /** Short caller-supplied label (e.g. "host_onboarding_reminder",
    *  "contact_notification"), recorded only if this send fails, so a
    *  failure has a queryable trace beyond Vercel's own ephemeral logs.
    *  Optional -- omitting it just means a failure's trace has no label. */
   context?: string;
 }): Promise<void> {
-  const apiKey = apiKeyOverride || process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     await recordEmailSendFailure(context, "RESEND_API_KEY is not set in this deployment.");
     throw new Error("RESEND_API_KEY is not set in this deployment.");
   }
-  const from = fromOverride || process.env.RESEND_FROM_EMAIL || "AVAIA <noreply@avaiainstitute.com>";
+  const from = process.env.RESEND_FROM_EMAIL || "AVAIA <noreply@avaiainstitute.com>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -145,8 +138,7 @@ export function experienceInquiryEmailHtml({
 
 /** Automation audit finding #4.5: the AVAIA /contact form saved and
  *  notified Dorian but never confirmed anything to the person who actually
- *  submitted it, unlike the matching Pink Shoelace form (lib/pink/emails.ts's
- *  pinkContactAcknowledgmentEmailHtml, the pattern this mirrors). */
+ *  submitted it. */
 export function contactAcknowledgmentEmailHtml({ name }: { name: string }): string {
   return `
     <p>Hi ${escapeHtml(name)},</p>

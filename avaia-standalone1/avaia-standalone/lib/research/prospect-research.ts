@@ -5,9 +5,11 @@ import { recordAiUsage } from "@/lib/engine/ai-usage";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EXPERIENCE_TYPES } from "@/lib/experiences-agent";
 
-// Outbound-research capability for Agents 3 (Partnership), 4 (Donor &
-// Sponsor), and 8 (Programs & Experiences), Automation Blueprint Round 3.
-// Round 4 adds a fourth vertical, "speaking" -- the Opportunity Finder's
+// Outbound-research capability for Agent 8 (Programs & Experiences), Automation
+// Blueprint Round 3. (The Partnership and Donor & Sponsor research that once lived here belonged
+// to the Pink Shoelace Foundation, a separate organization, and was removed on 2026-10-05; it
+// is in git history and its earlier output is archived in docs/pink/.)
+// Round 4 adds a second vertical, "speaking" -- the Opportunity Finder's
 // one genuine gap versus these three: it finds actual EVENTS (a conference
 // call-for-speakers, a podcast) rather than organizations to build an
 // ongoing relationship with. Same engine, same dedup/review posture.
@@ -16,8 +18,7 @@ import { EXPERIENCE_TYPES } from "@/lib/experiences-agent";
 // Anthropic call here drives a Host-facing conversation or extracts
 // structured content from one. This module instead asks the model to use
 // its server-side web_search tool to find real, publicly-discoverable
-// organizations that plausibly fit Pink Shoelace's or AVAIA's already-
-// established work, and to describe (never contact) them.
+// organizations that plausibly fit AVAIA's already-established work, and to describe (never contact) them.
 //
 // Deliberately conservative by design, per Dorian's own instruction:
 //  - Read-only. Nothing in this file ever sends an email, a message, or
@@ -31,7 +32,7 @@ import { EXPERIENCE_TYPES } from "@/lib/experiences-agent";
 //    back to the model as "already known, do not repeat," and the insert
 //    itself is guarded by the unique indexes from migration 0072 as a
 //    second, structural line of defense (23505 is treated as an expected,
-//    silent no-op, exactly like lib/pink/linking.ts already does).
+//    silent no-op).
 //  - Never invents a program, a package, or a relationship that doesn't
 //    exist -- the prompts below describe only the real, established work
 //    (the exact language Dorian himself used in his instruction, or
@@ -39,7 +40,7 @@ import { EXPERIENCE_TYPES } from "@/lib/experiences-agent";
 //    and the model is instructed to describe a prospect's plausible fit
 //    in its own words, not to assert a relationship that hasn't happened.
 
-export type ProspectVertical = "partnership" | "donor" | "program" | "speaking";
+export type ProspectVertical = "program" | "speaking";
 
 export type ProspectCandidate = {
   organizationName: string;
@@ -50,20 +51,11 @@ export type ProspectCandidate = {
   contactEmail: string | null;
   contactPhone: string | null;
   whyRelevant: string;
-  relevance: "pink" | "avaia" | "both" | null;
+  relevance: "avaia" | null;
   relevantExperience: string | null;
   researchNotes: string | null;
   applicationDeadline: string | null;
 };
-
-const PARTNERSHIP_ORG_TYPES = [
-  "school", "business", "hospice", "funeral_home", "community_organization",
-  "youth_organization", "conference", "employer", "other",
-] as const;
-
-const DONOR_ORG_TYPES = [
-  "individual", "business", "foundation", "community_organization", "employer", "other",
-] as const;
 
 const PROGRAM_ORG_TYPES = [
   "school", "conference", "business", "faith_community", "community_organization", "other",
@@ -102,87 +94,6 @@ matching this shape:
 }
 Return an empty array [] if you cannot find genuinely good, verifiable candidates -- never pad the list with weak or invented matches.`;
 
-  if (vertical === "partnership") {
-    return `${shared}
-
-Also include "relevance": "pink" | "avaia" | "both" on each object.
-
-Find legitimate partnership/collaboration prospects for two related
-organizations:
-
-The Pink Shoelace Foundation -- a nonprofit that increases access to grief
-and loss support for individuals and families who could not otherwise
-afford it, and strengthens community capacity to walk alongside people
-experiencing loss in any form (not only death, but divorce, illness,
-estrangement, and other significant life transitions), through three core
-programs: Sponsored Access (funding participation in structured
-grief-support programs, with priority for underserved populations such as
-youth aging out of foster care, family members who are caregivers of
-elderly parents with Alzheimer's/Dementia, and parents who've experienced
-miscarriage, stillbirth, or infant loss), Community Connection
-(volunteer-based service pairing practical support with companionship for
-people actively navigating loss), and Public Awareness (educating
-communities and organizations on recognizing and responding to grief,
-through the pink shoelace symbol and public outreach).
-
-AVAIA -- a grief education and restoration institute whose flagship
-program is Defying Grief, with Workshops & Speaking as an established
-form of educational outreach.
-
-organizationType must be one of: ${PARTNERSHIP_ORG_TYPES.join(", ")}.
-
-Look specifically among: schools, businesses, hospices, funeral homes,
-community organizations, youth organizations, conferences, and employers
-that would plausibly welcome a grief-support or grief-education
-partnership (e.g. an employee-wellness contact at a business, a
-bereavement or family-support program at a hospice or funeral home, a
-school counseling department, a relevant conference).`;
-  }
-
-  if (vertical === "donor") {
-    return `${shared}
-
-Find legitimate potential sponsors/supporters that appear genuinely
-aligned with The Pink Shoelace Foundation's mission: increasing access to
-grief and loss support for individuals and families who could not
-otherwise afford it, and strengthening community capacity to walk
-alongside people experiencing loss in any form (not only death, but
-divorce, illness, estrangement, and other significant life transitions),
-through Sponsored Access, Community Connection, and Public Awareness.
-Sponsored Access gives priority to underserved populations such as youth
-aging out of foster care, family members who are caregivers of elderly
-parents with Alzheimer's/Dementia, and parents who've experienced
-miscarriage, stillbirth, or infant loss -- a prospect connected to any of
-those populations, or to volunteer/companionship service, or to public
-grief-awareness education, is worth surfacing.
-
-Do not suggest anyone already known to be a national grief-charity
-competitor in a way that would be an odd fit. Prefer local/regional
-businesses, community foundations, and employers with visible
-community-giving programs.
-
-Alignment is broader than only organizations whose public material
-explicitly mentions grief or loss. A prospect also qualifies if its own
-public material shows a genuine interest in one or more closely related
-areas: bereavement support; hospice or end-of-life care; funeral or
-memorial services; mental or emotional wellness; youth or family
-support; community well-being; employee support/wellness programs;
-charitable or community giving; cause-based sponsorship; remembrance or
-memorial causes; or an organization that publicly sponsors other
-aligned community or human-support initiatives.
-
-Every candidate still needs real, verifiable public evidence of that
-alignment -- a program, a giving history, a stated mission, a
-sponsorship you can point to -- never a guess or a generic "this
-business exists and could theoretically give." Write whyRelevant as the
-specific, concrete reason this organization plausibly fits, grounded in
-what your search actually found. This is still a quality bar, not a
-quantity target: return fewer candidates, or none, rather than include
-a weak or generic match.
-
-organizationType must be one of: ${DONOR_ORG_TYPES.join(", ")}.`;
-  }
-
   if (vertical === "program") {
     return `${shared}
 
@@ -205,8 +116,8 @@ you are only identifying a plausible setting.
 organizationType must be one of: ${PROGRAM_ORG_TYPES.join(", ")}.`;
   }
 
-  // vertical === "speaking": distinct from "partnership" and "program" --
-  // those find ORGANIZATIONS to build a relationship with; this finds
+  // vertical === "speaking": distinct from "program" --
+  // that finds ORGANIZATIONS to build a relationship with; this finds
   // actual upcoming EVENTS (a conference with a call for speakers, a
   // podcast, a community event series) where Dorian himself could speak
   // or present about grief, loss, or AVAIA's established work.
@@ -294,7 +205,7 @@ async function callResearch(
         contactPhone: p.contactPhone ? String(p.contactPhone).trim().slice(0, 100) : null,
         whyRelevant: p.whyRelevant ? String(p.whyRelevant).trim().slice(0, 2000) : "",
         relevance:
-          p.relevance === "pink" || p.relevance === "avaia" || p.relevance === "both" ? p.relevance : null,
+          p.relevance === "avaia" ? "avaia" : null,
         relevantExperience: EXPERIENCE_VALUES.includes(p.relevantExperience)
           ? p.relevantExperience
           : null,
@@ -313,7 +224,7 @@ async function callResearch(
 type InsertResult = { inserted: number; skipped: number };
 
 async function insertCandidates(
-  table: "pink_partnership_prospects" | "pink_donor_prospects" | "avaia_experience_prospects" | "avaia_speaking_opportunities",
+  table: "avaia_experience_prospects" | "avaia_speaking_opportunities",
   vertical: ProspectVertical,
   candidates: ProspectCandidate[]
 ): Promise<InsertResult> {
@@ -338,8 +249,7 @@ async function insertCandidates(
       research_notes: c.researchNotes,
       discovered_via: "outbound_research",
     };
-    // Speaking research is AVAIA's own business development and is stored only in AVAIA's table,
-    // tagged accordingly. (The old "partnership" research, which mixed both organizations, is stopped.)
+    // Speaking research is AVAIA's own business development, stored in AVAIA's table.
     if (vertical === "speaking") row.relevance = "avaia";
     if (vertical === "program") row.relevant_experience = c.relevantExperience;
     if (vertical === "speaking") row.application_deadline = c.applicationDeadline;
@@ -347,8 +257,7 @@ async function insertCandidates(
     const { error } = await admin.from(table).insert(row);
     if (error) {
       if (error.code === "23505") {
-        // Already tracked (dedup index caught it) -- expected, silent no-op,
-        // same posture as lib/pink/linking.ts.
+        // Already tracked (dedup index caught it) -- expected, silent no-op.
         skipped++;
       } else {
         console.error(`Prospect research: failed to insert into ${table}:`, error.message);
@@ -369,29 +278,11 @@ async function insertCandidates(
  *  in one vertical never should block another; callers run each vertical
  *  in its own try/catch (see app/api/cron/prospect-research/route.ts and
  *  the admin "Run research now" actions). */
-/** Stopped on 2026-10-05 (Founder directive: Pink Shoelace Foundation and AVAIA are separate). The
- *  "partnership" research searched for both organizations at once and stored AVAIA business
- *  development in a Pink table. Its earlier output is preserved, untouched, in
- *  pink_partnership_prospects. Nothing may run it again until the owner decides whether a
- *  Pink-only version should exist. */
-export const STOPPED_VERTICALS: ProspectVertical[] = ["partnership"];
-
 export async function runProspectResearch(
   vertical: ProspectVertical,
   maxResults: number = 5
 ): Promise<InsertResult> {
-  if (STOPPED_VERTICALS.includes(vertical)) {
-    throw new Error(`Prospect research for "${vertical}" is stopped: it mixed two organizations. See STOPPED_VERTICALS.`);
-  }
-  const admin = createAdminClient();
-  const table =
-    vertical === "partnership"
-      ? "pink_partnership_prospects"
-      : vertical === "donor"
-        ? "pink_donor_prospects"
-        : vertical === "program"
-          ? "avaia_experience_prospects"
-          : "avaia_speaking_opportunities";
+  const admin = createAdminClient();\n  const table = vertical === "program" ? "avaia_experience_prospects" : "avaia_speaking_opportunities";
 
   const { data: existing } = await admin.from(table).select("organization_name").limit(500);
   const excludeNames = (existing ?? []).map((r: { organization_name: string }) => r.organization_name);

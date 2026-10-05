@@ -67,12 +67,18 @@ const PRESERVED_UNUSED_TABLES: Record<string, string> = {
   conversation_integrity_scans: "Scan ledger from the original design; flags are recorded in-request instead; kept.",
   program_authorization_reminders: "Cooldown ledger of the retired per-agent email; kept.",
   toolkit_support_reminders: "Cooldown ledger of the retired per-agent email; kept.",
-  pink_foundation_reminders: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
-  pink_legacy_review_items: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
-  pink_sponsored_access_requests: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
-  pink_campaign_items: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
-  pink_commercial_co_ventures: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
-  pink_volunteers: "Pink Shoelace Foundation record; belongs to the separated Pink side; kept.",
+  pink_foundation_reminders: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_legacy_review_items: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_sponsored_access_requests: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_campaign_items: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_commercial_co_ventures: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_volunteers: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_contact_submissions: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_participation_interest: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_partnerships: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_donor_sponsor_records: "Foundation record; the Foundation now has its own database, this copy is kept as history and never read.",
+  pink_partnership_prospects: "AI-found research kept as an archive (docs/pink/); the Foundation now has its own database, this copy is never read.",
+  pink_donor_prospects: "AI-found research kept as an archive (docs/pink/); the Foundation now has its own database, this copy is never read.",
 };
 
 function row(checkKey: string, label: string, status: CheckStatus, detail: string | null): CheckResult {
@@ -221,7 +227,7 @@ export async function schemaChecks(): Promise<CheckResult[]> {
           "schema_orphan_tables",
           "Every database table is either used by the app or deliberately preserved",
           "pass",
-          `No unexplained tables. ${preservedPresent.length} table(s) are intentionally kept without application code (history and Pink Shoelace records); none are ever dropped.`
+          `No unexplained tables. ${preservedPresent.length} table(s) are intentionally kept without application code (history and the Foundation's old records); none are ever dropped.`
         )
       : row(
           "schema_orphan_tables",

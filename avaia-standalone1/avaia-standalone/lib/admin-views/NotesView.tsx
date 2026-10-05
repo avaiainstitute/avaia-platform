@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import NoteCapture from "@/components/NoteCapture";
-import { SCOPE_BASE, SCOPE_TITLE, parseScope, type AdminScope } from "@/lib/admin-scope";
 
 
 // Founder Idea Catcher, Decision Keeper, Follow-up Memory, and
@@ -23,21 +22,20 @@ const KIND_LABEL: Record<string, string> = {
 
 const STATUSES = ["open", "in_progress", "done", "archived"] as const;
 
-async function requireAdmin(scope: AdminScope) {
+async function requireAdmin() {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/sign-in?from=${SCOPE_BASE[scope]}/notes`);
+  if (!user) redirect("/sign-in?from=/admin/notes");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (profile?.role !== "admin") redirect("/");
 }
 
 async function saveFounderNote(formData: FormData) {
   "use server";
-  const scope = parseScope(formData.get("scope"));
-  const base = SCOPE_BASE[scope];
-  await requireAdmin(scope);
+  const base = "/admin";
+  await requireAdmin();
 
   const kind = String(formData.get("kind") ?? "");
   const title = String(formData.get("title") ?? "").trim();
@@ -46,10 +44,7 @@ async function saveFounderNote(formData: FormData) {
     redirect(`${base}/notes?error=missing_fields`);
   }
 
-  // A note belongs to exactly one organization: Pink Shoelace notes are always tagged
-  // pink_shoelace, and AVAIA notes can never carry that tag.
-  const chosenCategory = String(formData.get("category") ?? "") || null;
-  const category = scope === "pink" ? "pink_shoelace" : chosenCategory === "pink_shoelace" ? null : chosenCategory;
+  const category = String(formData.get("category") ?? "") || null;
   const personName = String(formData.get("personName") ?? "").trim() || null;
   const organizationName = String(formData.get("organizationName") ?? "").trim() || null;
   const followUpDate = String(formData.get("followUpDate") ?? "").trim() || null;
@@ -83,9 +78,8 @@ async function saveFounderNote(formData: FormData) {
 
 async function updateNoteStatus(formData: FormData) {
   "use server";
-  const scope = parseScope(formData.get("scope"));
-  const base = SCOPE_BASE[scope];
-  await requireAdmin(scope);
+  const base = "/admin";
+  await requireAdmin();
 
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "");
@@ -114,9 +108,8 @@ async function updateNoteStatus(formData: FormData) {
  *  endpoint). */
 async function promoteIdeaToContent(formData: FormData) {
   "use server";
-  const scope = parseScope(formData.get("scope"));
-  const base = SCOPE_BASE[scope];
-  await requireAdmin(scope);
+  const base = "/admin";
+  await requireAdmin();
 
   const id = String(formData.get("id") ?? "");
   if (!id) redirect(`${base}/notes?error=invalid`);
@@ -137,7 +130,7 @@ async function promoteIdeaToContent(formData: FormData) {
       title: note.title,
       summary: note.body,
       content_type: "other",
-      related_to: scope === "pink" ? "pink_shoelace_general" : null,
+      related_to: null,
       status: "idea",
       source_reference: `From the Idea Catcher, ${new Date().toLocaleDateString()}.`,
     })
@@ -157,20 +150,16 @@ async function promoteIdeaToContent(formData: FormData) {
 }
 
 export default async function NotesView({
-  scope,
   searchParams,
 }: {
-  scope: AdminScope;
   searchParams: { error?: string; added?: string; updated?: string; promoted?: string; kind?: string };
 }) {
-  await requireAdmin(scope);
-  const base = SCOPE_BASE[scope];
+  await requireAdmin();
+  const base = "/admin";
 
   const admin = createAdminClient();
   const filterKind = searchParams?.kind;
   let query = admin.from("founder_notes").select("*").order("created_at", { ascending: false }).limit(150);
-  // Each organization sees only its own notes.
-  query = scope === "pink" ? query.eq("category", "pink_shoelace") : query.or("category.is.null,category.neq.pink_shoelace");
   if (filterKind && ["idea", "decision", "follow_up", "meeting_note"].includes(filterKind)) {
     query = query.eq("kind", filterKind);
   }
@@ -180,10 +169,10 @@ export default async function NotesView({
     <div className="mx-auto max-w-3xl px-5 py-16">
       <p className="mb-6">
         <Link href={base} className="label hover:text-seal">
-          ← Back to {scope === "pink" ? "Pink Shoelace Foundation Admin" : "Admin"}
+          ← Back to Admin
         </Link>
       </p>
-      <p className="label mb-3">{SCOPE_TITLE[scope]}</p>
+      <p className="label mb-3">AVAIA Admin</p>
       <h1 className="font-serif text-4xl text-ink">Ideas, Decisions & Follow-ups</h1>
       <p className="mt-4 text-lg text-muted">
         Capture something once, in your own words, so it isn&rsquo;t lost. An idea is never treated
@@ -207,7 +196,7 @@ export default async function NotesView({
 
       <section className="rule-t mt-10 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Capture Something</p>
-        <NoteCapture saveAction={saveFounderNote} scope={scope} />
+        <NoteCapture saveAction={saveFounderNote} />
       </section>
 
       <section className="rule-t mt-14 border-t border-rule pt-8">
@@ -266,7 +255,6 @@ export default async function NotesView({
                   )}
                 </div>
                 <form action={updateNoteStatus} className="mt-4 flex flex-wrap items-center gap-3">
-                  <input type="hidden" name="scope" value={scope} />
                   <input type="hidden" name="id" value={n.id} />
                   <select
                     name="status"
@@ -288,7 +276,6 @@ export default async function NotesView({
                 </form>
                 {n.kind === "idea" && !n.linked_content_item_id && (
                   <form action={promoteIdeaToContent} className="mt-2">
-                    <input type="hidden" name="scope" value={scope} />
                     <input type="hidden" name="id" value={n.id} />
                     <button
                       type="submit"

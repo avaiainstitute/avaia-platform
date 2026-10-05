@@ -31,7 +31,7 @@ export type FounderNoteExtraction = {
 };
 
 const CATEGORY_VALUES = [
-  "avaia", "pink_shoelace", "program", "experience", "website", "future", "follow_up", "other",
+  "avaia", "program", "experience", "website", "future", "follow_up", "other",
 ] as const;
 
 /** Asks Claude to propose structured fields from Dorian's own raw text --

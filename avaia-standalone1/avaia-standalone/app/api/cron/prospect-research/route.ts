@@ -25,10 +25,7 @@ export async function GET(request: Request) {
   const startedAt = new Date();
   const results: Record<string, { inserted: number; skipped: number } | { error: string }> = {};
 
-  // AVAIA's own business development only (program, speaking), stored in AVAIA's tables. The
-  // "partnership" and "donor" research wrote into the Pink Shoelace Foundation's tables from this
-  // AVAIA job (and "partnership" searched for both organizations at once); both were taken off
-  // this schedule on 2026-10-05. Their earlier output is preserved untouched.
+  // AVAIA's own business development only (program, speaking), stored in AVAIA's tables.
   for (const vertical of SCHEDULED_RESEARCH_VERTICALS) {
     try {
       results[vertical] = await runProspectResearch(vertical, MAX_RESULTS_PER_VERTICAL);

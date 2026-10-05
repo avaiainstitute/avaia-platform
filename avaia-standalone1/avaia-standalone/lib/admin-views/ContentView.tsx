@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SCOPE_BASE, SCOPE_TITLE, parseScope, type AdminScope } from "@/lib/admin-scope";
 
 
 // Agent 9 (Communications & Content), operational foundation only. This is
@@ -21,26 +20,24 @@ const RELATED_TO_AVAIA = [
   "defying_grief", "youth_defying_grief", "workshops_and_speaking", "chemistry_of_virtue",
   "unsung_heroes", "view_from_above", "other",
 ] as const;
-const RELATED_TO_PINK = ["pink_shoelace_general", "pink_participation"] as const;
 const STATUSES = ["idea", "draft", "waiting_for_approval", "approved", "scheduled", "published", "archived"] as const;
 
-const relatedOptionsFor = (scope: AdminScope): readonly string[] => (scope === "pink" ? RELATED_TO_PINK : RELATED_TO_AVAIA);
+const RELATED_OPTIONS: readonly string[] = RELATED_TO_AVAIA;
 
-async function requireAdmin(scope: AdminScope) {
+async function requireAdmin() {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/sign-in?from=${SCOPE_BASE[scope]}/content`);
+  if (!user) redirect("/sign-in?from=/admin/content");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (profile?.role !== "admin") redirect("/");
 }
 
 async function addContentItem(formData: FormData) {
   "use server";
-  const scope = parseScope(formData.get("scope"));
-  const base = SCOPE_BASE[scope];
-  await requireAdmin(scope);
+  const base = "/admin";
+  await requireAdmin();
 
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim();
@@ -57,7 +54,7 @@ async function addContentItem(formData: FormData) {
     summary,
     content_type: CONTENT_TYPES.includes(contentType as (typeof CONTENT_TYPES)[number]) ? contentType : "social_post",
     platform: PLATFORMS.includes(platform as (typeof PLATFORMS)[number]) ? platform : null,
-    related_to: relatedOptionsFor(scope).includes(relatedTo as never) ? relatedTo : scope === "pink" ? "pink_shoelace_general" : null,
+    related_to: RELATED_OPTIONS.includes(relatedTo as never) ? relatedTo : null,
     source_reference: sourceReference,
   });
   if (error) {
@@ -69,9 +66,8 @@ async function addContentItem(formData: FormData) {
 
 async function updateContentItem(formData: FormData) {
   "use server";
-  const scope = parseScope(formData.get("scope"));
-  const base = SCOPE_BASE[scope];
-  await requireAdmin(scope);
+  const base = "/admin";
+  await requireAdmin();
 
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "");
@@ -98,17 +94,15 @@ async function updateContentItem(formData: FormData) {
 }
 
 export default async function ContentView({
-  scope,
   searchParams,
 }: {
-  scope: AdminScope;
   searchParams: { error?: string; added?: string; updated?: string };
 }) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/sign-in?from=${SCOPE_BASE[scope]}/content`);
+  if (!user) redirect("/sign-in?from=/admin/content");
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (profile?.role !== "admin") redirect("/");
 
@@ -118,19 +112,18 @@ export default async function ContentView({
     .select("*")
     .order("created_at", { ascending: false })
     .limit(150);
-  // Each organization sees only its own content plans (Pink items are tagged pink_*).
-  const scopedItems = (items ?? []).filter((it) => (scope === "pink" ? String(it.related_to ?? "").startsWith("pink_") : !String(it.related_to ?? "").startsWith("pink_")));
+  const scopedItems = items ?? [];
 
   const fieldClass = "w-full rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-sm text-ink";
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-16">
       <p className="mb-6">
-        <Link href={SCOPE_BASE[scope]} className="label hover:text-seal">
-          ← Back to {scope === "pink" ? "Pink Shoelace Foundation Admin" : "Admin"}
+        <Link href="/admin" className="label hover:text-seal">
+          ← Back to Admin
         </Link>
       </p>
-      <p className="label mb-3">{SCOPE_TITLE[scope]}</p>
+      <p className="label mb-3">AVAIA Admin</p>
       <h1 className="font-serif text-4xl text-ink">Communications & Content</h1>
       <p className="mt-4 text-lg text-muted">
         Plan social posts, announcements, and PR/media opportunities from material you&rsquo;ve
@@ -150,7 +143,6 @@ export default async function ContentView({
       <section className="rule-t mt-10 border-t border-rule pt-8">
         <p className="label mb-3 text-muted">Add an Idea</p>
         <form action={addContentItem} className="space-y-3 rounded-lg border border-rule bg-white/[0.04] p-5">
-          <input type="hidden" name="scope" value={scope} />
           <div>
             <label className="label mb-1 block text-xs">Title</label>
             <input name="title" required className={fieldClass} />
@@ -189,7 +181,7 @@ export default async function ContentView({
                 <option value="" className="bg-[#05060b] text-ink">
                   --
                 </option>
-                {relatedOptionsFor(scope).map((r) => (
+                {RELATED_OPTIONS.map((r) => (
                   <option key={r} value={r} className="bg-[#05060b] text-ink">
                     {r.replace(/_/g, " ")}
                   </option>
@@ -233,7 +225,6 @@ export default async function ContentView({
                   {it.scheduled_for && <p>Scheduled: {new Date(it.scheduled_for).toLocaleString()}</p>}
                 </div>
                 <form action={updateContentItem} className="mt-4 flex flex-wrap items-end gap-3">
-                  <input type="hidden" name="scope" value={scope} />
                   <input type="hidden" name="id" value={it.id} />
                   <div>
                     <label className="label mb-1 block text-xs">Status</label>

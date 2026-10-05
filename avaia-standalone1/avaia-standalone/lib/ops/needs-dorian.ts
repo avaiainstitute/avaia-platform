@@ -71,13 +71,11 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
       .select("kind, title, person_name, organization_name, follow_up_date, next_action")
       .in("kind", ["follow_up", "meeting_note"])
       .eq("status", "open")
-      // AVAIA only: Pink Shoelace follow-ups belong to the Pink Shoelace Foundation admin.
-      .or("category.is.null,category.neq.pink_shoelace")
       .not("follow_up_date", "is", null)
       .lte("follow_up_date", day)
       .order("follow_up_date", { ascending: true }),
-    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "waiting_for_approval").or("related_to.is.null,related_to.not.like.pink_*"),
-    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "approved").or("related_to.is.null,related_to.not.like.pink_*"),
+    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "waiting_for_approval"),
+    admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "approved"),
     admin.from("avaia_experience_prospects").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("avaia_speaking_opportunities").select("id", { count: "exact", head: true }).eq("status", "new"),
     // Count only; never a host id, conversation id, or any content.
@@ -190,7 +188,7 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
   for (const p of checkProblems) {
     // Scheduled-job findings are listed above from the same source (live), not twice.
     if (p.checkKey.startsWith("schedule_")) continue;
-    // Pink Shoelace Foundation checks belong to the Pink admin (lib/pink/ops.ts), not AVAIA.
+    // Foundation checks (recorded before the separation) are not AVAIA's; the Foundation runs its own.
     if (p.checkKey.startsWith("pink_")) continue;
     // "Overall launch readiness" is only a summary of the other checks (it reads
     // "needs attention" whenever any one of them does), never a separate problem.

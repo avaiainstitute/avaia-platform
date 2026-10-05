@@ -8,8 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Agent 8 (Programs & Experiences), inbound. Same-origin AVAIA page (the
 // "Bring a Program/Experience to My Group" reason on /contact, components/
-// ContactForm.tsx), so no CORS handling is needed here -- unlike the Pink
-// Shoelace routes, which accept submissions from a separate site.
+// ContactForm.tsx), so no CORS handling is needed here.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_TEXT_LENGTH = 3000;
