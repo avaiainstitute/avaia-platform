@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SCOPE_BASE, SCOPE_TITLE, parseScope, type AdminScope } from "@/lib/admin-scope";
+import { SCOPE_BASE, SCOPE_TITLE, parseScope, INQUIRY_SOURCES_BY_SCOPE, type AdminScope, type InquirySourceKey } from "@/lib/admin-scope";
 
 // Inquiries: what is open in the contact forms, shown for exactly ONE
 // organization at a time. AVAIA's admin shows AVAIA's form; the Pink Shoelace
@@ -20,12 +20,9 @@ import { SCOPE_BASE, SCOPE_TITLE, parseScope, type AdminScope } from "@/lib/admi
 // role check (profiles.role === 'admin') is the real enforcement point,
 // re-verified on every request and on every action.
 
-type Source = "contact_submissions" | "pink_contact_submissions" | "pink_participation_interest";
+type Source = InquirySourceKey;
 
-const SOURCES_BY_SCOPE: Record<AdminScope, Source[]> = {
-  avaia: ["contact_submissions"],
-  pink: ["pink_contact_submissions", "pink_participation_interest"],
-};
+const SOURCES_BY_SCOPE = INQUIRY_SOURCES_BY_SCOPE;
 const SOURCE_LABEL: Record<Source, string> = {
   contact_submissions: "AVAIA Contact",
   pink_contact_submissions: "Pink Shoelace Contact",

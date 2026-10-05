@@ -54,8 +54,8 @@ export async function getPinkSnapshot(): Promise<PinkSnapshot> {
     { data: newDonorNames },
     checkProblems,
   ] = await Promise.all([
-    admin.from("pink_contact_submissions").select("name, category, created_at").eq("needs_dorian", true).in("status", ["new", "acknowledged"]).order("created_at", { ascending: true }),
-    admin.from("pink_participation_interest").select("name, interest_type, created_at").eq("needs_dorian", true).in("status", ["new", "acknowledged"]).order("created_at", { ascending: true }),
+    admin.from("pink_contact_submissions").select("name, category, created_at").in("status", ["new", "acknowledged"]).order("created_at", { ascending: true }),
+    admin.from("pink_participation_interest").select("name, interest_type, created_at").in("status", ["new", "acknowledged"]).order("created_at", { ascending: true }),
     admin
       .from("founder_notes")
       .select("kind, title, person_name, organization_name, next_action")
@@ -78,6 +78,9 @@ export async function getPinkSnapshot(): Promise<PinkSnapshot> {
     getLatestCheckProblems().catch(() => []),
   ]);
 
+  // Every open submission (status new or acknowledged) appears here until a person marks it resolved,
+  // whatever its type. The `needs_dorian` flag is a classification shown in the inquiry list, not a
+  // gate on whether anyone ever sees the submission.
   const people: NeedsItem[] = [];
   const push = (list: NeedsItem[], prefix: string, text: string, href?: string) => list.push({ key: `${prefix}:${list.length}`, text, href });
 

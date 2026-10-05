@@ -300,6 +300,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
     // Proof that no Pink Shoelace Foundation item appears in AVAIA's operations.
     import("@/lib/pink/separation").then((m) => m.pinkSeparationChecks()),
+    // Pink Shoelace Foundation / AVAIA boundary (2026-10-05): behavior self-test, email identity, and what is still shared.
+    import("@/lib/ops/pink-separation-selftests").then((m) => m.pinkSeparationChecks()),
   ]);
   const results: CheckResult[] = [];
   for (const g of groups) {

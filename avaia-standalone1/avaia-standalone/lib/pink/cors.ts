@@ -39,3 +39,12 @@ export function pinkCorsHeaders(request: Request): Record<string, string> {
     "Vary": "Origin",
   };
 }
+
+/** True only when the request names one of the Foundation's own sites as its Origin. A browser
+ *  always sends Origin on a cross-site form post, so a request with none, or with someone
+ *  else's, is not one of the Foundation's own forms. (Basic spam protection, not a security
+ *  boundary: a script can set any header.) */
+export function isAllowedPinkOrigin(request: Request): boolean {
+  const origin = request.headers.get("origin") || "";
+  return allowedOrigins().includes(origin);
+}

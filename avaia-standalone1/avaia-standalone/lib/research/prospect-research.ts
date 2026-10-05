@@ -212,17 +212,10 @@ organizationType must be one of: ${PROGRAM_ORG_TYPES.join(", ")}.`;
   // or present about grief, loss, or AVAIA's established work.
   return `${shared}
 
-Also include "relevance": "pink" | "avaia" | "both" on each object.
-
 Find real, currently-open (or soon-to-open) speaking, presenting, or
-media opportunities relevant to:
-
-The Pink Shoelace Foundation -- a grief-support nonprofit ("People walking
-with people. Different losses. Different grief.").
-
-AVAIA -- a grief education and restoration institute whose founder speaks
-and presents on grief, loss, and restoration (Workshops & Speaking is an
-established form of AVAIA's outreach).
+media opportunities relevant to AVAIA -- a grief education and restoration
+institute whose founder speaks and presents on grief, loss, and restoration
+(Workshops & Speaking is an established form of AVAIA's outreach).
 
 Look specifically for: conferences with an open or upcoming call for
 speakers/proposals in grief, loss, bereavement, hospice/palliative care,
@@ -345,7 +338,9 @@ async function insertCandidates(
       research_notes: c.researchNotes,
       discovered_via: "outbound_research",
     };
-    if (vertical === "partnership" || vertical === "speaking") row.relevance = c.relevance ?? "both";
+    // Speaking research is AVAIA's own business development and is stored only in AVAIA's table,
+    // tagged accordingly. (The old "partnership" research, which mixed both organizations, is stopped.)
+    if (vertical === "speaking") row.relevance = "avaia";
     if (vertical === "program") row.relevant_experience = c.relevantExperience;
     if (vertical === "speaking") row.application_deadline = c.applicationDeadline;
 
@@ -374,10 +369,20 @@ async function insertCandidates(
  *  in one vertical never should block another; callers run each vertical
  *  in its own try/catch (see app/api/cron/prospect-research/route.ts and
  *  the admin "Run research now" actions). */
+/** Stopped on 2026-10-05 (Founder directive: Pink Shoelace Foundation and AVAIA are separate). The
+ *  "partnership" research searched for both organizations at once and stored AVAIA business
+ *  development in a Pink table. Its earlier output is preserved, untouched, in
+ *  pink_partnership_prospects. Nothing may run it again until the owner decides whether a
+ *  Pink-only version should exist. */
+export const STOPPED_VERTICALS: ProspectVertical[] = ["partnership"];
+
 export async function runProspectResearch(
   vertical: ProspectVertical,
   maxResults: number = 5
 ): Promise<InsertResult> {
+  if (STOPPED_VERTICALS.includes(vertical)) {
+    throw new Error(`Prospect research for "${vertical}" is stopped: it mixed two organizations. See STOPPED_VERTICALS.`);
+  }
   const admin = createAdminClient();
   const table =
     vertical === "partnership"

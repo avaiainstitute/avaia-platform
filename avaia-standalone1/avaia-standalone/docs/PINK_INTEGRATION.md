@@ -1,7 +1,17 @@
 ---
 title: thepinkshoelace.org backend integration
-status: contact form wired and live; no participation form exists on the site yet
+status: contact and participation forms wired; backend still hosted inside the AVAIA application (NOT YET SEPARATE, see docs/pink/SEPARATION.md). Corrected 2026-10-05.
 ---
+
+> **Read first (2026-10-05).** The Pink Shoelace Foundation and AVAIA are separate organizations. This
+> document describes the Foundation's intake endpoints as they run today, still inside AVAIA's
+> deployment. Where it differs from what follows, trust: `docs/pink/SOURCE_AUTHORITY.md` (what is
+> Founder-established), `docs/pink/CONNECTION_MAP.md` (every connection), `docs/pink/SEPARATION.md`
+> (what separation requires). Corrections since it was written: the participation form exists and is
+> wired; the site now says online donations are not yet accepted and that all tax-exempt donations go to
+> Legacy Global Programs; the two endpoints now accept posts only from the Foundation's own site, include
+> basic spam protection, and the emails no longer promise a person or a time; Foundation email is sent under
+> the Foundation's name (and from the Foundation's own address once `PINK_FROM_EMAIL` is set).
 
 # What this is
 

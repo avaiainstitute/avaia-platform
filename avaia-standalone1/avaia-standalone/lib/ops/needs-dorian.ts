@@ -50,7 +50,6 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
     { data: dueFollowUps },
     { count: approvalPendingContent },
     { count: approvedContent },
-    { count: newPartnerships },
     { count: newPrograms },
     { count: newSpeaking },
     { count: crisisEventCount },
@@ -79,7 +78,6 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
       .order("follow_up_date", { ascending: true }),
     admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "waiting_for_approval").or("related_to.is.null,related_to.not.like.pink_*"),
     admin.from("avaia_content_items").select("id", { count: "exact", head: true }).eq("status", "approved").or("related_to.is.null,related_to.not.like.pink_*"),
-    admin.from("pink_partnership_prospects").select("id", { count: "exact", head: true }).eq("status", "new").in("relevance", ["avaia", "both"]),
     admin.from("avaia_experience_prospects").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("avaia_speaking_opportunities").select("id", { count: "exact", head: true }).eq("status", "new"),
     // Count only; never a host id, conversation id, or any content.
@@ -203,7 +201,6 @@ export async function getNeedsDorian(): Promise<NeedsDorianSnapshot> {
 
   // --------------------------------------------------------- opportunities
   const opportunities: NeedsItem[] = [];
-  if ((newPartnerships ?? 0) > 0) add(opportunities, "opp", `${newPartnerships} new partnership prospect(s) awaiting first review.`, { href: "/admin/opportunities" });
   if ((newPrograms ?? 0) > 0) add(opportunities, "opp", `${newPrograms} new Programs & Experiences prospect(s) awaiting first review.`, { href: "/admin/opportunities" });
   if ((newSpeaking ?? 0) > 0) add(opportunities, "opp", `${newSpeaking} new speaking/conference opportunity(ies) awaiting first review.`, { href: "/admin/opportunities" });
 

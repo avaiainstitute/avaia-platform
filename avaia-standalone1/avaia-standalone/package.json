@@ -5,7 +5,7 @@
   "description": "AVAIA — an operating system for guided conversations. Institution model + web platform. Next.js 14 + Tailwind.",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "sh scripts/expected-schema.sh --check && sh scripts/evaluator-isolation.sh",
+    "prebuild": "sh scripts/expected-schema.sh --check && sh scripts/evaluator-isolation.sh && sh scripts/pink-isolation.sh",
     "build": "next build",
     "expected-schema": "sh scripts/expected-schema.sh",
     "start": "next start",

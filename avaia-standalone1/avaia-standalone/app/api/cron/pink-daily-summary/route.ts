@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
 import { getPinkSnapshot } from "@/lib/pink/ops";
 import { pinkDailySummaryEmailHtml } from "@/lib/pink/emails";
-import { sendEmail } from "@/lib/resend";
+import { sendPinkEmail } from "@/lib/pink/mail";
 import { recordCronRun } from "@/lib/ops/cron-runs";
 
 export const runtime = "nodejs";
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
       opportunities: snapshot.opportunities.map((i) => i.text),
     });
     const subject = needs.length > 0 ? `Pink Shoelace Foundation daily summary -- ${needs.length} item(s) need you` : "Pink Shoelace Foundation daily summary";
-    await sendEmail({ to, subject, html });
+    await sendPinkEmail({ to, subject, html, context: "daily_summary" });
     await recordCronRun({ cronName: "pink-daily-summary", startedAt, status: "success", detail: { needs: needs.length } });
     return NextResponse.json({ ok: true, sent: true });
   } catch (err) {

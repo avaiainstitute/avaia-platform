@@ -6,7 +6,7 @@ const SIGNOFF = `<p style="color:#888">— The Pink Shoelace Foundation</p>`;
 export function pinkContactAcknowledgmentEmailHtml({ name }: { name: string }): string {
   return `
     <p>Hi ${escapeHtml(name)},</p>
-    <p>Thank you for reaching out to The Pink Shoelace Foundation. Your message has been received, and Dorian will follow up personally as soon as he can.</p>
+    <p>Thank you for reaching out to The Pink Shoelace Foundation. Your message has been received.</p>
     ${SIGNOFF}
   `.trim();
 }
@@ -49,8 +49,8 @@ export function pinkParticipationAcknowledgmentEmailHtml({
   const label = INTEREST_LABEL[interestType] ?? "getting involved";
   return `
     <p>Hi ${escapeHtml(name)},</p>
-    <p>Thank you for your interest in ${escapeHtml(label)}. This has been received, and Dorian will follow up personally.</p>
-    <p>As a reminder, the Foundation's programs are still being built -- nothing here is a confirmation of participation, only that your interest has been noted.</p>
+    <p>Thank you for your interest in ${escapeHtml(label)}. Your interest has been received.</p>
+    <p>This is an acknowledgment that it was received, not a confirmation of participation in anything.</p>
     ${SIGNOFF}
   `.trim();
 }

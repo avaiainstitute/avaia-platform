@@ -24,7 +24,6 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   const [
     { count: avaiaContactCount },
     { count: experienceInquiryCount },
-    { data: newPartnershipProspects },
     { data: newProgramProspects },
     { data: newSpeakingOpportunities },
     hostOnboarding,
@@ -32,7 +31,6 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   ] = await Promise.all([
     admin.from("contact_submissions").select("id", { count: "exact", head: true }).gte("created_at", since),
     admin.from("avaia_experience_inquiries").select("id", { count: "exact", head: true }).gte("created_at", since),
-    admin.from("pink_partnership_prospects").select("organization_name").in("relevance", ["avaia", "both"]).gte("created_at", since).order("created_at", { ascending: true }),
     admin.from("avaia_experience_prospects").select("organization_name").gte("created_at", since).order("created_at", { ascending: true }),
     admin.from("avaia_speaking_opportunities").select("organization_name").gte("created_at", since).order("created_at", { ascending: true }),
     getHostOnboardingSnapshot(),
@@ -43,7 +41,6 @@ export async function buildFounderDigestEmail(): Promise<{ subject: string; html
   const whatHappened: string[] = [
     `${avaiaContactCount ?? 0} new AVAIA contact form submission(s) in the last 24 hours.`,
     `${experienceInquiryCount ?? 0} new AVAIA Programs & Experiences inquiry/inquiries in the last 24 hours.`,
-    ...(newPartnershipProspects ?? []).map((p) => `New partnership prospect: ${p.organization_name}.`),
     ...(newProgramProspects ?? []).map((e) => `New Programs & Experiences prospect: ${e.organization_name}.`),
     ...(newSpeakingOpportunities ?? []).map((s) => `New speaking/conference opportunity: ${s.organization_name}.`),
     `Journey funnel right now -- new: ${hostOnboarding.stateCounts.new_host}, mid-IAP: ${hostOnboarding.stateCounts.iap_started}, at the membership gate: ${hostOnboarding.stateCounts.cat_eligible}, mid-CAT: ${hostOnboarding.stateCounts.cat_started}, mid-InnerCompass: ${hostOnboarding.stateCounts.innercompass_started}, completed: ${hostOnboarding.stateCounts.journey_completed}.`,

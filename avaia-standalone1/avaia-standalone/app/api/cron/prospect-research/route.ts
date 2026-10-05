@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAuthorizedCronRequest } from "@/lib/ops/cron-auth";
 import { runProspectResearch } from "@/lib/research/prospect-research";
 import { recordCronRun } from "@/lib/ops/cron-runs";
+import { SCHEDULED_RESEARCH_VERTICALS } from "@/lib/admin-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +25,11 @@ export async function GET(request: Request) {
   const startedAt = new Date();
   const results: Record<string, { inserted: number; skipped: number } | { error: string }> = {};
 
-  for (const vertical of ["partnership", "donor", "program", "speaking"] as const) {
+  // AVAIA's own business development only (program, speaking), stored in AVAIA's tables. The
+  // "partnership" and "donor" research wrote into the Pink Shoelace Foundation's tables from this
+  // AVAIA job (and "partnership" searched for both organizations at once); both were taken off
+  // this schedule on 2026-10-05. Their earlier output is preserved untouched.
+  for (const vertical of SCHEDULED_RESEARCH_VERTICALS) {
     try {
       results[vertical] = await runProspectResearch(vertical, MAX_RESULTS_PER_VERTICAL);
     } catch (e) {

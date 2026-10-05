@@ -3,7 +3,15 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runProspectResearch, type ProspectVertical } from "@/lib/research/prospect-research";
-import { SCOPE_BASE, SCOPE_TITLE, parseScope, type AdminScope } from "@/lib/admin-scope";
+import {
+  SCOPE_BASE,
+  SCOPE_TITLE,
+  parseScope,
+  PROSPECT_LISTS_BY_SCOPE,
+  PROSPECT_TABLE_BY_VERTICAL,
+  RESEARCH_RUNNABLE_BY_SCOPE,
+  type AdminScope,
+} from "@/lib/admin-scope";
 
 
 // Agents 3 (Partnership), 4 (Donor & Sponsor), and 8 (Programs &
@@ -20,19 +28,14 @@ import { SCOPE_BASE, SCOPE_TITLE, parseScope, type AdminScope } from "@/lib/admi
 // actual enforcement for this page, exactly like every cron route's
 // isAuthorizedCronRequest check already is for its own tables.
 
-const TABLE_BY_VERTICAL = {
-  partnership: "pink_partnership_prospects",
-  donor: "pink_donor_prospects",
-  program: "avaia_experience_prospects",
-  speaking: "avaia_speaking_opportunities",
-} as const;
+const TABLE_BY_VERTICAL = PROSPECT_TABLE_BY_VERTICAL;
 
-/** Which prospect lists each organization may see and act on. Partnership prospects
- *  carry a `relevance` (pink / avaia / both) and are filtered by it below. */
-const VERTICALS_BY_SCOPE: Record<AdminScope, ProspectVertical[]> = {
-  avaia: ["partnership", "program", "speaking"],
-  pink: ["partnership", "donor"],
-};
+// Which lists each organization sees, and which research it may run, are the boundary and
+// live in lib/admin-scope.ts (PROSPECT_LISTS_BY_SCOPE, RESEARCH_RUNNABLE_BY_SCOPE) so a
+// self-test can prove AVAIA never reads Pink's tables. The old mixed "partnership" research
+// was stopped on 2026-10-05; Pink's list of what it already found is preserved and shown only
+// in Pink's admin.
+const VERTICALS_BY_SCOPE = PROSPECT_LISTS_BY_SCOPE;
 
 const STATUSES = [
   "new", "reviewing", "contacted", "in_conversation", "active", "not_a_fit", "declined",
@@ -93,7 +96,7 @@ async function runResearchNow(formData: FormData) {
   await requireAdmin(scope);
 
   const vertical = String(formData.get("vertical") ?? "") as ProspectVertical;
-  if (!TABLE_BY_VERTICAL[vertical] || !VERTICALS_BY_SCOPE[scope].includes(vertical)) redirect(`${base}/opportunities?error=invalid`);
+  if (!TABLE_BY_VERTICAL[vertical] || !RESEARCH_RUNNABLE_BY_SCOPE[scope].includes(vertical)) redirect(`${base}/opportunities?error=invalid`);
 
   try {
     const result = await runProspectResearch(vertical, 5);
@@ -110,11 +113,13 @@ function ProspectSection({
   vertical,
   description,
   prospects,
+  canRunResearch,
 }: {
   scope: AdminScope;
   title: string;
   vertical: ProspectVertical;
   description: string;
+  canRunResearch: boolean;
   prospects: Array<{
     id: string;
     organization_name: string;
@@ -141,20 +146,22 @@ function ProspectSection({
           <p className="label mb-1 text-muted">{title}</p>
           <p className="text-sm text-muted">{description}</p>
         </div>
-        <form action={runResearchNow}>
-          <input type="hidden" name="scope" value={scope} />
-          <input type="hidden" name="vertical" value={vertical} />
-          <button
-            type="submit"
-            className="rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal"
-          >
-            Run research now
-          </button>
-        </form>
+        {canRunResearch && (
+          <form action={runResearchNow}>
+            <input type="hidden" name="scope" value={scope} />
+            <input type="hidden" name="vertical" value={vertical} />
+            <button
+              type="submit"
+              className="rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal"
+            >
+              Run research now
+            </button>
+          </form>
+        )}
       </div>
 
       {prospects.length === 0 ? (
-        <p className="mt-6 text-muted">No prospects yet. Run research, or add findings manually.</p>
+        <p className="mt-6 text-muted">No prospects yet.</p>
       ) : (
         <div className="mt-6 space-y-3">
           {prospects.map((p) => (
@@ -265,16 +272,17 @@ export default async function OpportunitiesView({
 
   const admin = createAdminClient();
   const isPink = scope === "pink";
-  // Partnership prospects carry a `relevance`; "both" appears in both organizations' lists.
-  const relevanceFilter = isPink ? ["pink", "both"] : ["avaia", "both"];
-
+  // Only Pink's admin ever reads Pink's tables. Rows the old mixed research tagged as AVAIA-only
+  // stay preserved in the table and are shown to neither organization.
   const [{ data: partnerships }, { data: donors }, { data: programs }, { data: speaking }] = await Promise.all([
-    admin
-      .from("pink_partnership_prospects")
-      .select("*")
-      .in("relevance", relevanceFilter)
-      .order("created_at", { ascending: false })
-      .limit(100),
+    isPink
+      ? admin
+          .from("pink_partnership_prospects")
+          .select("*")
+          .in("relevance", ["pink", "both"])
+          .order("created_at", { ascending: false })
+          .limit(100)
+      : Promise.resolve({ data: [] as never[] }),
     isPink
       ? admin.from("pink_donor_prospects").select("*").order("created_at", { ascending: false }).limit(100)
       : Promise.resolve({ data: [] as never[] }),
@@ -317,24 +325,24 @@ export default async function OpportunitiesView({
         </p>
       )}
 
-      <ProspectSection
-        scope={scope}
-        title="Partnership Prospects (Agent 3)"
-        vertical="partnership"
-        description={
-          isPink
-            ? "Schools, hospices, funeral homes, community and youth organizations, and employers relevant to the Pink Shoelace Foundation."
-            : "Schools, businesses, hospices, funeral homes, community and youth organizations, conferences, and employers relevant to AVAIA."
-        }
-        prospects={partnerships ?? []}
-      />
+      {isPink && (
+        <ProspectSection
+          scope={scope}
+          title="Partnership Prospects (preserved)"
+          vertical="partnership"
+          description="What the earlier research found. That research mixed two organizations in one search and was stopped on 2026-10-05; nothing new is added to this list. Everything here is AI-found and unverified."
+          prospects={partnerships ?? []}
+          canRunResearch={false}
+        />
+      )}
       {isPink && (
         <ProspectSection
           scope={scope}
           title="Donor & Sponsor Prospects (Agent 4)"
           vertical="donor"
-          description="Legitimate potential sponsors/supporters aligned with the Pink Shoelace Foundation's mission."
+          description="Potential sponsors/supporters the research found for the Pink Shoelace Foundation's mission. AI-found and unverified; a person decides whether anyone is contacted."
           prospects={donors ?? []}
+          canRunResearch={RESEARCH_RUNNABLE_BY_SCOPE.pink.includes("donor")}
         />
       )}
       {!isPink && (
@@ -345,6 +353,7 @@ export default async function OpportunitiesView({
             vertical="program"
             description="Organizations, conferences, schools, businesses, and communities where an established AVAIA Program or Experience could fit."
             prospects={programs ?? []}
+            canRunResearch
           />
           <ProspectSection
             scope={scope}
@@ -352,6 +361,7 @@ export default async function OpportunitiesView({
             vertical="speaking"
             description="Real, currently-open speaking, presenting, or media opportunities for AVAIA."
             prospects={speaking ?? []}
+            canRunResearch
           />
         </>
       )}
