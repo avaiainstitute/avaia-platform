@@ -292,7 +292,7 @@ create table if not exists public.content_items (
   summary           text not null,
   source_reference  text,
   status            text not null default 'idea' check (status in (
-                      'idea', 'draft', 'approved', 'scheduled', 'published', 'archived')),
+                      'idea', 'draft', 'waiting_for_approval', 'approved', 'scheduled', 'published', 'archived')),
   scheduled_for     timestamptz,
   published_at      timestamptz,
   notes             text,
