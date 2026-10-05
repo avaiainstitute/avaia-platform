@@ -140,3 +140,33 @@ pause, archive or reopen a Room and what happens to a Room if its Host's records
 the Signature's first eight elements are divided; approval of the reworded lesson 5.14. Provenance not
 established and left alone: the other ten Master Format Kits and Blueprints saved 26-27 August 2026 and the
 published Experiences that may derive from them.
+
+## Pink Shoelace Foundation separation and cutover (2026-10-05)
+
+Founder directive: the Pink Shoelace Foundation and AVAIA are separate organizations. Details and the
+thirteen answers: `docs/pink/SEPARATION.md`. Source authority and connection map: `docs/pink/`.
+
+| Step | Done | Production / proof |
+|---|---|---|
+| Cross-organization flows cut in AVAIA's code (research that mixed both, reads of Foundation tables in AVAIA's admin/digest/needs list) | yes | AVAIA `710e08f` |
+| Defects fixed (admin resolve, acknowledgment recording, all submission types queued, promises removed, basic spam protection) | yes | verified live on `710e08f`, then re-verified on the Foundation's own app |
+| Foundation's own database (Supabase project `pialogfbveweezrdfsql`, schema loaded, RLS on, no policies) | yes | 18 tables; no real submissions were ever recorded |
+| Foundation's own application (`avaiainstitute/pink-shoelace-foundation-app`, Vercel project of the same name, `https://app.thepinkshoelace.org`) | yes | first build passed; sign-in, admin, resolve, forms, acknowledgments proven below |
+| Own email identity (`contact@thepinkshoelace.org`, Resend domain verified, key limited to that domain) | yes | test submissions acknowledged; `email_send_failures` 0 |
+| Website forms repointed (`thepinkshoelace.org` contact and get-involved post to the new app) | yes | live pages checked from outside; a spam-trap submission stored nothing |
+| Foundation removed from AVAIA (routes, `/pink-admin`, daily summary job, checks, email code, Foundation research) | yes | AVAIA `6db667b` (first attempt `f20993b` failed to build on a literal `\n` left by a scripted edit, never deployed; the previous deployment stayed live) |
+| Build guard in AVAIA fails if any AVAIA code reads a `pink_*` table or imports Foundation code | yes | `scripts/pink-isolation.sh`, passes on a fresh clone |
+
+Proof: on production `6db667b` (`/api/health` shows the commit) `/api/pink/*`, `/pink-admin` and the old daily
+summary job return 404; AVAIA's contact page and cron routes respond as before. AVAIA System Checks run from
+`/admin/system-checks` after the cutover: clean (owner-reported). The Foundation's own System Checks run: all
+nine checks pass (public pages, own endpoints, database, email delivery, behavior self-test, email identity).
+My test submissions were deleted from the Foundation's database (0 rows).
+
+Still shared, stated plainly: the Vercel team account, the GitHub organization, the Cloudflare account, the
+Resend account, and the Google Workspace that holds the `contact@` alias. Neither database has backups.
+Owner decisions still open: what to do with the 19 AI-found prospect rows (archived in
+`docs/pink/research-output-archive-2026-10-05.json`; the Foundation starts empty), whether the Foundation's
+public pages keep their links to AVAIA, Supabase plan and who pays (needs the fiscal sponsor's approval for
+the Foundation's funds), the fund-name spelling on the fiscal sponsor's agreement, and whether any Foundation
+research should ever exist again.

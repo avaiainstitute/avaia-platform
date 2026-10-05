@@ -1,3 +1,5 @@
+> **Superseded 2026-10-05 (cutover).** The Foundation now has its own application, database and deployment; the connections mapped below no longer exist in AVAIA. See `docs/pink/SEPARATION.md`.
+
 # Every connection between the Pink Shoelace Foundation and AVAIA
 
 Mapped 2026-10-05, before and after the first separation pass. "Cut" means stopped in code on this

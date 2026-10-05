@@ -1,9 +1,10 @@
 # Separating the Pink Shoelace Foundation from AVAIA
 
-Written 2026-10-05. Founder directive: the Pink Shoelace Foundation and AVAIA are separate. Different
-table prefixes, folders, route names and branding do not make them separate. **Status today: NOT FULLY
-SEPARATE.** This pass stopped every cross-organization data flow in code and prepared the rest; what is
-left needs accounts only the owner can create.
+Written 2026-10-05; updated the same day after the cutover. Founder directive: the Pink Shoelace Foundation and AVAIA are separate.
+
+> **Status after the cutover (2026-10-05): the Foundation runs as its own application, database and deployment, and AVAIA holds no Foundation code or live data. Five vendor accounts are still shared (Vercel team, GitHub organization, Cloudflare, Resend, Google Workspace), and neither database has backups. See section 7.**
+>
+> The Foundation: repository `avaiainstitute/pink-shoelace-foundation-app`, Vercel project `pink-shoelace-foundation-app`, Supabase project `pialogfbveweezrdfsql` (own organization), `https://app.thepinkshoelace.org`, sender `contact@thepinkshoelace.org`. The sections below were written before the cutover and describe how it was planned.
 
 ## 1. What real separation requires, item by item
 
@@ -146,20 +147,18 @@ Type **CNAME**, Name `app`, Target the value Vercel shows, Proxy status **DNS on
 **Step 7. Tell me when Steps 1–6 are done.** I then: load the schema into the new database, move and adapt the code,
 update the two site forms to the new address, run the tests, switch over, and remove the Foundation from AVAIA.
 
-## 7. The thirteen questions, as of today
+## 7. The thirteen questions, after the cutover (2026-10-05)
 
-1. Can AVAIA access Foundation participant data? **Yes, technically** (the same service key and project). No AVAIA code reads it (guard + self-test).
-2. Can the Foundation access AVAIA participant data? **Yes, technically.** The Foundation's files read none (guard rule B).
-3. Can AVAIA write Foundation operational records? **Technically yes**; no AVAIA code does.
-4. Can the Foundation write AVAIA operational records? **Technically yes**; its code writes only shared logging tables and the shared notes/content tables.
-5. Can an AVAIA deployment break the Foundation? **Yes.**
-6. Can a Foundation deployment break AVAIA? **Yes.**
-7. Shared database credentials? **Yes.**
-8. Shared admin credentials? **Yes** (one admin account).
-9. Shared email identity? **Partly**: display name is the Foundation's; address and account are AVAIA's until Step 5.
-10. Shared environment secrets? **Yes.**
-11. Automations crossing the line? **No longer.** Cut on 2026-10-05.
-12. Independent backups? **No.**
-13. Still shared: repository, hosting, database, secrets, admin login, email sender, jobs, health checks, backups, Cloudflare account.
-
-**NOT FULLY SEPARATE.**
+1. Can AVAIA access Foundation participant data? **No.** AVAIA's code reads no `pink_*` table (build guard `scripts/pink-isolation.sh`) and has no credentials for the Foundation's database. The Foundation's old tables remain in AVAIA's database, unread, as history (they hold no real submissions).
+2. Can the Foundation access AVAIA participant data? **No.** Its database holds only its own tables, and it has no credentials for AVAIA's database. Its build guard fails the build if its code names another organization or reads a table that is not its own.
+3. Can AVAIA write Foundation operational records? **No.**
+4. Can the Foundation write AVAIA operational records? **No.**
+5. Can an AVAIA deployment break the Foundation? **No** (separate Vercel project, repository and database). They share a Vercel team account.
+6. Can a Foundation deployment break AVAIA? **No**, same reasoning.
+7. Shared database credentials? **No.** Separate Supabase projects and keys.
+8. Shared admin credentials? **No.** The Foundation's admin is its own Supabase Auth user, listed in its own `pink_admins` table.
+9. Shared email identity? **No.** The Foundation sends as `contact@thepinkshoelace.org` with its own Resend key limited to its own domain. The mailbox is an alias inside AVAIA's Google Workspace.
+10. Shared environment secrets? **No.** Separate Vercel project settings.
+11. Automations crossing the line? **No.** Cut on 2026-10-05; the Foundation's jobs run in its own project.
+12. Independent backups? **No.** Neither database has backups; this is an open item for both.
+13. Still shared: the Vercel team account, the GitHub organization, the Cloudflare account, the Resend account, the Google Workspace (the `contact@` alias lives in AVAIA's), and the absence of backups. Splitting those accounts is the owner's decision (cost; the fiscal sponsor's approval for anything that spends the Foundation's funds).

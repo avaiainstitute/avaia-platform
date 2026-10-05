@@ -1,6 +1,6 @@
 ---
 title: thepinkshoelace.org backend integration
-status: contact and participation forms wired; backend still hosted inside the AVAIA application (NOT YET SEPARATE, see docs/pink/SEPARATION.md). Corrected 2026-10-05.
+status: SUPERSEDED 2026-10-05. The Foundation's forms and admin moved to its own application (app.thepinkshoelace.org) and were removed from AVAIA. See docs/pink/SEPARATION.md.
 ---
 
 > **Read first (2026-10-05).** The Pink Shoelace Foundation and AVAIA are separate organizations. This
