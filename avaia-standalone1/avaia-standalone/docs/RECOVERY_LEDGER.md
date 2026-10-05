@@ -112,3 +112,31 @@ account, which holds the pre-existing admin-all policy on the Signature table, i
 Intentionally held: Rooms, estate/legacy functionality, a major export system, any Workbook redesign,
 offers to Youth participants (Youth Guide facilitation stays on hold), a participant with no email on file
 (no account an offer could reach).
+
+## Founder reconciliation (2026-10-04)
+
+Brings the existing system back into line with the owner's decisions recorded in
+`institution/decisions/0007-founder-reconciliation-2026-10-04.md`. Integrates, does not rebuild.
+Production: `1b88010` (migration `0118` applied and verified first).
+
+| Decision | Implemented | Connected | Production | Tested | Operational |
+|---|---|---|---|---|---|
+| The Host owns the Room and Table; the Guide facilitates (`rooms.host_participant_id`; Host seated first, not removable by the Guide; UI, prompts, policy names, public page) | yes | Shared Room, Toolkit Rooms, Room prompt | `1b88010` | `pipeline_founder_reconciliation` | yes |
+| Witness is a standing function, not a person | yes | institution roles/seats/OS text, Table prompts, Room prompt, Table lesson | `1b88010` | `pipeline_founder_reconciliation` | yes |
+| Preparation GPT is a human Guide-side tool used while working with the Host | yes | manual, Toolkit card/picker/record button, prompts, source docs and workflow chains, links from active session pages | `1b88010` | `pipeline_founder_reconciliation` | yes |
+| Virtue Formula governing term is Desired Outcome (lesson 5.14 corrected; the person's own words are the Desired Outcome) | yes | Chemistry page, generator, certification lesson 5.14 | `1b88010` | `pipeline_founder_reconciliation` | yes |
+| Virtue Signature: six AI-generated layers removed; repeated experiences kept together per virtue; first ring, next ring of eight, no invented later capacities | yes | Signature page, visual, Workbook, Journal form and prompts, Journey card, add route | `1b88010` | `pipeline_founder_reconciliation` | yes |
+| DORIAN = Dignity, Originality, Respect, Individuality, Authenticity, Nobility | already correct in code | name acrostic | `1b88010` | `pipeline_founder_reconciliation` | yes |
+
+Proof: System Checks run 2026-10-05 03:49 UTC on production `1b88010` (`deploy_matches_branch` confirmed),
+triggered manually from `/admin/system-checks`: `pipeline_founder_reconciliation`, `schema_rules`,
+`schema_tables` (109 of 109), `pipeline_keep_this` and all Move 6 pipeline checks pass; 68 of 68 checks in
+the run pass. Before that, the Vercel preview build (including the prebuild schema and evaluator-isolation
+guards) passed, and the production Formula route, Shared Room page and Chemistry page were spot-checked.
+
+Intentionally NOT decided (owner decisions still open): how the Virtue Formula's elements become visible or
+selected (today the AI chooses them, isolated in `app/api/chemistry/virtue-formula/route.ts`); who may close,
+pause, archive or reopen a Room and what happens to a Room if its Host's records are deleted; how rings after
+the Signature's first eight elements are divided; approval of the reworded lesson 5.14. Provenance not
+established and left alone: the other ten Master Format Kits and Blueprints saved 26-27 August 2026 and the
+published Experiences that may derive from them.
