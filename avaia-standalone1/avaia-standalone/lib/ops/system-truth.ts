@@ -321,6 +321,25 @@ export async function schemaChecks(): Promise<CheckResult[]> {
     if (!insert || !/guide_offer/.test(`${insert.with_check ?? ""}`)) failures.push(`kept_items lets a Host insert a row claiming to have come through a Guide, so provenance could be forged`);
     if (!kept.triggers.includes("kept_items_protect_content")) failures.push(`kept_items is missing the protective rule "kept_items_protect_content": what was kept could be rewritten`);
   }
+  // Coordination (migration 0120, Decision 0008). Coordination items belong to the Host alone:
+  // every policy is the Host's own, there is no delete policy (a Host closes an item), writes are
+  // limited to adult accounts, and the guard trigger keeps the owner and identity fixed. polcmd:
+  // 'r' read, 'a' insert, 'w' update, 'd' delete, '*' all.
+  const coordination = need("coordination_items");
+  if (coordination) {
+    if (coordination.policies.length === 0) failures.push(`coordination_items has no access policy`);
+    const wide = coordination.policies.find((p) => p.cmd === "d" || p.cmd === "*");
+    if (wide) failures.push(`coordination_items has a delete or all-commands policy ("${wide.name}"); Phase 1 has no Host delete`);
+    const notOwn = coordination.policies.find((p) => !/host_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (notOwn) failures.push(`coordination_items has a policy ("${notOwn.name}") that is not the Host's own`);
+    const reachable = coordination.policies.find((p) => /admin|guide/i.test(`${p.name} ${p.qual ?? ""}`));
+    if (reachable) failures.push(`coordination_items has a policy ("${reachable.name}") that reaches beyond the Host; coordination items belong to the Host alone`);
+    const writes = coordination.policies.filter((p) => p.cmd === "a" || p.cmd === "w");
+    if (writes.length !== 2 || writes.some((p) => !/developmental_band/.test(`${p.with_check ?? ""}`))) {
+      failures.push(`coordination_items does not limit writes to adult accounts, so a Youth profile could create or change one`);
+    }
+    if (!coordination.triggers.includes("coordination_items_guard")) failures.push(`coordination_items is missing the protective rule "coordination_items_guard": an item's owner could be changed`);
+  }
   const offers = need("guide_item_offers");
   if (offers) {
     // polcmd: 'w' is update and '*' is all; neither may exist for a Guide on an offer.

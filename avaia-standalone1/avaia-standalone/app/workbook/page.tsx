@@ -23,6 +23,8 @@ import {
   groupByElement,
 } from "@/lib/virtue-signature";
 import { hostIdentityFrom, listKeptItems, listOfferGroupsForHost, setKeptStatus, type KeptItem } from "@/lib/ops/kept-items";
+import { coordinationSummaryForHost } from "@/lib/ops/coordination";
+import { isCoordinateFromField } from "@/lib/coordination";
 
 /** The Host's own kept items as a plain-text download. Only what the Host chose to keep. */
 function buildKeptText(items: KeptItem[], exportedOn: string): string {
@@ -229,10 +231,13 @@ export default async function WorkbookPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("consent_at")
+    .select("consent_at, developmental_band")
     .eq("id", user.id)
     .maybeSingle();
   if (!profile?.consent_at) redirect("/welcome");
+  // Coordination is for adult account holders in this release; a self-serve Youth profile carries a
+  // developmental band and does not see it.
+  const coordinationAvailable = !profile.developmental_band;
 
   // Real defect found live (Org Admin / Wake It Up close-out pass): an
   // account-less Guide-facilitated participant's conversations.host_id is
@@ -365,6 +370,8 @@ export default async function WorkbookPage({
   const keptActive = keptAll.filter((k) => k.status === "active");
   const keptRemoved = keptAll.filter((k) => k.status === "removed");
   const waitingOffers = await listOfferGroupsForHost(hostIdentityFrom(user)).then((g) => g.length).catch(() => 0);
+  // Counts only, for the Coordination section below. A failure here must not take the Workbook down.
+  const coordination = coordinationAvailable ? await coordinationSummaryForHost(supabase, user.id) : null;
 
   // Group conversations into journeys. Each IAP begins a new journey; the CAT and
   // InnerCompass that follow belong to it. Referrals are matched to a journey by
@@ -593,6 +600,27 @@ export default async function WorkbookPage({
               </ul>
             </details>
           )}
+        </section>
+      )}
+
+      {coordinationAvailable && (
+        <section id="coordination" className="mt-10 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label text-seal">What you are carrying</p>
+          <h2 className="mt-1 font-serif text-2xl text-ink">Coordination</h2>
+          <p className="mt-1 text-sm text-muted">
+            Who is doing what, and what is waiting on whom. Every choice is yours, and only you can see it.
+          </p>
+          {coordination && coordination.open + coordination.waiting + coordination.closed > 0 && (
+            <p className="mt-3 text-sm text-ink">
+              {coordination.open} open · {coordination.waiting} waiting · {coordination.closed} closed
+              {coordination.overdue > 0 ? ` · ${coordination.overdue} past due` : ""}
+            </p>
+          )}
+          <p className="mt-4">
+            <Link href="/workbook/coordination" className="text-seal underline-offset-2 hover:underline">
+              {coordination && coordination.open + coordination.waiting + coordination.closed > 0 ? "Open Coordination →" : "Begin Coordination →"}
+            </Link>
+          </p>
         </section>
       )}
 
@@ -1100,12 +1128,21 @@ export default async function WorkbookPage({
                   const arr = (r.content as Record<string, unknown> | undefined)?.[key];
                   return Array.isArray(arr) ? (arr as string[]) : [];
                 });
+              // For decisions and commitments only: each item with the referral and position it came
+              // from, in the same order as `collect`, so "Add to Coordination" can point at exactly
+              // one. The text itself is read again on the server from the stored referral (the same
+              // rule Keep this uses); only the Host's own click starts it.
+              const located = (key: string) =>
+                j.referrals.flatMap((r) => {
+                  const arr = (r.content as Record<string, unknown> | undefined)?.[key];
+                  return Array.isArray(arr) ? (arr as unknown[]).map((_, index) => ({ referralId: String(r.id), index })) : [];
+                });
               const hostVoice = [
-                { label: "Anchor Statements", items: collect("anchorStatements") },
-                { label: "Reflections That Emerged", items: collect("reflectionsThatEmerged") },
-                { label: "Questions Worth Carrying", items: collect("questionsWorthCarrying") },
-                { label: "Decisions Made", items: collect("decisionsMade") },
-                { label: "Commitments Chosen", items: collect("commitmentsChosen") },
+                { label: "Anchor Statements", key: "anchorStatements", items: collect("anchorStatements"), at: [] as { referralId: string; index: number }[] },
+                { label: "Reflections That Emerged", key: "reflectionsThatEmerged", items: collect("reflectionsThatEmerged"), at: [] as { referralId: string; index: number }[] },
+                { label: "Questions Worth Carrying", key: "questionsWorthCarrying", items: collect("questionsWorthCarrying"), at: [] as { referralId: string; index: number }[] },
+                { label: "Decisions Made", key: "decisionsMade", items: collect("decisionsMade"), at: located("decisionsMade") },
+                { label: "Commitments Chosen", key: "commitmentsChosen", items: collect("commitmentsChosen"), at: located("commitmentsChosen") },
               ].filter((g) => g.items.length > 0);
               if (hostVoice.length === 0) return null;
               return (
@@ -1124,6 +1161,14 @@ export default async function WorkbookPage({
                             className="border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink"
                           >
                             &ldquo;{it}&rdquo;
+                            {coordinationAvailable && isCoordinateFromField(g.key) && g.at[ix] && typeof it === "string" && it.trim() && (
+                              <Link
+                                href={`/workbook/coordination?add=${g.at[ix].referralId}&field=${g.key}&index=${g.at[ix].index}#new`}
+                                className="ml-3 font-sans text-xs not-italic text-muted underline-offset-2 hover:text-seal hover:underline"
+                              >
+                                Add to Coordination
+                              </Link>
+                            )}
                           </li>
                         ))}
                       </ul>

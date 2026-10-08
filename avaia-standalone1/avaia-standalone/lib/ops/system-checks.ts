@@ -286,6 +286,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/certification-selftests").then((m) => m.certificationPathChecks()),
     // Keep this (Move 7): a Guide may offer, never decide; only the Host's own choice keeps anything.
     import("@/lib/ops/kept-selftests").then((m) => m.keepThisChecks()),
+    // Coordination (Workbook, Phase 1): every state is Host-selected, nothing inferred, no capacity field.
+    import("@/lib/ops/coordination-selftests").then((m) => m.coordinationChecks()),
     // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
   ]);

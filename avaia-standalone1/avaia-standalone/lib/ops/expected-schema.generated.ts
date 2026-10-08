@@ -26,6 +26,7 @@ export const EXPECTED_TABLES: string[] = [
   "contact_submissions",
   "conversation_integrity_flags",
   "conversations",
+  "coordination_items",
   "crisis_events",
   "cron_runs",
   "email_send_failures",
