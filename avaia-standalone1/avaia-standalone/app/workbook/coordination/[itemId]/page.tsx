@@ -37,6 +37,22 @@ import {
   type CoordinationShare,
 } from "@/lib/coordination-shares";
 import { isSharingEnabled, listSharesForItem, revokeShare } from "@/lib/ops/coordination-shares";
+import {
+  GUIDE_EVENT_LABEL_FOR_HOST,
+  grantStatus,
+  isGuideEventKind,
+  type GuideEvent,
+  type GuideGrant,
+  type GuideScopeRow,
+} from "@/lib/coordination-guide";
+import {
+  acknowledgeGuideFlag,
+  guideNames,
+  isGuideCoordinationEnabled,
+  listGrants,
+  listGuideEvents,
+  listScope,
+} from "@/lib/ops/coordination-guide";
 
 export const metadata = { title: "Coordination item, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -114,8 +130,18 @@ async function revokeAction(formData: FormData) {
   redirect(`/workbook/coordination/${itemId}?${result.ok ? "saved" : "error"}=${encodeURIComponent(message)}#share`);
 }
 
+// The Host acknowledges a flag a Guide raised. This only marks that the Host has seen it; it changes nothing else.
+async function acknowledgeAction(formData: FormData) {
+  "use server";
+  const itemId = String(formData.get("itemId") ?? "");
+  const { supabase, hostId } = await requireCoordinationHost(`/workbook/coordination/${itemId}`);
+  const result = await acknowledgeGuideFlag(supabase, hostId, String(formData.get("eventId") ?? ""));
+  const message = result.ok ? "Marked as seen." : result.error;
+  redirect(`/workbook/coordination/${itemId}?${result.ok ? "saved" : "error"}=${encodeURIComponent(message)}#guide`);
+}
+
 const fmt = (iso: string) => new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-const fmtTime = (iso: string) =>
+const fmtTime =(iso: string) =>
   new Date(iso).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 /** One entry, shown as it was recorded: the Host's own words, how they were chosen, when they were
@@ -195,6 +221,30 @@ export default async function CoordinationItemPage({
   }
   const sharingOpen = isSharingEnabled();
   const now = new Date();
+
+  // Guide access (Phase 4): the Host's own grants, what they chose to include, and every record a Guide made on
+  // this item. The Host always sees all of it, in a lane marked as the Guide's. A failed read is said plainly.
+  let guideGrants: GuideGrant[] = [];
+  let guideScope: GuideScopeRow[] = [];
+  let guideEvents: GuideEvent[] = [];
+  let guideNameById = new Map<string, string>();
+  let guideFailed = false;
+  try {
+    [guideGrants, guideScope, guideEvents] = await Promise.all([listGrants(supabase, hostId), listScope(supabase, hostId), listGuideEvents(supabase, hostId, item.id)]);
+    guideNameById = await guideNames(supabase, guideGrants.map((g) => g.guide_id));
+  } catch {
+    guideFailed = true;
+  }
+  const guideOpen = isGuideCoordinationEnabled();
+  const grantById = new Map(guideGrants.map((g) => [g.id, g]));
+  const guideLabelFor = (grantId: string) => {
+    const g = grantById.get(grantId);
+    return g ? guideNameById.get(g.guide_id) ?? "Your Guide" : "Your Guide";
+  };
+  const itemScopeRows = guideScope.filter((s) => s.item_id === item.id && s.entry_id === null);
+  const grantsForItem = guideGrants.filter((g) => itemScopeRows.some((s) => s.grant_id === g.id));
+  const visibleNow = grantsForItem.filter((g) => grantStatus(g, now) === "active" && itemScopeRows.some((s) => s.grant_id === g.id && s.removed_at === null));
+
   const timeline =
     item.kind === "decision"
       ? buildTimeline(
@@ -208,7 +258,25 @@ export default async function CoordinationItemPage({
             revoked_at: s.revoked_at,
             first_viewed_at: s.first_viewed_at,
           })),
-          now
+          now,
+          {
+            grants: grantsForItem.map((g) => ({
+              id: g.id,
+              guideLabel: guideLabelFor(g.id),
+              granted_at: g.granted_at,
+              ends_at: g.ends_at,
+              revoked_at: g.revoked_at,
+            })),
+            events: guideEvents.map((ev) => ({
+              id: ev.id,
+              guideLabel: guideLabelFor(ev.grant_id),
+              kind: ev.kind,
+              body: ev.body,
+              created_at: ev.created_at,
+              withdrawn_at: ev.withdrawn_at,
+              acknowledged_at: ev.acknowledged_at,
+            })),
+          }
         )
       : [];
 
@@ -318,6 +386,67 @@ export default async function CoordinationItemPage({
         )}
       </section>
 
+      {(guideOpen || guideFailed || visibleNow.length > 0 || guideEvents.length > 0) && (
+        <section id="guide" className="mt-6 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+          <p className="label text-muted">Your Guide</p>
+          {guideFailed && (
+            <p className="mt-3 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+              Your Guide access could not be loaded just now, so what you see here may be incomplete. Please try again.
+            </p>
+          )}
+          {visibleNow.length > 0 ? (
+            <p className="mt-1 text-sm text-ink">
+              {visibleNow.map((g) => `${guideLabelFor(g.id)} can see this item until ${fmt(g.ends_at)}`).join("; ")}.
+            </p>
+          ) : (
+            !guideFailed && <p className="mt-1 text-sm text-ink">No Guide can see this item.</p>
+          )}
+          {guideOpen && (
+            <p className="mt-3">
+              <Link
+                href="/workbook/coordination/guide"
+                className="inline-block rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal"
+              >
+                Manage Guide access
+              </Link>
+            </p>
+          )}
+
+          {guideEvents.length > 0 && (
+            <ul className="mt-5 space-y-3">
+              {guideEvents.map((ev) => (
+                <li key={ev.id} className={`rounded-md border p-3 ${ev.withdrawn_at ? "border-dashed border-rule opacity-70" : "border-rule bg-white/[0.03]"}`}>
+                  <p className="label text-seal">
+                    Guide-authored · {guideLabelFor(ev.grant_id)}
+                    {ev.withdrawn_at ? " · withdrawn by the Guide" : ""}
+                  </p>
+                  <p className="mt-1 text-sm text-ink">{GUIDE_EVENT_LABEL_FOR_HOST[ev.kind]}</p>
+                  {ev.body && <p className="mt-1 whitespace-pre-wrap text-sm text-ink">{ev.body}</p>}
+                  <p className="mt-1 text-xs text-muted">
+                    {fmtTime(ev.created_at)}
+                    {ev.kind === "flag_attention" && ev.acknowledged_at ? ` · you marked it seen ${fmt(ev.acknowledged_at)}` : ""}
+                  </p>
+                  {ev.kind === "flag_attention" && !ev.acknowledged_at && !ev.withdrawn_at && (
+                    <form action={acknowledgeAction} className="mt-2">
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <input type="hidden" name="eventId" value={ev.id} />
+                      <button type="submit" className="rounded-md border border-rule px-3 py-1.5 text-xs text-ink transition-colors hover:border-seal">
+                        Mark as seen
+                      </button>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {guideEvents.length > 0 && (
+            <p className="mt-3 text-xs text-muted">
+              These are your Guide&rsquo;s records, not your words. They never change your item, your entries or anything you share.
+            </p>
+          )}
+        </section>
+      )}
+
       {item.kind === "decision" && (
         <section id="record" className="mt-10">
           <p className="label text-seal">Decision &amp; Capacity Continuity Record</p>
@@ -386,6 +515,29 @@ export default async function CoordinationItemPage({
                   return (
                     <li key={`${ev.kind}-${ev.shareId}`} className="border-l-2 border-seal/50 pl-4 text-sm text-muted">
                       <span className="text-ink">{text}</span> · {fmt(ev.at)}
+                    </li>
+                  );
+                }
+                if (ev.kind === "guide_granted" || ev.kind === "guide_revoked" || ev.kind === "guide_expired") {
+                  const text =
+                    ev.kind === "guide_granted"
+                      ? `Guide access given to ${ev.guideLabel}`
+                      : ev.kind === "guide_revoked"
+                        ? `Guide access ended by you for ${ev.guideLabel}`
+                        : `Guide access ended (time ran out) for ${ev.guideLabel}`;
+                  return (
+                    <li key={`${ev.kind}-${ev.grantId}`} className="border-l-2 border-[#8fb8e0]/60 pl-4 text-sm text-muted">
+                      <span className="text-ink">{text}</span> · {fmt(ev.at)}
+                    </li>
+                  );
+                }
+                if (ev.kind === "guide_event") {
+                  const g = ev.event;
+                  const label = isGuideEventKind(g.kind) ? GUIDE_EVENT_LABEL_FOR_HOST[g.kind] : g.kind;
+                  return (
+                    <li key={`guide-event-${g.id}`} className="border-l-2 border-[#8fb8e0]/60 pl-4 text-sm text-muted">
+                      <span className="text-ink">Guide-authored · {g.guideLabel}: {label}</span> · {fmt(ev.at)}
+                      {g.withdrawn_at ? " · withdrawn by the Guide" : ""}
                     </li>
                   );
                 }

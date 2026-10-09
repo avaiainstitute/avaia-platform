@@ -184,6 +184,29 @@ export type ShareEventKind = "share_sent" | "share_viewed" | "share_revoked" | "
  *  share events and the entry event apart when a page narrows on `kind`. */
 type ShareEvent<K extends ShareEventKind> = { kind: K; at: string; shareId: string; recipientLabel: string };
 
+/** What the timeline needs of a Guide grant and of a Guide-authored record (Phase 4). Guide-authored
+ *  events are never Host entries: they appear in the timeline as their own kind, so a page can show them
+ *  visibly apart from the Host's own words. `kind` is the Guide event's kind, kept as plain text here. */
+export type GuideGrantTimelineInput = {
+  id: string;
+  guideLabel: string;
+  granted_at: string;
+  ends_at: string;
+  revoked_at: string | null;
+};
+export type GuideEventTimelineInput = {
+  id: string;
+  guideLabel: string;
+  kind: string;
+  body: string | null;
+  created_at: string;
+  withdrawn_at: string | null;
+  acknowledged_at: string | null;
+};
+export type GuideTimelineInput = { grants: GuideGrantTimelineInput[]; events: GuideEventTimelineInput[] };
+
+type GuideGrantEvent<K extends "guide_granted" | "guide_revoked" | "guide_expired"> = { kind: K; at: string; grantId: string; guideLabel: string };
+
 export type TimelineEvent =
   | { kind: "item_added"; at: string }
   | { kind: "entry"; at: string; entry: CoordinationEntry }
@@ -191,7 +214,11 @@ export type TimelineEvent =
   | ShareEvent<"share_sent">
   | ShareEvent<"share_viewed">
   | ShareEvent<"share_revoked">
-  | ShareEvent<"share_expired">;
+  | ShareEvent<"share_expired">
+  | GuideGrantEvent<"guide_granted">
+  | GuideGrantEvent<"guide_revoked">
+  | GuideGrantEvent<"guide_expired">
+  | { kind: "guide_event"; at: string; event: GuideEventTimelineInput };
 
 /** The timeline, generated from records that already exist: the item's creation, each entry (a
  *  withdrawn entry stays, flagged as withdrawn, and is never shown as active), the item's CURRENT
@@ -202,7 +229,8 @@ export function buildTimeline(
   item: Pick<CoordinationItem, "created_at" | "status" | "closed_at">,
   entries: CoordinationEntry[],
   shares: ShareTimelineInput[] = [],
-  now: Date = new Date()
+  now: Date = new Date(),
+  guide: GuideTimelineInput = { grants: [], events: [] }
 ): TimelineEvent[] {
   const order: Record<TimelineEvent["kind"], number> = {
     item_added: 0,
@@ -211,7 +239,11 @@ export function buildTimeline(
     share_viewed: 3,
     share_revoked: 4,
     share_expired: 5,
-    item_closed: 6,
+    guide_granted: 6,
+    guide_event: 7,
+    guide_revoked: 8,
+    guide_expired: 9,
+    item_closed: 10,
   };
   const events: TimelineEvent[] = [{ kind: "item_added", at: item.created_at }];
   for (const entry of entries) events.push({ kind: "entry", at: entry.occurred_at, entry });
@@ -225,6 +257,16 @@ export function buildTimeline(
       events.push({ kind: "share_expired", at: s.expires_at, shareId: s.id, recipientLabel: s.recipientLabel });
     }
   }
+  // Guide access (Phase 4), derived from the grant's own timestamps and the Guide's own records. Nothing is
+  // stored separately and nothing is invented.
+  for (const g of guide.grants) {
+    events.push({ kind: "guide_granted", at: g.granted_at, grantId: g.id, guideLabel: g.guideLabel });
+    if (g.revoked_at) events.push({ kind: "guide_revoked", at: g.revoked_at, grantId: g.id, guideLabel: g.guideLabel });
+    if (Date.parse(g.ends_at) <= now.getTime() && (!g.revoked_at || Date.parse(g.revoked_at) > Date.parse(g.ends_at))) {
+      events.push({ kind: "guide_expired", at: g.ends_at, grantId: g.id, guideLabel: g.guideLabel });
+    }
+  }
+  for (const ev of guide.events) events.push({ kind: "guide_event", at: ev.created_at, event: ev });
   return events.sort((a, b) => {
     const t = Date.parse(a.at) - Date.parse(b.at);
     if (t !== 0) return t;

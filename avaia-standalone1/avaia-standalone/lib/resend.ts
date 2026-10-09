@@ -194,3 +194,28 @@ export function handoffInvitationEmailHtml({
     <p style="color:#888">If you weren't expecting this, you can ignore this email.</p>
   `.trim();
 }
+
+/** Subject of the Guide Coordination email (Decision 0011). Carries only who gave the access: never an item,
+ *  a title or any content. Line breaks are removed so a typed name cannot add a header. */
+export function guideCoordinationSubject(hostLabel: string): string {
+  return `${hostLabel.replace(/[\r\n]+/g, " ").trim()} has given you access to coordination in AVAIA.`;
+}
+
+/** The one Guide Coordination email (Decision 0011): access has been granted. It contains only who gave it,
+ *  until when, and where to sign in. No item, title, entry or any private content. Every inserted value is escaped. */
+export function guideCoordinationEmailHtml({
+  hostLabel,
+  url,
+  endsOn,
+}: {
+  hostLabel: string;
+  url: string;
+  endsOn: string;
+}): string {
+  return `
+    <p>${escapeHtml(hostLabel)} has given you access to coordination items in AVAIA.</p>
+    <p>The access lasts until ${escapeHtml(endsOn)}, and ${escapeHtml(hostLabel)} can end it sooner.</p>
+    <p><a href="${escapeHtml(url)}">Sign in to AVAIA to see it</a></p>
+    <p style="color:#888">If you weren't expecting this, you can ignore this email.</p>
+  `.trim();
+}

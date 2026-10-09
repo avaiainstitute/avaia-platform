@@ -86,6 +86,27 @@ export async function isGuidedJourneyFacilitationAuthorized(
   return authorization.data !== null && certified;
 }
 
+/** True if this Guide currently holds an authorized coordination_support platform authorization (Phase 4)
+ *  AND an active Guide certification. Independent of Toolkit and of Guided Journey Facilitation: neither is
+ *  ever a substitute, and this is never a substitute for them. It only gates the /guided-coordination pages;
+ *  what a Guide can actually see is decided by the database (guide_coordination_* functions), which
+ *  re-checks certification, this capability, an active unexpired Host grant and the Host's chosen scope on
+ *  every call. */
+export async function isCoordinationSupportAuthorized(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const [authorization, certified] = await Promise.all([
+    supabase
+      .from("guide_platform_authorizations")
+      .select("id")
+      .eq("host_id", userId)
+      .eq("capability", "coordination_support")
+      .eq("status", "authorized")
+      .limit(1)
+      .maybeSingle(),
+    isActivelyCertified(supabase, userId),
+  ]);
+  return authorization.data !== null && certified;
+}
+
 /** True if this Guide's guide_certifications standing is currently
  *  'active', mirrors isToolkitAuthorized()/isGuidedJourneyFacilitationAuthorized()'s
  *  shape. Used alongside isGuidedJourneyFacilitationAuthorized() to gate

@@ -1931,6 +1931,20 @@ export default async function AdminGuideCandidateDetailPage({
           </div>
         )}
 
+        {/* Coordination support (Phase 4), an independent capability. It authorizes the Guide to receive a Host's
+            explicit, time-limited coordination grant; it never gives any access by itself. Its own page. */}
+        {certification && (
+          <div className="mt-6">
+            <p className="label mb-3 text-muted">Coordination support</p>
+            <Link
+              href={`/admin/guide-candidates/${candidate.id}/coordination-support`}
+              className="inline-block rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal"
+            >
+              Manage coordination support authorization
+            </Link>
+          </div>
+        )}
+
         {/* Guide Display Name (Phase E.3 prerequisite), the narrow,
             admin-managed Host-facing identity for an eligible Certified
             Guide. Not a general profile/display-name system; not

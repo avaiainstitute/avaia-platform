@@ -21,6 +21,7 @@ import {
   requireCoordinationHost,
   resolveSeedFromReferral,
 } from "@/lib/ops/coordination";
+import { isGuideCoordinationEnabled } from "@/lib/ops/coordination-guide";
 import CoordinationFields from "./CoordinationFields";
 
 export const metadata = { title: "Coordination, AVAIA" };
@@ -133,8 +134,15 @@ export default async function CoordinationPage({
       <h1 className="font-serif text-4xl text-ink">Coordination</h1>
       <p className="mt-4 text-lg text-muted">
         Who is doing what, and what is waiting on whom. Every choice on this page is yours. AVAIA doesn&rsquo;t fill it in, judge it,
-        or share it. Right now, only you can see it.
+        or share it. {isGuideCoordinationEnabled() ? "Only you can see it unless you choose to give a Guide access." : "Right now, only you can see it."}
       </p>
+      {isGuideCoordinationEnabled() && (
+        <p className="mt-3">
+          <Link href="/workbook/coordination/guide" className="text-sm text-muted underline-offset-2 hover:text-seal hover:underline">
+            Guide access
+          </Link>
+        </p>
+      )}
 
       {searchParams.saved && (
         <p className="mt-6 rounded-md border border-seal/40 bg-seal/[0.06] px-4 py-3 text-sm text-ink">{searchParams.saved}</p>

@@ -388,6 +388,49 @@ export async function schemaChecks(): Promise<CheckResult[]> {
   for (const fn of ["peek_handoff", "open_handoff"]) {
     if (!have.has(fn)) failures.push(`the recipient function ${fn} is missing (migration 0122): a shared link cannot be opened`);
   }
+  // Guide Coordination (migrations 0123 and 0124, Decision 0011). A Host gives one eligible Guide a time-limited,
+  // revocable window onto what the Host ticks. The three tables have no delete policy and no admin path of any
+  // kind; every policy is tied to the signed-in Host or Guide; the Guide has NO policy on the Host's items,
+  // entries or shares (covered by the three rules above) and no policy at all on the scope table, reading only
+  // through the narrow functions; and each table's guard keeps a record from being edited. polcmd: 'r' read,
+  // 'a' insert, 'w' update, 'd' delete, '*' all.
+  const guideTables: { table: string; triggers: string[]; noGuidePolicy?: boolean }[] = [
+    { table: "coordination_guide_grants", triggers: ["coordination_guide_grants_check_insert", "coordination_guide_grants_guard"] },
+    {
+      table: "coordination_guide_scope",
+      triggers: ["coordination_guide_scope_check_insert", "coordination_guide_scope_guard", "coordination_guide_scope_after_remove"],
+      noGuidePolicy: true,
+    },
+    { table: "coordination_guide_events", triggers: ["coordination_guide_events_check_insert", "coordination_guide_events_guard"] },
+  ];
+  for (const g of guideTables) {
+    const t = need(g.table);
+    if (!t) continue;
+    if (t.policies.length === 0) failures.push(`${g.table} has no access policy`);
+    const wide = t.policies.find((p) => p.cmd === "d" || p.cmd === "*");
+    if (wide) failures.push(`${g.table} has a delete or all-commands policy ("${wide.name}"); nothing is ever deleted`);
+    const admin = t.policies.find((p) => /admin/i.test(`${p.name} ${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (admin) failures.push(`${g.table} has an administrator policy ("${admin.name}"); admins have no path to a Host's Guide access, scope or records`);
+    const notSignedIn = t.policies.find((p) => !/auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (notSignedIn) failures.push(`${g.table} has a policy ("${notSignedIn.name}") that is not tied to the signed-in user`);
+    if (g.noGuidePolicy) {
+      const guideRead = t.policies.find((p) => !/host_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+      if (guideRead) failures.push(`${g.table} has a policy ("${guideRead.name}") that is not the Host's own; a Guide must learn their scope only through the view function`);
+    }
+    for (const trigger of g.triggers) {
+      if (!t.triggers.includes(trigger)) failures.push(`${g.table} is missing the protective rule "${trigger}": a grant, a choice or a Guide's record could be forged or edited`);
+    }
+  }
+  for (const fn of [
+    "coordination_guide_is_eligible",
+    "coordination_guide_grant_active",
+    "coordination_guide_item_in_scope",
+    "list_eligible_coordination_guides",
+    "guide_coordination_hosts",
+    "guide_coordination_host_view",
+  ]) {
+    if (!have.has(fn)) failures.push(`the Guide coordination function ${fn} is missing (migration 0123): a Guide's view or a Host's choice of Guide cannot work`);
+  }
   const offers = need("guide_item_offers");
   if (offers) {
     // polcmd: 'w' is update and '*' is all; neither may exist for a Guide on an offer.
