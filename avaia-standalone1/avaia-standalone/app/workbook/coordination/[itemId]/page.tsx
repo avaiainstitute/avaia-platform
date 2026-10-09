@@ -17,6 +17,16 @@ import {
   updateCoordinationItem,
 } from "@/lib/ops/coordination";
 import CoordinationFields from "../CoordinationFields";
+import {
+  ENTRY_TYPE_LABEL,
+  GOVERNING_STATEMENT,
+  SOURCE_LABEL,
+  buildTimeline,
+  positionOverTime,
+  sameMoment,
+  type CoordinationEntry,
+} from "@/lib/coordination-entries";
+import { listEntriesForItem, setEntryWithdrawn } from "@/lib/ops/coordination-entries";
 
 export const metadata = { title: "Coordination item, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -60,7 +70,68 @@ async function reopenAction(formData: FormData) {
   back(itemId, "Reopened.");
 }
 
+// Withdraw, never erase: an entry in the decision record is taken out of active use, and can be
+// restored. It is never rewritten or deleted; the database stamps the time and refuses anything else.
+async function withdrawAction(formData: FormData) {
+  "use server";
+  const itemId = String(formData.get("itemId") ?? "");
+  const { supabase, hostId } = await requireCoordinationHost(`/workbook/coordination/${itemId}`);
+  const result = await setEntryWithdrawn(supabase, hostId, String(formData.get("entryId") ?? ""), true);
+  const message = result.ok ? "Withdrawn from active use. It stays in the record, and you can restore it." : result.error;
+  redirect(`/workbook/coordination/${itemId}?${result.ok ? "saved" : "error"}=${encodeURIComponent(message)}#record`);
+}
+
+async function restoreAction(formData: FormData) {
+  "use server";
+  const itemId = String(formData.get("itemId") ?? "");
+  const { supabase, hostId } = await requireCoordinationHost(`/workbook/coordination/${itemId}`);
+  const result = await setEntryWithdrawn(supabase, hostId, String(formData.get("entryId") ?? ""), false);
+  const message = result.ok ? "Restored to active use." : result.error;
+  redirect(`/workbook/coordination/${itemId}?${result.ok ? "saved" : "error"}=${encodeURIComponent(message)}#record`);
+}
+
 const fmt = (iso: string) => new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+/** One entry, shown as it was recorded: the Host's own words, how they were chosen, when they were
+ *  said and when they were added. Nothing generated, nothing interpreted. */
+function EntryBody({ entry }: { entry: CoordinationEntry }) {
+  const written = entry.source_kind === "host_note";
+  return (
+    <div>
+      <p className="label text-seal">{ENTRY_TYPE_LABEL[entry.entry_type]}</p>
+      <p className="mt-1 text-xs text-muted">
+        {SOURCE_LABEL[entry.source_kind]}
+        {entry.source_kind === "room_message" && entry.room_label ? `: ${entry.room_label}` : ""}
+      </p>
+      <p className="mt-2 whitespace-pre-wrap border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink">{entry.excerpt}</p>
+      {entry.host_note && (
+        <p className="mt-2 text-sm text-ink">
+          <span className="text-muted">Your note: </span>
+          {entry.host_note}
+        </p>
+      )}
+      <p className="mt-2 text-xs text-muted">
+        {written ? `Written ${fmtTime(entry.occurred_at)}` : `Said ${fmtTime(entry.occurred_at)}`}
+        {!written && !sameMoment(entry.occurred_at, entry.created_at) ? ` · Added to your record ${fmt(entry.created_at)}` : ""}
+        {entry.present_note ? ` · ${entry.present_note}` : ""}
+      </p>
+    </div>
+  );
+}
+
+function EntryActions({ entry, itemId }: { entry: CoordinationEntry; itemId: string }) {
+  return (
+    <form action={entry.withdrawn_at ? restoreAction : withdrawAction} className="mt-2">
+      <input type="hidden" name="itemId" value={itemId} />
+      <input type="hidden" name="entryId" value={entry.id} />
+      <button type="submit" className="text-xs text-muted underline-offset-2 hover:text-seal hover:underline">
+        {entry.withdrawn_at ? "Restore to active use" : "Withdraw from active use"}
+      </button>
+    </form>
+  );
+}
 
 export default async function CoordinationItemPage({
   params,
@@ -76,6 +147,21 @@ export default async function CoordinationItemPage({
   const [all, choices] = await Promise.all([listCoordinationItems(supabase, hostId), listPointerChoices(supabase, hostId)]);
   const decisions = all.filter((i) => i.kind === "decision" && i.id !== item.id).map((i) => ({ id: i.id, title: i.title }));
   const overdue = isOverdue(item, todayIso());
+
+  // The decision record, only for a decision. Both the position view and the timeline are built from
+  // the entries that really exist (and the item itself); nothing is generated or stored separately.
+  let entries: CoordinationEntry[] = [];
+  let entriesFailed = false;
+  if (item.kind === "decision") {
+    try {
+      entries = await listEntriesForItem(supabase, hostId, item.id);
+    } catch {
+      // Say so plainly: an empty list here would wrongly read as an empty record.
+      entriesFailed = true;
+    }
+  }
+  const position = positionOverTime(entries);
+  const timeline = item.kind === "decision" ? buildTimeline(item, entries) : [];
 
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -103,6 +189,89 @@ export default async function CoordinationItemPage({
         <p className="label text-muted">Sharing</p>
         <p className="mt-1 text-sm text-ink">Not shared with anyone. Only you can see this.</p>
       </section>
+
+      {item.kind === "decision" && (
+        <section id="record" className="mt-10">
+          <p className="label text-seal">Decision &amp; Capacity Continuity Record</p>
+          <blockquote className="mt-3 border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink">{GOVERNING_STATEMENT}</blockquote>
+          <p className="mt-4 text-sm text-muted">
+            What you said and chose about this decision, in your own words, with the date. You choose what goes in. Nothing is written,
+            compared or judged for you, and only you can see it.
+          </p>
+          <p className="mt-4">
+            <Link
+              href={`/workbook/coordination/${item.id}/entries/new`}
+              className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Add to the record
+            </Link>
+          </p>
+
+          {entriesFailed && (
+            <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+              The record could not be loaded just now, so what you see below may be incomplete. Please try again.
+            </p>
+          )}
+
+          {position.length > 0 && (
+            <div className="mt-8">
+              <h2 className="font-serif text-2xl text-ink">Your stated position over time</h2>
+              <p className="mt-1 text-sm text-muted">Only the entries you marked as what you wanted, or whether your position stayed the same or changed. Shown in the order they happened.</p>
+              <ol className="mt-4 space-y-4">
+                {position.map((e) => (
+                  <li key={e.id} className="rounded-lg border border-rule bg-white/[0.04] p-4 backdrop-blur-sm">
+                    <EntryBody entry={e} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          <div className="mt-8">
+            <h2 className="font-serif text-2xl text-ink">Timeline</h2>
+            <p className="mt-1 text-sm text-muted">Built from what is actually recorded, in the order it happened. A withdrawn entry stays here, marked as withdrawn.</p>
+            <ol className="mt-4 space-y-4">
+              {timeline.map((ev, i) => {
+                if (ev.kind === "item_added") {
+                  return (
+                    <li key={`added-${i}`} className="border-l-2 border-rule pl-4 text-sm text-muted">
+                      <span className="text-ink">Added to your Coordination</span> · {fmt(ev.at)}
+                    </li>
+                  );
+                }
+                if (ev.kind === "item_closed") {
+                  return (
+                    <li key={`closed-${i}`} className="border-l-2 border-rule pl-4 text-sm text-muted">
+                      <span className="text-ink">Closed</span> · {fmt(ev.at)}
+                    </li>
+                  );
+                }
+                const e = ev.entry;
+                return e.withdrawn_at ? (
+                  <li key={e.id} className="rounded-lg border border-dashed border-rule p-4 opacity-70">
+                    <p className="label text-muted">
+                      {ENTRY_TYPE_LABEL[e.entry_type]} · withdrawn {e.withdrawn_at ? fmt(e.withdrawn_at) : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-muted">From {fmt(e.occurred_at)}. Not part of the active record.</p>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs text-muted">Show what was recorded</summary>
+                      <div className="mt-2">
+                        <EntryBody entry={e} />
+                      </div>
+                    </details>
+                    <EntryActions entry={e} itemId={item.id} />
+                  </li>
+                ) : (
+                  <li key={e.id} className="rounded-lg border border-rule bg-white/[0.04] p-4 backdrop-blur-sm">
+                    <EntryBody entry={e} />
+                    <EntryActions entry={e} itemId={item.id} />
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </section>
+      )}
 
       <form action={updateAction} className="mt-8">
         <input type="hidden" name="itemId" value={item.id} />

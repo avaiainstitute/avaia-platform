@@ -340,6 +340,32 @@ export async function schemaChecks(): Promise<CheckResult[]> {
     }
     if (!coordination.triggers.includes("coordination_items_guard")) failures.push(`coordination_items is missing the protective rule "coordination_items_guard": an item's owner could be changed`);
   }
+  // The Decision & Capacity Continuity Record (migration 0121, Decision 0008). Entries belong to the
+  // Host alone. Withdraw, never erase: no delete policy. A Host's browser may insert only a Host
+  // note; every copied source is written by the server and re-verified by the database, so verbatim
+  // text cannot be forged from a browser. An entry is never rewritten (only withdrawn or restored),
+  // and writes are limited to adult accounts.
+  const continuity = need("coordination_entries");
+  if (continuity) {
+    if (continuity.policies.length === 0) failures.push(`coordination_entries has no access policy`);
+    const wide = continuity.policies.find((p) => p.cmd === "d" || p.cmd === "*");
+    if (wide) failures.push(`coordination_entries has a delete or all-commands policy ("${wide.name}"); the record is withdraw, never erase`);
+    const notOwn = continuity.policies.find((p) => !/host_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (notOwn) failures.push(`coordination_entries has a policy ("${notOwn.name}") that is not the Host's own`);
+    const reachable = continuity.policies.find((p) => /admin|guide/i.test(`${p.name} ${p.qual ?? ""}`));
+    if (reachable) failures.push(`coordination_entries has a policy ("${reachable.name}") that reaches beyond the Host; the record belongs to the Host alone`);
+    const insert = continuity.policies.find((p) => p.cmd === "a");
+    if (!insert || !/source_kind\s*=\s*'host_note'/.test(`${insert.with_check ?? ""}`)) {
+      failures.push(`coordination_entries lets a Host's browser insert a copied source, so verbatim text could be forged`);
+    }
+    const continuityWrites = continuity.policies.filter((p) => p.cmd === "a" || p.cmd === "w");
+    if (continuityWrites.length !== 2 || continuityWrites.some((p) => !/developmental_band/.test(`${p.with_check ?? ""}`))) {
+      failures.push(`coordination_entries does not limit writes to adult accounts`);
+    }
+    for (const trigger of ["coordination_entries_check_insert", "coordination_entries_guard"]) {
+      if (!continuity.triggers.includes(trigger)) failures.push(`coordination_entries is missing the protective rule "${trigger}": entries could be forged or rewritten`);
+    }
+  }
   const offers = need("guide_item_offers");
   if (offers) {
     // polcmd: 'w' is update and '*' is all; neither may exist for a Guide on an offer.

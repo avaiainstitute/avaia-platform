@@ -288,6 +288,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/kept-selftests").then((m) => m.keepThisChecks()),
     // Coordination (Workbook, Phase 1): every state is Host-selected, nothing inferred, no capacity field.
     import("@/lib/ops/coordination-selftests").then((m) => m.coordinationChecks()),
+    // The Decision & Capacity Continuity Record (Phase 2): Host-selected types, verbatim words, withdraw never erase.
+    import("@/lib/ops/coordination-entries-selftests").then((m) => m.continuityRecordChecks()),
     // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
   ]);

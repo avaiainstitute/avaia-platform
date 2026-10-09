@@ -77,7 +77,7 @@ export async function isAdultHost(supabase: SupabaseClient, hostId: string): Pro
 
 /** Conversation ids the Host facilitated for someone else (a Guide's own account carries them).
  *  The Workbook already treats these as not the Host's own story; so does Coordination. */
-async function facilitatedConversationIds(supabase: SupabaseClient, hostId: string): Promise<Set<string>> {
+export async function facilitatedConversationIds(supabase: SupabaseClient, hostId: string): Promise<Set<string>> {
   const { data } = await supabase.from("guide_sessions").select("conversation_id").eq("guide_id", hostId);
   return new Set(((data ?? []) as { conversation_id: string | null }[]).map((r) => r.conversation_id).filter((v): v is string => !!v));
 }

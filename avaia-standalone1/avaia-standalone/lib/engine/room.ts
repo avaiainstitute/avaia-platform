@@ -986,7 +986,7 @@ export async function consumeRoomInvitation(token: string): Promise<
  *  a person seated in more than one Room across different Guides can
  *  never resolve ambiguously. Returns null (never throws) if either check
  *  fails, every caller below must treat that as "not authorized here." */
-async function resolveSeatedParticipant(
+export async function resolveSeatedParticipant(
   admin: ReturnType<typeof createAdminClient>,
   roomId: string,
   bearerUserId: string
