@@ -180,11 +180,18 @@ export type ShareTimelineInput = {
 
 export type ShareEventKind = "share_sent" | "share_viewed" | "share_revoked" | "share_expired";
 
+/** One variant per share event (not one variant with a union-typed kind), so the compiler can tell the
+ *  share events and the entry event apart when a page narrows on `kind`. */
+type ShareEvent<K extends ShareEventKind> = { kind: K; at: string; shareId: string; recipientLabel: string };
+
 export type TimelineEvent =
   | { kind: "item_added"; at: string }
   | { kind: "entry"; at: string; entry: CoordinationEntry }
   | { kind: "item_closed"; at: string }
-  | { kind: ShareEventKind; at: string; shareId: string; recipientLabel: string };
+  | ShareEvent<"share_sent">
+  | ShareEvent<"share_viewed">
+  | ShareEvent<"share_revoked">
+  | ShareEvent<"share_expired">;
 
 /** The timeline, generated from records that already exist: the item's creation, each entry (a
  *  withdrawn entry stays, flagged as withdrawn, and is never shown as active), the item's CURRENT
