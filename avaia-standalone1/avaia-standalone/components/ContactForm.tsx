@@ -9,6 +9,14 @@ import {
   type ExperienceType,
   type GroupType,
 } from "@/lib/experiences-agent";
+import {
+  CONTACT_LIMITS,
+  CONTEXT_COPY,
+  MESSAGE_PLACEHOLDER,
+  ORGANIZATION_KINDS,
+  PROFESSIONAL_ROLES,
+  REFERRAL_KINDS,
+} from "@/lib/contact-reasons";
 
 // "Bring a Program/Experience to My Group" is Contact's one doorway into
 // the existing Agent 8 intake (previously its own /experiences page and
@@ -19,6 +27,8 @@ import {
 // every other reason keeps today's exact plain-message behavior.
 const REASONS: { value: string; label: string }[] = [
   { value: "general", label: "General Inquiry" },
+  { value: "professional_referral", label: "Professional referral (about a client or family)" },
+  { value: "organization", label: "Organization, employer or professional firm" },
   { value: "bring_a_program", label: "Bring a Program/Experience to My Group" },
   { value: "guiding", label: "One-on-One Guiding" },
   { value: "workshops", label: "Workshops / Groups" },
@@ -43,13 +53,22 @@ export default function ContactForm() {
   const [location, setLocation] = useState("");
   const [experienceInterest, setExperienceInterest] = useState<ExperienceType>("defying_grief");
   const [requestDetails, setRequestDetails] = useState("");
+  // Professional-referral and organization paths only: a few short orientation fields, never client details.
+  const [professionalRole, setProfessionalRole] = useState("");
+  const [referralKind, setReferralKind] = useState("");
+  const [contactPreference, setContactPreference] = useState("");
+  const [firmName, setFirmName] = useState("");
+  const [organizationKind, setOrganizationKind] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
 
   const isBringAProgram = reason === "bring_a_program";
+  const isProfessional = reason === "professional_referral";
+  const isOrganization = reason === "organization";
+  const pathReady = isProfessional ? professionalRole !== "" && referralKind !== "" : isOrganization ? organizationKind !== "" : true;
   const canSubmit =
-    name.trim() !== "" && email.trim() !== "" && (isBringAProgram || message.trim() !== "");
+    name.trim() !== "" && email.trim() !== "" && (isBringAProgram || message.trim() !== "") && pathReady;
 
   // Pre-select the reason from ?reason=... when it's a genuine, already-
   // supported value (e.g. /certified-guide's CTA links to
@@ -92,7 +111,14 @@ export default function ContactForm() {
         : await fetch("/api/contact", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, reason, message }),
+            body: JSON.stringify({
+              name,
+              email,
+              reason,
+              message,
+              ...(isProfessional ? { professionalRole, referralKind, contactPreference } : {}),
+              ...(isOrganization ? { organizationName: firmName, organizationKind } : {}),
+            }),
           });
       if (!res.ok) {
         throw new Error((await res.json().catch(() => ({}))).error || "Could not send your message.");
@@ -166,6 +192,115 @@ export default function ContactForm() {
           ))}
         </select>
       </div>
+
+      {(isProfessional || isOrganization) && (
+        <p className="border-l-2 border-seal/50 pl-4 font-serif italic leading-relaxed text-ink">
+          {CONTEXT_COPY[isProfessional ? "professional_referral" : "organization"]}
+        </p>
+      )}
+
+      {isProfessional && (
+        <>
+          <div>
+            <label className="label mb-2 block" htmlFor="professionalRole">
+              Your professional role
+            </label>
+            <select
+              id="professionalRole"
+              required
+              value={professionalRole}
+              onChange={(e) => setProfessionalRole(e.target.value)}
+              className={FIELD_CLASSES}
+            >
+              <option value="" disabled className="bg-[#05060b] text-ink">
+                Choose your role
+              </option>
+              {PROFESSIONAL_ROLES.map((r) => (
+                <option key={r.value} value={r.value} className="bg-[#05060b] text-ink">
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="label mb-2 block" htmlFor="referralKind">
+              Are you referring someone, or asking about AVAIA for a client or family?
+            </label>
+            <select
+              id="referralKind"
+              required
+              value={referralKind}
+              onChange={(e) => setReferralKind(e.target.value)}
+              className={FIELD_CLASSES}
+            >
+              <option value="" disabled className="bg-[#05060b] text-ink">
+                Choose one
+              </option>
+              {REFERRAL_KINDS.map((k) => (
+                <option key={k.value} value={k.value} className="bg-[#05060b] text-ink">
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="label mb-2 block" htmlFor="contactPreference">
+              How should we reach you? <span className="text-muted">(optional)</span>
+            </label>
+            <input
+              id="contactPreference"
+              type="text"
+              maxLength={CONTACT_LIMITS.contactPreference}
+              value={contactPreference}
+              onChange={(e) => setContactPreference(e.target.value)}
+              placeholder="For example, a phone number or the best time to call"
+              className={FIELD_CLASSES}
+            />
+          </div>
+        </>
+      )}
+
+      {isOrganization && (
+        <>
+          <div>
+            <label className="label mb-2 block" htmlFor="firmName">
+              Organization or firm name <span className="text-muted">(optional)</span>
+            </label>
+            <input
+              id="firmName"
+              type="text"
+              maxLength={CONTACT_LIMITS.organizationName}
+              value={firmName}
+              onChange={(e) => setFirmName(e.target.value)}
+              className={FIELD_CLASSES}
+            />
+          </div>
+
+          <div>
+            <label className="label mb-2 block" htmlFor="organizationKind">
+              What kind of inquiry is this?
+            </label>
+            <select
+              id="organizationKind"
+              required
+              value={organizationKind}
+              onChange={(e) => setOrganizationKind(e.target.value)}
+              className={FIELD_CLASSES}
+            >
+              <option value="" disabled className="bg-[#05060b] text-ink">
+                Choose one
+              </option>
+              {ORGANIZATION_KINDS.map((k) => (
+                <option key={k.value} value={k.value} className="bg-[#05060b] text-ink">
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
 
       {isBringAProgram ? (
         <>
@@ -288,7 +423,11 @@ export default function ContactForm() {
             placeholder={
               reason === "certification"
                 ? "What draws you to Guide work, and how do you imagine using AVAIA?"
-                : "Tell us a little about what brought you here."
+                : isProfessional
+                  ? MESSAGE_PLACEHOLDER.professional_referral
+                  : isOrganization
+                    ? MESSAGE_PLACEHOLDER.organization
+                    : "Tell us a little about what brought you here."
             }
             className={`${FIELD_CLASSES} resize-none`}
           />

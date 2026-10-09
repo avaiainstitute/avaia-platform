@@ -2,23 +2,18 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, contactSubmissionEmailHtml, contactAcknowledgmentEmailHtml } from "@/lib/resend";
 import { detectCrisis } from "@/lib/engine/anthropic";
+import {
+  ALWAYS_NEEDS_DORIAN,
+  CONTACT_LIMITS,
+  CONTACT_REASON_LABEL,
+  composeContactMessage,
+  isContactReason,
+} from "@/lib/contact-reasons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const REASON_LABEL: Record<string, string> = {
-  general: "General Inquiry",
-  guiding: "One-on-One Guiding",
-  workshops: "Workshops / Groups",
-  schools: "Schools / Organizations",
-  certification: "Certification",
-  other: "Other",
-};
-
-const ALWAYS_NEEDS_DORIAN = new Set(["guiding", "workshops", "schools", "certification"]);
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_MESSAGE_LENGTH = 5000;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
@@ -31,23 +26,37 @@ export async function POST(request: Request) {
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
   }
-  if (!(reason in REASON_LABEL)) {
+  if (!isContactReason(reason)) {
     return NextResponse.json({ error: "Please choose a reason for contacting AVAIA." }, { status: 400 });
   }
   if (!message) return NextResponse.json({ error: "Please enter a message." }, { status: 400 });
-  if (message.length > MAX_MESSAGE_LENGTH) {
+  if (message.length > CONTACT_LIMITS.message) {
     return NextResponse.json({ error: "That message is too long." }, { status: 400 });
   }
 
-  const needsDorian =
-    ALWAYS_NEEDS_DORIAN.has(reason) || detectCrisis(message) || /\?/.test(message);
+  // Professional referral and organization carry a few short, validated orientation fields. They are folded into
+  // the stored message as labelled lines, so AVAIA sees who is writing and why. Every other reason is unchanged.
+  const composed = composeContactMessage(
+    reason,
+    {
+      professionalRole: body?.professionalRole,
+      referralKind: body?.referralKind,
+      contactPreference: body?.contactPreference,
+      organizationName: body?.organizationName,
+      organizationKind: body?.organizationKind,
+    },
+    message
+  );
+  if (!composed.ok) return NextResponse.json({ error: composed.error }, { status: 400 });
+
+  const needsDorian = ALWAYS_NEEDS_DORIAN.has(reason) || detectCrisis(message) || /\?/.test(message);
 
   const admin = createAdminClient();
   const { error: dbError } = await admin.from("contact_submissions").insert({
     name,
     email,
     reason,
-    message,
+    message: composed.message,
     needs_dorian: needsDorian,
     follow_up_needed: needsDorian,
   });
@@ -64,8 +73,8 @@ export async function POST(request: Request) {
     try {
       await sendEmail({
         to,
-        subject: `AVAIA contact form: ${REASON_LABEL[reason]}${needsDorian ? " (needs review)" : ""}`,
-        html: contactSubmissionEmailHtml({ name, email, reasonLabel: REASON_LABEL[reason], message }),
+        subject: `AVAIA contact form: ${CONTACT_REASON_LABEL[reason]}${needsDorian ? " (needs review)" : ""}`,
+        html: contactSubmissionEmailHtml({ name, email, reasonLabel: CONTACT_REASON_LABEL[reason], message: composed.message }),
       });
     } catch (e) {
       console.error("AVAIA contact notification email failed:", e);

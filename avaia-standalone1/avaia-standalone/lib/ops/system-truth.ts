@@ -431,6 +431,16 @@ export async function schemaChecks(): Promise<CheckResult[]> {
   ]) {
     if (!have.has(fn)) failures.push(`the Guide coordination function ${fn} is missing (migration 0123): a Guide's view or a Host's choice of Guide cannot work`);
   }
+  // The contact form's reasons (migration 0125): the check on contact_submissions.reason must accept the two
+  // professional-referral and organization reasons, or those submissions are refused by the database.
+  const contactTable = need("contact_submissions");
+  if (contactTable) {
+    const reasonCheck = contactTable.checks["contact_submissions_reason_check"] ?? "";
+    const missingReasons = ["professional_referral", "organization"].filter((v) => !reasonCheck.includes(`'${v}'`));
+    if (missingReasons.length > 0) {
+      failures.push(`contact_submissions does not yet accept the contact reason(s) ${missingReasons.join(", ")} (migration 0125): those submissions would be refused`);
+    }
+  }
   const offers = need("guide_item_offers");
   if (offers) {
     // polcmd: 'w' is update and '*' is all; neither may exist for a Guide on an offer.

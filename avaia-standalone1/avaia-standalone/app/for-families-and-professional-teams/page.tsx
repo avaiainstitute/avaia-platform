@@ -64,7 +64,7 @@ export default function ForFamiliesAndProfessionalTeamsPage() {
               alongside the professionals already involved.
             </p>
             <p className="mt-5">
-              <Link href="/contact" className={quietButton}>
+              <Link href="/contact?reason=professional_referral" className={quietButton}>
                 Contact us about a client
               </Link>
             </p>
@@ -78,7 +78,7 @@ export default function ForFamiliesAndProfessionalTeamsPage() {
               what you are looking for.
             </p>
             <p className="mt-5">
-              <Link href="/contact" className={quietButton}>
+              <Link href="/contact?reason=organization" className={quietButton}>
                 Contact us about your organization
               </Link>
             </p>
