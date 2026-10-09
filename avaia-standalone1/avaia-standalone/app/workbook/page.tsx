@@ -25,6 +25,7 @@ import {
 import { hostIdentityFrom, listKeptItems, listOfferGroupsForHost, setKeptStatus, type KeptItem } from "@/lib/ops/kept-items";
 import { coordinationSummaryForHost } from "@/lib/ops/coordination";
 import { isCoordinateFromField } from "@/lib/coordination";
+import { listFromField } from "@/lib/referral-fields";
 
 /** The Host's own kept items as a plain-text download. Only what the Host chose to keep. */
 function buildKeptText(items: KeptItem[], exportedOn: string): string {
@@ -416,10 +417,7 @@ export default async function WorkbookPage({
   const collectAll = (keys: string[]) =>
     allReferrals.flatMap((r) => {
       const c = r.content as Record<string, unknown> | undefined;
-      return keys.flatMap((k) => {
-        const v = c?.[k];
-        return Array.isArray(v) ? (v as string[]) : [];
-      });
+      return keys.flatMap((k) => listFromField(c?.[k]));
     });
   const recurring = (items: string[]) => {
     const counts = new Map<string, { label: string; n: number }>();

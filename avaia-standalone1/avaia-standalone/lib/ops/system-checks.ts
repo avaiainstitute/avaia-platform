@@ -294,6 +294,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/coordination-shares-selftests").then((m) => m.shareWithChecks()),
     // Guide Coordination (Phase 4): the Host chooses everything, a Guide's records are always the Guide's own.
     import("@/lib/ops/coordination-guide-selftests").then((m) => m.guideCoordinationChecks()),
+    // Workbook string fields and no-account referral invites (two defect fixes, regression coverage).
+    import("@/lib/ops/workbook-fixes-selftests").then((m) => m.workbookFixesChecks()),
     // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
   ]);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail, inviteEmailHtml } from "@/lib/resend";
+import { shareConversationId } from "@/lib/share-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
     owner_id: user.id,
     invited_email: email,
     scope,
-    conversation_id: scope === "conversation" ? conversationId : null,
+    conversation_id: shareConversationId(scope, conversationId),
   });
   if (inviteError) return NextResponse.json({ error: "Could not create the invite." }, { status: 500 });
 
