@@ -167,23 +167,57 @@ export function positionOverTime<T extends Pick<CoordinationEntry, "entry_type" 
     .sort(byTime);
 }
 
+/** The few fields of a share the timeline needs (Phase 3). `recipientLabel` is composed by the caller,
+ *  for example "Alex (Estate attorney)". */
+export type ShareTimelineInput = {
+  id: string;
+  recipientLabel: string;
+  authorized_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+  first_viewed_at: string | null;
+};
+
+export type ShareEventKind = "share_sent" | "share_viewed" | "share_revoked" | "share_expired";
+
 export type TimelineEvent =
   | { kind: "item_added"; at: string }
   | { kind: "entry"; at: string; entry: CoordinationEntry }
-  | { kind: "item_closed"; at: string };
+  | { kind: "item_closed"; at: string }
+  | { kind: ShareEventKind; at: string; shareId: string; recipientLabel: string };
 
 /** The timeline, generated from records that already exist: the item's creation, each entry (a
- *  withdrawn entry stays, flagged as withdrawn, and is never shown as active), and the item's
- *  CURRENT closed state. No timeline of its own is stored, and no event is invented. (Phase 1
- *  keeps no history of earlier closes and reopens, so only the current closure appears.) */
+ *  withdrawn entry stays, flagged as withdrawn, and is never shown as active), the item's CURRENT
+ *  closed state, and (Phase 3) each share's own timestamps: shared, first viewed, revoked, expired.
+ *  No timeline of its own is stored, and no event is invented. (Phase 1 keeps no history of earlier
+ *  closes and reopens, so only the current closure appears.) */
 export function buildTimeline(
   item: Pick<CoordinationItem, "created_at" | "status" | "closed_at">,
-  entries: CoordinationEntry[]
+  entries: CoordinationEntry[],
+  shares: ShareTimelineInput[] = [],
+  now: Date = new Date()
 ): TimelineEvent[] {
-  const order = { item_added: 0, entry: 1, item_closed: 2 } as const;
+  const order: Record<TimelineEvent["kind"], number> = {
+    item_added: 0,
+    entry: 1,
+    share_sent: 2,
+    share_viewed: 3,
+    share_revoked: 4,
+    share_expired: 5,
+    item_closed: 6,
+  };
   const events: TimelineEvent[] = [{ kind: "item_added", at: item.created_at }];
   for (const entry of entries) events.push({ kind: "entry", at: entry.occurred_at, entry });
   if (item.status === "closed" && item.closed_at) events.push({ kind: "item_closed", at: item.closed_at });
+  for (const s of shares) {
+    events.push({ kind: "share_sent", at: s.authorized_at, shareId: s.id, recipientLabel: s.recipientLabel });
+    if (s.first_viewed_at) events.push({ kind: "share_viewed", at: s.first_viewed_at, shareId: s.id, recipientLabel: s.recipientLabel });
+    if (s.revoked_at) events.push({ kind: "share_revoked", at: s.revoked_at, shareId: s.id, recipientLabel: s.recipientLabel });
+    // It expired only if its time has passed and it was not revoked before then.
+    if (Date.parse(s.expires_at) <= now.getTime() && (!s.revoked_at || Date.parse(s.revoked_at) > Date.parse(s.expires_at))) {
+      events.push({ kind: "share_expired", at: s.expires_at, shareId: s.id, recipientLabel: s.recipientLabel });
+    }
+  }
   return events.sort((a, b) => {
     const t = Date.parse(a.at) - Date.parse(b.at);
     if (t !== 0) return t;

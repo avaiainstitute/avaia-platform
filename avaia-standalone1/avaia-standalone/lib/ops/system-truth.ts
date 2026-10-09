@@ -366,6 +366,28 @@ export async function schemaChecks(): Promise<CheckResult[]> {
       if (!continuity.triggers.includes(trigger)) failures.push(`coordination_entries is missing the protective rule "${trigger}": entries could be forged or rewritten`);
     }
   }
+  // Share With + professional handoff (migration 0122, Decision 0010). A share is a frozen, Host-authorized
+  // copy. The Host can read their own and revoke them; they can never create one directly (so verbatim
+  // content cannot be forged from a browser), and no one can delete one. Recipients have no table access at
+  // all: they reach data only through the two narrow token functions. The trigger that verifies content
+  // against the real entries, and the guard that keeps a sent copy unchanged, must both be present.
+  // polcmd: 'r' read, 'a' insert, 'w' update, 'd' delete, '*' all.
+  const sharesTable = need("coordination_shares");
+  if (sharesTable) {
+    if (sharesTable.policies.length === 0) failures.push(`coordination_shares has no access policy`);
+    const sharesBad = sharesTable.policies.find((p) => p.cmd === "a" || p.cmd === "d" || p.cmd === "*");
+    if (sharesBad) failures.push(`coordination_shares has an insert, delete or all-commands policy ("${sharesBad.name}"); only the server may create a share and none may be deleted`);
+    const sharesNotOwn = sharesTable.policies.find((p) => !/host_id\s*=\s*auth\.uid\(\)/.test(`${p.qual ?? ""} ${p.with_check ?? ""}`));
+    if (sharesNotOwn) failures.push(`coordination_shares has a policy ("${sharesNotOwn.name}") that is not the Host's own`);
+    const sharesReach = sharesTable.policies.find((p) => /admin|guide|anon|public/i.test(`${p.name} ${p.qual ?? ""}`));
+    if (sharesReach) failures.push(`coordination_shares has a policy ("${sharesReach.name}") that reaches beyond the Host; recipients must use only the token functions`);
+    for (const trigger of ["coordination_shares_check_insert", "coordination_shares_guard"]) {
+      if (!sharesTable.triggers.includes(trigger)) failures.push(`coordination_shares is missing the protective rule "${trigger}": a share could be forged or changed after it was sent`);
+    }
+  }
+  for (const fn of ["peek_handoff", "open_handoff"]) {
+    if (!have.has(fn)) failures.push(`the recipient function ${fn} is missing (migration 0122): a shared link cannot be opened`);
+  }
   const offers = need("guide_item_offers");
   if (offers) {
     // polcmd: 'w' is update and '*' is all; neither may exist for a Guide on an offer.

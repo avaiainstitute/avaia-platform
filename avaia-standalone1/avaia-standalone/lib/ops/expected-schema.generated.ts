@@ -28,6 +28,7 @@ export const EXPECTED_TABLES: string[] = [
   "conversations",
   "coordination_entries",
   "coordination_items",
+  "coordination_shares",
   "crisis_events",
   "cron_runs",
   "email_send_failures",
@@ -118,6 +119,8 @@ export const EXPECTED_RPCS: string[] = [
   "get_guide_display_name",
   "get_pending_consent_by_token",
   "list_eligible_guided_journey_guides",
+  "open_handoff",
+  "peek_handoff",
   "set_guide_display_name",
 ];
 

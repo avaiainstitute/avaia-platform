@@ -168,3 +168,29 @@ export function contactSubmissionEmailHtml({
     <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
   `.trim();
 }
+
+/** Subject of the Share With email (Decision 0010). Carries only who shared it: never a title, a
+ *  purpose or any content. Line breaks are removed so a typed name cannot add a header. */
+export function handoffInvitationSubject(sharedByName: string): string {
+  return `${sharedByName.replace(/[\r\n]+/g, " ").trim()} has shared something with you through AVAIA.`;
+}
+
+/** The Share With email (Decision 0010). It contains only: who shared it, that it is a read-only AVAIA
+ *  handoff, when it expires, the secure link, and the instruction to ignore it if unexpected. No title,
+ *  purpose, excerpt or other content. Every inserted value is escaped. */
+export function handoffInvitationEmailHtml({
+  sharedByName,
+  url,
+  expiresOn,
+}: {
+  sharedByName: string;
+  url: string;
+  expiresOn: string;
+}): string {
+  return `
+    <p>${escapeHtml(sharedByName)} has shared a read-only AVAIA handoff with you.</p>
+    <p>It is available until ${escapeHtml(expiresOn)}.</p>
+    <p><a href="${escapeHtml(url)}">Open the handoff</a></p>
+    <p style="color:#888">If you weren't expecting this, you can ignore this email.</p>
+  `.trim();
+}

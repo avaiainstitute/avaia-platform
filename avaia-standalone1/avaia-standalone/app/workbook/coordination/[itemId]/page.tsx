@@ -27,6 +27,16 @@ import {
   type CoordinationEntry,
 } from "@/lib/coordination-entries";
 import { listEntriesForItem, setEntryWithdrawn } from "@/lib/ops/coordination-entries";
+import HandoffView from "@/components/HandoffView";
+import {
+  EMAIL_STATUS_LABEL,
+  SHARE_STATUS_LABEL,
+  includesWithdrawnEntry,
+  roleDisplay,
+  shareStatus,
+  type CoordinationShare,
+} from "@/lib/coordination-shares";
+import { isSharingEnabled, listSharesForItem, revokeShare } from "@/lib/ops/coordination-shares";
 
 export const metadata = { title: "Coordination item, AVAIA" };
 export const dynamic = "force-dynamic";
@@ -88,6 +98,20 @@ async function restoreAction(formData: FormData) {
   const result = await setEntryWithdrawn(supabase, hostId, String(formData.get("entryId") ?? ""), false);
   const message = result.ok ? "Restored to active use." : result.error;
   redirect(`/workbook/coordination/${itemId}?${result.ok ? "saved" : "error"}=${encodeURIComponent(message)}#record`);
+}
+
+// Revoke a share. This stops future access and cannot be undone; it does not recall anything the recipient
+// already read, copied, saved or printed. The share and its frozen copy stay in the history, never deleted.
+async function revokeAction(formData: FormData) {
+  "use server";
+  const itemId = String(formData.get("itemId") ?? "");
+  const { supabase, hostId } = await requireCoordinationHost(`/workbook/coordination/${itemId}`);
+  if (formData.get("confirm") !== "on") {
+    redirect(`/workbook/coordination/${itemId}?error=${encodeURIComponent("Tick the box to confirm before revoking.")}#share`);
+  }
+  const result = await revokeShare(supabase, hostId, String(formData.get("shareId") ?? ""));
+  const message = result.ok ? "Access revoked. The link no longer works." : result.error;
+  redirect(`/workbook/coordination/${itemId}?${result.ok ? "saved" : "error"}=${encodeURIComponent(message)}#share`);
 }
 
 const fmt = (iso: string) => new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
@@ -161,7 +185,32 @@ export default async function CoordinationItemPage({
     }
   }
   const position = positionOverTime(entries);
-  const timeline = item.kind === "decision" ? buildTimeline(item, entries) : [];
+  // Share history: the Host's own shares of this item. A failed read is said plainly, never shown as empty.
+  let shares: CoordinationShare[] = [];
+  let sharesFailed = false;
+  try {
+    shares = await listSharesForItem(supabase, hostId, item.id);
+  } catch {
+    sharesFailed = true;
+  }
+  const sharingOpen = isSharingEnabled();
+  const now = new Date();
+  const timeline =
+    item.kind === "decision"
+      ? buildTimeline(
+          item,
+          entries,
+          shares.map((s) => ({
+            id: s.id,
+            recipientLabel: `${s.recipient_name} (${roleDisplay(s.recipient_role, s.recipient_role_label)})`,
+            authorized_at: s.authorized_at,
+            expires_at: s.expires_at,
+            revoked_at: s.revoked_at,
+            first_viewed_at: s.first_viewed_at,
+          })),
+          now
+        )
+      : [];
 
   return (
     <div className="mx-auto max-w-prose px-5 py-16">
@@ -185,9 +234,88 @@ export default async function CoordinationItemPage({
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">{searchParams.error}</p>
       )}
 
-      <section className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
+      <section id="share" className="mt-8 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
         <p className="label text-muted">Sharing</p>
-        <p className="mt-1 text-sm text-ink">Not shared with anyone. Only you can see this.</p>
+        {shares.length === 0 && !sharesFailed && <p className="mt-1 text-sm text-ink">Not shared with anyone. Only you can see this.</p>}
+        {shares.length > 0 && (
+          <p className="mt-1 text-sm text-ink">
+            Shared {shares.length === 1 ? "once" : `${shares.length} times`}. Each share is a frozen copy exactly as you approved it, and it stays here even after it ends.
+          </p>
+        )}
+        {sharesFailed && (
+          <p className="mt-3 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">
+            Your sharing history could not be loaded just now, so what you see here may be incomplete. Please try again.
+          </p>
+        )}
+        {sharingOpen && (
+          <p className="mt-4">
+            <Link
+              href={`/workbook/coordination/${item.id}/share`}
+              className="inline-block rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal"
+            >
+              Share with someone
+            </Link>
+          </p>
+        )}
+
+        {shares.length > 0 && (
+          <ul className="mt-5 space-y-4">
+            {shares.map((s) => {
+              const status = shareStatus(s, now);
+              const role = roleDisplay(s.recipient_role, s.recipient_role_label);
+              return (
+                <li key={s.id} className="rounded-lg border border-rule bg-white/[0.03] p-4">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="font-serif text-lg text-ink">
+                      {s.recipient_name} <span className="text-muted">({role})</span>
+                    </p>
+                    <span className={`label ${status === "active" ? "text-seal" : "text-muted"}`}>{SHARE_STATUS_LABEL[status]}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">
+                    {s.recipient_email} · Shared {fmt(s.authorized_at)} · Until {fmt(s.expires_at)}
+                    {s.revoked_at ? ` · Revoked ${fmt(s.revoked_at)}` : ""}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    {EMAIL_STATUS_LABEL[s.email_status]} ·{" "}
+                    {s.first_viewed_at && s.last_viewed_at
+                      ? `Viewed: first ${fmtTime(s.first_viewed_at)}, last ${fmtTime(s.last_viewed_at)}, ${s.view_count} ${s.view_count === 1 ? "view" : "views"}`
+                      : "Not viewed yet"}
+                  </p>
+                  {includesWithdrawnEntry(s, entries) && (
+                    <p className="mt-2 text-sm text-ink">
+                      This share includes an entry you have since withdrawn from your active record. What was sent is unchanged.
+                    </p>
+                  )}
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm text-muted">What was shared (the frozen copy, exactly as sent)</summary>
+                    <div className="mt-3">
+                      <HandoffView payload={s.payload} sharedByName={s.shared_by_name} authorizedAt={s.authorized_at} expiresAt={s.expires_at} />
+                      <p className="mt-3 text-xs text-muted">What you authorized: {s.authorization_statement}</p>
+                    </div>
+                  </details>
+                  {status === "active" && (
+                    <details className="mt-3">
+                      <summary className="cursor-pointer text-sm text-muted">Revoke access</summary>
+                      <form action={revokeAction} className="mt-3">
+                        <input type="hidden" name="itemId" value={item.id} />
+                        <input type="hidden" name="shareId" value={s.id} />
+                        <label className="flex cursor-pointer items-start gap-3 text-sm">
+                          <input type="checkbox" name="confirm" className="mt-1" />
+                          <span className="text-ink">
+                            I understand that revoking stops future access, and that it does not recall anything {s.recipient_name} has already read, copied, saved or printed.
+                          </span>
+                        </label>
+                        <button type="submit" className="mt-3 rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal">
+                          Revoke access
+                        </button>
+                      </form>
+                    </details>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {item.kind === "decision" && (
@@ -243,6 +371,21 @@ export default async function CoordinationItemPage({
                   return (
                     <li key={`closed-${i}`} className="border-l-2 border-rule pl-4 text-sm text-muted">
                       <span className="text-ink">Closed</span> · {fmt(ev.at)}
+                    </li>
+                  );
+                }
+                if (ev.kind === "share_sent" || ev.kind === "share_viewed" || ev.kind === "share_revoked" || ev.kind === "share_expired") {
+                  const text =
+                    ev.kind === "share_sent"
+                      ? `Shared with ${ev.recipientLabel}`
+                      : ev.kind === "share_viewed"
+                        ? `First viewed by ${ev.recipientLabel}`
+                        : ev.kind === "share_revoked"
+                          ? `Access revoked for ${ev.recipientLabel}`
+                          : `Access expired for ${ev.recipientLabel}`;
+                  return (
+                    <li key={`${ev.kind}-${ev.shareId}`} className="border-l-2 border-seal/50 pl-4 text-sm text-muted">
+                      <span className="text-ink">{text}</span> · {fmt(ev.at)}
                     </li>
                   );
                 }
