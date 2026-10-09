@@ -146,6 +146,7 @@ export const EXPECTED_COLUMNS: Record<string, string[]> = {
   pink_contact_submissions: ["acknowledged_at", "resolved_at"],
   pink_donor_sponsor_records: ["dorian_action_needed", "next_follow_up_at"],
   pink_participation_interest: ["acknowledged_at", "resolved_at"],
+  pink_partnerships: ["legacy_review_item_id"],
   profiles: ["developmental_band", "guide_certified_at", "guide_display_name", "marketing_consent", "marketing_consent_at", "marketing_consent_source", "membership_status", "role"],
   recognitions: ["acknowledgment", "contribution", "conversation_id"],
   referrals: ["conversation_id"],
