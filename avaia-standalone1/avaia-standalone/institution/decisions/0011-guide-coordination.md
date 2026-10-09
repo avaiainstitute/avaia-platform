@@ -76,7 +76,7 @@ only grant or end the `coordination_support` capability itself.
 
 ## Host's authorization wording
 
-**DRAFT, awaiting the Founder's confirmation.** Stored verbatim with each grant:
+**FOUNDER-APPROVED, 2026-10-09, exactly as written below.** Stored verbatim with each grant:
 
 > I am choosing to let [Guide] see the items and entries I have selected, including the people I have named on those items, until
 > [date], unless I revoke access sooner. They can record notes and follow-up marks about these items. They cannot change my
