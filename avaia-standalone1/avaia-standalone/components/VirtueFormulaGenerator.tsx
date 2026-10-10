@@ -1,13 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { VIRTUES, familyOf } from "@/lib/virtues";
+import { VIRTUES, VIRTUE_FAMILIES, familyOf } from "@/lib/virtues";
+import {
+  buildConfirmedFormula,
+  type ConfirmedFormula,
+  type FormulaRole,
+  type FormulaSuggestion,
+} from "@/lib/virtue-formula";
 
-type Formula = {
-  primaryVirtue: string;
-  supportingVirtues: string[];
-  balancingVirtues: string[];
-  desiredOutcome: string;
+type Formula = ConfirmedFormula;
+type RoleChoice = FormulaRole | "";
+
+const ROLE_LABEL: Record<RoleChoice, string> = {
+  "": "Not part of my formula",
+  primary: "Primary",
+  supporting: "Supporting",
+  balancing: "Balancing",
 };
 
 function familyColorFor(name: string): string {
@@ -36,11 +45,10 @@ function VirtuePill({ name, onClick }: { name: string; onClick?: () => void }) {
   );
 }
 
-/** Describes a role or situation in your own words; AVAIA assembles a
- *  Primary + Supporting + Balancing formula from the real 123 elements,
- *  generated live, not looked up from a curated library. See the route's
- *  own comments for why every name it returns is validated against the
- *  real Chemistry of Virtue before being shown.
+/** You describe your Desired Outcome in your own words. AVAIA may point to real Chemistry of Virtue elements ONLY where your own words
+ *  support them, and shows the words it is pointing to. You decide which elements belong, which one is Primary, and which, if any, are
+ *  Supporting or Balancing. The formula exists only when you confirm it. See lib/virtue-formula.ts for the rule and the route's own
+ *  comments for how every suggestion is checked against the real table and against what you wrote.
  *
  *  onSelectVirtue, if given, makes each pill clickable, it reuses the
  *  Chemistry page's own existing detail-panel state (see selectByName in
@@ -51,16 +59,24 @@ export default function VirtueFormulaGenerator({
   onSelectVirtue?: (name: string) => void;
 }) {
   const [description, setDescription] = useState("");
+  const [outcome, setOutcome] = useState("");
+  const [suggestions, setSuggestions] = useState<FormulaSuggestion[] | null>(null);
+  const [added, setAdded] = useState<string[]>([]);
+  const [roles, setRoles] = useState<Record<string, RoleChoice>>({});
+  const [toAdd, setToAdd] = useState("");
   const [formula, setFormula] = useState<Formula | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function generate(e: React.FormEvent) {
+  async function lookForElements(e: React.FormEvent) {
     e.preventDefault();
     if (!description.trim() || loading) return;
     setLoading(true);
     setError("");
     setFormula(null);
+    setSuggestions(null);
+    setAdded([]);
+    setRoles({});
     try {
       const res = await fetch("/api/chemistry/virtue-formula", {
         method: "POST",
@@ -68,8 +84,9 @@ export default function VirtueFormulaGenerator({
         body: JSON.stringify({ description: description.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Could not generate a formula.");
-      setFormula(data);
+      if (!res.ok) throw new Error(data?.error || "Could not look for elements in your words.");
+      setOutcome(data.desiredOutcome);
+      setSuggestions(data.suggestions ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -77,9 +94,30 @@ export default function VirtueFormulaGenerator({
     }
   }
 
+  const chosen = [...(suggestions ?? []).map((s) => s.element), ...added];
+
+  function addElement() {
+    if (!toAdd || chosen.includes(toAdd)) return;
+    setAdded((a) => [...a, toAdd]);
+    setToAdd("");
+  }
+
+  function confirmFormula() {
+    setError("");
+    const picks = chosen
+      .filter((n) => roles[n])
+      .map((n) => ({ element: n, role: roles[n] as FormulaRole }));
+    const built = buildConfirmedFormula(outcome, picks);
+    if (!built.ok) {
+      setError(built.reason);
+      return;
+    }
+    setFormula(built.formula);
+  }
+
   return (
     <div>
-      <form onSubmit={generate} className="flex flex-col gap-3 sm:flex-row">
+      <form onSubmit={lookForElements} className="flex flex-col gap-3 sm:flex-row">
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -92,11 +130,100 @@ export default function VirtueFormulaGenerator({
           disabled={!description.trim() || loading}
           className="shrink-0 rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Working…" : "Generate"}
+          {loading ? "Working…" : "Look for elements in my words"}
         </button>
       </form>
 
       {error && <p className="mt-3 text-sm text-[#e0857d]">{error}</p>}
+
+      {suggestions && !formula && (
+        <div className="mt-6 space-y-5 rounded-lg border border-dashed border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-5">
+          <div>
+            <p className="label mb-1 text-muted">Your desired outcome</p>
+            <p className="font-serif text-lg text-ink">{outcome}</p>
+          </div>
+
+          <p className="text-sm text-muted">
+            {suggestions.length > 0
+              ? "These elements are possibilities your own words may point toward. You decide which belong in your formula, which one is Primary, and which, if any, are Supporting or Balancing."
+              : "Your words did not point clearly to any element yet. You can add elements yourself below."}
+          </p>
+
+          {chosen.length > 0 && (
+            <ul className="space-y-3">
+              {chosen.map((name) => {
+                const s = suggestions.find((x) => x.element === name);
+                return (
+                  <li key={name} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <VirtuePill name={name} onClick={onSelectVirtue ? () => onSelectVirtue(name) : undefined} />
+                      <p className="mt-1 text-sm text-muted">
+                        {s ? <>Your words: &ldquo;{s.theirWords}&rdquo;</> : "Added by you"}
+                      </p>
+                    </div>
+                    <label className="text-sm text-ink">
+                      <span className="sr-only">Role of {name} in your formula</span>
+                      <select
+                        value={roles[name] ?? ""}
+                        onChange={(e) => setRoles((r) => ({ ...r, [name]: e.target.value as RoleChoice }))}
+                        className="rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-ink outline-none focus:border-seal"
+                      >
+                        {(Object.keys(ROLE_LABEL) as RoleChoice[]).map((r) => (
+                          <option key={r || "none"} value={r}>
+                            {ROLE_LABEL[r]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <div className="flex flex-col gap-2 border-t border-rule pt-4 sm:flex-row sm:items-center">
+            <label className="text-sm text-muted" htmlFor="formula-add">
+              Add an element yourself
+            </label>
+            <select
+              id="formula-add"
+              value={toAdd}
+              onChange={(e) => setToAdd(e.target.value)}
+              className="rounded-md border border-rule bg-white/[0.04] px-3 py-2 text-ink outline-none focus:border-seal"
+            >
+              <option value="">Choose an element</option>
+              {VIRTUE_FAMILIES.map((f) => (
+                <optgroup key={f.key} label={f.name}>
+                  {VIRTUES.filter((v) => v.family === f.key && !chosen.includes(v.name)).map((v) => (
+                    <option key={v.name} value={v.name}>
+                      {v.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={addElement}
+              disabled={!toAdd}
+              className="rounded-md border border-rule px-4 py-2 text-sm text-ink transition-colors hover:border-seal disabled:opacity-50"
+            >
+              Add
+            </button>
+          </div>
+
+          <div className="border-t border-rule pt-4">
+            <button
+              type="button"
+              onClick={confirmFormula}
+              className="rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+            >
+              Confirm my formula
+            </button>
+            <p className="mt-2 text-sm text-muted">Choose exactly one Primary. Supporting and Balancing are yours to include or leave out.</p>
+          </div>
+        </div>
+      )}
 
       {formula && (
         <div className="mt-6 space-y-4 rounded-lg border border-dashed border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-5">
@@ -133,16 +260,25 @@ export default function VirtueFormulaGenerator({
           </div>
           <div className="border-t border-rule pt-4">
             <p className="text-ink">
-              These virtue elements are already within you, within whatever capacity you have right
+              This is your formula, confirmed by you. These virtue elements are already within you, within whatever capacity you have right
               now. You can also notice them becoming visible in someone else.
             </p>
-            <button
-              type="button"
-              onClick={() => noticeThisFormula(formula)}
-              className="mt-3 inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
-            >
-              Notice an Unsung Hero
-            </button>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => noticeThisFormula(formula)}
+                className="inline-block rounded-md bg-seal px-5 py-2.5 font-sans text-sm font-semibold text-[#05060b] transition-opacity hover:opacity-90"
+              >
+                Notice an Unsung Hero
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormula(null)}
+                className="inline-block rounded-md border border-rule px-5 py-2.5 text-sm text-ink transition-colors hover:border-seal"
+              >
+                Change my formula
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -429,15 +429,17 @@ export default function ChemistryPage() {
 
       {/* Virtue formulas, generated live from the real 123 elements */}
       <section className="rule-t mt-14 border-t border-rule pt-10">
-        <p className="label mb-2">Generated live · Capacity</p>
+        <p className="label mb-2">Your words · Your choice</p>
         <h2 className="font-serif text-2xl text-ink">Virtue Formulas</h2>
         <p className="mt-2 max-w-prose text-muted">
           Virtues rarely operate alone. Start with an outcome you want or
           need. The question is: what virtue elements already within you can
-          you draw upon, within your capacity right now, toward it? A formula
-          names a primary virtue, supporting virtues, and balancing virtues,
-          using only real Chemistry of Virtue elements. Nothing is invented;
-          every name shown is checked against the table above.
+          you draw upon, within your capacity right now, toward it? AVAIA can
+          point to elements your own words support, and show you the words.
+          You decide which elements belong, which one is Primary, and which,
+          if any, are Supporting or Balancing. Only real Chemistry of Virtue
+          elements are used; every name shown is checked against the table
+          above.
         </p>
         <p className="mt-3 text-center font-serif text-lg text-seal">
           Primary Virtue + Supporting Virtue(s) + Balancing Virtue(s) = Desired Outcome

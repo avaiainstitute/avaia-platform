@@ -22,7 +22,7 @@ const ORIENTING_PROMPTS: Record<string, string> = {
   Reality: "What's hard to fully take in or accept?",
   "Dreams / Opportunities": "What future did you have to let go of?",
   "Self-Trust": "Where do you doubt your own judgment now?",
-  Capacity: "What used to feel manageable that no longer does?",
+  "Loss of Capacity": "Is there something you used to be able to carry, handle, or do that feels different now?",
   "Life's Vision": "What did you picture for your life that's changed?",
   Connection: "Who feels distant, or hard to reach?",
   Control: "What feels like it's slipping out of your hands?",

@@ -1,3 +1,4 @@
+import { secondaryLossLabel } from "./institution";
 // The Grief Myth and Life Lesson threads of Defying Grief's four-thread
 // architecture (Secondary Loss -> Virtue -> Grief Myth + Life Lesson),
 // keyed by the same ten canonical Secondary Loss names as SECONDARY_LOSSES
@@ -70,7 +71,7 @@ export const DEFYING_GRIEF_THREADS: Record<string, DefyingGriefThread> = {
       "Why the person you “think” you are is no match for the person you really are.",
     ],
   },
-  Capacity: {
+  "Loss of Capacity": {
     griefMyth: "Talking about the loss will not help the situation.",
     lifeLessonName: "Dangerous Trail",
     lifeLessonTeachings: [

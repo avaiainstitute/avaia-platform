@@ -217,6 +217,7 @@ export default function CertifiedGuidePage() {
             "Facilitating approved general AVAIA classes and Experiences.",
             "Using Guide-only Toolkit materials and facilitation plans.",
             "Supporting private Journey periods inside approved group Experiences, without taking ownership of private content.",
+            "When a Host chooses to give it, reading a curated, time-limited view of the coordination items and decision-continuity entries that Host selects, and adding your own Guide notes and follow-up marks. You cannot change anything the Host owns.",
           ].map((line) => (
             <li key={line} className="flex gap-3">
               <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-seal" />
@@ -229,6 +230,7 @@ export default function CertifiedGuidePage() {
         <ul className="mt-4 space-y-2 text-muted">
           {[
             "Automatic access to anyone's private AVAIA conversations or Workbook.",
+            "Coordination access you were not given. A Host grants it separately, for a limited time, and can end it at any time; it is never included with Journey access.",
             "Authority to diagnose, treat, prescribe, or present AVAIA as therapy.",
             "Authority to decide what a Host should do.",
             "Youth Guide facilitation, this remains on hold.",

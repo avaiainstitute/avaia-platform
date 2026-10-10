@@ -147,7 +147,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: "view-from-above",
     label: "The View from Above",
-    description: "Ten classes built from the lessons that became visible on Bailand's Hike, Meaning, Reality, Dreams/Opportunities, Self-Trust, Capacity, Life's Vision, Connection, Control, Identity, and Attachment/Support, each paired with a Virtue Family. Facilitate here; a member can also take any class self-directed at /view-from-above.",
+    description: "Ten classes built from the lessons that became visible on Bailand's Hike, Meaning, Reality, Dreams/Opportunities, Self-Trust, Loss of Capacity, Life's Vision, Connection, Control, Identity, and Attachment/Support, each paired with a Virtue Family. Facilitate here; a member can also take any class self-directed at /view-from-above.",
     status: "installed",
     href: "/toolkit/view-from-above",
   },

@@ -160,31 +160,31 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
   },
   {
     slug: "decision-making-boundaries",
-    secondaryLoss: "Capacity",
+    secondaryLoss: "Loss of Capacity",
     title: "The Loss of Capacity",
     legacyTitle: "The Loss of Decision-Making / Boundaries",
     virtueFamily: "Fortitude",
     virtueElements: ["Courage", "Steadfast", "Resilience", "Assertive", "Bravery"],
-    humanQuestion: "What do I choose when fear, guilt, shame, or doubt are present?",
+    humanQuestion: "Do I still feel able to carry what I once could, and what has changed?",
     dorianLesson: "I need to know my boundaries and know that I am safe within them.",
     whatItIs:
-      "A class about the moment fear, guilt, shame, or doubt start making decisions for you, and about the Fortitude it takes to know your boundaries and choose from inside them anyway.",
+      "A class about the quiet change in your felt sense of your own ability to carry, handle, or do what you once could, and about the Fortitude it takes to stay steady with that change.",
     whatItTeaches:
-      "This class helps someone learn that fear, guilt, shame, and doubt don't have to be the ones deciding. Fortitude is choosing anyway, from inside boundaries that keep you safe.",
+      "This class helps someone notice a possible Loss of Capacity: grief about a change in their own felt capacity over time. It is a real loss worth staying curious about, not a verdict on who they are or on what they will always be able to do. Fortitude is carrying what can be carried, at a real pace, inside boundaries that protect it.",
     hikeLesson: HIKE_SOURCE_NOTE,
     hikeLessonSourceNote: HIKE_SOURCE_NOTE,
     virtueLooksLike: VIRTUE_FAMILY_LOOKS_LIKE.fortitude,
     personalRecognition: [
-      { prompt: "Which of the four is loudest for me", helper: "Fear, guilt, shame, or doubt?" },
-      { prompt: "A decision it's been interfering with", helper: "Name it, even loosely." },
-      { prompt: "What boundary would make this safer to decide", helper: "What structure or limit would help?" },
+      { prompt: "Something I used to carry easily", helper: "Name it, even loosely." },
+      { prompt: "What feels different now", helper: "Heavier, slower, or more tiring than ordinary tiredness?" },
+      { prompt: "A boundary or permission that would help", helper: "What limit, or what permission to go slower, would make this more bearable?" },
     ],
     chemistryActivity:
-      "Fortitude includes Courage, Steadfast, Resilience, Assertive, and more. Which one already shows up when you think of a hard decision you've made before, even a small one?",
+      "Fortitude includes Courage, Steadfast, Resilience, Assertive, and more. Which one has already helped you keep going through something hard, even at a smaller scale than before?",
     practice:
-      "This week, name one decision you've been avoiding, name which of the four is loudest, set one small boundary that would make it safer, then decide, inside that boundary.",
+      "This week, name one thing you used to carry more easily, notice what feels different about carrying it now, and give yourself permission to set one limit or one slower pace around it.",
     whatBecomesPossible:
-      "Not a promise that fear, guilt, shame, or doubt disappear. What can become possible is building a real boundary and choosing safely inside it, without waiting for those feelings to go away first.",
+      "Not a promise that earlier capacity returns. What can become possible is naming the change plainly, carrying what can be carried with permission to go at a real pace, and setting limits that protect it.",
   },
   {
     slug: "lifes-vision",

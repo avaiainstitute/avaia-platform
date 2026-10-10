@@ -12,7 +12,7 @@ const RECOGNITION_LINE: Record<string, string> = {
   Reality: "What feels real, or trustworthy, may shift.",
   "Dreams / Opportunities": "The future you imagined may need to change.",
   "Self-Trust": "How much you trust your own judgment may be shaken.",
-  Capacity: "Your sense of your own ability to carry or handle what you once could may have changed.",
+  "Loss of Capacity": "A change in your felt sense of your own ability to carry, handle, or do what you once could.",
   "Life's Vision": "The life you thought you were building may look different now.",
   Connection: "Connection with others may feel different.",
   Control: "Your sense of control may feel different.",
@@ -55,7 +55,7 @@ export default function SecondaryLossPage() {
             className="rounded-lg border border-rule bg-white/[0.04] backdrop-blur-sm px-5 py-4"
           >
             <p className="label text-muted">Loss of</p>
-            <p className="font-serif text-lg text-ink">{s.loss}</p>
+            <p className="font-serif text-lg text-ink">{s.loss.replace(/^Loss of /i, "")}</p>
             <p className="mt-1 text-sm text-muted">{RECOGNITION_LINE[s.loss]}</p>
             <Link
               href={`/library?secondary_loss=${encodeURIComponent(s.loss)}`}

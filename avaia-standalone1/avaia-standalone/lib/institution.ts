@@ -355,10 +355,11 @@ export const SECONDARY_LOSSES: SecondaryLoss[] = [
   { loss: "Reality", healingFamily: "humility", healingLabel: "Humility" },
   { loss: "Dreams / Opportunities", healingFamily: "positive-attitude", healingLabel: "Positive Attitude" },
   { loss: "Self-Trust", healingFamily: "hard-work", healingLabel: "Hard Work" },
-  // Renamed by Founder decision from "Decision-Making / Boundaries" to "Capacity" ("Loss of Capacity"). The thread is unchanged: same
+  // Renamed by Founder decision from "Decision-Making / Boundaries" to "Loss of Capacity" (the full name is the stored name, because a bare
+  // "Capacity" collides with the capacity principle and the Chemistry element). The thread is unchanged: same
   // Grief Myth, same virtue family, same life lesson. The old name stays accepted on READ only (LEGACY_SECONDARY_LOSS_NAMES below)
   // so a referral or Library tag stored before the rename keeps working.
-  { loss: "Capacity", healingFamily: "fortitude", healingLabel: "Fortitude" },
+  { loss: "Loss of Capacity", healingFamily: "fortitude", healingLabel: "Fortitude" },
   { loss: "Life's Vision", healingFamily: "wisdom", healingLabel: "Wisdom" },
   { loss: "Connection", healingFamily: "justice", healingLabel: "Justice" },
   { loss: "Control", healingFamily: "self-control", healingLabel: "Self-Control" },
@@ -391,8 +392,8 @@ export function isValidSecondaryLoss(category: string): boolean {
 /** Names that were once canonical and may still sit in stored data (referrals, Library tags) written before a rename. They are accepted when
  *  READING stored data and always shown as the current canonical name. Keys are lower-case with the spacing variants that were in use. */
 export const LEGACY_SECONDARY_LOSS_NAMES: Record<string, string> = {
-  "decision-making / boundaries": "Capacity",
-  "decision-making/boundaries": "Capacity",
+  "decision-making / boundaries": "Loss of Capacity",
+  "decision-making/boundaries": "Loss of Capacity",
 };
 
 /** The current canonical name for a stored or supplied Secondary Loss name, or null if it is neither a current name nor a known retired one.
@@ -404,6 +405,12 @@ export function canonicalSecondaryLoss(name: string): string | null {
   return LEGACY_SECONDARY_LOSS_NAMES[key] ?? null;
 }
 
+
+/** How a Secondary Loss is named in a sentence or heading: "Loss of Meaning", "Loss of Control". One stored name already carries the words
+ *  (Loss of Capacity), so the prefix is added only when it is missing and never doubles. */
+export function secondaryLossLabel(loss: string): string {
+  return /^loss of /i.test(loss.trim()) ? loss.trim() : `Loss of ${loss.trim()}`;
+}
 // ---------------------------------------------------------------------------
 // Reports & consent (Dorian Q25, Q26)
 // ---------------------------------------------------------------------------

@@ -86,6 +86,42 @@ export default function ForFamiliesAndProfessionalTeamsPage() {
         </div>
       </section>
 
+      <section className="mt-12" aria-labelledby="keeping-track">
+        <h2 id="keeping-track" className="font-serif text-2xl text-ink">
+          Keeping track, and sharing only what you choose
+        </h2>
+        <p className="mt-3 max-w-prose text-muted">
+          These are part of a signed-in Host&rsquo;s Workbook. Each one is the Host&rsquo;s own choice; AVAIA does not fill them in
+          or decide anything for you.
+        </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className={cardClass}>
+            <h3 className="font-serif text-xl text-ink">Coordination</h3>
+            <p className="mt-3 text-muted">
+              Keep track of who is doing what, and what is waiting on whom, around a decision or situation. AVAIA does not score
+              it, infer anyone&rsquo;s capacity, or share it.
+            </p>
+          </div>
+          <div className={cardClass}>
+            <h3 className="font-serif text-xl text-ink">Decision &amp; Capacity Continuity</h3>
+            <p className="mt-3 text-muted">
+              For a decision, keep a dated record of what you said you wanted and understood, the questions you asked, and
+              whether your position changed. It preserves what happened over time. AVAIA does not determine or declare anyone&rsquo;s
+              legal capacity or incapacity. An entry you withdraw leaves active use but is kept, not erased.
+            </p>
+          </div>
+          <div className={cardClass}>
+            <h3 className="font-serif text-xl text-ink">Share With</h3>
+            <p className="mt-3 text-muted">
+              Share one item with one person you name, such as a professional or family member, as a read-only copy of exactly what
+              you approved. They open a secure link; no account is needed. The link expires, 14 days by default and 30 at most, and
+              you can revoke it at any time. Revoking stops future access; it does not recall what was already read, copied, saved,
+              or printed. Shared Room content is not included.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <p className="mt-12 max-w-prose text-sm text-muted">
         AVAIA is not therapy, counseling, medical care, legal advice, or crisis intervention, and it does not replace the
         professionals already involved. You remain the owner of your story and every decision you make. If you are in crisis,

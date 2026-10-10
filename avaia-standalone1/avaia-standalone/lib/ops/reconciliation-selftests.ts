@@ -9,6 +9,7 @@ import {
 import { getLessonByKey } from "@/lib/certification-content";
 import { virtuesForName } from "@/lib/virtues";
 import * as signatureConstants from "@/lib/virtue-signature-constants";
+import { buildConfirmedFormula, supportedSuggestions } from "@/lib/virtue-formula";
 import type { CheckResult } from "@/lib/ops/system-checks";
 
 // SELF-TESTS FOR THE FOUNDER RECONCILIATION OF 2026-10-04. Simulated inputs only: nothing is
@@ -24,8 +25,9 @@ import type { CheckResult } from "@/lib/ops/system-checks";
 //     structure (identity, Vulnerability + Authenticity, a next ring of up to eight);
 //   * the DORIAN example is Dignity, Originality, Respect, Individuality, Authenticity, Nobility.
 //
-// The Virtue Formula's ELEMENT SELECTION is an open Founder decision and is deliberately NOT
-// tested here: nothing in this file encodes who chooses the elements.
+// The Virtue Formula element-selection rule (Founder, 2026-10-10): AVAIA may suggest elements only when the Host's own words support them; the
+// Host decides which belong and the roles. It is tested below through lib/virtue-formula.ts (suggestions carry no roles and need real quoted words;
+// the Host confirms exactly one Primary; no fixed counts of Supporting or Balancing).
 
 type Case = { name: string; ok: boolean };
 
@@ -69,6 +71,34 @@ function founderReconciliationCheck(): CheckResult {
     const lessonText = lesson ? JSON.stringify(lesson) : "";
     cases.push({ name: "lesson 5.14 is missing", ok: !!lesson });
     cases.push({ name: "lesson 5.14 still teaches 'Observable Outcome'", ok: !/observable outcome/i.test(lessonText) && /Desired Outcome/.test(lessonText) });
+
+    // Virtue Formula element-selection rule: suggestions need the Host's own words; the Host assigns every role.
+    const said = "I want to be a present dad who keeps showing up with courage even when I am tired";
+    const kept = supportedSuggestions(said, [
+      { element: "courage", theirWords: "with courage", role: "primary" },
+      { element: "Patience", theirWords: "quietly waiting it out" },
+      { element: "Not A Real Element", theirWords: "present dad" },
+      { element: "Courage", theirWords: "with courage" },
+    ]);
+    cases.push({ name: "a formula suggestion without the Host's own words (or for an invented element) was kept", ok: kept.length === 1 && kept[0].element === "Courage" });
+    cases.push({ name: "a formula suggestion carried a role chosen by the AI", ok: kept.every((k) => !("role" in k)) });
+    const noPrimary = buildConfirmedFormula("a present dad", [{ element: "Courage", role: "supporting" }]);
+    const twoPrimary = buildConfirmedFormula("a present dad", [{ element: "Courage", role: "primary" }, { element: "Patience", role: "primary" }]);
+    cases.push({ name: "a formula was confirmed without exactly one Host-chosen Primary", ok: !noPrimary.ok && !twoPrimary.ok });
+    const many = buildConfirmedFormula("a present dad", [
+      { element: "Courage", role: "primary" },
+      { element: "Patience", role: "supporting" },
+      { element: "Humility", role: "supporting" },
+      { element: "Gratitude", role: "supporting" },
+      { element: "Honesty", role: "supporting" },
+      { element: "Compassion", role: "balancing" },
+      { element: "Prudence", role: "balancing" },
+      { element: "Temperance", role: "balancing" },
+    ]);
+    cases.push({
+      name: "the Host's own number of Supporting or Balancing elements was capped",
+      ok: many.ok && many.formula.supportingVirtues.length === 4 && many.formula.balancingVirtues.length === 3,
+    });
 
     // Virtue Signature: no six layers, not a one-time list, Founder structure.
     const exported = Object.keys(signatureConstants);

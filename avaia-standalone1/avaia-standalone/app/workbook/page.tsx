@@ -24,6 +24,8 @@ import {
 } from "@/lib/virtue-signature";
 import { hostIdentityFrom, listKeptItems, listOfferGroupsForHost, setKeptStatus, type KeptItem } from "@/lib/ops/kept-items";
 import { coordinationSummaryForHost } from "@/lib/ops/coordination";
+import { loadHostGuideRelationships } from "@/lib/ops/host-guide-relationships";
+import HostGuideRelationships from "@/components/HostGuideRelationships";
 import { isCoordinateFromField } from "@/lib/coordination";
 import { listFromField } from "@/lib/referral-fields";
 
@@ -357,6 +359,8 @@ export default async function WorkbookPage({
     conversations.map((c) => loadMessages(supabase, c.id))
   );
 
+  // The Host's own view of which Guide currently has their permission (visibility only; see lib/ops/host-guide-relationships.ts).
+  const hostGuideRelationships = await loadHostGuideRelationships(supabase, user.id).catch(() => []);
   const hasActive = conversations.some((c) => c.status === "active");
   // Preserves the Host's most recent program for the "Begin a new journey"
   // link below, conversations is already ordered oldest-first, so the
@@ -718,6 +722,7 @@ export default async function WorkbookPage({
           Explore the AVAIA Library →
         </Link>
       </p>
+      <HostGuideRelationships relationships={hostGuideRelationships} />
 
       {/* Established Dorian source material (institution/source/19_UnsungHeroes.md,
           "Explicitly Not Yet Built"): "Unsung Heroes does not enter the core
