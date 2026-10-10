@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from "crypto";
 import { notFound, redirect } from "next/navigation";
-import { demoBaselineChecks, resetDemo, type DemoCheck } from "@/lib/demo/demo-reset";
+import { demoBaselineChecks, resetDemo, sendDemoTestEmails, type DemoCheck } from "@/lib/demo/demo-reset";
 
 export const metadata = { title: "Demo reset", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ function sameSecret(given: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-export default async function DemoResetPage({ searchParams }: { searchParams: { ran?: string; error?: string } }) {
+export default async function DemoResetPage({ searchParams }: { searchParams: { ran?: string; error?: string; sent?: string } }) {
   if (!configuredPassphrase()) notFound();
 
   async function resetAction(formData: FormData) {
@@ -43,6 +43,23 @@ export default async function DemoResetPage({ searchParams }: { searchParams: { 
     "use server";
     if (!configuredPassphrase()) notFound();
     redirect("/demo-reset?ran=check");
+  }
+
+  async function testEmailsAction(formData: FormData) {
+    "use server";
+    const expected = configuredPassphrase();
+    if (!expected) notFound();
+    const given = String(formData.get("passphrase") ?? "");
+    if (!sameSecret(given, expected)) redirect(`/demo-reset?error=${encodeURIComponent("That passphrase is not right.")}`);
+    let failure: string | null = null;
+    let message = "";
+    try {
+      message = await sendDemoTestEmails();
+    } catch (e) {
+      failure = e instanceof Error ? e.message : String(e);
+    }
+    if (failure) redirect(`/demo-reset?error=${encodeURIComponent(failure)}`);
+    redirect(`/demo-reset?sent=${encodeURIComponent(message)}`);
   }
 
   let checks: DemoCheck[] | null = null;
@@ -68,6 +85,9 @@ export default async function DemoResetPage({ searchParams }: { searchParams: { 
       {searchParams.error && (
         <p className="mt-6 rounded-md border border-[#e0857d]/40 bg-[#e0857d]/[0.08] px-4 py-3 text-sm text-[#e0857d]">{searchParams.error}</p>
       )}
+      {searchParams.sent && !searchParams.error && (
+        <p className="mt-6 rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-sm text-ink">{searchParams.sent}</p>
+      )}
       {searchParams.ran === "reset" && !searchParams.error && (
         <p className="mt-6 rounded-md border border-rule bg-white/[0.04] px-4 py-3 text-sm text-ink">The demo was reset.</p>
       )}
@@ -86,6 +106,13 @@ export default async function DemoResetPage({ searchParams }: { searchParams: { 
         />
         <button type="submit" className="mt-4 rounded-md border border-rule px-5 py-3 text-ink transition-colors hover:border-seal">
           Reset the demo
+        </button>
+        <button
+          type="submit"
+          formAction={testEmailsAction}
+          className="mt-4 ml-3 rounded-md border border-rule px-5 py-3 text-sm text-muted transition-colors hover:border-seal"
+        >
+          Send a test of the two demo emails
         </button>
       </form>
 

@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { guideCoordinationEmailHtml, guideCoordinationSubject, handoffInvitationEmailHtml, handoffInvitationSubject, sendEmail } from "@/lib/resend";
 
 // DEMONSTRATION RESET. Only ever reachable through app/demo-reset, which does not exist unless DEMO_RESET_PASSPHRASE is set (it never is in
 // Production). This rebuilds the baseline of the synthetic demonstration (Eleanor Marsh, the Host; Nora Castellane, the Guide) exactly as
@@ -11,6 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const DEMO_HOST_EMAIL = "kidathart+avaia-demo-host@gmail.com";
 export const DEMO_GUIDE_EMAIL = "kidathart+avaia-demo-guide@gmail.com";
+export const DEMO_ATTORNEY_EMAIL = "kidathart+avaia-demo-attorney@gmail.com";
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -314,4 +316,24 @@ export async function demoBaselineChecks(): Promise<DemoCheck[]> {
   const notes = await count(db, "coordination_guide_events", [["host_id", host]]);
   add("no Guide access exists yet (the grant is done live)", grants === 0 && notes === 0, `${grants} grants, ${notes} Guide notes`);
   return out;
+}
+
+/** Sends the two real demo emails (the Share With handoff and the Guide-access email) to the two synthetic demo addresses only, so deliverability can be
+ *  checked in one click. The links in them point at a page that shows the normal "not available" message; no real share or grant is created. */
+export async function sendDemoTestEmails(): Promise<string> {
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || "https://avaiainstitute.com").replace(/\/+$/, "");
+  const when = new Date(Date.now() + 7 * DAY).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  await sendEmail({
+    to: DEMO_ATTORNEY_EMAIL,
+    subject: handoffInvitationSubject("Eleanor Marsh"),
+    html: handoffInvitationEmailHtml({ sharedByName: "Eleanor Marsh", url: `${site}/handoff/email-test-only`, expiresOn: when }),
+    context: "demo_test_handoff",
+  });
+  await sendEmail({
+    to: DEMO_GUIDE_EMAIL,
+    subject: guideCoordinationSubject("Eleanor Marsh"),
+    html: guideCoordinationEmailHtml({ hostLabel: "Eleanor Marsh", url: `${site}/guided-coordination`, endsOn: when }),
+    context: "demo_test_guide",
+  });
+  return `Sent two test emails: the handoff email to ${DEMO_ATTORNEY_EMAIL} and the Guide-access email to ${DEMO_GUIDE_EMAIL}.`;
 }
