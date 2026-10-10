@@ -34,6 +34,12 @@ set title = $$The Loss of Capacity, View From Above$$,
 where title = $$The Loss of Decision-Making / Boundaries, View From Above$$
 returning id, title, status, updated_at;
 
+-- 1c. Production names its class rows "<title> — The View from Above" (found when 0126 was first applied); rename that form too. Exact match only.
+update public.classes
+set title = $$The Loss of Capacity — The View from Above$$, updated_at = now()
+where title = $$The Loss of Decision-Making / Boundaries — The View from Above$$
+returning id, title, status, updated_at;
+
 -- 2a. Other View From Above sections that name class 5 in their own text.
 update public.experience_sections es
 set body = replace(es.body, $$The Loss of Decision-Making / Boundaries$$, $$The Loss of Capacity$$), updated_at = now()
@@ -171,7 +177,7 @@ select
   (select count(*) from public.experiences where title = $$The Loss of Decision-Making / Boundaries$$)                                       as experiences_with_old_title_expect_0,
   (select count(*) from public.classes where title = $$The Loss of Decision-Making / Boundaries, View From Above$$)                           as classes_with_old_title_expect_0,
   (select count(*) from public.experiences where title = $$The Loss of Capacity$$)                                                            as experiences_with_new_title_expect_1,
-  (select count(*) from public.classes where title = $$The Loss of Capacity, View From Above$$)                                               as classes_with_new_title_expect_1,
+  (select count(*) from public.classes where title in ($$The Loss of Capacity, View From Above$$, $$The Loss of Capacity — The View from Above$$))                                             as classes_with_new_title_expect_1,
   (select count(*) from public.experience_sections where body ilike $$%Decision-Making / Boundaries%$$ or body ilike $$%decision-making or boundaries%$$) as sections_with_old_name_expect_0,
   (select count(*) from public.experience_sections es join public.experiences e on e.id = es.experience_id
      where e.title = $$The Loss of Capacity$$ and es.section_type <> 'hike_lesson' and es.body ilike $$%fear, guilt, shame%$$)               as class5_old_concept_in_body_expect_0,
