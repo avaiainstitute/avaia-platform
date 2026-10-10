@@ -298,6 +298,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/workbook-fixes-selftests").then((m) => m.workbookFixesChecks()),
     // Contact paths (professional referral and organization): the reasons, lists and message composition.
     import("@/lib/ops/contact-reasons-selftests").then((m) => m.contactReasonsChecks()),
+    // Where someone lands after signing in: back where they were going (Coordination, Guided Coordination), never off-site.
+    import("@/lib/ops/post-signin-redirect-selftests").then((m) => m.postSignInRedirectChecks()),
     // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
   ]);

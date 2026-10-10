@@ -1,5 +1,7 @@
 "use client";
 
+import { DEFAULT_POST_SIGNIN, isAllowedPostSignInPath } from "@/lib/post-signin-redirect-rules";
+
 // Where to send a Host after they finish signing in, when they arrived at
 // /sign-in from somewhere other than the default (e.g. Defying Grief's
 // Threshold screen). Deliberately does NOT touch emailRedirectTo or any
@@ -23,21 +25,9 @@ const KEY = "avaia_post_signin_redirect";
 // Fixed allowlist, this value ends up driving a same-origin navigation,
 // so it's validated rather than trusted, the same posture used for
 // Stripe's returnTo in app/api/stripe/checkout/route.ts.
-const ALLOWED = [
-  "/journey",
-  "/defying-grief",
-  "/unsung-heroes?path=i_saw_someone",
-  "/toolkit",
-  "/library",
-  "/workbook",
-  "/shared-with-me",
-  "/youth",
-  "/certified-guide/apply",
-  "/certification",
-];
 
 export function setPostSignInRedirect(path: string) {
-  if (typeof window === "undefined" || !ALLOWED.includes(path)) return;
+  if (typeof window === "undefined" || !isAllowedPostSignInPath(path)) return;
   try {
     window.sessionStorage.setItem(KEY, path);
   } catch {
@@ -55,7 +45,7 @@ export function peekPostSignInRedirect(): string {
   if (typeof window === "undefined") return "/journey";
   try {
     const value = window.sessionStorage.getItem(KEY);
-    return value && ALLOWED.includes(value) ? value : "/journey";
+    return isAllowedPostSignInPath(value) ? value : DEFAULT_POST_SIGNIN;
   } catch {
     return "/journey";
   }
@@ -68,7 +58,7 @@ export function consumePostSignInRedirect(): string {
   try {
     const value = window.sessionStorage.getItem(KEY);
     window.sessionStorage.removeItem(KEY);
-    return value && ALLOWED.includes(value) ? value : "/journey";
+    return isAllowedPostSignInPath(value) ? value : DEFAULT_POST_SIGNIN;
   } catch {
     return "/journey";
   }
