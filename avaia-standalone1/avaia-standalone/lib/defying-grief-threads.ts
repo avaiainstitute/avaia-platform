@@ -144,7 +144,7 @@ export function formatDefyingGriefThreadsHierarchy(): string {
   return Object.entries(DEFYING_GRIEF_THREADS)
     .map(
       ([loss, t]) =>
-        `Loss of ${loss}:\n  Grief Myth: "${t.griefMyth}"\n  Life Lesson: ${t.lifeLessonName}, ${t.lifeLessonTeachings.join("; ")}`
+        `${secondaryLossLabel(loss)}:\n  Grief Myth: "${t.griefMyth}"\n  Life Lesson: ${t.lifeLessonName}, ${t.lifeLessonTeachings.join("; ")}`
     )
     .join("\n\n");
 }

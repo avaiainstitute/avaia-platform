@@ -88,8 +88,8 @@ function founderReconciliationCheck(): CheckResult {
     const many = buildConfirmedFormula("a present dad", [
       { element: "Courage", role: "primary" },
       { element: "Patience", role: "supporting" },
-      { element: "Humility", role: "supporting" },
-      { element: "Gratitude", role: "supporting" },
+      { element: "Mindfulness", role: "supporting" },
+      { element: "Awareness", role: "supporting" },
       { element: "Honesty", role: "supporting" },
       { element: "Compassion", role: "balancing" },
       { element: "Prudence", role: "balancing" },
