@@ -15,7 +15,7 @@
 Follow `DEMO_PRESENTER_SCRIPT.md` row by row (Workbook, Coordination, the decision's timeline, Share With, the handoff link, Guide access, Nora's note, Eleanor's Guide lane, end access).
 
 ## If something goes wrong
-- **Email not in your inbox:** look in Spam, click "Not spam". Or skip it: open the share from Eleanor's item page under "What was shared (the frozen copy, exactly as sent)".
+- **Email not in your inbox:** look in Spam, click "Not spam". Or skip it: open the share from Eleanor's item page under "What was shared (the frozen copy, exactly as sent)". To check ahead of time, use the **Send a test of the two demo emails** button on the `/demo-reset` page (it sends the two real demo emails to the two demo addresses; nothing is shared). On 2026-10-10 both arrived in the inbox after the fix below.
 - **A page shows the wrong account:** check the menu. **CERTIFICATION** in the menu means you are Nora. Sign out and use the bookmark.
 - **Anything looks off:** run the reset and the check again. It takes two minutes and returns the demo to the exact baseline.
 
