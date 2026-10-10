@@ -302,6 +302,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/post-signin-redirect-selftests").then((m) => m.postSignInRedirectChecks()),
     // Outgoing email: every message carries a readable plain-text version beside the HTML one.
     import("@/lib/ops/email-text-selftests").then((m) => m.emailTextChecks()),
+    // The ten Secondary Loss names: the canonical list, the retired name on READ only, every keyed table.
+    import("@/lib/ops/secondary-loss-names-selftests").then((m) => m.secondaryLossNamesChecks()),
     // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
   ]);

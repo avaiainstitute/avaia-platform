@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { normalizeVirtueClassifications } from "./engine/referral-provenance";
 import type { Program } from "./engine/prompts";
 import { VIRTUE_FAMILIES, type VirtueFamilyKey } from "./virtues";
-import { SECONDARY_LOSSES } from "./institution";
+import { SECONDARY_LOSSES, canonicalSecondaryLoss } from "./institution";
 import type { LibraryEntry } from "./library";
 
 // Deterministic, explainable Phase 1 retrieval, reuses the frozen
@@ -145,7 +145,7 @@ export async function getLibraryEntriesForHost(
                     : undefined;
               if (typeof category !== "string") continue;
               const canonical = SECONDARY_LOSSES.find(
-                (s) => s.loss.toLowerCase() === category.trim().toLowerCase()
+                (s) => s.loss.toLowerCase() === (canonicalSecondaryLoss(category) ?? category).trim().toLowerCase()
               );
               if (canonical) matchedLossCategories.add(canonical.loss);
             }

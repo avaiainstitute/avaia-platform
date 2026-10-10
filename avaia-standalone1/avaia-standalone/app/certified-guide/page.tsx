@@ -231,7 +231,7 @@ export default function CertifiedGuidePage() {
             "Automatic access to anyone's private AVAIA conversations or Workbook.",
             "Authority to diagnose, treat, prescribe, or present AVAIA as therapy.",
             "Authority to decide what a Host should do.",
-            "Youth Guide facilitation, this remains on hold, pending separate guardian-consent architecture.",
+            "Youth Guide facilitation, this remains on hold.",
             "Complex Event Lead, Guide Trainer, or Faculty authority.",
             "Automatic permission for every AVAIA Experience, audience, or format.",
           ].map((line) => (

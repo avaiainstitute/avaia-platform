@@ -28,6 +28,8 @@ export type ViewFromAboveClass = {
   slug: string;
   secondaryLoss: string;
   title: string; // "The Loss of ..."
+  /** A title this class used to carry. The class is matched to its stored Experience by title, so until the stored title is renamed the retired title still finds it. */
+  legacyTitle?: string;
   virtueFamily: string;
   virtueElements: string[];
   humanQuestion: string;
@@ -158,8 +160,9 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
   },
   {
     slug: "decision-making-boundaries",
-    secondaryLoss: "Decision-Making / Boundaries",
-    title: "The Loss of Decision-Making / Boundaries",
+    secondaryLoss: "Capacity",
+    title: "The Loss of Capacity",
+    legacyTitle: "The Loss of Decision-Making / Boundaries",
     virtueFamily: "Fortitude",
     virtueElements: ["Courage", "Steadfast", "Resilience", "Assertive", "Bravery"],
     humanQuestion: "What do I choose when fear, guilt, shame, or doubt are present?",
@@ -323,4 +326,14 @@ export const VIEW_FROM_ABOVE_CLASSES: ViewFromAboveClass[] = [
 
 export function getViewFromAboveClass(slug: string): ViewFromAboveClass | undefined {
   return VIEW_FROM_ABOVE_CLASSES.find((c) => c.slug === slug);
+}
+
+/** Every title a class may be stored under in the database: its current title and any retired one. */
+export function viewFromAboveStoredTitles(c: ViewFromAboveClass): string[] {
+  return c.legacyTitle ? [c.title, c.legacyTitle] : [c.title];
+}
+
+/** True if a stored Experience title belongs to this class, under its current title or a retired one. */
+export function viewFromAboveTitleMatches(c: ViewFromAboveClass, storedTitle: string): boolean {
+  return viewFromAboveStoredTitles(c).includes(storedTitle);
 }

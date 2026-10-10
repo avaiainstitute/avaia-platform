@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { SECONDARY_LOSSES, type SecondaryLoss } from "./institution";
+import { SECONDARY_LOSSES, canonicalSecondaryLoss, type SecondaryLoss } from "./institution";
 import type { LibraryEntry } from "./library";
 import type { LibraryConcept } from "./library-concepts";
 
@@ -43,7 +43,7 @@ export async function getOrientationForSecondaryLoss(
   viewerIsMember: boolean
 ): Promise<SecondaryLossOrientation | null> {
   const loss = SECONDARY_LOSSES.find(
-    (s) => s.loss.toLowerCase() === lossName.trim().toLowerCase()
+    (s) => s.loss.toLowerCase() === (canonicalSecondaryLoss(lossName) ?? lossName).trim().toLowerCase()
   );
   if (!loss) return null;
 
@@ -69,7 +69,7 @@ export async function getOrientationForSecondaryLoss(
   );
 
   const entries = published.filter((entry) =>
-    entry.secondary_losses.some((l) => l.toLowerCase() === loss.loss.toLowerCase())
+    entry.secondary_losses.some((l) => (canonicalSecondaryLoss(l) ?? l).toLowerCase() === loss.loss.toLowerCase())
   );
 
   return { loss, concept: null, entries };

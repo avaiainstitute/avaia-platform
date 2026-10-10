@@ -464,17 +464,6 @@ export default function ChemistryPage() {
         </div>
       </section>
 
-      {/* Distortions, reserved future capability */}
-      <section className="mt-10">
-        <p className="label mb-2 text-muted">Future capability</p>
-        <p className="max-w-prose text-sm text-muted">
-          <span className="font-serif text-ink">Virtue Distortions</span>, a
-          planned extension of the Chemistry of Virtue, are reserved for when
-          official AVAIA content is developed. No definitions or logic are
-          implemented until then.
-        </p>
-      </section>
-
       <section className="mt-14 max-w-prose rule-t border-t border-rule pt-10">
         <div className="flex flex-wrap items-center gap-4">
           <Link

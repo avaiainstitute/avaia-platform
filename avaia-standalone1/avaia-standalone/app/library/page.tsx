@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLibraryEntriesForHost, getLibraryEntriesForVirtue, formatReason } from "@/lib/library-retrieval";
 import { searchLibrary, type LibrarySearchResult } from "@/lib/library-search";
 import { getOrientationForSecondaryLoss } from "@/lib/library-orientation";
-import { SECONDARY_LOSSES, isValidSecondaryLoss } from "@/lib/institution";
+import { SECONDARY_LOSSES, canonicalSecondaryLoss } from "@/lib/institution";
 import { isMember } from "@/lib/membership";
 import { VIRTUE_FAMILIES } from "@/lib/virtues";
 import type { LibraryEntry } from "@/lib/library";
@@ -22,7 +22,7 @@ const ORIENTING_PROMPTS: Record<string, string> = {
   Reality: "What's hard to fully take in or accept?",
   "Dreams / Opportunities": "What future did you have to let go of?",
   "Self-Trust": "Where do you doubt your own judgment now?",
-  "Decision-Making / Boundaries": "What's hard to decide, or hard to hold the line on?",
+  Capacity: "What used to feel manageable that no longer does?",
   "Life's Vision": "What did you picture for your life that's changed?",
   Connection: "Who feels distant, or hard to reach?",
   Control: "What feels like it's slipping out of your hands?",
@@ -127,8 +127,8 @@ export default async function LibraryPage({
 
   const lossParam = searchParams?.secondary_loss?.trim() ?? "";
   const orientation =
-    !searchResults && lossParam && isValidSecondaryLoss(lossParam)
-      ? await getOrientationForSecondaryLoss(supabase, lossParam, viewerIsMember)
+    !searchResults && lossParam && canonicalSecondaryLoss(lossParam)
+      ? await getOrientationForSecondaryLoss(supabase, canonicalSecondaryLoss(lossParam) ?? lossParam, viewerIsMember)
       : null;
 
   // A definitive concept match (Connection, today) is the answer, its

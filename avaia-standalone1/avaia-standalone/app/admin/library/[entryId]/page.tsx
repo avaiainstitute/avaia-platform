@@ -11,6 +11,7 @@ import {
   SECONDARY_LOSS_NAMES,
   validateVirtueTag,
 } from "@/lib/library";
+import { canonicalSecondaryLoss } from "@/lib/institution";
 import { VIRTUE_FAMILIES } from "@/lib/virtues";
 
 export const dynamic = "force-dynamic";
@@ -376,7 +377,7 @@ export default async function AdminLibraryEntryPage({
               <label key={loss} className="flex items-center gap-2 text-sm text-ink">
                 <input
                   type="checkbox" name="secondary_losses" value={loss}
-                  defaultChecked={entry.secondary_losses.includes(loss)}
+                  defaultChecked={entry.secondary_losses.some((t) => (canonicalSecondaryLoss(t) ?? t) === loss)}
                 />
                 {loss}
               </label>

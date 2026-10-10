@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { VIRTUE_FAMILIES, isValidVirtueFamily, isValidVirtueElement } from "@/lib/virtues";
-import { isValidSecondaryLoss } from "@/lib/institution";
+import { canonicalSecondaryLoss } from "@/lib/institution";
 import type { Stage } from "@/lib/engine/prompts";
 import { hostVoiceItems } from "@/lib/kept-items";
 
@@ -171,17 +171,18 @@ export function formatSecondaryLossClassifications(value: unknown): string[] {
   for (const item of value) {
     if (typeof item === "string") {
       const s = item.trim();
-      if (s) out.push(s);
+      if (s) out.push(canonicalSecondaryLoss(s) ?? s);
       continue;
     }
     if (item && typeof item === "object") {
       const category = (item as { category?: unknown }).category;
       const description = (item as { description?: unknown }).description;
-      if (typeof category !== "string" || !isValidSecondaryLoss(category)) continue;
+      const canonicalCategory = typeof category === "string" ? canonicalSecondaryLoss(category) : null;
+      if (canonicalCategory === null) continue;
       if (typeof description === "string" && description.trim()) {
-        out.push(`${category}, ${description.trim()}`);
+        out.push(`${canonicalCategory}, ${description.trim()}`);
       } else {
-        out.push(category);
+        out.push(canonicalCategory);
       }
     }
   }

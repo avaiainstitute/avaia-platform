@@ -161,7 +161,7 @@ export async function resetDemo(): Promise<string[]> {
       desiredDirection: "A decision about the house that her father, her brother and she can each live with.",
       secondaryLossesIdentified: [
         { category: "Control", description: "Events are moving faster than she can steer them." },
-        { category: "Decision-Making / Boundaries", description: "Unclear what is hers to decide and what is her father's." },
+        { category: "Capacity", description: "She no longer feels able to carry everything she used to carry for him." },
       ],
       governingNarratives: ["I am the one who is nearby, so it is mine to handle."],
       anchorStatements: [X.wanted],

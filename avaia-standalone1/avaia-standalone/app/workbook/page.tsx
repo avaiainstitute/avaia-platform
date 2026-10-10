@@ -477,29 +477,20 @@ export default async function WorkbookPage({
       carriedQuestions.length > 0 ||
       anchorPatterns.length > 0);
 
-  // Master Connection Map / Master Control Panel, established AVAIA
-  // Workbook concepts external to this codebase ("What Becomes Visible:
-  // Clarity and Agency," the official AVAIA visual asset: Connection Map
-  // "shows the people, virtues, losses, and lessons that shape your story";
-  // Control Panel "captures recognitions, insights, tasks, and next right
-  // steps"). Both are pure read-only aggregations over referral fields the
-  // Workbook already fetches above, no new schema, no new query. Unlike
-  // "Across your journeys" (only what recurs 2+ times, only with 2+
-  // journeys), this is the complete picture, always shown once any referral
-  // exists.
+  // "The whole picture": everything the Host's record has made visible, always shown once any referral exists (unlike "Across your journeys",
+  // which shows only what recurs 2+ times). Pure, read-only aggregations over referral fields the Workbook already fetches above: no new schema,
+  // no new query.
   //
-  // STATUS (internal, not shown to the Host): Master Connection Map is
-  // the first usable view of this concept, not a relational graph, People/
-  // Virtues/Losses/Lessons are independently aggregated from the same
-  // referral records, not linked to each other (no person-to-virtue or
-  // person-to-loss edge exists in the data). Master Control Panel is a
-  // PARTIAL IMPLEMENTATION: Recognitions, Insights, and Next Right Steps are
-  // real; Tasks is absent, AVAIA has no stateful, completable to-do record
-  // anywhere (no table or field tracks done/not-done). See "Master Control
-  // Panel, Task Capability" in the outstanding-work list for the smallest
-  // schema addition that would complete it. Deliberately not surfaced to the
-  // Host in the UI below, development status is a report concern, not
-  // something AVAIA exposes as a limitation to the person using it.
+  // WHAT IT IS (audited 2026-10-10): lists, not a graph. People, Virtues, Losses and Lessons are each gathered and de-duplicated independently
+  // from the same referral records; nothing links a person to a virtue or a loss, and none of this is stored as a relationship. The earlier
+  // headings "Master Connection Map" and "Master Control Panel" (names from an external AVAIA visual asset) promised more than that, so the
+  // headings now say what the lists are. Recognitions, Insights and Next right steps are real and unchanged.
+  //
+  // TASKS: the old "Control Panel" idea of a stateful, completable to-do record is SUPERSEDED BY COORDINATION (Phases 1 to 4). Coordination items
+  // carry ownership and delegation, Open / Waiting / Closed, a next action, a due date, professional involvement and what the item is waiting on,
+  // and a Host can add a decision or commitment to Coordination from the links beside Decisions Made and Commitments Chosen under "In your own
+  // words". Do not build a second
+  // task record here.
   const mapPeople = uniq(collectAll(["significantRelationships"]));
   const mapVirtues = uniq(collectVirtues());
   const mapLosses = uniq(collectSecondaryLosses());
@@ -826,7 +817,7 @@ export default async function WorkbookPage({
       {(hasConnectionMap || hasControlPanel) && (
         <section className="mt-12 rounded-lg border border-rule bg-white/[0.04] p-5 backdrop-blur-sm">
           <p className="label text-seal">Your Workbook</p>
-          <h2 className="mt-1 font-serif text-2xl text-ink">Master Connection Map &amp; Control Panel</h2>
+          <h2 className="mt-1 font-serif text-2xl text-ink">The whole picture</h2>
           <p className="mt-1 text-sm text-muted">
             The complete picture, not just what recurs, everyone, every virtue, every loss, and
             every lesson your record has already made visible, alongside what you&rsquo;ve
@@ -835,7 +826,7 @@ export default async function WorkbookPage({
 
           {hasConnectionMap && (
             <div className="mt-6">
-              <p className="label text-muted">Master Connection Map</p>
+              <p className="label text-muted">People, virtues, losses, and lessons</p>
               <p className="mt-1 text-xs text-muted">
                 The people, virtues, losses, and lessons that shape your story.
               </p>
@@ -903,7 +894,7 @@ export default async function WorkbookPage({
 
           {hasControlPanel && (
             <div className="mt-6">
-              <p className="label text-muted">Master Control Panel</p>
+              <p className="label text-muted">Recognitions, insights, and next steps</p>
               <p className="mt-1 text-xs text-muted">Captures recognitions, insights, and next right steps.</p>
 
               {panelRecognitions.length > 0 && (

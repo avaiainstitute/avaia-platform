@@ -3,7 +3,7 @@
 // Source of record: "The AVAIA Institutional Manual" and Dorian Johnson's build
 // answers (AVAIA Enterprises, LLC). Content below is drawn directly from those
 // materials. Nothing is invented. Where something is still genuinely unsupplied
-// (official virtue symbols, documented virtue formulas, virtue "distortions"),
+// (official virtue symbols, documented virtue formulas),
 // it is marked `AWAITING_SOURCE` rather than fabricated.
 
 export const AWAITING_SOURCE = "AWAITING_SOURCE" as const;
@@ -355,7 +355,10 @@ export const SECONDARY_LOSSES: SecondaryLoss[] = [
   { loss: "Reality", healingFamily: "humility", healingLabel: "Humility" },
   { loss: "Dreams / Opportunities", healingFamily: "positive-attitude", healingLabel: "Positive Attitude" },
   { loss: "Self-Trust", healingFamily: "hard-work", healingLabel: "Hard Work" },
-  { loss: "Decision-Making / Boundaries", healingFamily: "fortitude", healingLabel: "Fortitude" },
+  // Renamed by Founder decision from "Decision-Making / Boundaries" to "Capacity" ("Loss of Capacity"). The thread is unchanged: same
+  // Grief Myth, same virtue family, same life lesson. The old name stays accepted on READ only (LEGACY_SECONDARY_LOSS_NAMES below)
+  // so a referral or Library tag stored before the rename keeps working.
+  { loss: "Capacity", healingFamily: "fortitude", healingLabel: "Fortitude" },
   { loss: "Life's Vision", healingFamily: "wisdom", healingLabel: "Wisdom" },
   { loss: "Connection", healingFamily: "justice", healingLabel: "Justice" },
   { loss: "Control", healingFamily: "self-control", healingLabel: "Self-Control" },
@@ -379,9 +382,26 @@ export function formatSecondaryLossHierarchy(): string {
 }
 
 /** True only if category exactly matches one of the ten official Secondary
- *  Loss names (e.g. "Dreams / Opportunities"), case-insensitive. */
+ *  Loss names (e.g. "Dreams / Opportunities"), case-insensitive. Strict on purpose: this is what NEW generated
+ *  categories are validated against, so a retired name is never written again. */
 export function isValidSecondaryLoss(category: string): boolean {
   return SECONDARY_LOSSES.some((s) => s.loss.toLowerCase() === category.trim().toLowerCase());
+}
+
+/** Names that were once canonical and may still sit in stored data (referrals, Library tags) written before a rename. They are accepted when
+ *  READING stored data and always shown as the current canonical name. Keys are lower-case with the spacing variants that were in use. */
+export const LEGACY_SECONDARY_LOSS_NAMES: Record<string, string> = {
+  "decision-making / boundaries": "Capacity",
+  "decision-making/boundaries": "Capacity",
+};
+
+/** The current canonical name for a stored or supplied Secondary Loss name, or null if it is neither a current name nor a known retired one.
+ *  Use this when READING stored data; use isValidSecondaryLoss for validating newly generated values. */
+export function canonicalSecondaryLoss(name: string): string | null {
+  const key = name.trim().toLowerCase();
+  const current = SECONDARY_LOSSES.find((s) => s.loss.toLowerCase() === key);
+  if (current) return current.loss;
+  return LEGACY_SECONDARY_LOSS_NAMES[key] ?? null;
 }
 
 // ---------------------------------------------------------------------------

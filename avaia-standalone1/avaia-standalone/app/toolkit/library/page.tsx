@@ -5,7 +5,7 @@ import { EntryCard, SearchResultCard } from "@/app/library/page";
 import { searchLibrary } from "@/lib/library-search";
 import { getOrientationForSecondaryLoss } from "@/lib/library-orientation";
 import { getLibraryEntriesForVirtue } from "@/lib/library-retrieval";
-import { SECONDARY_LOSSES, isValidSecondaryLoss } from "@/lib/institution";
+import { SECONDARY_LOSSES, canonicalSecondaryLoss } from "@/lib/institution";
 import { VIRTUE_FAMILIES, type VirtueFamilyKey } from "@/lib/virtues";
 import type { LibraryEntry } from "@/lib/library";
 
@@ -42,8 +42,8 @@ export default async function ToolkitLibraryPage({
 
   const lossParam = searchParams?.secondary_loss?.trim() ?? "";
   const orientation =
-    !searchResults && lossParam && isValidSecondaryLoss(lossParam)
-      ? await getOrientationForSecondaryLoss(supabase, lossParam, true)
+    !searchResults && lossParam && canonicalSecondaryLoss(lossParam)
+      ? await getOrientationForSecondaryLoss(supabase, canonicalSecondaryLoss(lossParam) ?? lossParam, true)
       : null;
   if (orientation?.concept) redirect(`/library/concepts/${orientation.concept.id}`);
 

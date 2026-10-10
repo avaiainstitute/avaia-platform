@@ -9,7 +9,7 @@ import {
   type ExperienceSection,
 } from "@/lib/experience-sections";
 import type { ComponentAvailabilityItem, RelatedClass } from "@/components/ExperienceDetail";
-import { VIEW_FROM_ABOVE_CLASSES } from "@/lib/view-from-above";
+import { VIEW_FROM_ABOVE_CLASSES, viewFromAboveTitleMatches } from "@/lib/view-from-above";
 
 /** Delivery interface for a View From Above class, rendered by both the
  *  Guide-facing (app/toolkit/experiences/[experienceId]) and admin
@@ -66,7 +66,7 @@ export default function ViewFromAboveClass({
 
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const movementFields = movement ? parseModuleFields(movement.body) : [];
-  const matchingSlug = VIEW_FROM_ABOVE_CLASSES.find((c) => c.title === experience.title)?.slug ?? "";
+  const matchingSlug = VIEW_FROM_ABOVE_CLASSES.find((c) => viewFromAboveTitleMatches(c, experience.title))?.slug ?? "";
 
   return (
     <div>

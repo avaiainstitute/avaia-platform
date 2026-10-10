@@ -12,7 +12,7 @@ const RECOGNITION_LINE: Record<string, string> = {
   Reality: "What feels real, or trustworthy, may shift.",
   "Dreams / Opportunities": "The future you imagined may need to change.",
   "Self-Trust": "How much you trust your own judgment may be shaken.",
-  "Decision-Making / Boundaries": "Making decisions or holding boundaries may feel harder.",
+  Capacity: "Your sense of your own ability to carry or handle what you once could may have changed.",
   "Life's Vision": "The life you thought you were building may look different now.",
   Connection: "Connection with others may feel different.",
   Control: "Your sense of control may feel different.",

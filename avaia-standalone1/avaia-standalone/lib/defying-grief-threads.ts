@@ -70,7 +70,7 @@ export const DEFYING_GRIEF_THREADS: Record<string, DefyingGriefThread> = {
       "Why the person you “think” you are is no match for the person you really are.",
     ],
   },
-  "Decision-Making / Boundaries": {
+  Capacity: {
     griefMyth: "Talking about the loss will not help the situation.",
     lifeLessonName: "Dangerous Trail",
     lifeLessonTeachings: [

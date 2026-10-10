@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Experience } from "@/lib/experiences";
 import { groupSectionsByType, parseModuleFields, type ExperienceSection } from "@/lib/experience-sections";
-import { VIEW_FROM_ABOVE_CLASSES } from "@/lib/view-from-above";
+import { VIEW_FROM_ABOVE_CLASSES, viewFromAboveStoredTitles } from "@/lib/view-from-above";
 import { PrintButton } from "@/components/DefyingGriefPrintControls";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export default async function ViewFromAboveFacilitatorWorkbookPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in?from=/toolkit");
 
-  const titles = VIEW_FROM_ABOVE_CLASSES.map((c) => c.title);
+  const titles = VIEW_FROM_ABOVE_CLASSES.flatMap((c) => viewFromAboveStoredTitles(c));
   const { data: experienceRows } = await supabase.from("experiences").select("*").in("title", titles);
   const experiences = (experienceRows as Experience[]) ?? [];
   const experienceIds = experiences.map((e) => e.id);
@@ -84,13 +84,13 @@ export default async function ViewFromAboveFacilitatorWorkbookPage() {
         {VIEW_FROM_ABOVE_CLASSES.map((c) => (
           <li key={c.slug}>
             {c.title}, {c.virtueFamily}
-            {!byTitle.has(c.title) && " (not found in this database)"}
+            {!viewFromAboveStoredTitles(c).some((t) => byTitle.has(t)) && " (not found in this database)"}
           </li>
         ))}
       </ol>
 
       {VIEW_FROM_ABOVE_CLASSES.map((cls) => {
-        const experience = byTitle.get(cls.title);
+        const experience = (viewFromAboveStoredTitles(cls).map((t) => byTitle.get(t)).find((e) => e !== undefined));
         if (!experience) {
           return (
             <div key={cls.slug} className="class-block">
