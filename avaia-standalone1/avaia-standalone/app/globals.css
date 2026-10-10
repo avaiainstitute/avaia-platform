@@ -112,3 +112,14 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .avaia-glow { animation: none; }
 }
+
+/* Dropdown options: some browsers (Edge on Windows) draw the pop-up list on a light background while keeping the page's light text,
+   which makes the options unreadable. Give every option the site's own dark background and light text, always. */
+select option,
+select optgroup {
+  background-color: #0b0d14;
+  color: #e9eef4;
+}
+select option:disabled {
+  color: #8a93a0;
+}
