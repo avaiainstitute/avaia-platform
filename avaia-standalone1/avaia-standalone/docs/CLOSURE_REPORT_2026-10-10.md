@@ -47,3 +47,13 @@ Preview builds green on both Vercel projects; live site checks passed (see commi
 
 ## E. Open
 Run 0126; run System Checks; Founder: Virtue Formula selection, Capacity one-liners, class-5 and reference-row wording, public copy for new capabilities, confirm Owner/Exception Agent retirement. Held: Youth Guide facilitation, lessons 6.12, 6.16, 7.13. Demo "End their access" click-through unverified.
+
+## Update, same day (commit `0915e3b`, live)
+
+* Secondary Loss canonical name is **Loss of Capacity** (Decision 0015). Bare "Capacity" removed; "Decision-Making / Boundaries" is a read-only legacy alias; display never doubles the prefix. Migration 0126 rewritten to migrate stored data to "Loss of Capacity" (NOT yet applied; step 3 of it should return 20 rows).
+* Capacity wording approved and live: public line and Library prompt. View From Above class 5 body and the Defying Grief stored rows (pilot "Ten Secondary Losses" row, Module 4 adult and Youth) rewritten from lesson 5.5; the Hike Lesson, Anchor, Dorian's account and the Fortitude list are Founder-authored and unchanged.
+* Virtue Formula rule adopted (Decision 0014): suggestions only where the Host's own words support them (verified in code against the Host's text), no roles, no fixed counts, Host assigns roles and confirms exactly one Primary.
+* Public copy added to existing pages only: `/for-families-and-professional-teams` (Coordination, Decision & Capacity Continuity, Share With) and `/certified-guide` (Guide Coordination).
+* Owner/Exception Agent RETIRED (Decision 0016). Nine items DEFERRED (Decision 0013).
+* Host-facing "Your Guides" section added to the Workbook (visibility only, existing data only).
+* Not run (needs a signed-in session): full System Checks, demo End-access test.
