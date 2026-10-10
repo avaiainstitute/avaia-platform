@@ -57,3 +57,9 @@ Run 0126; run System Checks; Founder: Virtue Formula selection, Capacity one-lin
 * Owner/Exception Agent RETIRED (Decision 0016). Nine items DEFERRED (Decision 0013).
 * Host-facing "Your Guides" section added to the Workbook (visibility only, existing data only).
 * Not run (needs a signed-in session): full System Checks, demo End-access test.
+
+## Final status of the open items (2026-10-10, evening)
+
+* Migration 0126: APPLIED in Production and verified (all checks zero; the class row, titled "... — The View from Above", renamed by hand and added to the file).
+* System Checks: run by Dorian after commit `13c895e`; "Overall launch readiness: PASS" (2 self-test failures found and fixed first: one real prefix bug, one invalid test input).
+* **OPEN, deferred by Dorian: demo "End their access" test.** NOT RUN. Still to be done: Eleanor ends Nora's Guide Coordination access; Nora immediately loses future access; Nora's earlier notes remain; Eleanor's record is unchanged; then reset the demo to baseline. First attempt was stopped because the window was signed in as Nora (menu shows CERTIFICATION), so the Guide picker was empty; sign in as the Host account first. Steps are in `docs/demo/DEMO_DAY_CARD.md` and `DEMO_PRESENTER_SCRIPT.md`.
