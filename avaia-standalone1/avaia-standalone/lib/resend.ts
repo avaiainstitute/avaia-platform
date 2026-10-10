@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { htmlToPlainText } from "@/lib/email-text";
 
 // Automation audit finding #1.2: every caller of sendEmail already wraps
 // it in its own try/catch and swallows failures (a genuinely consistent
@@ -49,7 +50,9 @@ export async function sendEmail({
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to: [to], subject, html }),
+    // Every message carries a plain-text part as well as the HTML part (an HTML-only message is a common spam signal), and, only when
+    // RESEND_REPLY_TO is set, a real reply-to address so replies reach a person instead of a no-reply mailbox.
+    body: JSON.stringify({ from, to: [to], subject, html, text: htmlToPlainText(html), ...(process.env.RESEND_REPLY_TO ? { reply_to: process.env.RESEND_REPLY_TO } : {}) }),
   });
 
   if (!res.ok) {

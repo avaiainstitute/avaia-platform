@@ -300,6 +300,8 @@ export async function runSystemChecks(): Promise<{
     import("@/lib/ops/contact-reasons-selftests").then((m) => m.contactReasonsChecks()),
     // Where someone lands after signing in: back where they were going (Coordination, Guided Coordination), never off-site.
     import("@/lib/ops/post-signin-redirect-selftests").then((m) => m.postSignInRedirectChecks()),
+    // Outgoing email: every message carries a readable plain-text version beside the HTML one.
+    import("@/lib/ops/email-text-selftests").then((m) => m.emailTextChecks()),
     // Founder reconciliation (2026-10-04): Host-owned Room, Witness as a function, Preparation during the work, Desired Outcome, the Signature's structure.
     import("@/lib/ops/reconciliation-selftests").then((m) => m.founderReconciliationChecks()),
   ]);
